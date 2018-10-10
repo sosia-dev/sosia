@@ -27,25 +27,29 @@ def create_fields_journals_list():
     # Add information from list of external publication titles
     sheets_external = pd.read_excel(URL_EXT_LIST, sheet_name=None)
     for drop in ['More info Medline', 'ASJC classification codes']:
-       try:
-           sheets_external.pop(drop)
-       except KeyError:
-           continue
+        try:
+            sheets_external.pop(drop)
+        except KeyError:
+            continue
+
+    def _clean(x):
+        x = x.replace(';', ' ').replace(',', ' ').replace('  ', ' ').strip()
+
     keeps = ['Sourcerecord id', 'ASJC code']
     cols = ['source_id', 'asjc']
     rename = {'All Science Journal Classification Codes (ASJC)': 'ASJC code'}
     for df in sheets_external.values():
-       subset = df.rename(columns=rename)[keeps]
-       subset['ASJC code'] = (subset['ASJC code'].astype(str).str.strip(';')
-                                                 .str.split('; '))
-       subset = subset.set_index('Sourcerecord id')
-       subset = subset['ASJC code'].apply(pd.Series).stack()
-       subset = subset.reset_index().drop('level_1', axis=1)
-       subset.columns = cols
-       out = pd.concat([out, subset], sort=True)
-    
+        subset = df.rename(columns=rename)[keeps]
+        subset['ASJC code'] = (subset['ASJC code'].astype(str).apply(_clean)
+                                                  .str.split())
+        subset = subset.set_index('Sourcerecord id')
+        subset = subset['ASJC code'].apply(pd.Series).stack()
+        subset = subset.reset_index().drop('level_1', axis=1)
+        subset.columns = cols
+        out = pd.concat([out, subset], sort=True)
+
     # Write out
-    out = out.drop_duplicates()
+    out = out.astype(int).drop_duplicates()
     path = expanduser('~/.sosia/')
     if not exists(path):
        makedirs(path)
