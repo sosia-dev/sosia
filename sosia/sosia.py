@@ -33,8 +33,10 @@ class Original(object):
 
     @property
     def first_year(self):
-        au = sco.AuthorRetrieval(self.id)
-        return au.publication_range[0]
+        """The scientist's year of first publication, as string."""
+        q = 'AU-ID({}) AND PUBYEAR BEF {}'.format(self.id, self.year)
+        pubs = sco.ScopusSearch(q, refresh=self.refresh).results
+        return min([p.coverDate[:4] for p in pubs])
 
     @property
     def journals(self):
