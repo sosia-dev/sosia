@@ -10,6 +10,21 @@ import sosia
 scientist1 = sosia.Original(55208373700, 2017)
 
 
+def test_coauthors():
+    assert_true(isinstance(scientist1.coauthors, set))
+    assert_equal(len(scientist1.coauthors), 5)
+    assert_true('36617057700' in scientist1.coauthors)
+    assert_true('54930777900' in scientist1.coauthors)
+    assert_true('54929867200' in scientist1.coauthors)
+    assert_true('24781156100' in scientist1.coauthors)
+    assert_true('55875219200' in scientist1.coauthors)
+
+
+def test_fields():
+    expected = sorted([1400, 1405, 1405, 1408, 1803, 2002, 2200])
+    assert_equal(sorted(scientist1.fields), expected)
+
+
 def test_first_year():
     assert_equal(scientist1.first_year, '2012')
 
@@ -17,9 +32,9 @@ def test_first_year():
 def test_journals():
     journals = scientist1.journals
     assert_equal(len(journals), 3)
-    assert_true('Applied Economics Letters' in journals)
-    assert_true('Industry and Innovation' in journals)
-    assert_true('Research Policy' in journals)
+    assert_true('22900' in journals)
+    assert_true('23013' in journals)
+    assert_true('18769' in journals)
 
 
 def test_publications():

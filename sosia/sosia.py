@@ -15,15 +15,33 @@ from sosia.utils import FIELDS_JOURNALS_LIST
 
 class Original(object):
     @property
+    def coauthors(self):
+        """Set of coauthors of the scientist on all publications until the
+        given year.
+        """
+        coauth = set([a for p in self.publications for a in p.authid.split(';')])
+        coauth.remove(self.id)
+        return coauth
+
+    @property
+    def fields(self):
+        """The fields of the scientiest until the given year, estimated from
+        the journal she published in.
+        """
+        df = self.field_journal
+        return df[df['source_id'].isin(self.journals)]['asjc'].tolist()
+
+    @property
     def first_year(self):
         au = sco.AuthorRetrieval(self.id)
         return au.publication_range[0]
 
     @property
     def journals(self):
-        """The journals and conference proceedings in which the scientist
-        published until the given year year."""
-        return set([p.publicationName for p in self.publications])
+        """The Scopus IDs of journals and conference proceedings in which the
+        scientist published until the given year.
+        """
+        return set([p.source_id  for p in self.publications])
 
     @property
     def publications(self):
