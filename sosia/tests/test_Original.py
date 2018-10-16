@@ -26,7 +26,7 @@ def test_fields():
 
 
 def test_first_year():
-    assert_equal(scientist1.first_year, '2012')
+    assert_equal(scientist1.first_year, 2012)
 
 
 def test_journals():

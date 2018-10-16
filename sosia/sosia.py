@@ -36,9 +36,9 @@ class Original(object):
     @property
     def first_year(self):
         """The scientist's year of first publication, as string."""
-        q = 'AU-ID({}) AND PUBYEAR BEF {}'.format(self.id, self.year)
+        q = 'AU-ID({})'.format(self.id, self.year)
         pubs = sco.ScopusSearch(q, refresh=self.refresh).results
-        return min([p.coverDate[:4] for p in pubs])
+        return int(min([p.coverDate[:4] for p in pubs]))
 
     @property
     def journals(self):
@@ -61,8 +61,9 @@ class Original(object):
         """The publications of the scientist published until
         the given year.
         """
-        q = 'AU-ID({}) AND PUBYEAR BEF {}'.format(self.id, self.year)
-        pubs = sco.ScopusSearch(q, refresh=self.refresh).results
+        q = 'AU-ID({})'.format(self.id)
+        s = sco.ScopusSearch(q, refresh=self.refresh)
+        pubs = [p for p in s.results if int(p.coverDate[:4]) < self.year]
         if len(pubs) > 0:
             return pubs
         else:
