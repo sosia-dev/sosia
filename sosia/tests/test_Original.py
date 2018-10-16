@@ -37,6 +37,11 @@ def test_journals():
     assert_true('18769' in journals)
 
 
+def test_main_field():
+    expected = (1405, 'BUSI')
+    assert_equal(scientist1.main_field, expected)
+
+
 def test_publications():
     pubs = scientist1.publications
     assert_equal(len(pubs), 4)

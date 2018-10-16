@@ -5,12 +5,14 @@
 """Main class for sosia."""
 
 import warnings
+from collections import Counter
+from math import log
 from os.path import exists
 
 import pandas as pd
 import scopus as sco
 
-from sosia.utils import FIELDS_JOURNALS_LIST
+from sosia.utils import ASJC_2D, FIELDS_JOURNALS_LIST
 
 
 class Original(object):
@@ -25,7 +27,7 @@ class Original(object):
 
     @property
     def fields(self):
-        """The fields of the scientiest until the given year, estimated from
+        """The fields of the scientist until the given year, estimated from
         the journal she published in.
         """
         df = self.field_journal
@@ -46,8 +48,17 @@ class Original(object):
         return set([p.source_id  for p in self.publications])
 
     @property
+    def main_field(self):
+        """The scientist's main field of research, as tuple in
+        the form (ASJC code, general category).
+        """
+        main = Counter(self.fields).most_common(1)[0][0]
+        code = main // 10 ** (int(log(main, 10)) - 2 + 1)
+        return (main, ASJC_2D[code])
+
+    @property
     def publications(self):
-        """The publications of the scientist published until before
+        """The publications of the scientist published until
         the given year.
         """
         q = 'AU-ID({}) AND PUBYEAR BEF {}'.format(self.id, self.year)
