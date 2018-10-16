@@ -10,6 +10,10 @@ import sosia
 scientist1 = sosia.Original(55208373700, 2017)
 
 
+def test_country():
+    assert_equal(scientist1.country, 'Switzerland')
+
+
 def test_coauthors():
     assert_true(isinstance(scientist1.coauthors, set))
     assert_equal(len(scientist1.coauthors), 5)

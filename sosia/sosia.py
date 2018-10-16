@@ -17,6 +17,33 @@ from sosia.utils import ASJC_2D, FIELDS_JOURNALS_LIST
 
 class Original(object):
     @property
+    def country(self):
+        """Country of the scientist's most frequent affiliation
+        in the most recent year (before the given year) that
+        the scientist published.
+        """
+        # List of relevant papers
+        papers = []
+        max_iter = self.year - self.first_year + 1
+        i = 0
+        while len(papers) == 0 & i <= max_iter:
+            papers = [p for p in self.publications if int(p.coverDate[:4]) == self.year-i]
+            i += 1
+        if len(papers) == 0:
+            return None
+        # List of affiliations
+        affs = []
+        for p in papers:
+            authors = p.authid.split(';')
+            idx = authors.index(str(self.id))
+            aff = p.afid.split(';')[idx].split('-')
+            affs.extend(aff)
+        affs = [a for a in affs if a != '']
+        # Find countries of affiliations
+        countries = [sco.ContentAffiliationRetrieval(afid).country for afid in affs]
+        return Counter(countries).most_common(1)[0][0]
+
+    @property
     def coauthors(self):
         """Set of coauthors of the scientist on all publications until the
         given year.
