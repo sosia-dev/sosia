@@ -63,3 +63,10 @@ def test_publications():
         issn='00487333', source_id='22900', aggregationType='Journal',
         volume='45', issueIdentifier='4', pageRange='785-796')
     assert_equal(pubs[0], expected)
+
+
+def test_search_journals():
+    jour = scientist1.search_journals
+    assert_equal(len(jour), 33)
+    assert_true(14726 in jour)
+    assert_true(21100461344 in jour)

@@ -99,6 +99,24 @@ class Original(object):
             warnings.warn(text, UserWarning)
             return None
 
+    @property
+    def search_journals(self):
+        """The set of journals comparable to the journals the scientist
+        published in until the given year.
+        A journal is comparable if is belongs to the scientist's main field
+        but not to fields alien to the scientist.
+        """
+        df = self.field_journal
+        # Select journals in scientist's main field
+        journals = df[df['asjc'] == self.main_field[0]]['source_id'].tolist()
+        sel = df[df['source_id'].isin(journals)].copy()
+        sel['asjc'] = sel['asjc'].astype(str) + " "
+        grouped = sel.groupby('source_id').sum()['asjc'].to_frame()
+        # Deselect journals with alien fields
+        grouped['drop'] = grouped['asjc'].apply(
+            lambda s: any(x for x in s.split() if int(x) not in self.fields))
+        return grouped[~grouped['drop']].index.tolist()
+
     def __init__(self, scientist, year, refresh=False):
         """Class to represent a scientist for which we want to find a control
         group.
