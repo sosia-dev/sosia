@@ -67,6 +67,6 @@ def test_publications():
 
 def test_search_journals():
     jour = scientist1.search_journals
-    assert_equal(len(jour), 33)
+    assert_equal(len(jour), 180)
     assert_true(14726 in jour)
     assert_true(21100461344 in jour)
