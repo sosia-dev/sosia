@@ -65,6 +65,24 @@ def test_publications():
     assert_equal(pubs[0], expected)
 
 
+def test_search_group_then():
+    then = scientist1.search_group_then
+    assert_true(len(then) > 20500)
+    assert_true(isinstance(then, set))
+
+
+def test_search_group_today():
+    today = scientist1.search_group_today
+    assert_true(len(today) > 3650)
+    assert_true(isinstance(today, set))
+
+
+def test_search_group_negative():
+    negative = scientist1.search_group_negative
+    assert_true(len(negative) > 40000)
+    assert_true(isinstance(negative, set))
+
+
 def test_search_journals():
     jour = scientist1.search_journals
     assert_equal(len(jour), 180)

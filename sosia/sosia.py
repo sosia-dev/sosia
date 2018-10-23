@@ -100,6 +100,66 @@ class Original(object):
             return None
 
     @property
+    def search_group_then(self):
+        """Authors of publications in journals in the scientist's field
+        in the year of the scientist's first publication.
+        """
+        authors = set()
+        _years = range(self.first_year-self.year_margin,
+                       self.first_year+self.year_margin+1)
+        for journal in self.search_journals:
+            q = 'SOURCE-ID({})'.format(journal)
+            try:  # Try complete publication list first
+                s = sco.ScopusSearch(q)
+                res = [p for p in s.results if int(p.coverDate[:4]) in _years]
+            except:  # Fall back to year-wise queries
+                for year in _years:
+                    q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(journal, year)
+                    s = sco.ScopusSearch(q)
+                    res = s.results
+            new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
+            authors.update([au for sl in new for au in sl])
+        return authors
+
+    @property
+    def search_group_today(self):
+        """Authors of publications in journals in the scientist's field
+        in the given year.
+        """
+        authors = set()
+        for journal in self.search_journals:
+            q = 'SOURCE-ID({})'.format(journal)
+            try:  # Try complete publication list first
+                s = sco.ScopusSearch(q)
+                res = [p for p in s.results if int(p.coverDate[:4]) == self.year]
+            except:  # Fall back to year-wise queries
+                q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(journal, self.year)
+                s = sco.ScopusSearch(q)
+                res = s.results
+            new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
+            authors.update([au for sl in new for au in sl])
+        return authors
+
+    @property
+    def search_group_negative(self):
+        """Authors of publications in journals in the scientist's field
+        before the year of the scientist's first publication.
+        """
+        authors = set()
+        _min = self.first_year-self.year_margin
+        for journal in self.search_journals:
+            q = 'SOURCE-ID({})'.format(journal)
+            try:
+                s = sco.ScopusSearch(q)
+                res = [p for p in s.results if int(p.coverDate[:4]) < _min]
+            except Exception as e:
+                # Do not run year-wise queries for this group
+                continue
+            new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
+            authors.update([au for sl in new for au in sl])
+        return authors
+
+    @property
     def search_journals(self):
         """The set of journals comparable to the journals the scientist
         published in until the given year.
@@ -117,7 +177,7 @@ class Original(object):
             lambda s: any(x for x in s.split() if int(x) not in self.fields))
         return grouped[~grouped['drop']].index.tolist()
 
-    def __init__(self, scientist, year, refresh=False):
+    def __init__(self, scientist, year, year_margin=1, refresh=False):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -127,13 +187,18 @@ class Original(object):
             Scopus Author ID of the scientist you want to find control
             groups for.
 
-        year : str or int
+        year : str or numeric
             Year of the event.  Control groups will be matched on trends and
             characteristics of the scientist up to this year.
+
+        year_margin : str or numeric (optional, default=1)
+            Number of years by which the search for authors publishing around
+            the year of the focal scientist's year of first publication should
+            be extend in both directions.
         """
         # Check for existence of fields-journals list
         try:
-            self.field_journal = pd.read_csv(FIELDS_JOURNALS_LIST)
+            self.field_journal = pd.read_csv(FIELDS_JOURNALS_LIST, dtype=int)
         except FileNotFoundError:
             text = "Fields-Journals list not found, but required for sosia "\
                    "to match authors' publications to fields.  Please run "\
@@ -144,4 +209,5 @@ class Original(object):
         # Variables
         self.id = str(scientist)
         self.year = int(year)
+        self.year_margin = int(year_margin)
         self.refresh = refresh
