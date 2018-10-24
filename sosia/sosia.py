@@ -6,7 +6,7 @@
 
 import warnings
 from collections import Counter
-from math import log
+from math import ceil, floor, log
 from os.path import exists
 
 import pandas as pd
@@ -14,6 +14,7 @@ import scopus as sco
 
 from sosia.utils import ASJC_2D, FIELDS_JOURNALS_LIST
 
+MAX_LENGTH = 3893  # Maximum character length of a query
 
 class Original(object):
     @property
@@ -211,3 +212,158 @@ class Original(object):
         self.year = int(year)
         self.year_margin = int(year_margin)
         self.refresh = refresh
+
+    def find_matches(self, pub_margin=0.1, coauth_margin=0.1, stacked=False):
+        """Find matches from a search group based on three criteria:
+        1. Started publishing in about the same year
+        2. Has about the same number of publications in the year of treatment
+        3. Has about the same number of coauthors in the year of treatment
+        The search group is defined as intersection of `search_group_today`
+        and `search_group_then`, minus `search_group_negative`.
+
+        Parameters
+        ----------
+        pub_margin : numeric (optional, default=0.1)
+            The left and right margin for the number of publications to match
+            possible matches and the scientist on.  If the value is a float,
+            it is interpreted as percentage of the scientists number of
+            publications and the resulting value is rounded up.  If the value
+            is an integer it is interpreted as fixed number of publications.
+
+        coauth_margin : numeric (optional, default=0.1)
+            The left and right margin for the number of coauthors to match
+            possible matches and the scientist on.  If the value is a float,
+            it is interpreted as percentage of the scientists number of
+            coauthors and the resulting value is rounded up.  If the value
+            is an integer it is interpreted as fixed number of coauthors.
+
+        stacked : bool (optional, default=False)
+            Whether to combine searches in few queries or not.  Cached
+            files with most likely not be resuable.  Set to true if you
+            query in distinct fields or you want to minimize API key usage.
+        """
+        # Variables
+        _years = range(self.first_year-self.year_margin,
+                       self.first_year-self.year_margin+1)
+        try:
+            _npapers = _get_value_range(len(self.publications), pub_margin)
+        except TypeError:
+            raise ValueError('Value pub_margin must be float or integer.')
+        try:
+            _ncoauth = _get_value_range(len(self.coauthors), coauth_margin)
+        except TypeError:
+            raise ValueError('Value coauth_margin must be float or integer.')
+
+        # Define search group
+        group = self.search_group_then.intersection(self.search_group_today)
+        group = sorted(list(group - self.search_group_negative))
+
+        # First stage of filtering: minimum publications and main field
+        df = pd.DataFrame()
+        for chunk in _chunker(group, floor((MAX_LENGTH-30)/27)):
+            while len(chunk) > 0:
+                half = floor(len(chunk)/2)
+                try:
+                    df = df.append(_query_author(chunk))
+                    chunk = []
+                except:  # Rerun query with half the list
+                    df = df.append(_query_author(chunk[:half]))
+                    chunk = chunk[half:]
+        df = df[df['areas'].str.startswith(self.main_field[1])]
+        df['documents'] = pd.to_numeric(df['documents'], errors='coerce').fillna(0)
+        df = df[df['documents'].astype(int) >= min(_npapers)]
+
+        # Second round of filtering
+        df['id'] = df['eid'].str.split('-').str[-1]
+        group = df['id'].tolist()
+        keep = []
+        if stacked:  # Combine searches
+            d = {}
+            y = self.first_year
+            for chunk in _chunker(group, floor((MAX_LENGTH-21-30)/27)):
+                while len(chunk) > 0:
+                    h = floor(len(chunk)/2)
+                    try:
+                        d.update(_build_dict(_query_docs(chunk, y), y))
+                        chunk = []
+                    except Exception as e:  # Rerun query with half the list
+                        d.update(_build_dict(_query_docs(chunk[:h], y), y))
+                        chunk = chunk[h:]
+            # Iterate through container
+            for auth, dat in d.items():
+                if (dat['pub_year'] in _years and dat['n_pubs'] in
+                        _npapers and len(dat['coauth']) in _ncoauth):
+                    keep.append(auth)
+        else:  # Query each author individually
+            for au in group:
+                s = sco.ScopusSearch('AU-ID({})'.format(au))
+                res = [p for p in s.results if int(p.coverDate[:4]) < self.year+1]
+                # Filter based on age (first publication year)
+                min_year = int(min([p.coverDate[:4] for p in res]))
+                if min_year not in _years:
+                    continue
+                # Filter based on number of publications in t
+                if len(res) not in _npapers:
+                    continue
+                # Filter based on number of coauthors
+                coauth = set([a for p in res for a in p.authid.split(';')])
+                coauth.remove(au)
+                if len(coauth) not in _ncoauth:
+                    continue
+                keep.append(au)
+        return keep
+
+
+def _build_dict(results, year):
+    """Create dictionary assigning publication information to authors we
+    are looking for.
+    """
+    d = defaultdict(lambda: {'pub_year': year, 'n_pubs': 0, 'coauth': set()})
+    for pub in results:
+        authors = set(pub.authid.split(';'))
+        try:
+            focal = next(iter(authors.intersection(chunk)))
+        except StopIteration:
+            continue
+        authors.remove(focal)
+        d[focal]['coauth'].update(authors)
+        d[focal]['n_pubs'] += 1
+        pub_year = int(pub.coverDate[:4])
+        d[focal]['pub_year'] = min(d[focal]['pub_year'], pub_year)
+    return d
+
+
+def _chunker(l, n):
+    """Auxiliary function to break a list into chunks of at most size n"""
+    # From https://stackoverflow.com/a/312464/3621464
+    for i in range(0, len(l), n):
+        yield l[i:i+n]
+
+
+def _query_author(l):
+    """Auxiliary function to perform a combined query for authors."""
+    q = "AU-ID(" + ") OR AU-ID(".join(l) + ")"
+    try:
+        return sco.AuthorSearch(q).authors
+    except KeyError:
+        return sco.AuthorSearch(q, refresh=True).authors
+
+
+def _query_docs(l, cur_year):
+    """Auxiliary function to perform a combined query for documents."""
+    q = "AU-ID({}) AND PUBYEAR BEF {}".format(
+        ") OR AU-ID(".join(l), cur_year+1)
+    try:
+        return sco.ScopusSearch(q).results
+    except KeyError:
+        return sco.ScopusSearch(q, refresh=True).results
+
+
+def _get_value_range(base, val):
+    """Auxiliary function to create a range of margins around a base value."""
+    if isinstance(val, float):
+        margin = ceil(val*base)
+        r = range(base-margin, base+margin+1)
+    elif isinstance(val, int):
+        r = range(base-margin, base+margin+1)
+    return r

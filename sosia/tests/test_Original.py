@@ -29,6 +29,15 @@ def test_fields():
     assert_equal(sorted(scientist1.fields), expected)
 
 
+def test_find_matches():
+    expected = ['54893528800', '42661166900', '55268789000', '56282273300']
+    recieved = sorted(scientist1.find_matches())
+    assert_true(isinstance(recieved, list))
+    assert_equal(len(recieved), len(expected))
+    for e in expected:
+        assert_true(e in recieved)
+
+
 def test_first_year():
     assert_equal(scientist1.first_year, 2012)
 
