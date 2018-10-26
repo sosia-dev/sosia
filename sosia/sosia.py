@@ -16,6 +16,7 @@ from sosia.utils import ASJC_2D, FIELDS_JOURNALS_LIST
 
 MAX_LENGTH = 3893  # Maximum character length of a query
 
+
 class Original(object):
     @property
     def country(self):
@@ -28,7 +29,8 @@ class Original(object):
         max_iter = self.year - self.first_year + 1
         i = 0
         while len(papers) == 0 & i <= max_iter:
-            papers = [p for p in self.publications if int(p.coverDate[:4]) == self.year-i]
+            papers = [p for p in self.publications if
+                      int(p.coverDate[:4]) == self.year-i]
             i += 1
         if len(papers) == 0:
             return None
@@ -41,7 +43,8 @@ class Original(object):
             affs.extend(aff)
         affs = [a for a in affs if a != '']
         # Find countries of affiliations
-        countries = [sco.ContentAffiliationRetrieval(afid).country for afid in affs]
+        countries = [sco.ContentAffiliationRetrieval(afid).country
+                     for afid in affs]
         return Counter(countries).most_common(1)[0][0]
 
     @property
@@ -49,7 +52,8 @@ class Original(object):
         """Set of coauthors of the scientist on all publications until the
         given year.
         """
-        coauth = set([a for p in self.publications for a in p.authid.split(';')])
+        coauth = set([a for p in self.publications
+                      for a in p.authid.split(';')])
         coauth.remove(self.id)
         return coauth
 
@@ -92,7 +96,7 @@ class Original(object):
         if len(pubs) > 0:
             return pubs
         else:
-            text = "No publications for author with ID {} until year {}".format(
+            text = "No publications for author {} until year {}".format(
                 self.id, self.year)
             warnings.warn(text, UserWarning)
             return None
@@ -114,7 +118,8 @@ class Original(object):
                 for year in _years:
                     q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(journal, year)
                     res = _query_docs(q, refresh=self.refresh)
-            new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
+            new = [x.authid.split(';') for x in res
+                   if isinstance(x.authid, str)]
             authors.update([au for sl in new for au in sl])
         return authors
 
@@ -132,7 +137,8 @@ class Original(object):
             except:  # Fall back to year-wise queries
                 q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(journal, self.year)
                 res = _query_docs(q, refresh=self.refresh)
-            new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
+            new = [x.authid.split(';') for x in res
+                   if isinstance(x.authid, str)]
             authors.update([au for sl in new for au in sl])
         return authors
 
