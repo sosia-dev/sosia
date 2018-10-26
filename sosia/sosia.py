@@ -106,41 +106,18 @@ class Original(object):
         """Authors of publications in journals in the scientist's field
         in the year of the scientist's first publication.
         """
-        authors = set()
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
-        for journal in self.search_journals:
-            q = 'SOURCE-ID({})'.format(journal)
-            try:  # Try complete publication list first
-                res = _query_docs(q, refresh=self.refresh)
-                res = [p for p in res if int(p.coverDate[:4]) in _years]
-            except:  # Fall back to year-wise queries
-                for year in _years:
-                    q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(journal, year)
-                    res = _query_docs(q, refresh=self.refresh)
-            new = [x.authid.split(';') for x in res
-                   if isinstance(x.authid, str)]
-            authors.update([au for sl in new for au in sl])
-        return authors
+        return _find_search_group(self.search_journals, _years,
+                                  refresh=self.refresh)
 
     @property
     def search_group_today(self):
         """Authors of publications in journals in the scientist's field
         in the given year.
         """
-        authors = set()
-        for journal in self.search_journals:
-            q = 'SOURCE-ID({})'.format(journal)
-            try:  # Try complete publication list first
-                res = _query_docs(q, refresh=self.refresh)
-                res = [p for p in res if int(p.coverDate[:4]) == self.year]
-            except:  # Fall back to year-wise queries
-                q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(journal, self.year)
-                res = _query_docs(q, refresh=self.refresh)
-            new = [x.authid.split(';') for x in res
-                   if isinstance(x.authid, str)]
-            authors.update([au for sl in new for au in sl])
-        return authors
+        return _find_search_group(self.search_journals, [self.year],
+                                  refresh=self.refresh)
 
     @property
     def search_group_negative(self):
@@ -345,6 +322,23 @@ def _chunker(l, n):
     # From https://stackoverflow.com/a/312464/3621464
     for i in range(0, len(l), n):
         yield l[i:i+n]
+
+
+def _find_search_group(journals, years, refresh=False):
+    """Auxiliary function to query multiple journals and years."""
+    authors = set()
+    for j in journals:
+        q = 'SOURCE-ID({})'.format(j)
+        try:  # Try complete publication list first
+            res = _query_docs(q, refresh=refresh)
+            res = [p for p in res if int(p.coverDate[:4]) in years]
+        except:  # Fall back to year-wise queries
+            for y in years:
+                q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(j, y)
+                res = _query_docs(q, refresh=refresh)
+        new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
+        authors.update([au for sl in new for au in sl])
+    return authors
 
 
 def _query_author(q, refresh=False):
