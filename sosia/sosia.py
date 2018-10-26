@@ -87,9 +87,8 @@ class Original(object):
         """The publications of the scientist published until
         the given year.
         """
-        q = 'AU-ID({})'.format(self.id)
-        s = sco.ScopusSearch(q, refresh=self.refresh)
-        pubs = [p for p in s.results if int(p.coverDate[:4]) < self.year]
+        res = _query_docs('AU-ID({})'.format(self.id), refresh=self.refresh)
+        pubs = [p for p in res if int(p.coverDate[:4]) < self.year]
         if len(pubs) > 0:
             return pubs
         else:
@@ -109,13 +108,12 @@ class Original(object):
         for journal in self.search_journals:
             q = 'SOURCE-ID({})'.format(journal)
             try:  # Try complete publication list first
-                s = sco.ScopusSearch(q)
-                res = [p for p in s.results if int(p.coverDate[:4]) in _years]
+                res = _query_docs(q, refresh=self.refresh)
+                res = [p for p in res if int(p.coverDate[:4]) in _years]
             except:  # Fall back to year-wise queries
                 for year in _years:
                     q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(journal, year)
-                    s = sco.ScopusSearch(q)
-                    res = s.results
+                    res = _query_docs(q, refresh=self.refresh)
             new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
             authors.update([au for sl in new for au in sl])
         return authors
@@ -129,12 +127,11 @@ class Original(object):
         for journal in self.search_journals:
             q = 'SOURCE-ID({})'.format(journal)
             try:  # Try complete publication list first
-                s = sco.ScopusSearch(q)
-                res = [p for p in s.results if int(p.coverDate[:4]) == self.year]
+                res = _query_docs(q, refresh=self.refresh)
+                res = [p for p in res if int(p.coverDate[:4]) == self.year]
             except:  # Fall back to year-wise queries
                 q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(journal, self.year)
-                s = sco.ScopusSearch(q)
-                res = s.results
+                res = _query_docs(q, refresh=self.refresh)
             new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
             authors.update([au for sl in new for au in sl])
         return authors
@@ -149,8 +146,8 @@ class Original(object):
         for journal in self.search_journals:
             q = 'SOURCE-ID({})'.format(journal)
             try:
-                s = sco.ScopusSearch(q)
-                res = [p for p in s.results if int(p.coverDate[:4]) < _min]
+                res = _query_docs(q, refresh=self.refresh)
+                res = [p for p in res if int(p.coverDate[:4]) < _min]
             except Exception as e:
                 # Do not run year-wise queries for this group
                 continue
@@ -262,10 +259,12 @@ class Original(object):
             while len(chunk) > 0:
                 half = floor(len(chunk)/2)
                 try:
-                    df = df.append(_query_author(chunk))
+                    q = "AU-ID(" + ") OR AU-ID(".join(chunk) + ")"
+                    df = df.append(_query_author(q))
                     chunk = []
                 except:  # Rerun query with half the list
-                    df = df.append(_query_author(chunk[:half]))
+                    q = "AU-ID(" + ") OR AU-ID(".join(chunk[:half]) + ")"
+                    df = df.append(_query_author(q))
                     chunk = chunk[half:]
         df = df[df['areas'].str.startswith(self.main_field[1])]
         df['documents'] = pd.to_numeric(df['documents'], errors='coerce').fillna(0)
@@ -282,10 +281,14 @@ class Original(object):
                 while len(chunk) > 0:
                     h = floor(len(chunk)/2)
                     try:
-                        d.update(_build_dict(_query_docs(chunk, y), y))
+                        q = "AU-ID({}) AND PUBYEAR BEF {}".format(
+                            ") OR AU-ID(".join(chunk), cur_year+1)
+                        d.update(_build_dict(_query_docs(q), y))
                         chunk = []
                     except Exception as e:  # Rerun query with half the list
-                        d.update(_build_dict(_query_docs(chunk[:h], y), y))
+                        q = "AU-ID({}) AND PUBYEAR BEF {}".format(
+                            ") OR AU-ID(".join(chunk[:h]), cur_year+1)
+                        d.update(_build_dict(_query_docs(q), y))
                         chunk = chunk[h:]
             # Iterate through container
             for auth, dat in d.items():
@@ -294,8 +297,8 @@ class Original(object):
                     keep.append(auth)
         else:  # Query each author individually
             for au in group:
-                s = sco.ScopusSearch('AU-ID({})'.format(au))
-                res = [p for p in s.results if int(p.coverDate[:4]) < self.year+1]
+                res = _query_docs('AU-ID({})'.format(au), refresh=self.refresh)
+                res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 # Filter based on age (first publication year)
                 min_year = int(min([p.coverDate[:4] for p in res]))
                 if min_year not in _years:
@@ -338,21 +341,18 @@ def _chunker(l, n):
         yield l[i:i+n]
 
 
-def _query_author(l):
-    """Auxiliary function to perform a combined query for authors."""
-    q = "AU-ID(" + ") OR AU-ID(".join(l) + ")"
+def _query_author(q, refresh=False):
+    """Auxiliary function to perform a search query for authors."""
     try:
-        return sco.AuthorSearch(q).authors
+        return sco.AuthorSearch(q, refresh=False).authors
     except KeyError:
         return sco.AuthorSearch(q, refresh=True).authors
 
 
-def _query_docs(l, cur_year):
-    """Auxiliary function to perform a combined query for documents."""
-    q = "AU-ID({}) AND PUBYEAR BEF {}".format(
-        ") OR AU-ID(".join(l), cur_year+1)
+def _query_docs(q, refresh=False):
+    """Auxiliary function to perform a search query for documents."""
     try:
-        return sco.ScopusSearch(q).results
+        return sco.ScopusSearch(q, refresh=refresh).results
     except KeyError:
         return sco.ScopusSearch(q, refresh=True).results
 
