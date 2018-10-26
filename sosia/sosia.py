@@ -63,17 +63,15 @@ class Original(object):
 
     @property
     def first_year(self):
-        """The scientist's year of first publication, as string."""
-        q = 'AU-ID({})'.format(self.id, self.year)
-        pubs = sco.ScopusSearch(q, refresh=self.refresh).results
-        return int(min([p.coverDate[:4] for p in pubs]))
+        """The scientist's year of first publication, as integer."""
+        return int(min([p.coverDate[:4] for p in self.publications]))
 
     @property
     def journals(self):
         """The Scopus IDs of journals and conference proceedings in which the
         scientist published until the given year.
         """
-        return set([p.source_id  for p in self.publications])
+        return set([p.source_id for p in self.publications])
 
     @property
     def main_field(self):
