@@ -7,6 +7,7 @@
 import warnings
 from collections import Counter
 from math import ceil, floor, log
+from operator import attrgetter
 from os.path import exists
 
 import pandas as pd
@@ -47,6 +48,12 @@ class Original(object):
                      for afid in affs]
         return Counter(countries).most_common(1)[0][0]
 
+    @country.setter
+    def country(self, val):
+        if not isinstance(val, str):
+            raise Exception("Value must be a string.")
+        self._country = val
+
     @property
     def coauthors(self):
         """Set of coauthors of the scientist on all publications until the
@@ -57,6 +64,12 @@ class Original(object):
         coauth.remove(self.id)
         return coauth
 
+    @coauthors.setter
+    def coauthors(self, val):
+        if not isinstance(val, set) or len(val) == 0:
+            raise Exception("Value must be a non-empty set.")
+        self._coauthors = val
+
     @property
     def fields(self):
         """The fields of the scientist until the given year, estimated from
@@ -65,10 +78,22 @@ class Original(object):
         df = self.field_journal
         return df[df['source_id'].isin(self.journals)]['asjc'].tolist()
 
+    @fields.setter
+    def fields(self, val):
+        if not isinstance(val, list) or len(val) == 0:
+            raise Exception("Value must be a non-empty list.")
+        self._fields = val
+
     @property
     def first_year(self):
         """The scientist's year of first publication, as integer."""
         return int(min([p.coverDate[:4] for p in self.publications]))
+
+    @first_year.setter
+    def first_year(self, val):
+        if not isinstance(val, int):
+            raise Exception("Value must be an integer.")
+        self._first_year = val
 
     @property
     def journals(self):
@@ -76,6 +101,12 @@ class Original(object):
         scientist published until the given year.
         """
         return set([p.source_id for p in self.publications])
+
+    @journals.setter
+    def journals(self, val):
+        if not isinstance(val, set) or len(val) == 0:
+            raise Exception("Value must be a non-empty set.")
+        self._journals = val
 
     @property
     def main_field(self):
@@ -85,6 +116,12 @@ class Original(object):
         main = Counter(self.fields).most_common(1)[0][0]
         code = main // 10 ** (int(log(main, 10)) - 2 + 1)
         return (main, ASJC_2D[code])
+
+    @main_field.setter
+    def main_field(self, val):
+        if not isinstance(val, tuple) or len(val) != 2:
+            raise Exception("Value must be a two-element tuple.")
+        self._main_field = val
 
     @property
     def publications(self):
@@ -100,6 +137,12 @@ class Original(object):
                 self.id, self.year)
             warnings.warn(text, UserWarning)
             return None
+
+    @publications.setter
+    def publications(self, val):
+        if not isinstance(val, list) or len(val) == 0:
+            raise Exception("Value must be a non-empty list.")
+        self._publications = val
 
     @property
     def search_group_then(self):
@@ -163,7 +206,14 @@ class Original(object):
             lambda s: any(x for x in s.split() if int(x) not in self.fields))
         return grouped[~grouped['drop']].index.tolist()
 
-    def __init__(self, scientist, year, year_margin=1, refresh=False):
+    @search_journals.setter
+    def search_journals(self, val):
+        if not isinstance(val, list) or len(val) == 0:
+            raise Exception("Value must be a non-empty list.")
+        self._search_journals = val
+
+    def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
+                 coauth_margin=0.1, refresh=False):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -177,37 +227,11 @@ class Original(object):
             Year of the event.  Control groups will be matched on trends and
             characteristics of the scientist up to this year.
 
-        year_margin : str or numeric (optional, default=1)
+        year_margin : numeric (optional, default=1)
             Number of years by which the search for authors publishing around
             the year of the focal scientist's year of first publication should
             be extend in both directions.
-        """
-        # Check for existence of fields-journals list
-        try:
-            self.field_journal = pd.read_csv(FIELDS_JOURNALS_LIST, dtype=int)
-        except FileNotFoundError:
-            text = "Fields-Journals list not found, but required for sosia "\
-                   "to match authors' publications to fields.  Please run "\
-                   "sosia.create_fields_journals_list() and initiate "\
-                   "the class again."
-            warnings.warn(text, UserWarning)
 
-        # Variables
-        self.id = str(scientist)
-        self.year = int(year)
-        self.year_margin = int(year_margin)
-        self.refresh = refresh
-
-    def find_matches(self, pub_margin=0.1, coauth_margin=0.1, stacked=False):
-        """Find matches from a search group based on three criteria:
-        1. Started publishing in about the same year
-        2. Has about the same number of publications in the year of treatment
-        3. Has about the same number of coauthors in the year of treatment
-        The search group is defined as intersection of `search_group_today`
-        and `search_group_then`, minus `search_group_negative`.
-
-        Parameters
-        ----------
         pub_margin : numeric (optional, default=0.1)
             The left and right margin for the number of publications to match
             possible matches and the scientist on.  If the value is a float,
@@ -222,6 +246,58 @@ class Original(object):
             coauthors and the resulting value is rounded up.  If the value
             is an integer it is interpreted as fixed number of coauthors.
 
+        refresh : boolean (optional, default=False)
+            Whether to refresh all cached files or not.
+        """
+        # Check for existence of fields-journals list
+        try:
+            self.field_journal = pd.read_csv(FIELDS_JOURNALS_LIST, dtype=int)
+        except FileNotFoundError:
+            text = "Fields-Journals list not found, but required for sosia "\
+                   "to match authors' publications to fields.  Please run "\
+                   "sosia.create_fields_journals_list() and initiate "\
+                   "the class again."
+            warnings.warn(text, UserWarning)
+
+        # Variables
+        self.id = str(scientist)
+        self.year = int(year)
+        self.year_margin = year_margin
+        self.pub_margin = pub_margin
+        self.coauth_margin = coauth_margin
+        self.refresh = refresh
+
+    year_margin = property(attrgetter('_year_margin'))
+    @year_margin.setter
+    def year_margin(self, val):
+        if not isinstance(val, (int, float)):
+            raise Exception("Value must be float or integer.")
+        self._year_margin = int(val)
+
+    pub_margin = property(attrgetter('_pub_margin'))
+    @pub_margin.setter
+    def pub_margin(self, val):
+        if not isinstance(val, (int, float)):
+            raise Exception("Value must be float or integer.")
+        self._pub_margin = val
+
+    coauth_margin = property(attrgetter('_coauth_margin'))
+    @coauth_margin.setter
+    def coauth_margin(self, val):
+        if not isinstance(val, (int, float)):
+            raise Exception("Value must be float or integer.")
+        self._coauth_margin = val
+
+    def find_matches(self, stacked=False):
+        """Find matches from a search group based on three criteria:
+        1. Started publishing in about the same year
+        2. Has about the same number of publications in the year of treatment
+        3. Has about the same number of coauthors in the year of treatment
+        The search group is defined as intersection of `search_group_today`
+        and `search_group_then`, minus `search_group_negative`.
+
+        Parameters
+        ----------
         stacked : bool (optional, default=False)
             Whether to combine searches in few queries or not.  Cached
             files with most likely not be resuable.  Set to true if you
@@ -230,14 +306,8 @@ class Original(object):
         # Variables
         _years = range(self.first_year-self.year_margin,
                        self.first_year-self.year_margin+1)
-        try:
-            _npapers = _get_value_range(len(self.publications), pub_margin)
-        except TypeError:
-            raise ValueError('Value pub_margin must be float or integer.')
-        try:
-            _ncoauth = _get_value_range(len(self.coauthors), coauth_margin)
-        except TypeError:
-            raise ValueError('Value coauth_margin must be float or integer.')
+        _npapers = _get_value_range(len(self.publications), self.pub_margin)
+        _ncoauth = _get_value_range(len(self.coauthors), self.coauth_margin)
 
         # Define search group
         group = self.search_group_then.intersection(self.search_group_today)
@@ -304,19 +374,9 @@ class Original(object):
                 keep.append(au)
         return keep
 
-    def define_search_groups(self, pub_margin=0.1):
+    def define_search_groups(self):
         """Define search groups: search_group_today, search_group_then
         and search_group_negative.
-
-        Parameters
-        ----------
-        pub_margin : numeric (optional, default=0.1)
-            The right margin around the number of publications of the
-            scientist, used to exclude other scientists when they have
-            more publications than this.  If the value is a float, it
-            is interpreted as percentage of the scientists number of
-            publications and the resulting value is rounded up.  If the value
-            is an integer it is interpreted as fixed number of publications.
         """
         # Today
         today = _find_search_group(self.search_journals, [self.year],
@@ -330,7 +390,7 @@ class Original(object):
         self._search_group_then = then
         # Negative
         try:
-            _npapers = _get_value_range(len(self.publications), pub_margin)
+            _npapers = _get_value_range(len(self.publications), self.pub_margin)
         except TypeError:
             raise ValueError('Value pub_margin must be float or integer.')
         max_pubs = max(_npapers)
