@@ -120,25 +120,6 @@ class Original(object):
                                   refresh=self.refresh)
 
     @property
-    def search_group_negative(self):
-        """Authors of publications in journals in the scientist's field
-        before the year of the scientist's first publication.
-        """
-        authors = set()
-        _min = self.first_year-self.year_margin
-        for journal in self.search_journals:
-            q = 'SOURCE-ID({})'.format(journal)
-            try:
-                res = _query_docs(q, refresh=self.refresh)
-                res = [p for p in res if int(p.coverDate[:4]) < _min]
-            except Exception as e:
-                # Do not run year-wise queries for this group
-                continue
-            new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
-            authors.update([au for sl in new for au in sl])
-        return authors
-
-    @property
     def search_journals(self):
         """The set of journals comparable to the journals the scientist
         published in until the given year.
@@ -234,7 +215,8 @@ class Original(object):
 
         # Define search group
         group = self.search_group_then.intersection(self.search_group_today)
-        group = sorted(list(group - self.search_group_negative))
+        group = group - self.search_group_negative(max_pubs=max(_npapers))
+        group = sorted(list(group))
 
         # First stage of filtering: minimum publications and main field
         df = pd.DataFrame()
@@ -296,6 +278,34 @@ class Original(object):
                     continue
                 keep.append(au)
         return keep
+
+    def search_group_negative(self, max_pubs):
+        """Authors with too many publications already in the
+        scientist's search journals in the given year and authors of
+        publications in journals in the scientist's field before the year
+        of the scientist's first publication.
+        """
+        too_young = set()
+        authors = []
+        _min = self.first_year-self.year_margin
+        for journal in self.search_journals:
+            q = 'SOURCE-ID({})'.format(journal)
+            try:
+                docs = _query_docs(q, refresh=self.refresh)
+                res1 = [p for p in docs if int(p.coverDate[:4]) < _min]
+                res2 = [p for p in docs if int(p.coverDate[:4]) < self.year]
+            except Exception as e:
+                # Do not run year-wise queries for this group
+                continue
+            # Authors publishing too early
+            new = [x.authid.split(';') for x in res1 if isinstance(x.authid, str)]
+            too_young.update([au for sl in new for au in sl])
+            # Author count
+            new = [x.authid.split(';') for x in res2 if isinstance(x.authid, str)]
+            authors.extend([au for sl in new for au in sl])
+        too_many = {a for a, npubs in Counter(authors).items()
+                    if npubs > max_pubs}
+        return too_young.union(too_many)
 
 
 def _build_dict(results, year):

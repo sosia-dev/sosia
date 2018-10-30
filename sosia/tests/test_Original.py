@@ -87,7 +87,7 @@ def test_search_group_today():
 
 
 def test_search_group_negative():
-    negative = scientist1.search_group_negative
+    negative = scientist1.search_group_negative(max_pubs=5)
     assert_true(len(negative) > 40000)
     assert_true(isinstance(negative, set))
 
