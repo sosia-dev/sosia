@@ -8,6 +8,7 @@ from nose.tools import assert_equal, assert_true
 import sosia
 
 scientist1 = sosia.Original(55208373700, 2017)
+scientist1.define_search_groups()
 
 
 def test_country():
@@ -87,7 +88,7 @@ def test_search_group_today():
 
 
 def test_search_group_negative():
-    negative = scientist1.search_group_negative(max_pubs=5)
+    negative = scientist1.search_group_negative
     assert_true(len(negative) > 40000)
     assert_true(isinstance(negative, set))
 

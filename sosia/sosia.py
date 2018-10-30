@@ -105,19 +105,45 @@ class Original(object):
     def search_group_then(self):
         """Authors of publications in journals in the scientist's field
         in the year of the scientist's first publication.
+
+        Notes
+        -----
+        Property is initiated via .define_search_groups().
         """
-        _years = range(self.first_year-self.year_margin,
-                       self.first_year+self.year_margin+1)
-        return _find_search_group(self.search_journals, _years,
-                                  refresh=self.refresh)
+        try:
+            return self._search_group_then
+        except AttributeError:
+            return None
 
     @property
     def search_group_today(self):
         """Authors of publications in journals in the scientist's field
         in the given year.
+
+        Notes
+        -----
+        Property is initiated via .define_search_groups().
         """
-        return _find_search_group(self.search_journals, [self.year],
-                                  refresh=self.refresh)
+        try:
+            return self._search_group_today
+        except AttributeError:
+            return None
+
+    @property
+    def search_group_negative(self):
+        """Authors with too many publications in the scientist's search
+        journals already in the given year and authors of publications
+        in journals in the scientist's field before the year of the 
+        scientist's first publication.
+
+        Notes
+        -----
+        Property is initiated via .define_search_groups().
+        """
+        try:
+            return self._search_group_negative
+        except AttributeError:
+            return None
 
     @property
     def search_journals(self):
@@ -215,8 +241,7 @@ class Original(object):
 
         # Define search group
         group = self.search_group_then.intersection(self.search_group_today)
-        group = group - self.search_group_negative(max_pubs=max(_npapers))
-        group = sorted(list(group))
+        group = sorted(list(group - self.search_group_negative))
 
         # First stage of filtering: minimum publications and main field
         df = pd.DataFrame()
@@ -279,12 +304,36 @@ class Original(object):
                 keep.append(au)
         return keep
 
-    def search_group_negative(self, max_pubs):
-        """Authors with too many publications already in the
-        scientist's search journals in the given year and authors of
-        publications in journals in the scientist's field before the year
-        of the scientist's first publication.
+    def define_search_groups(self, pub_margin=0.1):
+        """Define search groups: search_group_today, search_group_then
+        and search_group_negative.
+
+        Parameters
+        ----------
+        pub_margin : numeric (optional, default=0.1)
+            The right margin around the number of publications of the
+            scientist, used to exclude other scientists when they have
+            more publications than this.  If the value is a float, it
+            is interpreted as percentage of the scientists number of
+            publications and the resulting value is rounded up.  If the value
+            is an integer it is interpreted as fixed number of publications.
         """
+        # Today
+        today = _find_search_group(self.search_journals, [self.year],
+                                   refresh=self.refresh)
+        self._search_group_today = today
+        # Then
+        _years = range(self.first_year-self.year_margin,
+                       self.first_year+self.year_margin+1)
+        then = _find_search_group(self.search_journals, _years,
+                                  refresh=self.refresh)
+        self._search_group_then = then
+        # Negative
+        try:
+            _npapers = _get_value_range(len(self.publications), pub_margin)
+        except TypeError:
+            raise ValueError('Value pub_margin must be float or integer.')
+        max_pubs = max(_npapers)
         too_young = set()
         authors = []
         _min = self.first_year-self.year_margin
@@ -305,7 +354,7 @@ class Original(object):
             authors.extend([au for sl in new for au in sl])
         too_many = {a for a, npubs in Counter(authors).items()
                     if npubs > max_pubs}
-        return too_young.union(too_many)
+        self._search_group_negative = too_young.union(too_many)
 
 
 def _build_dict(results, year):
