@@ -195,16 +195,10 @@ class Original(object):
         A journal is comparable if is belongs to the scientist's main field
         but not to fields alien to the scientist.
         """
-        df = self.field_journal
-        # Select journals in scientist's main field
-        journals = df[df['asjc'] == self.main_field[0]]['source_id'].tolist()
-        sel = df[df['source_id'].isin(journals)].copy()
-        sel['asjc'] = sel['asjc'].astype(str) + " "
-        grouped = sel.groupby('source_id').sum()['asjc'].to_frame()
-        # Deselect journals with alien fields
-        grouped['drop'] = grouped['asjc'].apply(
-            lambda s: any(x for x in s.split() if int(x) not in self.fields))
-        return grouped[~grouped['drop']].index.tolist()
+        try:
+            return self._search_journals
+        except AttributeError:
+            return None
 
     @search_journals.setter
     def search_journals(self, val):
@@ -287,6 +281,67 @@ class Original(object):
         if not isinstance(val, (int, float)):
             raise Exception("Value must be float or integer.")
         self._coauth_margin = val
+
+    def define_search_groups(self):
+        """Define search groups: search_group_today, search_group_then
+        and search_group_negative.
+        """
+        if not self.search_journals:
+            text = "No search journals defined.  Please run "\
+                   ".define_search_journals() first."
+            raise Exception(text)
+        # Today
+        today = _find_search_group(self.search_journals, [self.year],
+                                   refresh=self.refresh)
+        self._search_group_today = today
+        # Then
+        _years = range(self.first_year-self.year_margin,
+                       self.first_year+self.year_margin+1)
+        then = _find_search_group(self.search_journals, _years,
+                                  refresh=self.refresh)
+        self._search_group_then = then
+        # Negative
+        try:
+            _npapers = _get_value_range(len(self.publications), self.pub_margin)
+        except TypeError:
+            raise ValueError('Value pub_margin must be float or integer.')
+        max_pubs = max(_npapers)
+        too_young = set()
+        authors = []
+        _min = self.first_year-self.year_margin
+        for journal in self.search_journals:
+            q = 'SOURCE-ID({})'.format(journal)
+            try:
+                docs = _query_docs(q, refresh=self.refresh)
+                res1 = [p for p in docs if int(p.coverDate[:4]) < _min]
+                res2 = [p for p in docs if int(p.coverDate[:4]) < self.year]
+            except Exception as e:
+                # Do not run year-wise queries for this group
+                continue
+            # Authors publishing too early
+            new = [x.authid.split(';') for x in res1 if isinstance(x.authid, str)]
+            too_young.update([au for sl in new for au in sl])
+            # Author count
+            new = [x.authid.split(';') for x in res2 if isinstance(x.authid, str)]
+            authors.extend([au for sl in new for au in sl])
+        too_many = {a for a, npubs in Counter(authors).items()
+                    if npubs > max_pubs}
+        self._search_group_negative = too_young.union(too_many)
+
+    def define_search_journals(self):
+        """Define search journals: Journals whose authors will be
+        considered as possible matches.
+        """
+        df = self.field_journal
+        # Select journals in scientist's main field
+        journals = df[df['asjc'] == self.main_field[0]]['source_id'].tolist()
+        sel = df[df['source_id'].isin(journals)].copy()
+        sel['asjc'] = sel['asjc'].astype(str) + " "
+        grouped = sel.groupby('source_id').sum()['asjc'].to_frame()
+        # Deselect journals with alien fields
+        grouped['drop'] = grouped['asjc'].apply(
+            lambda s: any(x for x in s.split() if int(x) not in self.fields))
+        self._search_journals = grouped[~grouped['drop']].index.tolist()
 
     def find_matches(self, stacked=False):
         """Find matches from a search group based on three criteria:
@@ -373,48 +428,6 @@ class Original(object):
                     continue
                 keep.append(au)
         return keep
-
-    def define_search_groups(self):
-        """Define search groups: search_group_today, search_group_then
-        and search_group_negative.
-        """
-        # Today
-        today = _find_search_group(self.search_journals, [self.year],
-                                   refresh=self.refresh)
-        self._search_group_today = today
-        # Then
-        _years = range(self.first_year-self.year_margin,
-                       self.first_year+self.year_margin+1)
-        then = _find_search_group(self.search_journals, _years,
-                                  refresh=self.refresh)
-        self._search_group_then = then
-        # Negative
-        try:
-            _npapers = _get_value_range(len(self.publications), self.pub_margin)
-        except TypeError:
-            raise ValueError('Value pub_margin must be float or integer.')
-        max_pubs = max(_npapers)
-        too_young = set()
-        authors = []
-        _min = self.first_year-self.year_margin
-        for journal in self.search_journals:
-            q = 'SOURCE-ID({})'.format(journal)
-            try:
-                docs = _query_docs(q, refresh=self.refresh)
-                res1 = [p for p in docs if int(p.coverDate[:4]) < _min]
-                res2 = [p for p in docs if int(p.coverDate[:4]) < self.year]
-            except Exception as e:
-                # Do not run year-wise queries for this group
-                continue
-            # Authors publishing too early
-            new = [x.authid.split(';') for x in res1 if isinstance(x.authid, str)]
-            too_young.update([au for sl in new for au in sl])
-            # Author count
-            new = [x.authid.split(';') for x in res2 if isinstance(x.authid, str)]
-            authors.extend([au for sl in new for au in sl])
-        too_many = {a for a, npubs in Counter(authors).items()
-                    if npubs > max_pubs}
-        self._search_group_negative = too_young.union(too_many)
 
 
 def _build_dict(results, year):

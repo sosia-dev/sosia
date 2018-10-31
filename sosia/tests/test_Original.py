@@ -8,6 +8,7 @@ from nose.tools import assert_equal, assert_true
 import sosia
 
 scientist1 = sosia.Original(55208373700, 2017)
+scientist1.define_search_journals()
 scientist1.define_search_groups()
 
 
