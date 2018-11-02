@@ -245,7 +245,7 @@ class Original(object):
         """
         # Check for existence of fields-journals list
         try:
-            self.field_journal = pd.read_csv(FIELDS_JOURNALS_LIST, dtype=int)
+            self.field_journal = pd.read_csv(FIELDS_JOURNALS_LIST)
         except FileNotFoundError:
             text = "Fields-Journals list not found, but required for sosia "\
                    "to match authors' publications to fields.  Please run "\
@@ -333,8 +333,13 @@ class Original(object):
         considered as possible matches.
         """
         df = self.field_journal
+        # Select types of journals of scientist's publications in main field
+        mask = (df['source_id'].isin(self.journals)) &\
+               (df['asjc'] == self.main_field[0])
+        main_types = set(df[mask]['type'])
         # Select journals in scientist's main field
-        journals = df[df['asjc'] == self.main_field[0]]['source_id'].tolist()
+        mask = (df['asjc'] == self.main_field[0]) & (df['type'].isin(main_types))
+        journals = df[mask]['source_id'].tolist()
         sel = df[df['source_id'].isin(journals)].copy()
         sel['asjc'] = sel['asjc'].astype(str) + " "
         grouped = sel.groupby('source_id').sum()['asjc'].to_frame()

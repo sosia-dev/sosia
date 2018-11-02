@@ -18,5 +18,5 @@ def test_create_fields_journals_list():
     create_fields_journals_list()
     df = pd.read_csv(FIELDS_JOURNALS_LIST)
     assert_true(isinstance(df, pd.DataFrame))
-    assert_equal(list(df.columns), ['asjc', 'source_id'])
+    assert_equal(list(df.columns), ['asjc', 'source_id', 'type'])
     assert_true(df.shape[0] > 55130)
