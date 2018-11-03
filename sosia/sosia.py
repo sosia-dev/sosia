@@ -4,10 +4,8 @@
 #            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
-import warnings
 from collections import Counter
 from math import ceil, floor, log
-from operator import attrgetter
 from os.path import exists
 
 import pandas as pd
@@ -25,28 +23,7 @@ class Original(object):
         in the most recent year (before the given year) that
         the scientist published.
         """
-        # List of relevant papers
-        papers = []
-        max_iter = self.year - self.first_year + 1
-        i = 0
-        while len(papers) == 0 & i <= max_iter:
-            papers = [p for p in self.publications if
-                      int(p.coverDate[:4]) == self.year-i]
-            i += 1
-        if len(papers) == 0:
-            return None
-        # List of affiliations
-        affs = []
-        for p in papers:
-            authors = p.authid.split(';')
-            idx = authors.index(str(self.id))
-            aff = p.afid.split(';')[idx].split('-')
-            affs.extend(aff)
-        affs = [a for a in affs if a != '']
-        # Find countries of affiliations
-        countries = [sco.ContentAffiliationRetrieval(afid).country
-                     for afid in affs]
-        return Counter(countries).most_common(1)[0][0]
+        return self._country
 
     @country.setter
     def country(self, val):
@@ -59,10 +36,7 @@ class Original(object):
         """Set of coauthors of the scientist on all publications until the
         given year.
         """
-        coauth = set([a for p in self.publications
-                      for a in p.authid.split(';')])
-        coauth.remove(self.id)
-        return coauth
+        return self._coauthors
 
     @coauthors.setter
     def coauthors(self, val):
@@ -75,8 +49,7 @@ class Original(object):
         """The fields of the scientist until the given year, estimated from
         the journal she published in.
         """
-        df = self.field_journal
-        return df[df['source_id'].isin(self.journals)]['asjc'].tolist()
+        return self._fields
 
     @fields.setter
     def fields(self, val):
@@ -87,7 +60,7 @@ class Original(object):
     @property
     def first_year(self):
         """The scientist's year of first publication, as integer."""
-        return int(min([p.coverDate[:4] for p in self.publications]))
+        return self._first_year
 
     @first_year.setter
     def first_year(self, val):
@@ -100,7 +73,7 @@ class Original(object):
         """The Scopus IDs of journals and conference proceedings in which the
         scientist published until the given year.
         """
-        return set([p.source_id for p in self.publications])
+        return self._journals
 
     @journals.setter
     def journals(self, val):
@@ -113,9 +86,7 @@ class Original(object):
         """The scientist's main field of research, as tuple in
         the form (ASJC code, general category).
         """
-        main = Counter(self.fields).most_common(1)[0][0]
-        code = main // 10 ** (int(log(main, 10)) - 2 + 1)
-        return (main, ASJC_2D[code])
+        return self._main_field
 
     @main_field.setter
     def main_field(self, val):
@@ -128,15 +99,7 @@ class Original(object):
         """The publications of the scientist published until
         the given year.
         """
-        res = _query_docs('AU-ID({})'.format(self.id), refresh=self.refresh)
-        pubs = [p for p in res if int(p.coverDate[:4]) < self.year]
-        if len(pubs) > 0:
-            return pubs
-        else:
-            text = "No publications for author {} until year {}".format(
-                self.id, self.year)
-            warnings.warn(text, UserWarning)
-            return None
+        return self._publications
 
     @publications.setter
     def publications(self, val):
@@ -176,7 +139,7 @@ class Original(object):
     def search_group_negative(self):
         """Authors with too many publications in the scientist's search
         journals already in the given year and authors of publications
-        in journals in the scientist's field before the year of the 
+        in journals in the scientist's field before the year of the
         scientist's first publication.
 
         Notes
@@ -246,12 +209,23 @@ class Original(object):
         # Check for existence of fields-journals list
         try:
             self.field_journal = pd.read_csv(FIELDS_JOURNALS_LIST)
+            df = self.field_journal
         except FileNotFoundError:
             text = "Fields-Journals list not found, but required for sosia "\
                    "to match authors' publications to fields.  Please run "\
                    "sosia.create_fields_journals_list() and initiate "\
                    "the class again."
-            warnings.warn(text, UserWarning)
+            raise Exception(text)
+
+        # Internal checks
+        if not isinstance(year, int):
+            raise Exception("Argument year must be an integer.")
+        if not isinstance(year_margin, (int, float)):
+            raise Exception("Argument year_margin must be float or integer.")
+        if not isinstance(pub_margin, (int, float)):
+            raise Exception("Argument pub_margin must be float or integer.")
+        if not isinstance(coauth_margin, (int, float)):
+            raise Exception("Argument coauth_margin must be float or integer.")
 
         # Variables
         self.id = str(scientist)
@@ -261,26 +235,24 @@ class Original(object):
         self.coauth_margin = coauth_margin
         self.refresh = refresh
 
-    year_margin = property(attrgetter('_year_margin'))
-    @year_margin.setter
-    def year_margin(self, val):
-        if not isinstance(val, (int, float)):
-            raise Exception("Value must be float or integer.")
-        self._year_margin = int(val)
-
-    pub_margin = property(attrgetter('_pub_margin'))
-    @pub_margin.setter
-    def pub_margin(self, val):
-        if not isinstance(val, (int, float)):
-            raise Exception("Value must be float or integer.")
-        self._pub_margin = val
-
-    coauth_margin = property(attrgetter('_coauth_margin'))
-    @coauth_margin.setter
-    def coauth_margin(self, val):
-        if not isinstance(val, (int, float)):
-            raise Exception("Value must be float or integer.")
-        self._coauth_margin = val
+        # Own information
+        res = _query_docs('AU-ID({})'.format(self.id), refresh=self.refresh)
+        self._publications = [p for p in res if int(p.coverDate[:4]) < self.year]
+        if len(self._publications) == 0:
+            text = "No publications for author {} until year {}".format(
+                self.id, self.year)
+            raise Exception(text)
+        self._journals = set([p.source_id for p in self._publications])
+        self._fields = df[df['source_id'].isin(self._journals)]['asjc'].tolist()
+        main = Counter(self._fields).most_common(1)[0][0]
+        code = main // 10 ** (int(log(main, 10)) - 2 + 1)
+        self._main_field = (main, ASJC_2D[code])
+        self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
+        self._coauthors = set([a for p in self._publications
+                              for a in p.authid.split(';')])
+        self._coauthors.remove(self.id)
+        self._country = _find_country(self.id, self._publications,
+                                      self.year, self._first_year)
 
     def define_search_groups(self):
         """Define search groups: search_group_today, search_group_then
@@ -459,6 +431,33 @@ def _chunker(l, n):
     # From https://stackoverflow.com/a/312464/3621464
     for i in range(0, len(l), n):
         yield l[i:i+n]
+
+
+def _find_country(auth_id, pubs, year, first_year):
+    """Auxiliary function to find the country of the most recent affiliation
+    of a scientist.
+    """
+    # List of relevant papers
+    papers = []
+    max_iter = year - first_year + 1
+    i = 0
+    while len(papers) == 0 & i <= max_iter:
+        papers = [p for p in pubs if int(p.coverDate[:4]) == year-i]
+        i += 1
+    if len(papers) == 0:
+        return None
+    # List of affiliations
+    affs = []
+    for p in papers:
+        authors = p.authid.split(';')
+        idx = authors.index(str(auth_id))
+        aff = p.afid.split(';')[idx].split('-')
+        affs.extend(aff)
+    affs = [a for a in affs if a != '']
+    # Find countries of affiliations
+    countries = [sco.ContentAffiliationRetrieval(afid).country
+                 for afid in affs]
+    return Counter(countries).most_common(1)[0][0]
 
 
 def _find_search_group(journals, years, refresh=False):
