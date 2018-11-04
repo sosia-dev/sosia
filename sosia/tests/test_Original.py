@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for `AbstractRetrieval` module."""
+"""Tests for class `Original`."""
 
 from collections import namedtuple
 from nose.tools import assert_equal, assert_true
@@ -11,6 +11,8 @@ scientist1 = sosia.Original(55208373700, 2017)
 scientist1.define_search_journals()
 scientist1.define_search_groups()
 
+MATCHES = ['42661166900', '55268789000', '54893528800', '56282273300']
+
 
 def test_country():
     assert_equal(scientist1.country, 'Switzerland')
@@ -18,12 +20,11 @@ def test_country():
 
 def test_coauthors():
     assert_true(isinstance(scientist1.coauthors, set))
-    assert_equal(len(scientist1.coauthors), 5)
-    assert_true('36617057700' in scientist1.coauthors)
-    assert_true('54930777900' in scientist1.coauthors)
-    assert_true('54929867200' in scientist1.coauthors)
-    assert_true('24781156100' in scientist1.coauthors)
-    assert_true('55875219200' in scientist1.coauthors)
+    expected = ['36617057700', '54930777900', '54929867200',
+                '24781156100', '55875219200']
+    assert_equal(len(scientist1.coauthors), len(expected))
+    for coauth in expected:
+        assert_true(coauth in scientist1.coauthors)
 
 
 def test_fields():
@@ -32,20 +33,19 @@ def test_fields():
 
 
 def test_find_matches():
-    expected = ['42661166900', '54893528800', '55268789000', '56282273300']
     recieved = sorted(scientist1.find_matches())
     assert_true(isinstance(recieved, list))
-    assert_equal(len(recieved), len(expected))
-    for e in expected:
+    assert_equal(len(recieved), len(MATCHES))
+    for e in MATCHES:
         assert_true(e in recieved)
 
 
 def test_find_matches_stacked():
-    expected = ['42661166900', '54893528800', '55268789000', '56282273300']
     recieved = sorted(scientist1.find_matches(stacked=True))
+    print(recieved)
     assert_true(isinstance(recieved, list))
-    assert_equal(len(recieved), len(expected))
-    for e in expected:
+    assert_equal(len(recieved), len(MATCHES))
+    for e in MATCHES:
         assert_true(e in recieved)
 
 

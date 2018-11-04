@@ -433,6 +433,16 @@ def _chunker(l, n):
         yield l[i:i+n]
 
 
+def _get_value_range(base, val):
+    """Auxiliary function to create a range of margins around a base value."""
+    if isinstance(val, float):
+        margin = ceil(val*base)
+        r = range(base-margin, base+margin+1)
+    elif isinstance(val, int):
+        r = range(base-margin, base+margin+1)
+    return r
+
+
 def _find_country(auth_id, pubs, year, first_year):
     """Auxiliary function to find the country of the most recent affiliation
     of a scientist.
@@ -480,7 +490,7 @@ def _find_search_group(journals, years, refresh=False):
 def _query_author(q, refresh=False):
     """Auxiliary function to perform a search query for authors."""
     try:
-        return sco.AuthorSearch(q, refresh=False).authors
+        return sco.AuthorSearch(q, refresh=refresh).authors
     except KeyError:
         return sco.AuthorSearch(q, refresh=True).authors
 
@@ -491,13 +501,3 @@ def _query_docs(q, refresh=False):
         return sco.ScopusSearch(q, refresh=refresh).results
     except KeyError:
         return sco.ScopusSearch(q, refresh=True).results
-
-
-def _get_value_range(base, val):
-    """Auxiliary function to create a range of margins around a base value."""
-    if isinstance(val, float):
-        margin = ceil(val*base)
-        r = range(base-margin, base+margin+1)
-    elif isinstance(val, int):
-        r = range(base-margin, base+margin+1)
-    return r
