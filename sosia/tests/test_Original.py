@@ -32,8 +32,17 @@ def test_fields():
 
 
 def test_find_matches():
-    expected = ['54893528800', '42661166900', '55268789000', '56282273300']
+    expected = ['42661166900', '54893528800', '55268789000', '56282273300']
     recieved = sorted(scientist1.find_matches())
+    assert_true(isinstance(recieved, list))
+    assert_equal(len(recieved), len(expected))
+    for e in expected:
+        assert_true(e in recieved)
+
+
+def test_find_matches_stacked():
+    expected = ['42661166900', '54893528800', '55268789000', '56282273300']
+    recieved = sorted(scientist1.find_matches(stacked=True))
     assert_true(isinstance(recieved, list))
     assert_equal(len(recieved), len(expected))
     for e in expected:

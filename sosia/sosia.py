@@ -4,7 +4,7 @@
 #            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
-from collections import Counter
+from collections import Counter, defaultdict
 from math import ceil, floor, log
 from os.path import exists
 
@@ -364,23 +364,25 @@ class Original(object):
 
         # Second round of filtering
         df['id'] = df['eid'].str.split('-').str[-1]
-        group = df['id'].tolist()
+        group = sorted(df['id'].tolist())
         keep = []
         if stacked:  # Combine searches
             d = {}
-            y = self.first_year
+            f = self.first_year
             for chunk in _chunker(group, floor((MAX_LENGTH-21-30)/27)):
                 while len(chunk) > 0:
                     h = floor(len(chunk)/2)
                     try:
                         q = "AU-ID({}) AND PUBYEAR BEF {}".format(
-                            ") OR AU-ID(".join(chunk), cur_year+1)
-                        d.update(_build_dict(_query_docs(q), y))
+                            ") OR AU-ID(".join(chunk), self.year+1)
+                        new = _query_docs(q, refresh=self.refresh)
+                        d.update(_build_dict(new, f, chunk))
                         chunk = []
                     except Exception as e:  # Rerun query with half the list
                         q = "AU-ID({}) AND PUBYEAR BEF {}".format(
-                            ") OR AU-ID(".join(chunk[:h]), cur_year+1)
-                        d.update(_build_dict(_query_docs(q), y))
+                            ") OR AU-ID(".join(chunk[:h]), self.year+1)
+                        new = _query_docs(q, refresh=self.refresh)
+                        d.update(_build_dict(new, f, chunk))
                         chunk = chunk[h:]
             # Iterate through container
             for auth, dat in d.items():
@@ -407,22 +409,20 @@ class Original(object):
         return keep
 
 
-def _build_dict(results, year):
+def _build_dict(results, year, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.
     """
     d = defaultdict(lambda: {'pub_year': year, 'n_pubs': 0, 'coauth': set()})
     for pub in results:
         authors = set(pub.authid.split(';'))
-        try:
-            focal = next(iter(authors.intersection(chunk)))
-        except StopIteration:
-            continue
-        authors.remove(focal)
-        d[focal]['coauth'].update(authors)
-        d[focal]['n_pubs'] += 1
-        pub_year = int(pub.coverDate[:4])
-        d[focal]['pub_year'] = min(d[focal]['pub_year'], pub_year)
+        for focal in authors.intersection(chunk):
+            authors.remove(focal)
+            d[focal]['coauth'].update(authors)
+            d[focal]['n_pubs'] += 1
+            pub_year = int(pub.coverDate[:4])
+            d[focal]['pub_year'] = min(d[focal]['pub_year'], pub_year)
+            authors.add(focal)
     return d
 
 
