@@ -5,7 +5,7 @@ import pandas as pd
     
 URL_SOURCES = 'https://elsevier.com/?a=734751'
 URL_EXT_LIST = 'https://www.elsevier.com/__data/assets/excel_doc/0015/91122/ext_list_September_2018.xlsx'
-FIELDS_JOURNALS_LIST = expanduser('~/.sosia/') + 'field_journal_list.csv'
+FIELDS_SOURCES_LIST = expanduser('~/.sosia/') + 'field_sources_list.csv'
 
 ASJC_2D = {10: "MULT", 11: "AGRI", 12: "ARTS", 13: "BIOC", 14: "BUSI", 
            15: "CENG", 16: "CHEM", 17: "COMP", 18: "DECI", 19: "EART",
@@ -15,8 +15,8 @@ ASJC_2D = {10: "MULT", 11: "AGRI", 12: "ARTS", 13: "BIOC", 14: "BUSI",
            35: "DENT", 36: "HEAL"}
 
 
-def create_fields_journals_list():
-    """Download scopus files and create list of all journals with ids and
+def create_fields_sources_list():
+    """Download scopus files and create list of all sources with ids and
     field information.
     """
     # Get Information from Scopus Sources list
@@ -65,4 +65,4 @@ def create_fields_journals_list():
     path = expanduser('~/.sosia/')
     if not exists(path):
        makedirs(path)
-    out.to_csv(FIELDS_JOURNALS_LIST, index=False)
+    out.to_csv(FIELDS_SOURCES_LIST, index=False)

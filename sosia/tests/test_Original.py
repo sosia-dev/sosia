@@ -8,7 +8,7 @@ from nose.tools import assert_equal, assert_true
 import sosia
 
 scientist1 = sosia.Original(55208373700, 2017)
-scientist1.define_search_journals()
+scientist1.define_search_sources()
 scientist1.define_search_groups()
 
 MATCHES = ['42661166900', '55268789000', '54893528800', '56282273300']
@@ -53,12 +53,12 @@ def test_first_year():
     assert_equal(scientist1.first_year, 2012)
 
 
-def test_journals():
-    journals = scientist1.journals
-    assert_equal(len(journals), 3)
-    assert_true('22900' in journals)
-    assert_true('23013' in journals)
-    assert_true('18769' in journals)
+def test_sources():
+    sources = scientist1.sources
+    assert_equal(len(sources), 3)
+    assert_true('22900' in sources)
+    assert_true('23013' in sources)
+    assert_true('18769' in sources)
 
 
 def test_main_field():
@@ -103,8 +103,8 @@ def test_search_group_negative():
     assert_true(isinstance(negative, set))
 
 
-def test_search_journals():
-    jour = scientist1.search_journals
+def test_search_sources():
+    jour = scientist1.search_sources
     assert_equal(len(jour), 59)
     assert_true(14726 in jour)
     assert_true(22009 in jour)

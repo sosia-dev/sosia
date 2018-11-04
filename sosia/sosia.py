@@ -11,7 +11,7 @@ from os.path import exists
 import pandas as pd
 import scopus as sco
 
-from sosia.utils import ASJC_2D, FIELDS_JOURNALS_LIST
+from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST
 
 MAX_LENGTH = 3893  # Maximum character length of a query
 
@@ -47,7 +47,7 @@ class Original(object):
     @property
     def fields(self):
         """The fields of the scientist until the given year, estimated from
-        the journal she published in.
+        the sources (journals, books, etc.) she published in.
         """
         return self._fields
 
@@ -67,19 +67,6 @@ class Original(object):
         if not isinstance(val, int):
             raise Exception("Value must be an integer.")
         self._first_year = val
-
-    @property
-    def journals(self):
-        """The Scopus IDs of journals and conference proceedings in which the
-        scientist published until the given year.
-        """
-        return self._journals
-
-    @journals.setter
-    def journals(self, val):
-        if not isinstance(val, set) or len(val) == 0:
-            raise Exception("Value must be a non-empty set.")
-        self._journals = val
 
     @property
     def main_field(self):
@@ -109,7 +96,7 @@ class Original(object):
 
     @property
     def search_group_then(self):
-        """Authors of publications in journals in the scientist's field
+        """Authors of publications in sources in the scientist's field
         in the year of the scientist's first publication.
 
         Notes
@@ -123,7 +110,7 @@ class Original(object):
 
     @property
     def search_group_today(self):
-        """Authors of publications in journals in the scientist's field
+        """Authors of publications in sources in the scientist's field
         in the given year.
 
         Notes
@@ -138,8 +125,8 @@ class Original(object):
     @property
     def search_group_negative(self):
         """Authors with too many publications in the scientist's search
-        journals already in the given year and authors of publications
-        in journals in the scientist's field before the year of the
+        sources already in the given year and authors of publications
+        in sources in the scientist's field before the year of the
         scientist's first publication.
 
         Notes
@@ -152,22 +139,41 @@ class Original(object):
             return None
 
     @property
-    def search_journals(self):
-        """The set of journals comparable to the journals the scientist
-        published in until the given year.
-        A journal is comparable if is belongs to the scientist's main field
-        but not to fields alien to the scientist.
+    def search_sources(self):
+        """The set of sources (journals, books) comparable to the sources
+        the scientist published in until the given year.
+        A sources is comparable if is belongs to the scientist's main field
+        but not to fields alien to the scientist, and if the types of the
+        sources are the same as the types of the sources in the scientist's
+        main field where she published in.
+
+        Notes
+        -----
+        Property is initiated via .define_search_sources().
         """
         try:
-            return self._search_journals
+            return self._search_sources
         except AttributeError:
             return None
 
-    @search_journals.setter
-    def search_journals(self, val):
+    @search_sources.setter
+    def search_sources(self, val):
         if not isinstance(val, list) or len(val) == 0:
             raise Exception("Value must be a non-empty list.")
-        self._search_journals = val
+        self._search_sources = val
+
+    @property
+    def sources(self):
+        """The Scopus IDs of sources (journals, books) in which the
+        scientist published until the given year.
+        """
+        return self._sources
+
+    @sources.setter
+    def sources(self, val):
+        if not isinstance(val, set) or len(val) == 0:
+            raise Exception("Value must be a non-empty set.")
+        self._sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
                  coauth_margin=0.1, refresh=False):
@@ -206,14 +212,14 @@ class Original(object):
         refresh : boolean (optional, default=False)
             Whether to refresh all cached files or not.
         """
-        # Check for existence of fields-journals list
+        # Check for existence of fields-sources list
         try:
-            self.field_journal = pd.read_csv(FIELDS_JOURNALS_LIST)
-            df = self.field_journal
+            self.field_source = pd.read_csv(FIELDS_SOURCES_LIST)
+            df = self.field_source
         except FileNotFoundError:
             text = "Fields-Journals list not found, but required for sosia "\
                    "to match authors' publications to fields.  Please run "\
-                   "sosia.create_fields_journals_list() and initiate "\
+                   "sosia.create_fields_sources_list() and initiate "\
                    "the class again."
             raise Exception(text)
 
@@ -242,8 +248,8 @@ class Original(object):
             text = "No publications for author {} until year {}".format(
                 self.id, self.year)
             raise Exception(text)
-        self._journals = set([p.source_id for p in self._publications])
-        self._fields = df[df['source_id'].isin(self._journals)]['asjc'].tolist()
+        self._sources = set([p.source_id for p in self._publications])
+        self._fields = df[df['source_id'].isin(self._sources)]['asjc'].tolist()
         main = Counter(self._fields).most_common(1)[0][0]
         code = main // 10 ** (int(log(main, 10)) - 2 + 1)
         self._main_field = (main, ASJC_2D[code])
@@ -258,18 +264,18 @@ class Original(object):
         """Define search groups: search_group_today, search_group_then
         and search_group_negative.
         """
-        if not self.search_journals:
-            text = "No search journals defined.  Please run "\
-                   ".define_search_journals() first."
+        if not self.search_sources:
+            text = "No search sources defined.  Please run "\
+                   ".define_search_sources() first."
             raise Exception(text)
         # Today
-        today = _find_search_group(self.search_journals, [self.year],
+        today = _find_search_group(self.search_sources, [self.year],
                                    refresh=self.refresh)
         self._search_group_today = today
         # Then
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
-        then = _find_search_group(self.search_journals, _years,
+        then = _find_search_group(self.search_sources, _years,
                                   refresh=self.refresh)
         self._search_group_then = then
         # Negative
@@ -281,8 +287,8 @@ class Original(object):
         too_young = set()
         authors = []
         _min = self.first_year-self.year_margin
-        for journal in self.search_journals:
-            q = 'SOURCE-ID({})'.format(journal)
+        for source in self.search_sources:
+            q = 'SOURCE-ID({})'.format(source)
             try:
                 docs = _query_docs(q, refresh=self.refresh)
                 res1 = [p for p in docs if int(p.coverDate[:4]) < _min]
@@ -300,25 +306,23 @@ class Original(object):
                     if npubs > max_pubs}
         self._search_group_negative = too_young.union(too_many)
 
-    def define_search_journals(self):
-        """Define search journals: Journals whose authors will be
-        considered as possible matches.
-        """
-        df = self.field_journal
-        # Select types of journals of scientist's publications in main field
-        mask = (df['source_id'].isin(self.journals)) &\
+    def define_search_sources(self):
+        """Define .search_sources."""
+        df = self.field_source
+        # Select types of sources of scientist's publications in main field
+        mask = (df['source_id'].isin(self.sources)) &\
                (df['asjc'] == self.main_field[0])
         main_types = set(df[mask]['type'])
-        # Select journals in scientist's main field
+        # Select sources in scientist's main field
         mask = (df['asjc'] == self.main_field[0]) & (df['type'].isin(main_types))
-        journals = df[mask]['source_id'].tolist()
-        sel = df[df['source_id'].isin(journals)].copy()
+        sources = df[mask]['source_id'].tolist()
+        sel = df[df['source_id'].isin(sources)].copy()
         sel['asjc'] = sel['asjc'].astype(str) + " "
         grouped = sel.groupby('source_id').sum()['asjc'].to_frame()
-        # Deselect journals with alien fields
+        # Deselect sources with alien fields
         grouped['drop'] = grouped['asjc'].apply(
             lambda s: any(x for x in s.split() if int(x) not in self.fields))
-        self._search_journals = grouped[~grouped['drop']].index.tolist()
+        self._search_sources = grouped[~grouped['drop']].index.tolist()
 
     def find_matches(self, stacked=False):
         """Find matches from a search group based on three criteria:
@@ -470,17 +474,17 @@ def _find_country(auth_id, pubs, year, first_year):
     return Counter(countries).most_common(1)[0][0]
 
 
-def _find_search_group(journals, years, refresh=False):
-    """Auxiliary function to query multiple journals and years."""
+def _find_search_group(sources, years, refresh=False):
+    """Auxiliary function to query multiple sources and years."""
     authors = set()
-    for j in journals:
-        q = 'SOURCE-ID({})'.format(j)
+    for s in sources:
+        q = 'SOURCE-ID({})'.format(s)
         try:  # Try complete publication list first
             res = _query_docs(q, refresh=refresh)
             res = [p for p in res if int(p.coverDate[:4]) in years]
         except:  # Fall back to year-wise queries
             for y in years:
-                q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(j, y)
+                q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
                 res = _query_docs(q, refresh=refresh)
         new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
         authors.update([au for sl in new for au in sl])
