@@ -260,34 +260,55 @@ class Original(object):
         self._country = _find_country(self.id, self._publications,
                                       self.year, self._first_year)
 
-    def define_search_groups(self):
+    def define_search_groups(self, verbose=False):
         """Define search groups: search_group_today, search_group_then
         and search_group_negative.
+
+        Parameters
+        ----------
+        verbose : bool (optional, default=False)
+            Whether to report on the progress of the process.
         """
         if not self.search_sources:
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise Exception(text)
         # Today
+        if verbose:
+            print("Searching authors for search_group_today in {} "\
+                  "sources".format(len(self.search_sources)))
         today = _find_search_group(self.search_sources, [self.year],
-                                   refresh=self.refresh)
+                                   refresh=self.refresh, verbose=verbose)
         self._search_group_today = today
+        if verbose:
+            print("Found {:,} authors".format(len(today)))
         # Then
+        if verbose:
+            print("Searching authors for search_group_then in {} "\
+                  "sources".format(len(self.search_sources)))
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
         then = _find_search_group(self.search_sources, _years,
-                                  refresh=self.refresh)
+                                  refresh=self.refresh, verbose=verbose)
         self._search_group_then = then
+        if verbose:
+            print("Found {:,} authors".format(len(then)))
         # Negative
         try:
             _npapers = _get_value_range(len(self.publications), self.pub_margin)
         except TypeError:
             raise ValueError('Value pub_margin must be float or integer.')
+        if verbose:
+            print("Searching authors for search_group_negative in {} "\
+                  "sources".format(len(self.search_sources)))
         max_pubs = max(_npapers)
         too_young = set()
         authors = []
         _min = self.first_year-self.year_margin
-        for source in self.search_sources:
+        n = len(self.search_sources)
+        if verbose:
+            _print_progress(0, n)
+        for i, source in enumerate(self.search_sources):
             q = 'SOURCE-ID({})'.format(source)
             try:
                 docs = _query_docs(q, refresh=self.refresh)
@@ -302,12 +323,23 @@ class Original(object):
             # Author count
             new = [x.authid.split(';') for x in res2 if isinstance(x.authid, str)]
             authors.extend([au for sl in new for au in sl])
+            if verbose:
+                _print_progress(i+1, n)
         too_many = {a for a, npubs in Counter(authors).items()
                     if npubs > max_pubs}
         self._search_group_negative = too_young.union(too_many)
+        if verbose:
+            print("Found {:,} authors for search_group_negative".format(
+                len(self._search_group_negative)))
 
-    def define_search_sources(self):
-        """Define .search_sources."""
+    def define_search_sources(self, verbose=False):
+        """Define .search_sources.
+
+        Parameters
+        ----------
+        verbose : bool (optional, default=False)
+            Whether to report on the progress of the process.
+        """
         df = self.field_source
         # Select types of sources of scientist's publications in main field
         mask = (df['source_id'].isin(self.sources)) &\
@@ -323,8 +355,13 @@ class Original(object):
         grouped['drop'] = grouped['asjc'].apply(
             lambda s: any(x for x in s.split() if int(x) not in self.fields))
         self._search_sources = grouped[~grouped['drop']].index.tolist()
+        if verbose:
+            types = "; ".join(list(main_types))
+            print("Found {} sources for main field {} and source"\
+                  " type(s) {}".format(len(self._search_sources),
+                                       self.main_field[0], types))
 
-    def find_matches(self, stacked=False):
+    def find_matches(self, stacked=False, verbose=False):
         """Find matches from a search group based on three criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -338,6 +375,9 @@ class Original(object):
             Whether to combine searches in few queries or not.  Cached
             files with most likely not be resuable.  Set to true if you
             query in distinct fields or you want to minimize API key usage.
+
+        verbose : bool (optional, default=False)
+            Whether to report on the progress of the process.
         """
         # Variables
         _years = range(self.first_year-self.year_margin,
@@ -348,28 +388,48 @@ class Original(object):
         # Define search group
         group = self.search_group_then.intersection(self.search_group_today)
         group = sorted(list(group - self.search_group_negative))
+        n = len(group)
+        if verbose:
+            print("Searching through characteristics of {:,} authors".format(n))
 
         # First stage of filtering: minimum publications and main field
         df = pd.DataFrame()
+        i = 0
+        if verbose:
+            print("Pre-filtering...")
+            _print_progress(i, n)
         for chunk in _chunker(group, floor((MAX_LENGTH-30)/27)):
             while len(chunk) > 0:
                 half = floor(len(chunk)/2)
                 try:
                     q = "AU-ID(" + ") OR AU-ID(".join(chunk) + ")"
                     df = df.append(_query_author(q))
+                    if verbose:
+                        i += len(chunk)
+                        _print_progress(i, n)
                     chunk = []
                 except:  # Rerun query with half the list
                     q = "AU-ID(" + ") OR AU-ID(".join(chunk[:half]) + ")"
                     df = df.append(_query_author(q))
+                    if verbose:
+                        i += len(chunk[:half])
+                        _print_progress(i, n)
                     chunk = chunk[half:]
         df = df[df['areas'].str.startswith(self.main_field[1])]
         df['documents'] = pd.to_numeric(df['documents'], errors='coerce').fillna(0)
         df = df[df['documents'].astype(int) >= min(_npapers)]
+        n = df.shape[0]
+        if verbose:
+            print("Left with {} authors".format(n))
 
         # Second round of filtering
         df['id'] = df['eid'].str.split('-').str[-1]
         group = sorted(df['id'].tolist())
         keep = []
+        if verbose:
+            print("Filtering based on provided conditions...")
+            i = 0
+            _print_progress(0, n)
         if stacked:  # Combine searches
             d = {}
             f = self.first_year
@@ -381,12 +441,18 @@ class Original(object):
                             ") OR AU-ID(".join(chunk), self.year+1)
                         new = _query_docs(q, refresh=self.refresh)
                         d.update(_build_dict(new, f, chunk))
+                        if verbose:
+                            i += len(chunk)
+                            _print_progress(i, n)
                         chunk = []
                     except Exception as e:  # Rerun query with half the list
                         q = "AU-ID({}) AND PUBYEAR BEF {}".format(
                             ") OR AU-ID(".join(chunk[:h]), self.year+1)
                         new = _query_docs(q, refresh=self.refresh)
                         d.update(_build_dict(new, f, chunk))
+                        if verbose:
+                            i += len(chunk)
+                            _print_progress(i, n)
                         chunk = chunk[h:]
             # Iterate through container
             for auth, dat in d.items():
@@ -394,7 +460,9 @@ class Original(object):
                         _npapers and len(dat['coauth']) in _ncoauth):
                     keep.append(auth)
         else:  # Query each author individually
-            for au in group:
+            for i, au in enumerate(group):
+                if verbose:
+                    _print_progress(i+1, n)
                 res = _query_docs('AU-ID({})'.format(au), refresh=self.refresh)
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 # Filter based on age (first publication year)
@@ -410,6 +478,8 @@ class Original(object):
                 if len(coauth) not in _ncoauth:
                     continue
                 keep.append(au)
+        if verbose:
+            print("Found {:,} author(s) matching all criteria".format(len(keep)))
         return keep
 
 
@@ -474,10 +544,13 @@ def _find_country(auth_id, pubs, year, first_year):
     return Counter(countries).most_common(1)[0][0]
 
 
-def _find_search_group(sources, years, refresh=False):
+def _find_search_group(sources, years, refresh=False, verbose=False):
     """Auxiliary function to query multiple sources and years."""
     authors = set()
-    for s in sources:
+    n = len(sources)
+    if verbose:
+        _print_progress(0, n)
+    for i, s in enumerate(sources):
         q = 'SOURCE-ID({})'.format(s)
         try:  # Try complete publication list first
             res = _query_docs(q, refresh=refresh)
@@ -488,7 +561,20 @@ def _find_search_group(sources, years, refresh=False):
                 res = _query_docs(q, refresh=refresh)
         new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
         authors.update([au for sl in new for au in sl])
+        if verbose:
+            _print_progress(i+1, n)
     return authors
+
+
+def _print_progress(iteration, total, prefix='Progress:', suffix='Complete',
+                    decimals=2, length=50, fill='█'):
+    """Print terminal progress bar."""
+    percent = round(100 * (iteration / float(total)), decimals)
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
+    if iteration == total:
+        print()
 
 
 def _query_author(q, refresh=False):
