@@ -42,7 +42,6 @@ def test_find_matches():
 
 def test_find_matches_stacked():
     recieved = sorted(scientist1.find_matches(stacked=True))
-    print(recieved)
     assert_true(isinstance(recieved, list))
     assert_equal(len(recieved), len(MATCHES))
     for e in MATCHES:

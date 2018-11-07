@@ -262,7 +262,7 @@ class Original(object):
         # Query journals
         if verbose:
             n = len(self.search_sources)
-            print("Searching authors for search_group in {} "\
+            print("Searching authors for search_group in {} "
                   "sources".format(len(self.search_sources)))
             _print_progress(0, n)
         for i, s in enumerate(self.search_sources):
@@ -327,7 +327,7 @@ class Original(object):
         self._search_sources = grouped[~grouped['drop']].index.tolist()
         if verbose:
             types = "; ".join(list(main_types))
-            print("Found {} sources for main field {} and source"\
+            print("Found {} sources for main field {} and source"
                   " type(s) {}".format(len(self._search_sources),
                                        self.main_field[0], types))
 
