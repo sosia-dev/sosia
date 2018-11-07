@@ -336,6 +336,7 @@ class Original(object):
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
         3. Has about the same number of coauthors in the year of treatment
+        4. Affiliation was in the same country in the year of treatment
 
         Parameters
         ----------
@@ -445,9 +446,17 @@ class Original(object):
                 if len(coauth) not in _ncoauth:
                     continue
                 keep.append(au)
+
+        # Add country information
+        out = []
+        for auth_id in keep:
+            au = sco.AuthorRetrieval(auth_id)
+            country = _find_country(auth_id, _query_docs('AU-ID({})'.format(auth_id)),
+                                    self.year, int(au.publication_range[0]))
+            out.append((auth_id, country))
         if verbose:
-            print("Found {:,} author(s) matching all criteria".format(len(keep)))
-        return keep
+            print("Found {:,} author(s) matching all criteria".format(len(out)))
+        return out
 
 
 def _build_dict(results, year, chunk):

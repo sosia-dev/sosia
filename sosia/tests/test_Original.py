@@ -11,7 +11,8 @@ scientist1 = sosia.Original(55208373700, 2017)
 scientist1.define_search_sources()
 scientist1.define_search_group()
 
-MATCHES = ['42661166900', '55268789000', '54893528800', '56282273300']
+MATCHES = [('42661166900', 'Norway'), ('55268789000', 'Taiwan'),
+           ('54893528800', 'France'), ('56282273300', 'Mexico')]
 
 
 def test_country():
