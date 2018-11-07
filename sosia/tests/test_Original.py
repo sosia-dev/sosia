@@ -9,7 +9,7 @@ import sosia
 
 scientist1 = sosia.Original(55208373700, 2017)
 scientist1.define_search_sources()
-scientist1.define_search_groups()
+scientist1.define_search_group()
 
 MATCHES = ['42661166900', '55268789000', '54893528800', '56282273300']
 
@@ -85,22 +85,10 @@ def test_publications():
     assert_equal(pubs[0], expected)
 
 
-def test_search_group_then():
-    then = scientist1.search_group_then
-    assert_true(len(then) > 8900)
-    assert_true(isinstance(then, set))
-
-
-def test_search_group_today():
-    today = scientist1.search_group_today
-    assert_true(len(today) > 3600)
-    assert_true(isinstance(today, set))
-
-
-def test_search_group_negative():
-    negative = scientist1.search_group_negative
-    assert_true(len(negative) > 32000)
-    assert_true(isinstance(negative, set))
+def test_search_group():
+    then = scientist1.search_group
+    assert_true(len(then) == 227)
+    assert_true(isinstance(then, list))
 
 
 def test_search_sources():

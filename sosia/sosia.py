@@ -95,46 +95,19 @@ class Original(object):
         self._publications = val
 
     @property
-    def search_group_then(self):
-        """Authors of publications in sources in the scientist's field
-        in the year of the scientist's first publication.
+    def search_group(self):
+        """The set of authors that might be matches to the scientist.  The
+        set contains the intersection of all authors publishing in the given
+        year as well as authors publishing around the year of first
+        publication.  Some authors with too many publications in the given
+        year and authors having published too early are removed.
 
         Notes
         -----
-        Property is initiated via .define_search_groups().
+        Property is initiated via .define_search_group().
         """
         try:
-            return self._search_group_then
-        except AttributeError:
-            return None
-
-    @property
-    def search_group_today(self):
-        """Authors of publications in sources in the scientist's field
-        in the given year.
-
-        Notes
-        -----
-        Property is initiated via .define_search_groups().
-        """
-        try:
-            return self._search_group_today
-        except AttributeError:
-            return None
-
-    @property
-    def search_group_negative(self):
-        """Authors with too many publications in the scientist's search
-        sources already in the given year and authors of publications
-        in sources in the scientist's field before the year of the
-        scientist's first publication.
-
-        Notes
-        -----
-        Property is initiated via .define_search_groups().
-        """
-        try:
-            return self._search_group_negative
+            return self._search_group
         except AttributeError:
             return None
 
@@ -260,77 +233,74 @@ class Original(object):
         self._country = _find_country(self.id, self._publications,
                                       self.year, self._first_year)
 
-    def define_search_groups(self, verbose=False):
-        """Define search groups: search_group_today, search_group_then
-        and search_group_negative.
+    def define_search_group(self, verbose=False):
+        """Define search_group.
 
         Parameters
         ----------
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
         """
+        # Checks
         if not self.search_sources:
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise Exception(text)
-        # Today
-        if verbose:
-            print("Searching authors for search_group_today in {} "\
-                  "sources".format(len(self.search_sources)))
-        today = _find_search_group(self.search_sources, [self.year],
-                                   refresh=self.refresh, verbose=verbose)
-        self._search_group_today = today
-        if verbose:
-            print("Found {:,} authors".format(len(today)))
-        # Then
-        if verbose:
-            print("Searching authors for search_group_then in {} "\
-                  "sources".format(len(self.search_sources)))
-        _years = range(self.first_year-self.year_margin,
-                       self.first_year+self.year_margin+1)
-        then = _find_search_group(self.search_sources, _years,
-                                  refresh=self.refresh, verbose=verbose)
-        self._search_group_then = then
-        if verbose:
-            print("Found {:,} authors".format(len(then)))
-        # Negative
         try:
             _npapers = _get_value_range(len(self.publications), self.pub_margin)
+            max_pubs = max(_npapers)
         except TypeError:
             raise ValueError('Value pub_margin must be float or integer.')
+        # Variables
+        today = set()
+        then = set()
+        negative = set()
+        auth_count = []
+        _min_year = self.first_year-self.year_margin
+        _years = list(range(self.first_year-self.year_margin,
+                            self.first_year+self.year_margin+1))
+        # Query journals
         if verbose:
-            print("Searching authors for search_group_negative in {} "\
+            n = len(self.search_sources)
+            print("Searching authors for search_group in {} "\
                   "sources".format(len(self.search_sources)))
-        max_pubs = max(_npapers)
-        too_young = set()
-        authors = []
-        _min = self.first_year-self.year_margin
-        n = len(self.search_sources)
-        if verbose:
             _print_progress(0, n)
-        for i, source in enumerate(self.search_sources):
-            q = 'SOURCE-ID({})'.format(source)
-            try:
-                docs = _query_docs(q, refresh=self.refresh)
-                res1 = [p for p in docs if int(p.coverDate[:4]) < _min]
-                res2 = [p for p in docs if int(p.coverDate[:4]) < self.year]
-            except Exception as e:
-                # Do not run year-wise queries for this group
-                continue
-            # Authors publishing too early
-            new = [x.authid.split(';') for x in res1 if isinstance(x.authid, str)]
-            too_young.update([au for sl in new for au in sl])
-            # Author count
-            new = [x.authid.split(';') for x in res2 if isinstance(x.authid, str)]
-            authors.extend([au for sl in new for au in sl])
+        for i, s in enumerate(self.search_sources):
+            try:  # Try complete publication list first
+                q = 'SOURCE-ID({})'.format(s)
+                res = _query_docs(q, refresh=self.refresh)
+                # Today
+                pubs = [p for p in res if int(p.coverDate[:4]) == self.year]
+                today.update([au for sl in _get_authors(pubs) for au in sl])
+                # Then
+                pubs = [p for p in res if int(p.coverDate[:4]) in _years]
+                then.update([au for sl in _get_authors(pubs) for au in sl])
+                # Negative
+                res1 = [p for p in res if int(p.coverDate[:4]) < _min_year]
+                negative.update([au for sl in _get_authors(res1) for au in sl])
+                # Author count
+                res2 = [p for p in res if int(p.coverDate[:4]) < self.year+1]
+                auth_count.extend([au for sl in _get_authors(res2) for au in sl])
+            except:  # Fall back to year-wise queries
+                q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
+                res = _query_docs(q, refresh=self.refresh)
+                today.update([au for sl in _get_authors(res) for au in sl])
+                for y in _years:
+                    q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
+                    res = _query_docs(q, refresh=self.refresh)
+                    new = [x.authid.split(';') for x in pubs
+                           if isinstance(x.authid, str)]
+                    then.update([au for sl in new for au in sl])
             if verbose:
                 _print_progress(i+1, n)
-        too_many = {a for a, npubs in Counter(authors).items()
-                    if npubs > max_pubs}
-        self._search_group_negative = too_young.union(too_many)
+        # Finalize
+        group = today.intersection(then)
+        negative.update({a for a, npubs in Counter(auth_count).items()
+                        if npubs > max_pubs})
+        self._search_group = sorted(list(group - negative))
         if verbose:
-            print("Found {:,} authors for search_group_negative".format(
-                len(self._search_group_negative)))
+            print("Found {:,} authors for search_group".format(
+                len(self._search_group)))
 
     def define_search_sources(self, verbose=False):
         """Define .search_sources.
@@ -362,12 +332,10 @@ class Original(object):
                                        self.main_field[0], types))
 
     def find_matches(self, stacked=False, verbose=False):
-        """Find matches from a search group based on three criteria:
+        """Find matches within search_group based on three criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
         3. Has about the same number of coauthors in the year of treatment
-        The search group is defined as intersection of `search_group_today`
-        and `search_group_then`, minus `search_group_negative`.
 
         Parameters
         ----------
@@ -386,8 +354,7 @@ class Original(object):
         _ncoauth = _get_value_range(len(self.coauthors), self.coauth_margin)
 
         # Define search group
-        group = self.search_group_then.intersection(self.search_group_today)
-        group = sorted(list(group - self.search_group_negative))
+        group = self.search_group
         n = len(group)
         if verbose:
             print("Searching through characteristics of {:,} authors".format(n))
@@ -507,6 +474,13 @@ def _chunker(l, n):
         yield l[i:i+n]
 
 
+def _get_authors(pubs):
+    """Auxiliary function to get author IDs from string concatenated by ;,
+    which are embedded in a list of namedtuples.
+    """
+    return [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
+
+
 def _get_value_range(base, val):
     """Auxiliary function to create a range of margins around a base value."""
     if isinstance(val, float):
@@ -542,28 +516,6 @@ def _find_country(auth_id, pubs, year, first_year):
     countries = [sco.ContentAffiliationRetrieval(afid).country
                  for afid in affs]
     return Counter(countries).most_common(1)[0][0]
-
-
-def _find_search_group(sources, years, refresh=False, verbose=False):
-    """Auxiliary function to query multiple sources and years."""
-    authors = set()
-    n = len(sources)
-    if verbose:
-        _print_progress(0, n)
-    for i, s in enumerate(sources):
-        q = 'SOURCE-ID({})'.format(s)
-        try:  # Try complete publication list first
-            res = _query_docs(q, refresh=refresh)
-            res = [p for p in res if int(p.coverDate[:4]) in years]
-        except:  # Fall back to year-wise queries
-            for y in years:
-                q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
-                res = _query_docs(q, refresh=refresh)
-        new = [x.authid.split(';') for x in res if isinstance(x.authid, str)]
-        authors.update([au for sl in new for au in sl])
-        if verbose:
-            _print_progress(i+1, n)
-    return authors
 
 
 def _print_progress(iteration, total, prefix='Progress:', suffix='Complete',
