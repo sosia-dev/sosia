@@ -10,6 +10,7 @@ from os.path import exists
 
 import pandas as pd
 import scopus as sco
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST
 
@@ -447,16 +448,21 @@ class Original(object):
                     continue
                 keep.append(au)
 
-        # Add country information
-        out = []
-        for auth_id in keep:
-            au = sco.AuthorRetrieval(auth_id)
-            country = _find_country(auth_id, _query_docs('AU-ID({})'.format(auth_id)),
-                                    self.year, int(au.publication_range[0]))
-            out.append((auth_id, country))
         if verbose:
-            print("Found {:,} author(s) matching all criteria".format(len(out)))
-        return out
+            print("Found {:,} author(s) matching all criteria\nAdding "
+                  "other information".format(len(keep)))
+        # Add country information
+        countries = [_find_country(
+                        auth, _query_docs('AU-ID({})'.format(auth)), self.year,
+                        int(sco.AuthorRetrieval(auth).publication_range[0]))
+                    for auth in keep]
+        # Add reference cosine similarity
+        refs = [_get_refs(auth, self.year, self.refresh) for auth in keep]
+        refs.append(_get_refs(self.id, self.year, self.refresh))
+        tfidf = TfidfVectorizer().fit_transform(refs)
+        cosines = pd.DataFrame((tfidf * tfidf.T).toarray()).round(4).iloc[-1]
+
+        return list(zip(keep, countries, cosines))
 
 
 def _build_dict(results, year, chunk):
@@ -488,6 +494,22 @@ def _get_authors(pubs):
     which are embedded in a list of namedtuples.
     """
     return [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
+
+
+def _get_refs(auth, year, refresh):
+    """Auxiliary function to return references of articles published up
+    until the given year.
+    """
+    res = _query_docs("AU-ID({})".format(auth), refresh)
+    eids = [p.eid for p in res if int(p.coverDate[:4]) <= year]
+    refs = ""
+    for eid in eids:
+        ab = sco.AbstractRetrieval(eid, view='FULL', refresh=refresh)
+        try:
+            refs += " ".join([ref.id for ref in ab.references])
+        except TypeError:  # No references present (consider refreshing)
+            continue
+    return refs
 
 
 def _get_value_range(base, val):

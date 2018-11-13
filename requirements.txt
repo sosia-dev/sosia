@@ -1,3 +1,4 @@
 pandas>=0.23.4
 pbr
 scopus>=1.2.0
+sklearn>=0.20.0
