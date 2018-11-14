@@ -4,17 +4,19 @@
 
 from collections import namedtuple
 from nose.tools import assert_equal, assert_true
+import warnings
 
 import sosia
 
+warnings.filterwarnings("ignore")
 scientist1 = sosia.Original(55208373700, 2017)
 scientist1.define_search_sources()
 scientist1.define_search_group()
 
-MATCHES = [('42661166900', 'Norway', 0.0238),
-           ('54893528800', 'France', 0.0014),
-           ('55268789000', 'Taiwan', 0.0),
-           ('56282273300', 'Mexico', 0.0044)]
+MATCHES = [('42661166900', 'Norway', 0.0238, 0.0202),
+           ('54893528800', 'France', 0.0014, 0.0109),
+           ('55268789000', 'Taiwan', 0.0, 0.0087),
+           ('56282273300', 'Mexico', 0.0044, 0.0694)]
 
 
 def test_country():

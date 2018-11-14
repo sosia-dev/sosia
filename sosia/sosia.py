@@ -7,14 +7,20 @@
 from collections import Counter, defaultdict
 from math import ceil, floor, log
 from os.path import exists
+from string import digits, punctuation
 
 import pandas as pd
 import scopus as sco
+from nltk import snowball, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST
 
 MAX_LENGTH = 3893  # Maximum character length of a query
+STOPWORDS = list(ENGLISH_STOP_WORDS)
+STOPWORDS.extend(punctuation + digits)
+_stemmer = snowball.SnowballStemmer('english')
 
 
 class Original(object):
@@ -459,13 +465,18 @@ class Original(object):
                         auth, _query_docs('AU-ID({})'.format(auth)), self.year,
                         int(sco.AuthorRetrieval(auth).publication_range[0]))
                     for auth in keep]
-        # Add reference cosine similarity
-        refs = [_get_refs(auth, self.year, self.refresh) for auth in keep]
-        refs.append(_get_refs(self.id, self.year, self.refresh))
-        tfidf = TfidfVectorizer().fit_transform(refs)
-        cosines = pd.DataFrame((tfidf * tfidf.T).toarray()).round(4).iloc[-1]
+        # Add abstract and reference cosine similarity
+        tokens = [_get_refs(auth, self.year, self.refresh) for auth in keep]
+        tokens.append(_get_refs(self.id, self.year, self.refresh))
+        tfidf = TfidfVectorizer().fit_transform([t[1] for t in tokens])
+        ref_cos = pd.DataFrame((tfidf * tfidf.T).toarray()).round(4).iloc[-1]
+        vectorizer = TfidfVectorizer(
+            min_df=0.05, max_df=0.8, max_features=200000, ngram_range=(1, 3),
+            stop_words=STOPWORDS, tokenizer=_tokenize_and_stem)
+        tfidf = vectorizer.fit_transform([t[0] for t in tokens])
+        abs_cos = pd.DataFrame((tfidf * tfidf.T).toarray()).round(4).iloc[-1]
 
-        return list(zip(keep, countries, cosines))
+        return list(zip(keep, countries, ref_cos, abs_cos))
 
 
 def _build_dict(results, year, chunk):
@@ -500,19 +511,21 @@ def _get_authors(pubs):
 
 
 def _get_refs(auth, year, refresh):
-    """Auxiliary function to return references of articles published up
-    until the given year.
+    """Auxiliary function to return abstract and references of articles
+    published up until the given year, both as continuous string.
     """
     res = _query_docs("AU-ID({})".format(auth), refresh)
     eids = [p.eid for p in res if int(p.coverDate[:4]) <= year]
+    abstracts = ""
     refs = ""
     for eid in eids:
         ab = sco.AbstractRetrieval(eid, view='FULL', refresh=refresh)
+        abstracts += ab.abstract.rsplit("©", 1)[0]
         try:
             refs += " ".join([ref.id for ref in ab.references])
         except TypeError:  # No references present (consider refreshing)
             continue
-    return refs
+    return abstracts, refs
 
 
 def _get_value_range(base, val):
@@ -561,6 +574,11 @@ def _print_progress(iteration, total, prefix='Progress:', suffix='Complete',
     print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
     if iteration == total:
         print()
+
+
+def _tokenize_and_stem(text):
+    """Auxiliary funtion to return stemmed tokens of document"""
+    return [_stemmer.stem(t) for t in word_tokenize(text.lower())]
 
 
 def _query_author(q, refresh=False):
