@@ -325,7 +325,10 @@ class Original(object):
         # Deselect sources with alien fields
         grouped['drop'] = grouped['asjc'].apply(
             lambda s: any(x for x in s.split() if int(x) not in self.fields))
-        self._search_sources = grouped[~grouped['drop']].index.tolist()
+        # Add own sources
+        sources = grouped[~grouped['drop']].index.tolist()
+        sources.append(sorted(list(self.sources)))
+        self._search_sources = sources
         if verbose:
             types = "; ".join(list(main_types))
             print("Found {} sources for main field {} and source"

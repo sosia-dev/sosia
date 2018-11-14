@@ -95,6 +95,6 @@ def test_search_group():
 
 def test_search_sources():
     jour = scientist1.search_sources
-    assert_equal(len(jour), 59)
+    assert_equal(len(jour), 60)
     assert_true(14726 in jour)
     assert_true(22009 in jour)
