@@ -239,13 +239,16 @@ class Original(object):
         self._coauthors.remove(self.id)
         self._country = _find_country(self.id, self._publications, self.year)
 
-    def define_search_group(self, verbose=False):
+    def define_search_group(self, verbose=False, refresh=False):
         """Define search_group.
 
         Parameters
         ----------
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
+
+        refresh : bool (optional, default=False)
+            Whether to refresh cached search files.
         """
         # Checks
         if not self.search_sources:
@@ -273,8 +276,7 @@ class Original(object):
             _print_progress(0, n)
         for i, s in enumerate(self.search_sources):
             try:  # Try complete publication list first
-                q = 'SOURCE-ID({})'.format(s)
-                res = _query_docs(q, refresh=self.refresh)
+                res = _query_docs('SOURCE-ID({})'.format(s), refresh)
                 # Today
                 pubs = [p for p in res if int(p.coverDate[:4]) == self.year]
                 today.update([au for sl in _get_authors(pubs) for au in sl])
@@ -289,11 +291,11 @@ class Original(object):
                 auth_count.extend([au for sl in _get_authors(res2) for au in sl])
             except:  # Fall back to year-wise queries
                 q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
-                res = _query_docs(q, refresh=self.refresh)
+                res = _query_docs(q, refresh)
                 today.update([au for sl in _get_authors(res) for au in sl])
                 for y in _years:
                     q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
-                    res = _query_docs(q, refresh=self.refresh)
+                    res = _query_docs(q, refresh)
                     new = [x.authid.split(';') for x in pubs
                            if isinstance(x.authid, str)]
                     then.update([au for sl in new for au in sl])
@@ -340,7 +342,7 @@ class Original(object):
                   "type(s) {}".format(len(self._search_sources),
                                       self.main_field[0], types))
 
-    def find_matches(self, stacked=False, verbose=False):
+    def find_matches(self, stacked=False, verbose=False, refresh=False):
         """Find matches within search_group based on three criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -356,6 +358,9 @@ class Original(object):
 
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
+
+        refresh : bool (optional, default=False)
+            Whether to refresh cached search files.
         """
         # Variables
         _years = range(self.first_year-self.year_margin,
@@ -380,14 +385,14 @@ class Original(object):
                 half = floor(len(chunk)/2)
                 try:
                     q = "AU-ID(" + ") OR AU-ID(".join(chunk) + ")"
-                    df = df.append(_query_author(q))
+                    df = df.append(_query_author(q, refresh))
                     if verbose:
                         i += len(chunk)
                         _print_progress(i, n)
                     chunk = []
                 except:  # Rerun query with half the list
                     q = "AU-ID(" + ") OR AU-ID(".join(chunk[:half]) + ")"
-                    df = df.append(_query_author(q))
+                    df = df.append(_query_author(q, refresh))
                     if verbose:
                         i += len(chunk[:half])
                         _print_progress(i, n)
@@ -411,20 +416,18 @@ class Original(object):
             d = {}
             for chunk in _chunker(group, floor((MAX_LENGTH-21-30)/27)):
                 while len(chunk) > 0:
-                    h = floor(len(chunk)/2)
                     try:
                         q = "AU-ID({}) AND PUBYEAR BEF {}".format(
                             ") OR AU-ID(".join(chunk), self.year+1)
-                        new = _query_docs(q, refresh=self.refresh)
-                        d.update(_build_dict(new, chunk))
                         i += len(chunk)
+                        d.update(_build_dict(_query_docs(q, refresh), chunk))
                         chunk = []
                     except Exception as e:  # Rerun query with half the list
+                        h = floor(len(chunk)/2)
                         q = "AU-ID({}) AND PUBYEAR BEF {}".format(
                             ") OR AU-ID(".join(chunk[:h]), self.year+1)
-                        new = _query_docs(q, refresh=self.refresh)
-                        d.update(_build_dict(new, chunk))
                         i += len(chunk)
+                        d.update(_build_dict(_query_docs(q, refresh), chunk))
                         chunk = chunk[h:]
                     if verbose:
                         _print_progress(i, n)
@@ -440,7 +443,7 @@ class Original(object):
             for i, au in enumerate(group):
                 if verbose:
                     _print_progress(i+1, n)
-                res = _query_docs('AU-ID({})'.format(au), refresh=self.refresh)
+                res = _query_docs('AU-ID({})'.format(au), refresh)
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 # Filter
                 if len(res) not in _npapers:
@@ -460,16 +463,17 @@ class Original(object):
         if verbose:
             print("Found {:,} author(s) matching all criteria\nAdding "
                   "other information".format(len(keep['ID'])))
-        profiles = [sco.AuthorRetrieval(auth) for auth in keep['ID']]
+        profiles = [sco.AuthorRetrieval(auth, refresh) for auth in keep['ID']]
         # Add name
         names = [", ".join([p.surname, p.given_name]) for p in profiles]
         # Add country
         countries = [_find_country(
-                        au, _query_docs('AU-ID({})'.format(au)), self.year)
+                        au, _query_docs('AU-ID({})'.format(au), refresh),
+                        self.year)
                      for au in keep['ID']]
         # Add abstract and reference cosine similarity
-        tokens = [_get_refs(au, self.year, self.refresh) for au in keep['ID']]
-        tokens.append(_get_refs(self.id, self.year, self.refresh))
+        tokens = [_get_refs(au, self.year, refresh) for au in keep['ID']]
+        tokens.append(_get_refs(self.id, self.year, refresh))
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
         ref_cos = (ref_m * ref_m.T).toarray().round(4)[-1]
         vectorizer = TfidfVectorizer(
