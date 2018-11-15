@@ -4,7 +4,7 @@
 #            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, namedtuple
 from math import ceil, floor, log
 from os.path import exists
 from string import digits, punctuation
@@ -403,11 +403,11 @@ class Original(object):
         # Second round of filtering
         df['id'] = df['eid'].str.split('-').str[-1]
         group = sorted(df['id'].tolist())
-        keep = []
         if verbose:
             print("Filtering based on provided conditions...")
             i = 0
             _print_progress(0, n)
+        keep = defaultdict(list)
         if stacked:  # Combine searches
             d = {}
             f = self.first_year
@@ -434,9 +434,12 @@ class Original(object):
                         chunk = chunk[h:]
             # Iterate through container
             for auth, dat in d.items():
+                dat['n_coauth'] = len(dat['coauth'])
                 if (dat['pub_year'] in _years and dat['n_pubs'] in
-                        _npapers and len(dat['coauth']) in _ncoauth):
-                    keep.append(auth)
+                        _npapers and dat['n_coauth'] in _ncoauth):
+                    keep['ID'].append(auth)
+                    for key, val in dat.items():
+                        keep[key].append(val)
         else:  # Query each author individually
             for i, au in enumerate(group):
                 if verbose:
@@ -455,28 +458,41 @@ class Original(object):
                 coauth.remove(au)
                 if len(coauth) not in _ncoauth:
                     continue
-                keep.append(au)
+                # Collect information
+                keep['ID'].append(au)
+                keep['pub_year'].append(min_year)
+                keep['n_pubs'].append(len(res))
+                keep['n_coauth'].append(len(coauth))
 
         if verbose:
             print("Found {:,} author(s) matching all criteria\nAdding "
-                  "other information".format(len(keep)))
-        # Add country information
+                  "other information".format(len(keep['ID'])))
+        profiles = [sco.AuthorRetrieval(auth) for auth in keep['ID']]
+        # Add name
+        names = [", ".join([p.surname, p.given_name]) for p in profiles]
+        # Add country
         countries = [_find_country(
                         auth, _query_docs('AU-ID({})'.format(auth)), self.year,
-                        int(sco.AuthorRetrieval(auth).publication_range[0]))
-                    for auth in keep]
+                        int(profiles[idx].publication_range[0]))
+                     for idx, auth in enumerate(keep['ID'])]
         # Add abstract and reference cosine similarity
-        tokens = [_get_refs(auth, self.year, self.refresh) for auth in keep]
+        tokens = [_get_refs(auth, self.year, self.refresh) for auth in keep['ID']]
         tokens.append(_get_refs(self.id, self.year, self.refresh))
-        tfidf = TfidfVectorizer().fit_transform([t[1] for t in tokens])
-        ref_cos = pd.DataFrame((tfidf * tfidf.T).toarray()).round(4).iloc[-1]
+        ref_m = TfidfVectorizer().fit_transform([t[1] for t in tokens])
+        ref_cos = pd.DataFrame((ref_m * ref_m.T).toarray()).round(4).iloc[-1]
         vectorizer = TfidfVectorizer(
             min_df=0.05, max_df=0.8, max_features=200000, ngram_range=(1, 3),
             stop_words=STOPWORDS, tokenizer=_tokenize_and_stem)
         tfidf = vectorizer.fit_transform([t[0] for t in tokens])
         abs_cos = pd.DataFrame((tfidf * tfidf.T).toarray()).round(4).iloc[-1]
 
-        return list(zip(keep, countries, ref_cos, abs_cos))
+        # Merge information into namedtuple
+        t = list(zip(keep['ID'], names, keep['pub_year'], keep['n_coauth'],
+                     keep['n_pubs'], countries, ref_cos, abs_cos))
+        fields = "ID name first_year num_coauthors num_publications country "\
+                 "reference_sim abstract_sim"
+        match = namedtuple("Match", fields)
+        return [match(*tup) for tup in t]
 
 
 def _build_dict(results, year, chunk):

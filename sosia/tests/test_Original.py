@@ -13,10 +13,22 @@ scientist1 = sosia.Original(55208373700, 2017)
 scientist1.define_search_sources()
 scientist1.define_search_group()
 
-MATCHES = [('42661166900', 'Norway', 0.0238, 0.0202),
-           ('54893528800', 'France', 0.0014, 0.0109),
-           ('55268789000', 'Taiwan', 0.0, 0.0087),
-           ('56282273300', 'Mexico', 0.0044, 0.0694)]
+fields = "ID name first_year num_coauthors num_publications country "\
+         "reference_sim abstract_sim"
+match = namedtuple("Match", fields)
+MATCHES = [
+    match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
+        num_coauthors=4, num_publications=3, country='Norway',
+        reference_sim=0.0238, abstract_sim=0.0202),
+    match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011,
+        num_coauthors=5, num_publications=4, country='France',
+        reference_sim=0.0014, abstract_sim=0.0109),
+    match(ID='55268789000', name='Chen, Chun Liang', first_year=2011,
+        num_coauthors=4, num_publications=5, country='Taiwan',
+        reference_sim=0.0, abstract_sim=0.0087),
+    match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011,
+        num_coauthors=5, num_publications=5, country='Mexico',
+        reference_sim=0.0044, abstract_sim=0.0694)]
 
 
 def test_country():
