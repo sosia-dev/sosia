@@ -5,7 +5,7 @@
 """Main class for sosia."""
 
 from collections import Counter, defaultdict, namedtuple
-from math import ceil, floor, log
+from math import ceil, floor, inf, log
 from os.path import exists
 from string import digits, punctuation
 
@@ -237,8 +237,7 @@ class Original(object):
         self._coauthors = set([a for p in self._publications
                               for a in p.authid.split(';')])
         self._coauthors.remove(self.id)
-        self._country = _find_country(self.id, self._publications,
-                                      self.year, self._first_year)
+        self._country = _find_country(self.id, self._publications, self.year)
 
     def define_search_group(self, verbose=False):
         """Define search_group.
@@ -282,10 +281,10 @@ class Original(object):
                 # Then
                 pubs = [p for p in res if int(p.coverDate[:4]) in _years]
                 then.update([au for sl in _get_authors(pubs) for au in sl])
-                # Negative
+                # Publications before
                 res1 = [p for p in res if int(p.coverDate[:4]) < _min_year]
                 negative.update([au for sl in _get_authors(res1) for au in sl])
-                # Author count
+                # Author count (for excess publication count)
                 res2 = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 auth_count.extend([au for sl in _get_authors(res2) for au in sl])
             except:  # Fall back to year-wise queries
@@ -303,7 +302,7 @@ class Original(object):
         # Finalize
         group = today.intersection(then)
         negative.update({a for a, npubs in Counter(auth_count).items()
-                        if npubs > max_pubs})
+                         if npubs > max_pubs})
         self._search_group = sorted(list(group - negative))
         if verbose:
             print("Found {:,} authors for search_group".format(
@@ -337,9 +336,9 @@ class Original(object):
         self._search_sources = sources
         if verbose:
             types = "; ".join(list(main_types))
-            print("Found {} sources for main field {} and source"
-                  " type(s) {}".format(len(self._search_sources),
-                                       self.main_field[0], types))
+            print("Found {} sources for main field {} and source "
+                  "type(s) {}".format(len(self._search_sources),
+                                      self.main_field[0], types))
 
     def find_matches(self, stacked=False, verbose=False):
         """Find matches within search_group based on three criteria:
@@ -410,7 +409,6 @@ class Original(object):
         keep = defaultdict(list)
         if stacked:  # Combine searches
             d = {}
-            f = self.first_year
             for chunk in _chunker(group, floor((MAX_LENGTH-21-30)/27)):
                 while len(chunk) > 0:
                     h = floor(len(chunk)/2)
@@ -418,24 +416,22 @@ class Original(object):
                         q = "AU-ID({}) AND PUBYEAR BEF {}".format(
                             ") OR AU-ID(".join(chunk), self.year+1)
                         new = _query_docs(q, refresh=self.refresh)
-                        d.update(_build_dict(new, f, chunk))
-                        if verbose:
-                            i += len(chunk)
-                            _print_progress(i, n)
+                        d.update(_build_dict(new, chunk))
+                        i += len(chunk)
                         chunk = []
                     except Exception as e:  # Rerun query with half the list
                         q = "AU-ID({}) AND PUBYEAR BEF {}".format(
                             ") OR AU-ID(".join(chunk[:h]), self.year+1)
                         new = _query_docs(q, refresh=self.refresh)
-                        d.update(_build_dict(new, f, chunk))
-                        if verbose:
-                            i += len(chunk)
-                            _print_progress(i, n)
+                        d.update(_build_dict(new, chunk))
+                        i += len(chunk)
                         chunk = chunk[h:]
+                    if verbose:
+                        _print_progress(i, n)
             # Iterate through container
             for auth, dat in d.items():
                 dat['n_coauth'] = len(dat['coauth'])
-                if (dat['pub_year'] in _years and dat['n_pubs'] in
+                if (dat['first_year'] in _years and dat['n_pubs'] in
                         _npapers and dat['n_coauth'] in _ncoauth):
                     keep['ID'].append(auth)
                     for key, val in dat.items():
@@ -446,24 +442,21 @@ class Original(object):
                     _print_progress(i+1, n)
                 res = _query_docs('AU-ID({})'.format(au), refresh=self.refresh)
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
-                # Filter based on age (first publication year)
+                # Filter
+                if len(res) not in _npapers:
+                    continue
                 min_year = int(min([p.coverDate[:4] for p in res]))
                 if min_year not in _years:
                     continue
-                # Filter based on number of publications in t
-                if len(res) not in _npapers:
-                    continue
-                # Filter based on number of coauthors
                 coauth = set([a for p in res for a in p.authid.split(';')])
                 coauth.remove(au)
                 if len(coauth) not in _ncoauth:
                     continue
                 # Collect information
                 keep['ID'].append(au)
-                keep['pub_year'].append(min_year)
+                keep['first_year'].append(min_year)
                 keep['n_pubs'].append(len(res))
                 keep['n_coauth'].append(len(coauth))
-
         if verbose:
             print("Found {:,} author(s) matching all criteria\nAdding "
                   "other information".format(len(keep['ID'])))
@@ -472,22 +465,21 @@ class Original(object):
         names = [", ".join([p.surname, p.given_name]) for p in profiles]
         # Add country
         countries = [_find_country(
-                        auth, _query_docs('AU-ID({})'.format(auth)), self.year,
-                        int(profiles[idx].publication_range[0]))
-                     for idx, auth in enumerate(keep['ID'])]
+                        au, _query_docs('AU-ID({})'.format(au)), self.year)
+                     for au in keep['ID']]
         # Add abstract and reference cosine similarity
-        tokens = [_get_refs(auth, self.year, self.refresh) for auth in keep['ID']]
+        tokens = [_get_refs(au, self.year, self.refresh) for au in keep['ID']]
         tokens.append(_get_refs(self.id, self.year, self.refresh))
-        ref_m = TfidfVectorizer().fit_transform([t[1] for t in tokens])
-        ref_cos = pd.DataFrame((ref_m * ref_m.T).toarray()).round(4).iloc[-1]
+        ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
+        ref_cos = (ref_m * ref_m.T).toarray().round(4)[-1]
         vectorizer = TfidfVectorizer(
             min_df=0.05, max_df=0.8, max_features=200000, ngram_range=(1, 3),
             stop_words=STOPWORDS, tokenizer=_tokenize_and_stem)
-        tfidf = vectorizer.fit_transform([t[0] for t in tokens])
-        abs_cos = pd.DataFrame((tfidf * tfidf.T).toarray()).round(4).iloc[-1]
+        tfidf = vectorizer.fit_transform([t['abstracts'] for t in tokens])
+        abs_cos = (tfidf * tfidf.T).toarray().round(4)[-1]
 
         # Merge information into namedtuple
-        t = list(zip(keep['ID'], names, keep['pub_year'], keep['n_coauth'],
+        t = list(zip(keep['ID'], names, keep['first_year'], keep['n_coauth'],
                      keep['n_pubs'], countries, ref_cos, abs_cos))
         fields = "ID name first_year num_coauthors num_publications country "\
                  "reference_sim abstract_sim"
@@ -495,20 +487,19 @@ class Original(object):
         return [match(*tup) for tup in t]
 
 
-def _build_dict(results, year, chunk):
+def _build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.
     """
-    d = defaultdict(lambda: {'pub_year': year, 'n_pubs': 0, 'coauth': set()})
+    d = defaultdict(lambda: {'first_year': inf, 'n_pubs': 0, 'coauth': set()})
     for pub in results:
         authors = set(pub.authid.split(';'))
         for focal in authors.intersection(chunk):
-            authors.remove(focal)
             d[focal]['coauth'].update(authors)
+            d[focal]['coauth'].remove(focal)
             d[focal]['n_pubs'] += 1
-            pub_year = int(pub.coverDate[:4])
-            d[focal]['pub_year'] = min(d[focal]['pub_year'], pub_year)
-            authors.add(focal)
+            first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
+            d[focal]['first_year'] = first_year
     return d
 
 
@@ -541,7 +532,7 @@ def _get_refs(auth, year, refresh):
             refs += " ".join([ref.id for ref in ab.references])
         except TypeError:  # No references present (consider refreshing)
             continue
-    return abstracts, refs
+    return {"abstracts": abstracts, "refs": refs}
 
 
 def _get_value_range(base, val):
@@ -554,20 +545,19 @@ def _get_value_range(base, val):
     return r
 
 
-def _find_country(auth_id, pubs, year, first_year):
+def _find_country(auth_id, pubs, year):
     """Auxiliary function to find the country of the most recent affiliation
     of a scientist.
     """
-    # List of relevant papers
+    # Available papers of most recent year with publications
     papers = []
-    max_iter = year - first_year + 1
     i = 0
-    while len(papers) == 0 & i <= max_iter:
+    while len(papers) == 0 & i <= len(pubs):
         papers = [p for p in pubs if int(p.coverDate[:4]) == year-i]
         i += 1
     if len(papers) == 0:
         return None
-    # List of affiliations
+    # List of affiliations on these papers belonging to the actual author
     affs = []
     for p in papers:
         authors = p.authid.split(';')
@@ -575,7 +565,7 @@ def _find_country(auth_id, pubs, year, first_year):
         aff = p.afid.split(';')[idx].split('-')
         affs.extend(aff)
     affs = [a for a in affs if a != '']
-    # Find countries of affiliations
+    # Find most often listed country of affiliations
     countries = [sco.ContentAffiliationRetrieval(afid).country
                  for afid in affs]
     return Counter(countries).most_common(1)[0][0]
