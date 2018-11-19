@@ -334,7 +334,7 @@ class Original(object):
             lambda s: any(x for x in s.split() if int(x) not in self.fields))
         # Add own sources
         sources = grouped[~grouped['drop']].index.tolist()
-        sources.append(sorted(list(self.sources)))
+        sources.extend(sorted(list(self.sources)))
         self._search_sources = sources
         if verbose:
             types = "; ".join(list(main_types))
