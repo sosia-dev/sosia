@@ -472,8 +472,8 @@ class Original(object):
                         self.year)
                      for au in keep['ID']]
         # Add abstract and reference cosine similarity
-        tokens = [_get_refs(au, self.year, refresh) for au in keep['ID']]
-        tokens.append(_get_refs(self.id, self.year, refresh))
+        tokens = [_get_refs(au, self.year, refresh, verbose) for au in keep['ID']]
+        tokens.append(_get_refs(self.id, self.year, refresh, verbose))
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
         ref_cos = (ref_m * ref_m.T).toarray().round(4)[-1]
         vectorizer = TfidfVectorizer(
@@ -521,7 +521,7 @@ def _get_authors(pubs):
     return [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
 
 
-def _get_refs(auth, year, refresh):
+def _get_refs(auth, year, refresh, verbose):
     """Auxiliary function to return abstract and references of articles
     published up until the given year, both as continuous string.
     """
@@ -529,13 +529,23 @@ def _get_refs(auth, year, refresh):
     eids = [p.eid for p in res if int(p.coverDate[:4]) <= year]
     abstracts = ""
     refs = ""
+    missing = {'abs': 0, 'refs': 0}
     for eid in eids:
         ab = sco.AbstractRetrieval(eid, view='FULL', refresh=refresh)
-        abstracts += ab.abstract.rsplit("©", 1)[0]
+        try:
+            abstracts += ab.abstract.rsplit("©", 1)[0]
+        except AttributeError:  # No abstract present
+            missing['abs'] += 1
+            continue
         try:
             refs += " ".join([ref.id for ref in ab.references])
         except TypeError:  # No references present (consider refreshing)
+            missing['refs'] += 1
             continue
+    if verbose:
+        print("For researcher {}, {} abstracts and {} reference lists out of "
+              "{} documents are missing".format(auth, missing['abs'],
+                                                missing['refs'], len(eids)))
     return {"abstracts": abstracts, "refs": refs}
 
 
