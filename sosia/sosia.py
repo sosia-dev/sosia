@@ -228,7 +228,7 @@ class Original(object):
             text = "No publications for author {} until year {}".format(
                 self.id, self.year)
             raise Exception(text)
-        self._sources = set([p.source_id for p in self._publications])
+        self._sources = set([int(p.source_id) for p in self._publications])
         self._fields = df[df['source_id'].isin(self._sources)]['asjc'].tolist()
         main = Counter(self._fields).most_common(1)[0][0]
         code = main // 10 ** (int(log(main, 10)) - 2 + 1)
@@ -333,9 +333,9 @@ class Original(object):
         grouped['drop'] = grouped['asjc'].apply(
             lambda s: any(x for x in s.split() if int(x) not in self.fields))
         # Add own sources
-        sources = grouped[~grouped['drop']].index.tolist()
-        sources.extend(sorted(list(self.sources)))
-        self._search_sources = sources
+        sources = set(grouped[~grouped['drop']].index.tolist())
+        sources.update(set(self.sources))
+        self._search_sources = sorted(list(sources))
         if verbose:
             types = "; ".join(list(main_types))
             print("Found {} sources for main field {} and source "

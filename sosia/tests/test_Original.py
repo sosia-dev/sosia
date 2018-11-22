@@ -17,15 +17,18 @@ fields = "ID name first_year num_coauthors num_publications country "\
          "reference_sim abstract_sim"
 match = namedtuple("Match", fields)
 MATCHES = [
+    match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
+        num_coauthors=4, num_publications=3, country='Norway',
+        reference_sim=0.0238, abstract_sim=0.0202),
     match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011,
         num_coauthors=5, num_publications=4, country='France',
-        reference_sim=0.0017, abstract_sim=0.0124),
+        reference_sim=0.0014, abstract_sim=0.0109),
     match(ID='55268789000', name='Chen, Chun Liang', first_year=2011,
         num_coauthors=4, num_publications=5, country='Taiwan',
-        reference_sim=0.0, abstract_sim=0.0106),
+        reference_sim=0.0, abstract_sim=0.0087),
     match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011,
         num_coauthors=5, num_publications=5, country='Mexico',
-        reference_sim=0.0059, abstract_sim=0.065)]
+        reference_sim=0.0044, abstract_sim=0.0694)]
 
 
 def test_country():
@@ -69,9 +72,9 @@ def test_first_year():
 def test_sources():
     sources = scientist1.sources
     assert_equal(len(sources), 3)
-    assert_true('22900' in sources)
-    assert_true('23013' in sources)
-    assert_true('18769' in sources)
+    assert_true(22900 in sources)
+    assert_true(23013 in sources)
+    assert_true(18769 in sources)
 
 
 def test_main_field():
@@ -100,12 +103,14 @@ def test_publications():
 
 def test_search_group():
     group = scientist1.search_group
-    assert_true(len(group) == 216)
+    assert_true(len(group) == 233)
     assert_true(isinstance(group, list))
 
 
 def test_search_sources():
     jour = scientist1.search_sources
-    assert_equal(len(jour), 62)
+    assert_equal(len(jour), 60)
     assert_true(14726 in jour)
     assert_true(22009 in jour)
+    for j in scientist1.sources:
+        assert_true(j in jour)
