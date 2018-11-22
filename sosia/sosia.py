@@ -5,9 +5,10 @@
 """Main class for sosia."""
 
 from collections import Counter, defaultdict, namedtuple
+from functools import partial
 from math import ceil, floor, inf, log
 from os.path import exists
-from string import digits, punctuation
+from string import digits, punctuation, Template
 
 import pandas as pd
 import scopus as sco
@@ -17,7 +18,6 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST
 
-MAX_LENGTH = 3893  # Maximum character length of a query
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
 _stemmer = snowball.SnowballStemmer('english')
@@ -369,34 +369,21 @@ class Original(object):
         _ncoauth = _get_value_range(len(self.coauthors), self.coauth_margin)
 
         # Define search group
-        group = self.search_group
+        group = sorted(self.search_group)
         n = len(group)
         if verbose:
             print("Searching through characteristics of {:,} authors".format(n))
 
         # First stage of filtering: minimum publications and main field
-        df = pd.DataFrame()
-        i = 0
+        params = {"group": group, "res": [], "refresh": refresh,
+                  "joiner": ") OR AU-ID(", "func": partial(_query_author),
+                  "query": Template("AU-ID($fill)")}
         if verbose:
             print("Pre-filtering...")
-            _print_progress(i, n)
-        for chunk in _chunker(group, floor((MAX_LENGTH-30)/27)):
-            while len(chunk) > 0:
-                half = floor(len(chunk)/2)
-                try:
-                    q = "AU-ID(" + ") OR AU-ID(".join(chunk) + ")"
-                    df = df.append(_query_author(q, refresh))
-                    if verbose:
-                        i += len(chunk)
-                        _print_progress(i, n)
-                    chunk = []
-                except:  # Rerun query with half the list
-                    q = "AU-ID(" + ") OR AU-ID(".join(chunk[:half]) + ")"
-                    df = df.append(_query_author(q, refresh))
-                    if verbose:
-                        i += len(chunk[:half])
-                        _print_progress(i, n)
-                    chunk = chunk[half:]
+            _print_progress(0, n)
+            params.update({'i': 0, 'total': n})
+        res, _ = _stacked_query(**params)
+        df = pd.DataFrame(res)
         df = df[df['areas'].str.startswith(self.main_field[1])]
         df['documents'] = pd.to_numeric(df['documents'], errors='coerce').fillna(0)
         df = df[df['documents'].astype(int) >= min(_npapers)]
@@ -413,27 +400,18 @@ class Original(object):
             _print_progress(0, n)
         keep = defaultdict(list)
         if stacked:  # Combine searches
-            d = {}
-            for chunk in _chunker(group, floor((MAX_LENGTH-21-30)/27)):
-                while len(chunk) > 0:
-                    try:
-                        q = "AU-ID({}) AND PUBYEAR BEF {}".format(
-                            ") OR AU-ID(".join(chunk), self.year+1)
-                        i += len(chunk)
-                        d.update(_build_dict(_query_docs(q, refresh), chunk))
-                        chunk = []
-                    except Exception as e:  # Rerun query with half the list
-                        h = floor(len(chunk)/2)
-                        q = "AU-ID({}) AND PUBYEAR BEF {}".format(
-                            ") OR AU-ID(".join(chunk[:h]), self.year+1)
-                        i += len(chunk)
-                        d.update(_build_dict(_query_docs(q, refresh), chunk))
-                        chunk = chunk[h:]
-                    if verbose:
-                        _print_progress(i, n)
-            # Iterate through container
-            for auth, dat in d.items():
+            query = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year+1))
+            params = {"group": group, "res": [], "query": query,
+                      "joiner": ") OR AU-ID(", "func": partial(_query_docs),
+                      "refresh": refresh}
+            if verbose:
+                params.update({"i": 0, "total": n})
+            res, _ = _stacked_query(**params)
+            container = _build_dict(res, group)
+            # Iterate through container in order to filter results
+            for auth, dat in container.items():
                 dat['n_coauth'] = len(dat['coauth'])
+                dat['n_pubs'] = len(dat['pubs'])
                 if (dat['first_year'] in _years and dat['n_pubs'] in
                         _npapers and dat['n_coauth'] in _ncoauth):
                     keep['ID'].append(auth)
@@ -495,23 +473,43 @@ def _build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.
     """
-    d = defaultdict(lambda: {'first_year': inf, 'n_pubs': 0, 'coauth': set()})
+    d = defaultdict(lambda: {'first_year': inf, 'pubs': set(), 'coauth': set()})
     for pub in results:
         authors = set(pub.authid.split(';'))
         for focal in authors.intersection(chunk):
             d[focal]['coauth'].update(authors)
             d[focal]['coauth'].remove(focal)
-            d[focal]['n_pubs'] += 1
+            d[focal]['pubs'].add(pub.eid)
             first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
             d[focal]['first_year'] = first_year
     return d
 
 
-def _chunker(l, n):
-    """Auxiliary function to break a list into chunks of at most size n"""
-    # From https://stackoverflow.com/a/312464/3621464
-    for i in range(0, len(l), n):
-        yield l[i:i+n]
+def _run(op, *args):
+    """Auxiliary function to call a function passed by partial()."""
+    return op(*args)
+
+
+def _stacked_query(group, res, query, joiner, func, refresh, i=None, total=None):
+    """Auxiliary function to recursively perform queries until they work.
+
+    Results of each successful query are appended to ´res´.
+    """
+    try:
+        q = query.substitute(fill=joiner.join(group))
+        res.extend(_run(func, q, refresh))
+        if total:  # Equivalent of verbose
+            i += len(group)
+            _print_progress(i, total)
+    except Exception as e:  # Catches two exceptions (long URL + many results)
+        mid = len(group) // 2
+        params = {"group": group[:mid], "res": res, "query": query, "i": i,
+                  "joiner": joiner, "func": func, "total": total,
+                  "refresh": refresh}
+        res, i = _stacked_query(**params)
+        params.update({"group": group[mid:], "i": i})
+        res, i = _stacked_query(**params)
+    return res, i
 
 
 def _get_authors(pubs):
