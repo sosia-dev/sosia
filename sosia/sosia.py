@@ -440,7 +440,7 @@ class Original(object):
                 keep['n_coauth'].append(len(coauth))
         if verbose:
             print("Found {:,} author(s) matching all criteria\nAdding "
-                  "other information".format(len(keep['ID'])))
+                  "other information...".format(len(keep['ID'])))
         profiles = [sco.AuthorRetrieval(auth, refresh) for auth in keep['ID']]
         # Add name
         names = [", ".join([p.surname, p.given_name]) for p in profiles]
@@ -541,9 +541,9 @@ def _get_refs(auth, year, refresh, verbose):
             missing['refs'] += 1
             continue
     if verbose:
-        print("For researcher {}, {} abstracts and {} reference lists out of "
-              "{} documents are missing".format(auth, missing['abs'],
-                                                missing['refs'], len(eids)))
+        print("For researcher {}, {} abstract(s) and {} reference list(s) out "
+              "of {} documents are missing".format(auth, missing['abs'],
+                                                   missing['refs'], len(eids)))
     return {"abstracts": abstracts, "refs": refs}
 
 
