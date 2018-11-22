@@ -197,7 +197,7 @@ class Original(object):
             self.field_source = pd.read_csv(FIELDS_SOURCES_LIST)
             df = self.field_source
         except FileNotFoundError:
-            text = "Fields-Journals list not found, but required for sosia "\
+            text = "Fields-Sources list not found, but required for sosia "\
                    "to match authors' publications to fields.  Please run "\
                    "sosia.create_fields_sources_list() and initiate "\
                    "the class again."
@@ -353,7 +353,7 @@ class Original(object):
         ----------
         stacked : bool (optional, default=False)
             Whether to combine searches in few queries or not.  Cached
-            files with most likely not be resuable.  Set to true if you
+            files with most likely not be resuable.  Set to True if you
             query in distinct fields or you want to minimize API key usage.
 
         verbose : bool (optional, default=False)
