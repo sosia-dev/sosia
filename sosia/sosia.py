@@ -239,11 +239,16 @@ class Original(object):
         self._coauthors.remove(self.id)
         self._country = _find_country(self.id, self._publications, self.year)
 
-    def define_search_group(self, verbose=False, refresh=False):
+    def define_search_group(self, stacked=False, verbose=False, refresh=False):
         """Define search_group.
 
         Parameters
         ----------
+        stacked : bool (optional, default=False)
+            Whether to combine searches in few queries or not.  Cached
+            files with most likely not be resuable.  Set to True if you
+            query in distinct fields or you want to minimize API key usage.
+
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
 
@@ -272,35 +277,62 @@ class Original(object):
         if verbose:
             n = len(self.search_sources)
             print("Searching authors for search_group in {} "
-                  "sources".format(len(self.search_sources)))
+                  "sources...".format(len(self.search_sources)))
             _print_progress(0, n)
-        for i, s in enumerate(self.search_sources):
-            try:  # Try complete publication list first
-                res = _query_docs('SOURCE-ID({})'.format(s), refresh)
-                # Today
-                pubs = [p for p in res if int(p.coverDate[:4]) == self.year]
-                today.update([au for sl in _get_authors(pubs) for au in sl])
-                # Then
-                pubs = [p for p in res if int(p.coverDate[:4]) in _years]
-                then.update([au for sl in _get_authors(pubs) for au in sl])
-                # Publications before
-                res1 = [p for p in res if int(p.coverDate[:4]) < _min_year]
-                negative.update([au for sl in _get_authors(res1) for au in sl])
-                # Author count (for excess publication count)
-                res2 = [p for p in res if int(p.coverDate[:4]) < self.year+1]
-                auth_count.extend([au for sl in _get_authors(res2) for au in sl])
-            except:  # Fall back to year-wise queries
-                q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
-                res = _query_docs(q, refresh)
-                today.update([au for sl in _get_authors(res) for au in sl])
-                for y in _years:
-                    q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
-                    res = _query_docs(q, refresh)
-                    new = [x.authid.split(';') for x in pubs
-                           if isinstance(x.authid, str)]
-                    then.update([au for sl in new for au in sl])
+        if stacked:
+            # verbose must be different
+            params = {"group": [str(x) for x in sorted(self.search_sources)],
+                      "joiner": ") OR SOURCE-ID(", "refresh": refresh,
+                      "func": partial(_query_docs)}
             if verbose:
-                _print_progress(i+1, n)
+                params.update({"i": 0, "total": n})
+            # Today
+            query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(self.year))
+            params.update({'query': query, "res": []})
+            pubs, _ = _stacked_query(**params)
+            today.update([au for sl in _get_authors(pubs) for au in sl])
+            # Then
+            if len(_years) == 1:
+                query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_years[0]))
+            else:
+                query = Template("SOURCE-ID($fill) AND PUBYEAR AFT {} AND "
+                                 "PUBYEAR BEF {}".format(min(_years)-1, max(_years)+1))
+            params.update({'query': query, "res": []})
+            pubs, _ = _stacked_query(**params)
+            then.update([au for sl in _get_authors(pubs) for au in sl])
+            # Negative
+            query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_min_year-1))
+            params.update({'query': query, "res": []})
+            pubs, _ = _stacked_query(**params)
+            negative.update([au for sl in _get_authors(pubs) for au in sl])
+        else:
+            for i, s in enumerate(self.search_sources):
+                try:  # Try complete publication list first
+                    res = _query_docs('SOURCE-ID({})'.format(s), refresh)
+                    # Today
+                    pubs = [p for p in res if int(p.coverDate[:4]) == self.year]
+                    today.update([au for sl in _get_authors(pubs) for au in sl])
+                    # Then
+                    pubs = [p for p in res if int(p.coverDate[:4]) in _years]
+                    then.update([au for sl in _get_authors(pubs) for au in sl])
+                    # Publications before
+                    res1 = [p for p in res if int(p.coverDate[:4]) < _min_year]
+                    negative.update([au for sl in _get_authors(res1) for au in sl])
+                    # Author count (for excess publication count)
+                    res2 = [p for p in res if int(p.coverDate[:4]) < self.year+1]
+                    auth_count.extend([au for sl in _get_authors(res2) for au in sl])
+                except:  # Fall back to year-wise queries
+                    q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
+                    res = _query_docs(q, refresh)
+                    today.update([au for sl in _get_authors(res) for au in sl])
+                    for y in _years:
+                        q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
+                        res = _query_docs(q, refresh)
+                        new = [x.authid.split(';') for x in pubs
+                               if isinstance(x.authid, str)]
+                        then.update([au for sl in new for au in sl])
+                if verbose:
+                    _print_progress(i+1, n)
         # Finalize
         group = today.intersection(then)
         negative.update({a for a, npubs in Counter(auth_count).items()

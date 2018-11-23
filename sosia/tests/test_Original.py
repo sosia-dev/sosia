@@ -100,6 +100,13 @@ def test_search_group():
     assert_true(isinstance(group, list))
 
 
+def test_search_group_stacked():
+    scientist1.define_search_group(stacked=True)
+    group = scientist1.search_group
+    assert_equal(len(group), 527)
+    assert_true(isinstance(group, list))
+
+
 def test_find_matches():
     recieved = sorted(scientist1.find_matches())
     assert_equal(len(recieved), len(MATCHES))
