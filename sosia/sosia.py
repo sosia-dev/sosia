@@ -274,18 +274,15 @@ class Original(object):
         _years = list(range(self.first_year-self.year_margin,
                             self.first_year+self.year_margin+1))
         # Query journals
-        if verbose:
-            n = len(self.search_sources)
-            print("Searching authors for search_group in {} "
-                  "sources...".format(len(self.search_sources)))
-            _print_progress(0, n)
         if stacked:
-            # verbose must be different
             params = {"group": [str(x) for x in sorted(self.search_sources)],
                       "joiner": ") OR SOURCE-ID(", "refresh": refresh,
                       "func": partial(_query_docs)}
             if verbose:
+                n = len(self.search_sources)
                 params.update({"i": 0, "total": n})
+                print("Searching authors in {} sources in {}...".format(
+                        len(self.search_sources), self.year))
             # Today
             query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(self.year))
             params.update({'query': query, "res": []})
@@ -293,19 +290,36 @@ class Original(object):
             today.update([au for sl in _get_authors(pubs) for au in sl])
             # Then
             if len(_years) == 1:
-                query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_years[0]))
+                query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
+                    _years[0]))
+                if verbose:
+                    print("Searching authors in {} sources in {}...".format(
+                        len(self.search_sources), _years[0]))
             else:
+                _min = min(_years)-1
+                _max = max(_years)+1
                 query = Template("SOURCE-ID($fill) AND PUBYEAR AFT {} AND "
-                                 "PUBYEAR BEF {}".format(min(_years)-1, max(_years)+1))
+                                 "PUBYEAR BEF {}".format(_min, _max))
+                if verbose:
+                    print("Searching authors in {} sources in {}-{}...".format(
+                        len(self.search_sources), _min+1, _max-1))
             params.update({'query': query, "res": []})
             pubs, _ = _stacked_query(**params)
             then.update([au for sl in _get_authors(pubs) for au in sl])
             # Negative
+            if verbose:
+                print("Searching authors in {} sources in {}...".format(
+                        len(self.search_sources), _min_year-1))
             query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_min_year-1))
             params.update({'query': query, "res": []})
             pubs, _ = _stacked_query(**params)
             negative.update([au for sl in _get_authors(pubs) for au in sl])
         else:
+            if verbose:
+                n = len(self.search_sources)
+                print("Searching authors for search_group in {} "
+                      "sources...".format(len(self.search_sources)))
+                _print_progress(0, n)
             for i, s in enumerate(self.search_sources):
                 try:  # Try complete publication list first
                     res = _query_docs('SOURCE-ID({})'.format(s), refresh)
