@@ -10,8 +10,6 @@ import sosia
 
 warnings.filterwarnings("ignore")
 scientist1 = sosia.Original(55208373700, 2017)
-scientist1.define_search_sources()
-scientist1.define_search_group()
 
 fields = "ID name first_year num_coauthors num_publications country "\
          "reference_sim abstract_sim"
@@ -47,22 +45,6 @@ def test_coauthors():
 def test_fields():
     expected = sorted([1400, 1405, 1405, 1408, 1803, 2002, 2200])
     assert_equal(sorted(scientist1.fields), expected)
-
-
-def test_find_matches():
-    recieved = sorted(scientist1.find_matches())
-    assert_true(isinstance(recieved, list))
-    assert_equal(len(recieved), len(MATCHES))
-    for e in MATCHES:
-        assert_true(e in recieved)
-
-
-def test_find_matches_stacked():
-    recieved = sorted(scientist1.find_matches(stacked=True))
-    assert_true(isinstance(recieved, list))
-    assert_equal(len(recieved), len(MATCHES))
-    for e in MATCHES:
-        assert_true(e in recieved)
 
 
 def test_first_year():
@@ -101,16 +83,34 @@ def test_publications():
     assert_equal(pubs[0], expected)
 
 
-def test_search_group():
-    group = scientist1.search_group
-    assert_true(len(group) == 233)
-    assert_true(isinstance(group, list))
-
-
 def test_search_sources():
+    scientist1.define_search_sources()
     jour = scientist1.search_sources
     assert_equal(len(jour), 60)
     assert_true(14726 in jour)
     assert_true(22009 in jour)
     for j in scientist1.sources:
         assert_true(j in jour)
+
+
+def test_search_group():
+    scientist1.define_search_group()
+    group = scientist1.search_group
+    assert_equal(len(group), 233)
+    assert_true(isinstance(group, list))
+
+
+def test_find_matches():
+    recieved = sorted(scientist1.find_matches())
+    assert_equal(len(recieved), len(MATCHES))
+    assert_true(isinstance(recieved, list))
+    for e in MATCHES:
+        assert_true(e in recieved)
+
+
+def test_find_matches_stacked():
+    recieved = sorted(scientist1.find_matches(stacked=True))
+    assert_equal(len(recieved), len(MATCHES))
+    assert_true(isinstance(recieved, list))
+    for e in MATCHES:
+        assert_true(e in recieved)
