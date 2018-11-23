@@ -51,3 +51,4 @@ Indices and tables
    reference
    changelog
    authors
+   contributing
