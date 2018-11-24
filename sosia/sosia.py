@@ -324,16 +324,16 @@ class Original(object):
                     today.update(_get_authors(pubs))
                     pubs = [p for p in res if int(p.coverDate[:4]) in _years]
                     then.update(_get_authors(pubs))
-                    res1 = [p for p in res if int(p.coverDate[:4]) < _min_year]
-                    negative.update(_get_authors(res1))
-                    res2 = [p for p in res if int(p.coverDate[:4]) < self.year+1]
-                    auth_count.extend(_get_authors(res2))
+                    pubs = [p for p in res if int(p.coverDate[:4]) < _min_year]
+                    negative.update(_get_authors(pubs))
+                    pubs = [p for p in res if int(p.coverDate[:4]) < self.year+1]
+                    auth_count.extend(_get_authors(pubs))
                 except:  # Fall back to year-wise queries
                     q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
                     today.update(_get_authors(_query_docs(q, refresh)))
                     for y in _years:
                         q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
-                        res = _query_docs(q, refresh)
+                        pubs = _query_docs(q, refresh)
                         new = [x.authid.split(';') for x in pubs
                                if isinstance(x.authid, str)]
                         then.update([au for sl in new for au in sl])
