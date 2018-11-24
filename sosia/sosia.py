@@ -281,7 +281,7 @@ class Original(object):
                       "joiner": ") OR SOURCE-ID(", "refresh": refresh,
                       "func": partial(_query_docs)}
             if verbose:
-                params.update({"i": 0, "total": n})
+                params.update({"total": n})
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), self.year))
             # Today
@@ -419,8 +419,7 @@ class Original(object):
                   "query": Template("AU-ID($fill)")}
         if verbose:
             print("Pre-filtering...")
-            print_progress(0, n)
-            params.update({'i': 0, 'total': n})
+            params.update({'total': n})
         res, _ = _stacked_query(**params)
         df = pd.DataFrame(res)
         df = df[df['areas'].str.startswith(self.main_field[1])]
@@ -444,7 +443,7 @@ class Original(object):
                       "joiner": ") OR AU-ID(", "func": partial(_query_docs),
                       "refresh": refresh}
             if verbose:
-                params.update({"i": 0, "total": n})
+                params.update({"total": n})
             res, _ = _stacked_query(**params)
             container = _build_dict(res, group)
             # Iterate through container in order to filter results
@@ -529,7 +528,7 @@ def _run(op, *args):
     return op(*args)
 
 
-def _stacked_query(group, res, query, joiner, func, refresh, i=None, total=None):
+def _stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
     """Auxiliary function to recursively perform queries until they work.
 
     Results of each successful query are appended to ´res´.
