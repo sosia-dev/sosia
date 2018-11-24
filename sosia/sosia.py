@@ -559,32 +559,23 @@ def _get_authors(pubs):
     return [au for sl in l for au in sl]
 
 
-def _get_refs(auth, year, refresh, verbose):
+def _get_refs(au, year, refresh, verbose):
     """Auxiliary function to return abstract and references of articles
     published up until the given year, both as continuous string.
     """
-    res = _query_docs("AU-ID({})".format(auth), refresh)
+    res = _query_docs("AU-ID({})".format(au), refresh)
     eids = [p.eid for p in res if int(p.coverDate[:4]) <= year]
-    abstracts = ""
-    refs = ""
-    missing = {'abs': 0, 'refs': 0}
-    for eid in eids:
-        ab = sco.AbstractRetrieval(eid, view='FULL', refresh=refresh)
-        try:
-            abstracts += ab.abstract.rsplit("©", 1)[0]
-        except AttributeError:  # No abstract present
-            missing['abs'] += 1
-            continue
-        try:
-            refs += " ".join([ref.id for ref in ab.references])
-        except TypeError:  # No references present (consider refreshing)
-            missing['refs'] += 1
-            continue
+    docs = [sco.AbstractRetrieval(eid, view='FULL', refresh=refresh)
+            for eid in eids]
+    absts = [ab.abstract for ab in docs if ab.abstract]  # Filter None's
+    refs = [ab.references for ab in docs if ab.references]  # Filter None's
     if verbose:
-        print("For researcher {}, {} abstract(s) and {} reference list(s) out "
-              "of {} documents are missing".format(auth, missing['abs'],
-                                                   missing['refs'], len(eids)))
-    return {"abstracts": abstracts, "refs": refs}
+        miss_abs = len(eids) - len(absts)
+        miss_refs = len(eids) - len(refs)
+        print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
+              "{} documents missing".format(au, miss_abs, miss_refs, len(eids)))
+    return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
+            'abstracts': " ".join(absts)}
 
 
 def _get_value_range(base, val):
