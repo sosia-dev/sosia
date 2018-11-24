@@ -265,29 +265,29 @@ class Original(object):
             max_pubs = max(_npapers)
         except TypeError:
             raise ValueError('Value pub_margin must be float or integer.')
+
         # Variables
         today = set()
         then = set()
         negative = set()
         auth_count = []
         _min_year = self.first_year-self.year_margin
-        _years = list(range(self.first_year-self.year_margin,
-                            self.first_year+self.year_margin+1))
+        _years = list(range(_min_year, self.first_year+self.year_margin+1))
+        n = len(self.search_sources)
+
         # Query journals
         if stacked:
             params = {"group": [str(x) for x in sorted(self.search_sources)],
                       "joiner": ") OR SOURCE-ID(", "refresh": refresh,
                       "func": partial(_query_docs)}
             if verbose:
-                n = len(self.search_sources)
                 params.update({"i": 0, "total": n})
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), self.year))
             # Today
             query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(self.year))
             params.update({'query': query, "res": []})
-            pubs, _ = _stacked_query(**params)
-            today.update(_get_authors(pubs))
+            today.update(_get_authors(_stacked_query(**params)[0]))
             # Then
             if len(_years) == 1:
                 query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
@@ -304,36 +304,28 @@ class Original(object):
                     print("Searching authors in {} sources in {}-{}...".format(
                         len(self.search_sources), _min+1, _max-1))
             params.update({'query': query, "res": []})
-            pubs, _ = _stacked_query(**params)
-            then.update(_get_authors(pubs))
+            then.update(_get_authors(_stacked_query(**params)[0]))
             # Negative
             if verbose:
-                n = len(self.search_sources)
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), _min_year-1))
             query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_min_year-1))
             params.update({'query': query, "res": []})
-            pubs, _ = _stacked_query(**params)
-            negative.update(_get_authors(pubs))
+            negative.update(_get_authors(_stacked_query(**params)[0]))
         else:
             if verbose:
-                n = len(self.search_sources)
                 print("Searching authors for search_group in {} "
                       "sources...".format(len(self.search_sources)))
                 print_progress(0, n)
             for i, s in enumerate(self.search_sources):
                 try:  # Try complete publication list first
                     res = _query_docs('SOURCE-ID({})'.format(s), refresh)
-                    # Today
                     pubs = [p for p in res if int(p.coverDate[:4]) == self.year]
                     today.update(_get_authors(pubs))
-                    # Then
                     pubs = [p for p in res if int(p.coverDate[:4]) in _years]
                     then.update(_get_authors(pubs))
-                    # Publications before
                     res1 = [p for p in res if int(p.coverDate[:4]) < _min_year]
                     negative.update(_get_authors(res1))
-                    # Author count (for excess publication count)
                     res2 = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                     auth_count.extend(_get_authors(res2))
                 except:  # Fall back to year-wise queries
@@ -347,6 +339,7 @@ class Original(object):
                         then.update([au for sl in new for au in sl])
                 if verbose:
                     print_progress(i+1, n)
+
         # Finalize
         group = today.intersection(then)
         negative.update({a for a, npubs in Counter(auth_count).items()
