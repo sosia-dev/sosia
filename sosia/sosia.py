@@ -401,15 +401,12 @@ class Original(object):
                        self.first_year-self.year_margin+1)
         _npapers = _get_value_range(len(self.publications), self.pub_margin)
         _ncoauth = _get_value_range(len(self.coauthors), self.coauth_margin)
-
-        # Define search group
-        group = sorted(self.search_group)
-        n = len(group)
+        n = len(self.search_group)
         if verbose:
             print("Searching through characteristics of {:,} authors".format(n))
 
         # First stage of filtering: minimum publications and main field
-        params = {"group": group, "res": [], "refresh": refresh,
+        params = {"group": self.search_group, "res": [], "refresh": refresh,
                   "joiner": ") OR AU-ID(", "func": partial(_query_author),
                   "query": Template("AU-ID($fill)")}
         if verbose:
@@ -429,8 +426,7 @@ class Original(object):
         group = sorted(df['id'].tolist())
         if verbose:
             print("Filtering based on provided conditions...")
-            i = 0
-            print_progress(0, n)
+            print_progress(0, len(group))
         keep = defaultdict(list)
         if stacked:  # Combine searches
             query = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year+1))
@@ -457,20 +453,17 @@ class Original(object):
                 res = _query_docs('AU-ID({})'.format(au), refresh)
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 # Filter
-                if len(res) not in _npapers:
-                    continue
                 min_year = int(min([p.coverDate[:4] for p in res]))
-                if min_year not in _years:
-                    continue
-                coauth = set([a for p in res for a in p.authid.split(';')])
-                coauth.remove(au)
-                if len(coauth) not in _ncoauth:
+                authors = set([a for p in res for a in p.authid.split(';')])
+                n_coauth = len(authors) - 1  # -1 for focal author
+                if ((len(res) not in _npapers) or (min_year not in _years) or
+                        (n_coauth not in _ncoauth)):
                     continue
                 # Collect information
-                keep['ID'].append(au)
-                keep['first_year'].append(min_year)
-                keep['n_pubs'].append(len(res))
-                keep['n_coauth'].append(len(coauth))
+                info = [('n_pubs', len(res)), ('n_coauth', n_coauth),
+                        ('ID', au), ('first_year', min_year)]
+                for key, val in info:
+                    keep[key].append(val)
         if verbose:
             print("Found {:,} author(s) matching all criteria\nAdding "
                   "other information...".format(len(keep['ID'])))
