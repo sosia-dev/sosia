@@ -287,7 +287,7 @@ class Original(object):
             query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(self.year))
             params.update({'query': query, "res": []})
             pubs, _ = _stacked_query(**params)
-            today.update([au for sl in _get_authors(pubs) for au in sl])
+            today.update(_get_authors(pubs))
             # Then
             if len(_years) == 1:
                 query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
@@ -305,15 +305,16 @@ class Original(object):
                         len(self.search_sources), _min+1, _max-1))
             params.update({'query': query, "res": []})
             pubs, _ = _stacked_query(**params)
-            then.update([au for sl in _get_authors(pubs) for au in sl])
+            then.update(_get_authors(pubs))
             # Negative
             if verbose:
+                n = len(self.search_sources)
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), _min_year-1))
             query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_min_year-1))
             params.update({'query': query, "res": []})
             pubs, _ = _stacked_query(**params)
-            negative.update([au for sl in _get_authors(pubs) for au in sl])
+            negative.update(_get_authors(pubs))
         else:
             if verbose:
                 n = len(self.search_sources)
@@ -325,20 +326,19 @@ class Original(object):
                     res = _query_docs('SOURCE-ID({})'.format(s), refresh)
                     # Today
                     pubs = [p for p in res if int(p.coverDate[:4]) == self.year]
-                    today.update([au for sl in _get_authors(pubs) for au in sl])
+                    today.update(_get_authors(pubs))
                     # Then
                     pubs = [p for p in res if int(p.coverDate[:4]) in _years]
-                    then.update([au for sl in _get_authors(pubs) for au in sl])
+                    then.update(_get_authors(pubs))
                     # Publications before
                     res1 = [p for p in res if int(p.coverDate[:4]) < _min_year]
-                    negative.update([au for sl in _get_authors(res1) for au in sl])
+                    negative.update(_get_authors(res1))
                     # Author count (for excess publication count)
                     res2 = [p for p in res if int(p.coverDate[:4]) < self.year+1]
-                    auth_count.extend([au for sl in _get_authors(res2) for au in sl])
+                    auth_count.extend(_get_authors(res2))
                 except:  # Fall back to year-wise queries
                     q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
-                    res = _query_docs(q, refresh)
-                    today.update([au for sl in _get_authors(res) for au in sl])
+                    today.update(_get_authors(_query_docs(q, refresh)))
                     for y in _years:
                         q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
                         res = _query_docs(q, refresh)
@@ -559,10 +559,11 @@ def _stacked_query(group, res, query, joiner, func, refresh, i=None, total=None)
 
 
 def _get_authors(pubs):
-    """Auxiliary function to get author IDs from string concatenated by ;,
-    which are embedded in a list of namedtuples.
+    """Auxiliary function to get list of author IDs from a list of
+    namedtuples representing publications.
     """
-    return [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
+    l = [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
+    return [au for sl in l for au in sl]
 
 
 def _get_refs(auth, year, refresh, verbose):
