@@ -2,7 +2,8 @@ from os import makedirs
 from os.path import exists, expanduser
 
 import pandas as pd
-    
+from scopus import AuthorSearch, ScopusSearch
+
 URL_SOURCES = 'https://elsevier.com/?a=734751'
 URL_EXT_LIST = 'https://www.elsevier.com/__data/assets/excel_doc/0015/91122/ext_list_September_2018.xlsx'
 FIELDS_SOURCES_LIST = expanduser('~/.sosia/') + 'field_sources_list.csv'
@@ -82,5 +83,21 @@ def raise_non_empty(val, obj):
     not of the desired object type.
     """
     if not isinstance(val, obj) or len(val) == 0:
-        obj_name = str(obj).split("'")[1])
-        raise Exception("Value must be a non-empty {}.".format(obj_name)
+        obj_name = str(obj).split("'")[1]
+        raise Exception("Value must be a non-empty {}.".format(obj_name))
+
+
+def query(q_type, q, refresh=False, first_try=True):
+    """Auxiliary wrapper function to perform a particular search query."""
+    try:
+        if q_type == "author":
+            return AuthorSearch(q, refresh=refresh).authors
+        elif q_type == "docs":
+            return ScopusSearch(q, refresh=refresh).results
+        else:
+            raise Exception("Unknown value provided.")
+    except KeyError:  # Cached file broken
+        if first_try:
+            return query(q_type, q, True, False)
+        else:
+            pass

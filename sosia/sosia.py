@@ -17,7 +17,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, print_progress,
-    raise_non_empty)
+    raise_non_empty, query)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -217,7 +217,7 @@ class Original(object):
         self.refresh = refresh
 
         # Own information
-        res = _query_docs('AU-ID({})'.format(self.id), refresh=self.refresh)
+        res = query("docs", 'AU-ID({})'.format(self.id), self.refresh)
         self._publications = [p for p in res if int(p.coverDate[:4]) < self.year]
         if len(self._publications) == 0:
             text = "No publications for author {} until year {}".format(
@@ -274,18 +274,18 @@ class Original(object):
         if stacked:
             params = {"group": [str(x) for x in sorted(self.search_sources)],
                       "joiner": ") OR SOURCE-ID(", "refresh": refresh,
-                      "func": partial(_query_docs)}
+                      "func": partial(query, "docs")}
             if verbose:
                 params.update({"total": n})
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), self.year))
             # Today
-            query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(self.year))
-            params.update({'query': query, "res": []})
+            q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(self.year))
+            params.update({'query': q, "res": []})
             today.update(_get_authors(_stacked_query(**params)[0]))
             # Then
             if len(_years) == 1:
-                query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
+                q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
                     _years[0]))
                 if verbose:
                     print("Searching authors in {} sources in {}...".format(
@@ -293,19 +293,19 @@ class Original(object):
             else:
                 _min = min(_years)-1
                 _max = max(_years)+1
-                query = Template("SOURCE-ID($fill) AND PUBYEAR AFT {} AND "
-                                 "PUBYEAR BEF {}".format(_min, _max))
+                q = Template("SOURCE-ID($fill) AND PUBYEAR AFT {} AND "
+                             "PUBYEAR BEF {}".format(_min, _max))
                 if verbose:
                     print("Searching authors in {} sources in {}-{}...".format(
                         len(self.search_sources), _min+1, _max-1))
-            params.update({'query': query, "res": []})
+            params.update({'query': q, "res": []})
             then.update(_get_authors(_stacked_query(**params)[0]))
             # Negative
             if verbose:
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), _min_year-1))
-            query = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_min_year-1))
-            params.update({'query': query, "res": []})
+            q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_min_year-1))
+            params.update({'query': q, "res": []})
             negative.update(_get_authors(_stacked_query(**params)[0]))
         else:
             if verbose:
@@ -314,7 +314,7 @@ class Original(object):
                 print_progress(0, n)
             for i, s in enumerate(self.search_sources):
                 try:  # Try complete publication list first
-                    res = _query_docs('SOURCE-ID({})'.format(s), refresh)
+                    res = query("docs", 'SOURCE-ID({})'.format(s), refresh)
                     pubs = [p for p in res if int(p.coverDate[:4]) == self.year]
                     today.update(_get_authors(pubs))
                     pubs = [p for p in res if int(p.coverDate[:4]) in _years]
@@ -325,10 +325,10 @@ class Original(object):
                     auth_count.extend(_get_authors(pubs))
                 except:  # Fall back to year-wise queries
                     q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
-                    today.update(_get_authors(_query_docs(q, refresh)))
+                    today.update(_get_authors(query("docs", q, refresh)))
                     for y in _years:
                         q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
-                        pubs = _query_docs(q, refresh)
+                        pubs = query("docs", q, refresh)
                         new = [x.authid.split(';') for x in pubs
                                if isinstance(x.authid, str)]
                         then.update([au for sl in new for au in sl])
@@ -407,7 +407,7 @@ class Original(object):
 
         # First stage of filtering: minimum publications and main field
         params = {"group": self.search_group, "res": [], "refresh": refresh,
-                  "joiner": ") OR AU-ID(", "func": partial(_query_author),
+                  "joiner": ") OR AU-ID(", "func": partial(query, "author"),
                   "query": Template("AU-ID($fill)")}
         if verbose:
             print("Pre-filtering...")
@@ -429,10 +429,9 @@ class Original(object):
             print_progress(0, len(group))
         keep = defaultdict(list)
         if stacked:  # Combine searches
-            query = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year+1))
-            params = {"group": group, "res": [], "query": query,
-                      "joiner": ") OR AU-ID(", "func": partial(_query_docs),
-                      "refresh": refresh}
+            q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year+1))
+            params = {"group": group, "res": [], "query": q, "refresh": refresh,
+                      "joiner": ") OR AU-ID(", "func": partial(query, "docs")}
             if verbose:
                 params.update({"total": n})
             res, _ = _stacked_query(**params)
@@ -450,7 +449,7 @@ class Original(object):
             for i, au in enumerate(group):
                 if verbose:
                     print_progress(i+1, n)
-                res = _query_docs('AU-ID({})'.format(au), refresh)
+                res = query("docs", 'AU-ID({})'.format(au), refresh)
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
@@ -472,7 +471,7 @@ class Original(object):
         names = [", ".join([p.surname, p.given_name]) for p in profiles]
         # Add country
         countries = [_find_country(
-                        au, _query_docs('AU-ID({})'.format(au), refresh),
+                        au, query("docs", 'AU-ID({})'.format(au), refresh),
                         self.year)
                      for au in keep['ID']]
         # Add abstract and reference cosine similarity
@@ -550,7 +549,7 @@ def _get_refs(au, year, refresh, verbose):
     """Auxiliary function to return abstract and references of articles
     published up until the given year, both as continuous string.
     """
-    res = _query_docs("AU-ID({})".format(au), refresh)
+    res = query("docs", "AU-ID({})".format(au), refresh)
     eids = [p.eid for p in res if int(p.coverDate[:4]) <= year]
     docs = [sco.AbstractRetrieval(eid, view='FULL', refresh=refresh)
             for eid in eids]
@@ -604,19 +603,3 @@ def _find_country(auth_id, pubs, year):
 def _tokenize_and_stem(text):
     """Auxiliary funtion to return stemmed tokens of document"""
     return [_stemmer.stem(t) for t in word_tokenize(text.lower())]
-
-
-def _query_author(q, refresh=False):
-    """Auxiliary function to perform a search query for authors."""
-    try:
-        return sco.AuthorSearch(q, refresh=refresh).authors
-    except KeyError:
-        return sco.AuthorSearch(q, refresh=True).authors
-
-
-def _query_docs(q, refresh=False):
-    """Auxiliary function to perform a search query for documents."""
-    try:
-        return sco.ScopusSearch(q, refresh=refresh).results
-    except KeyError:
-        return sco.ScopusSearch(q, refresh=True).results
