@@ -66,3 +66,13 @@ def create_fields_sources_list():
     if not exists(path):
        makedirs(path)
     out.to_csv(FIELDS_SOURCES_LIST, index=False)
+
+
+def print_progress(iteration, total, decimals=2, length=50):
+    """Print terminal progress bar."""
+    percent = round(100 * (iteration / float(total)), decimals)
+    filled_len = int(length * iteration // total)
+    bar = '█' * filled_len + '-' * (length - filled_len)
+    print('\rProgress: |{}| {}% Complete'.format(bar, percent), end='\r')
+    if iteration == total:
+        print()

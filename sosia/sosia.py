@@ -16,7 +16,7 @@ from nltk import snowball, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST
+from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, print_progress
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -319,7 +319,7 @@ class Original(object):
                 n = len(self.search_sources)
                 print("Searching authors for search_group in {} "
                       "sources...".format(len(self.search_sources)))
-                _print_progress(0, n)
+                print_progress(0, n)
             for i, s in enumerate(self.search_sources):
                 try:  # Try complete publication list first
                     res = _query_docs('SOURCE-ID({})'.format(s), refresh)
@@ -346,7 +346,7 @@ class Original(object):
                                if isinstance(x.authid, str)]
                         then.update([au for sl in new for au in sl])
                 if verbose:
-                    _print_progress(i+1, n)
+                    print_progress(i+1, n)
         # Finalize
         group = today.intersection(then)
         negative.update({a for a, npubs in Counter(auth_count).items()
@@ -426,7 +426,7 @@ class Original(object):
                   "query": Template("AU-ID($fill)")}
         if verbose:
             print("Pre-filtering...")
-            _print_progress(0, n)
+            print_progress(0, n)
             params.update({'i': 0, 'total': n})
         res, _ = _stacked_query(**params)
         df = pd.DataFrame(res)
@@ -443,7 +443,7 @@ class Original(object):
         if verbose:
             print("Filtering based on provided conditions...")
             i = 0
-            _print_progress(0, n)
+            print_progress(0, n)
         keep = defaultdict(list)
         if stacked:  # Combine searches
             query = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year+1))
@@ -466,7 +466,7 @@ class Original(object):
         else:  # Query each author individually
             for i, au in enumerate(group):
                 if verbose:
-                    _print_progress(i+1, n)
+                    print_progress(i+1, n)
                 res = _query_docs('AU-ID({})'.format(au), refresh)
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 # Filter
@@ -546,7 +546,7 @@ def _stacked_query(group, res, query, joiner, func, refresh, i=None, total=None)
         res.extend(_run(func, q, refresh))
         if total:  # Equivalent of verbose
             i += len(group)
-            _print_progress(i, total)
+            print_progress(i, total)
     except Exception as e:  # Catches two exceptions (long URL + many results)
         mid = len(group) // 2
         params = {"group": group[:mid], "res": res, "query": query, "i": i,
@@ -627,17 +627,6 @@ def _find_country(auth_id, pubs, year):
     countries = [sco.ContentAffiliationRetrieval(afid).country
                  for afid in affs]
     return Counter(countries).most_common(1)[0][0]
-
-
-def _print_progress(iteration, total, prefix='Progress:', suffix='Complete',
-                    decimals=2, length=50, fill='█'):
-    """Print terminal progress bar."""
-    percent = round(100 * (iteration / float(total)), decimals)
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
-    if iteration == total:
-        print()
 
 
 def _tokenize_and_stem(text):
