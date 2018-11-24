@@ -401,11 +401,11 @@ class Original(object):
                        self.first_year-self.year_margin+1)
         _npapers = _get_value_range(len(self.publications), self.pub_margin)
         _ncoauth = _get_value_range(len(self.coauthors), self.coauth_margin)
-        n = len(self.search_group)
         if verbose:
+            n = len(self.search_group)
             print("Searching through characteristics of {:,} authors".format(n))
 
-        # First stage of filtering: minimum publications and main field
+        # First round of filtering: minimum publications and main field
         params = {"group": self.search_group, "res": [], "refresh": refresh,
                   "joiner": ") OR AU-ID(", "func": partial(query, "author"),
                   "query": Template("AU-ID($fill)")}
@@ -413,20 +413,16 @@ class Original(object):
             print("Pre-filtering...")
             params.update({'total': n})
         res, _ = _stacked_query(**params)
-        df = pd.DataFrame(res)
-        df = df[df['areas'].str.startswith(self.main_field[1])]
-        df['documents'] = pd.to_numeric(df['documents'], errors='coerce').fillna(0)
-        df = df[df['documents'].astype(int) >= min(_npapers)]
-        n = df.shape[0]
+        group = [pub.eid.split('-')[-1] for pub in res
+                 if pub.areas.startswith(self.main_field[1])
+                 and pub.documents >= str(min(_npapers))]
+        group.sort()
         if verbose:
-            print("Left with {} authors".format(n))
+            n = len(group)
+            print("Left with {} authors\nFiltering based on provided "
+                  "conditions...".format(n))
 
-        # Second round of filtering
-        df['id'] = df['eid'].str.split('-').str[-1]
-        group = sorted(df['id'].tolist())
-        if verbose:
-            print("Filtering based on provided conditions...")
-            print_progress(0, len(group))
+        # Second round of filtering: All other conditions
         keep = defaultdict(list)
         if stacked:  # Combine searches
             q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year+1))
@@ -454,7 +450,7 @@ class Original(object):
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
                 authors = set([a for p in res for a in p.authid.split(';')])
-                n_coauth = len(authors) - 1  # -1 for focal author
+                n_coauth = len(authors) - 1  # Subtract 1 for focal author
                 if ((len(res) not in _npapers) or (min_year not in _years) or
                         (n_coauth not in _ncoauth)):
                     continue
