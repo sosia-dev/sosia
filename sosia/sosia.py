@@ -376,7 +376,8 @@ class Original(object):
                   "type(s) {}".format(len(self._search_sources),
                                       self.main_field[0], types))
 
-    def find_matches(self, stacked=False, verbose=False, refresh=False):
+    def find_matches(self, stacked=False, verbose=False, refresh=False,
+                     **kwds):
         """Find matches within search_group based on three criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -395,6 +396,9 @@ class Original(object):
 
         refresh : bool (optional, default=False)
             Whether to refresh cached search files.
+
+        kwds : keywords
+            Parameters to pass to TfidfVectorizer for abstract vectorization.
         """
         # Variables
         _years = range(self.first_year-self.year_margin,
@@ -475,9 +479,8 @@ class Original(object):
         tokens.append(_get_refs(self.id, self.year, refresh, verbose))
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
         ref_cos = (ref_m * ref_m.T).toarray().round(4)[-1]
-        vectorizer = TfidfVectorizer(
-            min_df=0.05, max_df=0.8, max_features=200000, ngram_range=(1, 3),
-            stop_words=STOPWORDS, tokenizer=_tokenize_and_stem)
+        vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
+            tokenizer=_tokenize_and_stem, **kwds)
         tfidf = vectorizer.fit_transform([t['abstracts'] for t in tokens])
         abs_cos = (tfidf * tfidf.T).toarray().round(4)[-1]
 
