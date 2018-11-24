@@ -76,3 +76,11 @@ def print_progress(iteration, total, decimals=2, length=50):
     print('\rProgress: |{}| {}% Complete'.format(bar, percent), end='\r')
     if iteration == total:
         print()
+
+def raise_non_empty(val, obj):
+    """Auxiliary function to raise exception if provided value is empty or
+    not of the desired object type.
+    """
+    if not isinstance(val, obj) or len(val) == 0:
+        obj_name = str(obj).split("'")[1])
+        raise Exception("Value must be a non-empty {}.".format(obj_name)

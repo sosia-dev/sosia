@@ -16,7 +16,8 @@ from nltk import snowball, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, print_progress
+from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, print_progress,
+    raise_non_empty)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -34,8 +35,7 @@ class Original(object):
 
     @country.setter
     def country(self, val):
-        if not isinstance(val, str):
-            raise Exception("Value must be a string.")
+        raise_non_empty(val, str)
         self._country = val
 
     @property
@@ -47,8 +47,7 @@ class Original(object):
 
     @coauthors.setter
     def coauthors(self, val):
-        if not isinstance(val, set) or len(val) == 0:
-            raise Exception("Value must be a non-empty set.")
+        raise_non_empty(val, set)
         self._coauthors = val
 
     @property
@@ -60,8 +59,7 @@ class Original(object):
 
     @fields.setter
     def fields(self, val):
-        if not isinstance(val, list) or len(val) == 0:
-            raise Exception("Value must be a non-empty list.")
+        raise_non_empty(val, set)
         self._fields = val
 
     @property
@@ -97,8 +95,7 @@ class Original(object):
 
     @publications.setter
     def publications(self, val):
-        if not isinstance(val, list) or len(val) == 0:
-            raise Exception("Value must be a non-empty list.")
+        raise_non_empty(val, set)
         self._publications = val
 
     @property
@@ -138,8 +135,7 @@ class Original(object):
 
     @search_sources.setter
     def search_sources(self, val):
-        if not isinstance(val, list) or len(val) == 0:
-            raise Exception("Value must be a non-empty list.")
+        raise_non_empty(val, list)
         self._search_sources = val
 
     @property
@@ -151,8 +147,7 @@ class Original(object):
 
     @sources.setter
     def sources(self, val):
-        if not isinstance(val, set) or len(val) == 0:
-            raise Exception("Value must be a non-empty set.")
+        raise_non_empty(val, set)
         self._sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
