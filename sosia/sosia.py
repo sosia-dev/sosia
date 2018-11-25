@@ -16,8 +16,8 @@ from nltk import snowball, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, print_progress,
-    raise_non_empty, query)
+from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, compute_cosine,
+    print_progress, raise_non_empty, query)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -476,15 +476,14 @@ class Original(object):
         tokens = [_get_refs(au, self.year, refresh, verbose) for au
                   in keep['ID'] + [self.id]]
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
-        ref_cos = (ref_m * ref_m.T).toarray().round(4)[-1]
         vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
             tokenizer=_tokenize_and_stem, **kwds)
         abs_m = vectorizer.fit_transform([t['abstracts'] for t in tokens])
-        abs_cos = (abs_m * abs_m.T).toarray().round(4)[-1]
 
         # Merge information into namedtuple
         t = zip(keep['ID'], names, keep['first_year'], keep['n_coauth'],
-                keep['n_pubs'], countries, ref_cos, abs_cos)
+                keep['n_pubs'], countries, compute_cosine(ref_m),
+                compute_cosine(abs_m))
         fields = "ID name first_year num_coauthors num_publications country "\
                  "reference_sim abstract_sim"
         match = namedtuple("Match", fields)

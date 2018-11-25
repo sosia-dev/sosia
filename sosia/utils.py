@@ -69,6 +69,11 @@ def create_fields_sources_list():
     out.to_csv(FIELDS_SOURCES_LIST, index=False)
 
 
+def compute_cosine(matrix, digits=4):
+    """Auxiliary function to return last column of cosine matrix."""
+    return (matrix * matrix.T).toarray().round(digits)[-1]
+
+
 def print_progress(iteration, total, decimals=2, length=50):
     """Print terminal progress bar."""
     percent = round(100 * (iteration / float(total)), decimals)
