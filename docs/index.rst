@@ -10,18 +10,9 @@ sosia is a Python library match authors in the Scopus database, using the `scopu
 Example
 =======
 
-.. code-block:: python
-
-    >>> import sosia
-    >>> sosia.create_fields_sources_list()  # Necessary only once
-    >>> stefano = sosia.Original(55208373700, 2017)  # Scopus ID and year
-    >>> stefano.define_search_sources()  # Sources similiar to scientist
-    >>> stefano.define_search_group()  # Authors publishing in similar sources
-    >>> matches = stefano.find_matches()  # List of namedtuples
-    >>> matches[0]
-    Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
-    num_coauthors=4, num_publications=3, country='Norway', reference_sim=0.0238,
-    abstract_sim=0.1264)
+.. include:: ../README.rst
+  :start-after: inclusion-marker-start
+  :end-before: inclusion-marker-end
 
 
 Full reference:
