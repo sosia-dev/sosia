@@ -328,7 +328,10 @@ class Original(object):
                     today.update(_get_authors(query("docs", q, refresh)))
                     for y in _years:
                         q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
-                        pubs = query("docs", q, refresh)
+                        try:
+                            pubs = query("docs", q, refresh)
+                        except Exception as e:  # Too many publications
+                            continue
                         new = [x.authid.split(';') for x in pubs
                                if isinstance(x.authid, str)]
                         then.update([au for sl in new for au in sl])
