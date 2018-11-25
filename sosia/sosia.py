@@ -342,6 +342,7 @@ class Original(object):
         if verbose:
             print("Found {:,} authors for search_group".format(
                 len(self._search_group)))
+        return self
 
     def define_search_sources(self, verbose=False):
         """Define .search_sources.
@@ -374,6 +375,7 @@ class Original(object):
             print("Found {} sources for main field {} and source "
                   "type(s) {}".format(len(self._search_sources),
                                       self.main_field[0], types))
+        return self
 
     def find_matches(self, stacked=False, verbose=False, refresh=False,
                      **kwds):
