@@ -466,31 +466,29 @@ class Original(object):
         if verbose:
             print("Found {:,} author(s) matching all criteria\nAdding "
                   "other information...".format(len(keep['ID'])))
+
+        # Add other information
         profiles = [sco.AuthorRetrieval(auth, refresh) for auth in keep['ID']]
-        # Add name
         names = [", ".join([p.surname, p.given_name]) for p in profiles]
-        # Add country
-        countries = [_find_country(
-                        au, query("docs", 'AU-ID({})'.format(au), refresh),
-                        self.year)
+        countries = [_find_country(au, year=self.year,
+                        pubs=query("docs", 'AU-ID({})'.format(au), refresh))
                      for au in keep['ID']]
-        # Add abstract and reference cosine similarity
-        tokens = [_get_refs(au, self.year, refresh, verbose) for au in keep['ID']]
-        tokens.append(_get_refs(self.id, self.year, refresh, verbose))
+        tokens = [_get_refs(au, self.year, refresh, verbose) for au
+                  in keep['ID'] + [self.id]]
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
         ref_cos = (ref_m * ref_m.T).toarray().round(4)[-1]
         vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
             tokenizer=_tokenize_and_stem, **kwds)
-        tfidf = vectorizer.fit_transform([t['abstracts'] for t in tokens])
-        abs_cos = (tfidf * tfidf.T).toarray().round(4)[-1]
+        abs_m = vectorizer.fit_transform([t['abstracts'] for t in tokens])
+        abs_cos = (abs_m * abs_m.T).toarray().round(4)[-1]
 
         # Merge information into namedtuple
-        t = list(zip(keep['ID'], names, keep['first_year'], keep['n_coauth'],
-                     keep['n_pubs'], countries, ref_cos, abs_cos))
+        t = zip(keep['ID'], names, keep['first_year'], keep['n_coauth'],
+                keep['n_pubs'], countries, ref_cos, abs_cos)
         fields = "ID name first_year num_coauthors num_publications country "\
                  "reference_sim abstract_sim"
         match = namedtuple("Match", fields)
-        return [match(*tup) for tup in t]
+        return [match(*tup) for tup in list(t)]
 
 
 def _build_dict(results, chunk):
