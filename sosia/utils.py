@@ -1,3 +1,4 @@
+from math import ceil
 from os import makedirs
 from os.path import exists, expanduser
 
@@ -74,6 +75,18 @@ def compute_cosine(matrix, digits=4):
     return (matrix * matrix.T).toarray().round(digits)[-1]
 
 
+def margin_range(base, val):
+    """Auxiliary function to create a range of margins around a base value."""
+    if isinstance(val, float):
+        margin = ceil(val*base)
+        r = range(base-margin, base+margin+1)
+    elif isinstance(val, int):
+        r = range(base-val, base+val+1)
+    else:
+        raise Exception("Value must be either float or int.")
+    return r
+
+
 def print_progress(iteration, total, decimals=2, length=50):
     """Print terminal progress bar."""
     percent = round(100 * (iteration / float(total)), decimals)
@@ -82,6 +95,7 @@ def print_progress(iteration, total, decimals=2, length=50):
     print('\rProgress: |{}| {}% Complete'.format(bar, percent), end='\r')
     if iteration == total:
         print()
+
 
 def raise_non_empty(val, obj):
     """Auxiliary function to raise exception if provided value is empty or

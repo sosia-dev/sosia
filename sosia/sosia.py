@@ -6,7 +6,7 @@
 
 from collections import Counter, defaultdict, namedtuple
 from functools import partial
-from math import ceil, floor, inf, log
+from math import inf, log
 from os.path import exists
 from string import digits, punctuation, Template
 
@@ -17,7 +17,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, compute_cosine,
-    print_progress, raise_non_empty, query)
+    margin_range, print_progress, raise_non_empty, query)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -255,11 +255,6 @@ class Original(object):
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise Exception(text)
-        try:
-            _npapers = _get_value_range(len(self.publications), self.pub_margin)
-            max_pubs = max(_npapers)
-        except TypeError:
-            raise ValueError('Value pub_margin must be float or integer.')
 
         # Variables
         today = set()
@@ -267,6 +262,7 @@ class Original(object):
         negative = set()
         auth_count = []
         _min_year = self.first_year-self.year_margin
+        _max_pubs = max(margin_range(len(self.publications), self.pub_margin))
         _years = list(range(_min_year, self.first_year+self.year_margin+1))
         n = len(self.search_sources)
 
@@ -341,7 +337,7 @@ class Original(object):
         # Finalize
         group = today.intersection(then)
         negative.update({a for a, npubs in Counter(auth_count).items()
-                         if npubs > max_pubs})
+                         if npubs > _max_pubs})
         self._search_group = sorted(list(group - negative))
         if verbose:
             print("Found {:,} authors for search_group".format(
@@ -406,8 +402,8 @@ class Original(object):
         # Variables
         _years = range(self.first_year-self.year_margin,
                        self.first_year-self.year_margin+1)
-        _npapers = _get_value_range(len(self.publications), self.pub_margin)
-        _ncoauth = _get_value_range(len(self.coauthors), self.coauth_margin)
+        _npapers = margin_range(len(self.publications), self.pub_margin)
+        _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
         if verbose:
             n = len(self.search_group)
             print("Searching through characteristics of {:,} authors".format(n))
@@ -561,16 +557,6 @@ def _get_refs(au, year, refresh, verbose):
               "{} documents missing".format(au, miss_abs, miss_refs, len(eids)))
     return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
             'abstracts': " ".join(absts)}
-
-
-def _get_value_range(base, val):
-    """Auxiliary function to create a range of margins around a base value."""
-    if isinstance(val, float):
-        margin = ceil(val*base)
-        r = range(base-margin, base+margin+1)
-    elif isinstance(val, int):
-        r = range(base-margin, base+margin+1)
-    return r
 
 
 def _find_country(auth_id, pubs, year):
