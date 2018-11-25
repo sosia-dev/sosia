@@ -155,10 +155,10 @@ The final step is to search within this search group for authors that fulfill cr
     >>> matches
     Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
     num_coauthors=4, num_publications=3, country='Norway', reference_sim=0.0238,
-    abstract_sim=0.0671)
-    Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011, num_coauthors=5, num_publications=4, country='France', reference_sim=0.0014, abstract_sim=0.0442)
-    Match(ID='55268789000', name='Chen, Chun Liang', first_year=2011, num_coauthors=4, num_publications=5, country='Taiwan', reference_sim=0.0, abstract_sim=0.039)
-    Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011, num_coauthors=5, num_publications=5, country='Mexico', reference_sim=0.0044, abstract_sim=0.0599)
+    abstract_sim=0.1264)
+    Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011, num_coauthors=5, num_publications=4, country='France', reference_sim=0.0014, abstract_sim=0.1128)
+    Match(ID='55268789000', name='Chen, Chun Liang', first_year=2011, num_coauthors=4, num_publications=5, country='Taiwan', reference_sim=0.0, abstract_sim=0.0887)
+    Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011, num_coauthors=5, num_publications=5, country='Mexico', reference_sim=0.0044, abstract_sim=0.1503)
 
 `sosia` provides the following information:
 
@@ -189,7 +189,7 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
 
                  num_publications country  reference_sim  abstract_sim  
     ID                                                                  
-    42661166900                 3  Norway         0.0238        0.0671  
-    54893528800                 4  France         0.0014        0.0442  
-    55268789000                 5  Taiwan         0.0000        0.039  
-    56282273300                 5  Mexico         0.0044        0.0599
+    42661166900                 3  Norway         0.0238        0.1264  
+    54893528800                 4  France         0.0014        0.1128  
+    55268789000                 5  Taiwan         0.0000        0.0887  
+    56282273300                 5  Mexico         0.0044        0.1503

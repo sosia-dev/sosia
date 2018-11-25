@@ -16,8 +16,8 @@ from nltk import snowball, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, compute_cosine,
-    margin_range, print_progress, raise_non_empty, query)
+from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, clean_abstract,
+    compute_cosine, margin_range, print_progress, raise_non_empty, query)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -548,8 +548,9 @@ def _get_refs(au, year, refresh, verbose):
     eids = [p.eid for p in res if int(p.coverDate[:4]) <= year]
     docs = [sco.AbstractRetrieval(eid, view='FULL', refresh=refresh)
             for eid in eids]
-    absts = [ab.abstract for ab in docs if ab.abstract]  # Filter None's
-    refs = [ab.references for ab in docs if ab.references]  # Filter None's
+    # Filter None's
+    absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
+    refs = [ab.references for ab in docs if ab.references]
     if verbose:
         miss_abs = len(eids) - len(absts)
         miss_refs = len(eids) - len(refs)

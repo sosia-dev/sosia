@@ -70,6 +70,18 @@ def create_fields_sources_list():
     out.to_csv(FIELDS_SOURCES_LIST, index=False)
 
 
+def clean_abstract(s):
+    """Auxiliary function to clean an abstract of a document."""
+    # Remove copyright statement, which can be leading or trailing
+    tokens = s.split(". ")
+    if "©" in tokens[0]:
+        return ". ".join(tokens[1:])
+    if "©" in tokens[-1]:
+        return ". ".join(tokens[:-1]) + "."
+    else:
+        return s
+
+
 def compute_cosine(matrix, digits=4):
     """Auxiliary function to return last column of cosine matrix."""
     return (matrix * matrix.T).toarray().round(digits)[-1]

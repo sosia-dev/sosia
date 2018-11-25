@@ -9,8 +9,15 @@ from nose.tools import assert_equal, assert_true, raises
 from numpy import array
 from scipy.sparse import csr_matrix
 
-from sosia.utils import (FIELDS_SOURCES_LIST, compute_cosine,
+from sosia.utils import (FIELDS_SOURCES_LIST, clean_abstract, compute_cosine,
     create_fields_sources_list, margin_range, raise_non_empty)
+
+
+def test_clean_abstract():
+    expected = "Lorem ipsum."
+    assert_equal(clean_abstract("Lorem ipsum. © dolor sit."), expected)
+    assert_equal(clean_abstract("© dolor sit. Lorem ipsum."), expected)
+    assert_equal(clean_abstract(expected), expected)
 
 
 def test_compute_cosine():
