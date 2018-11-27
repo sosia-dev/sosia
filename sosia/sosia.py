@@ -269,7 +269,7 @@ class Original(object):
         # Query journals
         if stacked:
             params = {"group": [str(x) for x in sorted(self.search_sources)],
-                      "joiner": ") OR SOURCE-ID(", "refresh": refresh,
+                      "joiner": " OR ", "refresh": refresh,
                       "func": partial(query, "docs")}
             if verbose:
                 params.update({"total": n})
