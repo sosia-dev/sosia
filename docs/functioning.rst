@@ -36,12 +36,19 @@ Initial set-up
 Step-by-Step
 ------------
 
-The main class is :doc:`Original <../reference/sosia.Original>`.  You initiate it with the Scopus Author ID of the researcher you are looking for, and the year of treatment:
+The main class is :doc:`Original <../reference/sosia.Original>`.  You initiate it with the Scopus Author ID, or a list of Scopus Author IDs, of the researcher you are looking for, and the year of treatment:
 
 .. code-block:: python
    
     >>> from sosia import Original
     >>> stefano = Original(55208373700, 2017)
+
+You can provide a list of Scopus Author IDs, in the case the author you are interested in has more than one. All properties and the control group will be based on the publications associated to all Scopus Author IDs and published before the year you provide. You can also set as an optional parameter a list of Scopus EIDs corresponding to a list of publications. If you do so, all properties of the scientists and the control group will be based on the publications in this list only, published before they year you provide: 
+
+.. code-block:: python
+   
+    >>> eids=['2-s2.0-84959420483', '2-s2.0-84949113230', '2-s2.0-84961390052', '2-s2.0-84866317084']
+    >>> scientist1_eids = sosia.Original(55208373700, 2017, eids=eids)
 
 A number of optional parameters will be used throughout the query process in order to define "about" similarity.  There are margins for the first year of publication, the number of co-authors and the number of publications:
 

@@ -10,10 +10,10 @@ import sosia
 
 warnings.filterwarnings("ignore")
 scientist1 = sosia.Original(55208373700, 2017)
-scientist1_eids = sosia.Original(55208373700, 2017, eids=['2-s2.0-84959420483',
-                                                     '2-s2.0-84949113230',
-                                                     '2-s2.0-84961390052',
-                                                     '2-s2.0-84866317084'])
+scientist1_list = sosia.Original([55208373700, 55208373700, 99], 2017)
+eids=['2-s2.0-84959420483', '2-s2.0-84949113230', '2-s2.0-84961390052',
+      '2-s2.0-84866317084']
+scientist1_eids = sosia.Original(55208373700, 2017, eids=eids)
 
 fields = "ID name first_year num_coauthors num_publications country "\
          "reference_sim abstract_sim"
@@ -89,6 +89,25 @@ def test_publications():
 
 def test_publications_eids():
     pubs = scientist1_eids.publications
+    assert_equal(len(pubs), 4)
+    fields = 'eid doi pii title subtype creator authname authid afid coverDate '\
+             'coverDisplayDate publicationName issn source_id aggregationType'\
+             ' volume issueIdentifier pageRange citedby_count openaccess'
+    doc = namedtuple('Document', fields)
+    expected = doc(eid='2-s2.0-84959420483', doi='10.1016/j.respol.2015.12.006',
+        pii='S0048733315002000', title="The productivity of science &amp; engineering PhD students hired from supervisors' networks",
+        subtype='ar', creator='Baruffaldi S.', citedby_count='5',
+        authname='Baruffaldi S.;Visentin F.;Conti A.',
+        authid='55208373700;55875219200;36617057700', openaccess='0',
+        afid='60028186;60028186-106299773;60019647', coverDate='2016-05-01',
+        coverDisplayDate='1 May 2016', publicationName='Research Policy',
+        issn='00487333', source_id='22900', aggregationType='Journal',
+        volume='45', issueIdentifier='4', pageRange='785-796')
+    assert_equal(pubs[0], expected)
+
+
+def test_publications_list():
+    pubs = scientist1_list.publications
     assert_equal(len(pubs), 4)
     fields = 'eid doi pii title subtype creator authname authid afid coverDate '\
              'coverDisplayDate publicationName issn source_id aggregationType'\

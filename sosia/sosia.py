@@ -157,9 +157,9 @@ class Original(object):
 
         Parameters
         ----------
-        scientist : str or int
-            Scopus Author ID of the scientist you want to find control
-            groups for.
+        scientist : str, int or list
+            Scopus Author ID, or list of Scopus Author IDs, of the scientist
+            you want to find control groups for.
 
         year : str or numeric
             Year of the event.  Control groups will be matched on trends and
@@ -188,11 +188,11 @@ class Original(object):
             Whether to refresh all cached files or not.
 
         eids : list (optional, default=None)
-            The list of scopus EIDs of the publications of the original
-            author.  If it is provided, the scientist properties and the
-            control group are set based on this list of publications,
-            instead of the list of publications obtained from the
-            Scopus Author ID.
+            A list of scopus EIDs of the publications of the scientist you
+            want to find a control for.  If it is provided, the scientist
+            properties and the control group are set based on this list of
+            publications, instead of the list of publications obtained from
+            the Scopus Author ID.
         """
         # Check for existence of fields-sources list
         try:
@@ -216,7 +216,10 @@ class Original(object):
             raise Exception("Argument coauth_margin must be float or integer.")
 
         # Variables
-        self.id = str(scientist)
+        if isinstance(scientist, (int, str)): 
+            self.id = [str(scientist)]
+        elif isinstance(scientist, list):
+            self.id = [str(s) for s in scientist]
         self.year = int(year)
         self.year_margin = year_margin
         self.pub_margin = pub_margin
@@ -226,7 +229,8 @@ class Original(object):
 
         # Own information
         if not self.eids:
-            res = query("docs", 'AU-ID({})'.format(self.id), self.refresh)
+            res = query("docs", 'AU-ID({})'.format(') OR AU-ID('.join(self.id))
+                        , self.refresh)
         else:
             q = Template("EID($fill)")
             func = partial(query, "docs")
@@ -234,7 +238,7 @@ class Original(object):
         self._publications = [p for p in res if int(p.coverDate[:4]) < self.year]
         if len(self._publications) == 0:
             text = "No publications for author {} until year {}".format(
-                self.id, self.year)
+                '-'.join(self.id), self.year)
             raise Exception(text)
         self._sources = set([int(p.source_id) for p in self._publications])
         self._fields = df[df['source_id'].isin(self._sources)]['asjc'].tolist()
@@ -243,8 +247,7 @@ class Original(object):
         self._main_field = (main, ASJC_2D[code])
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
         self._coauthors = set([a for p in self._publications
-                              for a in p.authid.split(';')])
-        self._coauthors.remove(self.id)
+                              for a in p.authid.split(';') if a not in self.id])
         self._country = _find_country(self.id, self._publications, self.year)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False):
@@ -484,11 +487,11 @@ class Original(object):
         # Add other information
         profiles = [sco.AuthorRetrieval(auth, refresh) for auth in keep['ID']]
         names = [", ".join([p.surname, p.given_name]) for p in profiles]
-        countries = [_find_country(au, year=self.year,
+        countries = [_find_country([au], year=self.year,
                         pubs=query("docs", 'AU-ID({})'.format(au), refresh))
                      for au in keep['ID']]
         tokens = [_get_refs(au, self.year, refresh, verbose) for au
-                  in keep['ID'] + [self.id]]
+                  in keep['ID'] + [s for s in self.id]]
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
         vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
             tokenizer=_tokenize_and_stem, **kwds)
@@ -575,7 +578,7 @@ def _get_refs(au, year, refresh, verbose):
             'abstracts': " ".join(absts)}
 
 
-def _find_country(auth_id, pubs, year):
+def _find_country(auth_ids, pubs, year):
     """Auxiliary function to find the country of the most recent affiliation
     of a scientist.
     """
@@ -591,10 +594,11 @@ def _find_country(auth_id, pubs, year):
     affs = []
     for p in papers:
         authors = p.authid.split(';')
-        idx = authors.index(str(auth_id))
+        au_id = [au for au in auth_ids if au in authors][0]
+        idx = authors.index(str(au_id))
         aff = p.afid.split(';')[idx].split('-')
         affs.extend(aff)
-    affs = [a for a in affs if a != '']
+    affs = [af for af in affs if af != '']
     # Find most often listed country of affiliations
     countries = [sco.ContentAffiliationRetrieval(afid).country
                  for afid in affs]
