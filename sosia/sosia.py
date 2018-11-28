@@ -151,7 +151,7 @@ class Original(object):
         self._sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
-                 coauth_margin=0.1, refresh=False):
+                 coauth_margin=0.1, eids=None, refresh=False):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -186,6 +186,13 @@ class Original(object):
 
         refresh : boolean (optional, default=False)
             Whether to refresh all cached files or not.
+
+        eids : list (optional, default=None)
+            The list of scopus EIDs of the publications of the original
+            author.  If it is provided, the scientist properties and the
+            control group are set based on this list of publications,
+            instead of the list of publications obtained from the
+            Scopus Author ID.
         """
         # Check for existence of fields-sources list
         try:
@@ -214,10 +221,16 @@ class Original(object):
         self.year_margin = year_margin
         self.pub_margin = pub_margin
         self.coauth_margin = coauth_margin
+        self.eids = eids
         self.refresh = refresh
 
         # Own information
-        res = query("docs", 'AU-ID({})'.format(self.id), self.refresh)
+        if not self.eids:
+            res = query("docs", 'AU-ID({})'.format(self.id), self.refresh)
+        else:
+            q = Template("EID($fill)")
+            func = partial(query, "docs")
+            res, _ =  _stacked_query(self.eids, [], q, " OR ", func, self.refresh)
         self._publications = [p for p in res if int(p.coverDate[:4]) < self.year]
         if len(self._publications) == 0:
             text = "No publications for author {} until year {}".format(
