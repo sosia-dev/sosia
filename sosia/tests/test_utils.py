@@ -8,9 +8,10 @@ import pandas as pd
 from nose.tools import assert_equal, assert_true, raises
 from numpy import array
 from scipy.sparse import csr_matrix
+from scopus import ScopusSearch
 
 from sosia.utils import (FIELDS_SOURCES_LIST, clean_abstract, compute_cosine,
-    create_fields_sources_list, margin_range, raise_non_empty)
+    create_fields_sources_list, find_country, margin_range, raise_non_empty)
 
 
 def test_clean_abstract():
@@ -38,6 +39,12 @@ def test_create_fields_sources_list():
     assert_true(df.shape[0] > 55130)
 
 
+def test_find_country():
+    pubs = ScopusSearch('AU-ID(6701809842)').results
+    received = find_country(['6701809842'], pubs, 2000)
+    assert_equal(received, 'Germany')
+
+
 def test_margin_range():
     assert_equal(margin_range(5, 1), range(4, 7))
     assert_equal(margin_range(10, 0.09), range(9, 12))
@@ -56,4 +63,3 @@ def test_raise_non_empty_set():
 @raises(Exception)
 def test_raise_non_empty_list():
     raise_non_empty([], list)
-

@@ -1,9 +1,10 @@
+from collections import Counter
 from math import ceil
 from os import makedirs
 from os.path import exists, expanduser
 
 import pandas as pd
-from scopus import AuthorSearch, ScopusSearch
+from scopus import AuthorSearch, ContentAffiliationRetrieval, ScopusSearch
 
 URL_SOURCES = 'https://elsevier.com/?a=734751'
 URL_EXT_LIST = 'https://www.elsevier.com/__data/assets/excel_doc/0015/91122/ext_list_September_2018.xlsx'
@@ -85,6 +86,33 @@ def clean_abstract(s):
 def compute_cosine(matrix, digits=4):
     """Auxiliary function to return last column of cosine matrix."""
     return (matrix * matrix.T).toarray().round(digits)[-1]
+
+
+def find_country(auth_ids, pubs, year):
+    """Auxiliary function to find the most commont country of affiliations
+    of a scientist using her most recent publications.
+    """
+    # Available papers of most recent year with publications
+    papers = []
+    i = 0
+    while len(papers) == 0 & i <= len(pubs):
+        papers = [p for p in pubs if int(p.coverDate[:4]) == year-i]
+        i += 1
+    if len(papers) == 0:
+        return None
+    # List of affiliations on these papers belonging to the actual author
+    affs = []
+    for p in papers:
+        authors = p.authid.split(';')
+        au_id = [au for au in auth_ids if au in authors][0]
+        idx = authors.index(str(au_id))
+        aff = p.afid.split(';')[idx].split('-')
+        affs.extend(aff)
+    affs = [af for af in affs if af != '']
+    # Find most often listed country of affiliations
+    countries = [ContentAffiliationRetrieval(afid).country
+                 for afid in affs]
+    return Counter(countries).most_common(1)[0][0]
 
 
 def margin_range(base, val):

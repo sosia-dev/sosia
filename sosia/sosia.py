@@ -17,7 +17,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, clean_abstract,
-    compute_cosine, margin_range, print_progress, raise_non_empty, query)
+    compute_cosine, find_country, margin_range, print_progress,
+    raise_non_empty, query)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -248,7 +249,7 @@ class Original(object):
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
         self._coauthors = set([a for p in self._publications
                               for a in p.authid.split(';') if a not in self.id])
-        self._country = _find_country(self.id, self._publications, self.year)
+        self._country = find_country(self.id, self._publications, self.year)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False):
         """Define search_group.
@@ -487,7 +488,7 @@ class Original(object):
         # Add other information
         profiles = [sco.AuthorRetrieval(auth, refresh) for auth in keep['ID']]
         names = [", ".join([p.surname, p.given_name]) for p in profiles]
-        countries = [_find_country([au], year=self.year,
+        countries = [find_country([au], year=self.year,
                         pubs=query("docs", 'AU-ID({})'.format(au), refresh))
                      for au in keep['ID']]
         tokens = [_get_refs(au, self.year, refresh, verbose) for au
@@ -576,33 +577,6 @@ def _get_refs(au, year, refresh, verbose):
               "{} documents missing".format(au, miss_abs, miss_refs, len(eids)))
     return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
             'abstracts': " ".join(absts)}
-
-
-def _find_country(auth_ids, pubs, year):
-    """Auxiliary function to find the country of the most recent affiliation
-    of a scientist.
-    """
-    # Available papers of most recent year with publications
-    papers = []
-    i = 0
-    while len(papers) == 0 & i <= len(pubs):
-        papers = [p for p in pubs if int(p.coverDate[:4]) == year-i]
-        i += 1
-    if len(papers) == 0:
-        return None
-    # List of affiliations on these papers belonging to the actual author
-    affs = []
-    for p in papers:
-        authors = p.authid.split(';')
-        au_id = [au for au in auth_ids if au in authors][0]
-        idx = authors.index(str(au_id))
-        aff = p.afid.split(';')[idx].split('-')
-        affs.extend(aff)
-    affs = [af for af in affs if af != '']
-    # Find most often listed country of affiliations
-    countries = [sco.ContentAffiliationRetrieval(afid).country
-                 for afid in affs]
-    return Counter(countries).most_common(1)[0][0]
 
 
 def _tokenize_and_stem(text):
