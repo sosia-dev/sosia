@@ -15,9 +15,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
-from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, clean_abstract,
-    compute_cosine, find_country, margin_range, print_progress, query,
-    raise_non_empty, stacked_query)
+from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, clean_abstract,\
+    compute_cosine, find_country, margin_range, print_progress, query,\
+    raise_non_empty, stacked_query
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -203,7 +203,7 @@ class Original(Scientist):
             raise Exception("Argument coauth_margin must be float or integer.")
 
         # Variables
-        if isinstance(scientist, (int, str)): 
+        if isinstance(scientist, (int, str)):
             scientist = [scientist]
         self.id = [str(auth_id) for auth_id in scientist]
         self.year = int(year)
@@ -258,7 +258,8 @@ class Original(Scientist):
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), self.year))
             # Today
-            q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(self.year))
+            q = Template("SOURCE-ID($fill) AND PUBYEAR "
+                         "IS {}".format(self.year))
             params.update({'query': q, "res": []})
             today.update(_get_authors(stacked_query(**params)[0]))
             # Then
@@ -282,7 +283,8 @@ class Original(Scientist):
             if verbose:
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), _min_year-1))
-            q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_min_year-1))
+            q = Template("SOURCE-ID($fill) AND PUBYEAR "
+                         "IS {}".format(_min_year-1))
             params.update({'query': q, "res": []})
             negative.update(_get_authors(stacked_query(**params)[0]))
         else:
@@ -293,13 +295,17 @@ class Original(Scientist):
             for i, s in enumerate(self.search_sources):
                 try:  # Try complete publication list first
                     res = query("docs", 'SOURCE-ID({})'.format(s), refresh)
-                    pubs = [p for p in res if int(p.coverDate[:4]) == self.year]
+                    pubs = [p for p in res if
+                            int(p.coverDate[:4]) == self.year]
                     today.update(_get_authors(pubs))
-                    pubs = [p for p in res if int(p.coverDate[:4]) in _years]
+                    pubs = [p for p in res if
+                            int(p.coverDate[:4]) in _years]
                     then.update(_get_authors(pubs))
-                    pubs = [p for p in res if int(p.coverDate[:4]) < _min_year]
+                    pubs = [p for p in res if
+                            int(p.coverDate[:4]) < _min_year]
                     negative.update(_get_authors(pubs))
-                    pubs = [p for p in res if int(p.coverDate[:4]) < self.year+1]
+                    pubs = [p for p in res if
+                            int(p.coverDate[:4]) < self.year+1]
                     auth_count.extend(_get_authors(pubs))
                 except:  # Fall back to year-wise queries
                     q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
@@ -340,7 +346,8 @@ class Original(Scientist):
                (df['asjc'] == self.main_field[0])
         main_types = set(df[mask]['type'])
         # Select sources in scientist's main field
-        mask = (df['asjc'] == self.main_field[0]) & (df['type'].isin(main_types))
+        mask = (df['asjc'] == self.main_field[0]) &\
+               (df['type'].isin(main_types))
         sources = df[mask]['source_id'].tolist()
         sel = df[df['source_id'].isin(sources)].copy()
         sel['asjc'] = sel['asjc'].astype(str) + " "
@@ -401,8 +408,8 @@ class Original(Scientist):
             params.update({'total': n})
         res, _ = stacked_query(**params)
         group = [pub.eid.split('-')[-1] for pub in res
-                 if pub.areas.startswith(self.main_field[1])
-                 and pub.documents >= str(min(_npapers))]
+                 if pub.areas.startswith(self.main_field[1]) and
+                 pub.documents >= str(min(_npapers))]
         group.sort()
         if verbose:
             n = len(group)
@@ -454,13 +461,14 @@ class Original(Scientist):
         profiles = [sco.AuthorRetrieval(auth, refresh) for auth in keep['ID']]
         names = [", ".join([p.surname, p.given_name]) for p in profiles]
         countries = [find_country([au], year=self.year,
-                        pubs=query("docs", 'AU-ID({})'.format(au), refresh))
+                                  pubs=query("docs", 'AU-ID({})'.format(au),
+                                             refresh))
                      for au in keep['ID']]
         tokens = [_get_refs(au, self.year, refresh, verbose) for au
                   in keep['ID'] + [s for s in self.id]]
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
         vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
-            tokenizer=_tokenize_and_stem, **kwds)
+                                     tokenizer=_tokenize_and_stem, **kwds)
         abs_m = vectorizer.fit_transform([t['abstracts'] for t in tokens])
 
         # Merge information into namedtuple
