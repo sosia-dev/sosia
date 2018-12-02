@@ -6,16 +6,15 @@
 
 from collections import Counter, defaultdict, namedtuple
 from functools import partial
-from math import inf, log
-from os.path import exists
+from math import inf
 from string import digits, punctuation, Template
 
-import pandas as pd
 import scopus as sco
 from nltk import snowball, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
+from sosia.classes import Scientist
 from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, clean_abstract,
     compute_cosine, find_country, margin_range, print_progress, query,
     raise_non_empty, stacked_query)
@@ -25,7 +24,7 @@ STOPWORDS.extend(punctuation + digits)
 _stemmer = snowball.SnowballStemmer('english')
 
 
-class Original(object):
+class Original(Scientist):
     @property
     def country(self):
         """Country of the scientist's most frequent affiliation
@@ -152,7 +151,7 @@ class Original(object):
         self._sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
-                 coauth_margin=0.1, eids=None, refresh=False):
+                 coauth_margin=0.1, refresh=False, eids=None):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -195,20 +194,7 @@ class Original(object):
             publications, instead of the list of publications obtained from
             the Scopus Author ID.
         """
-        # Check for existence of fields-sources list
-        try:
-            self.field_source = pd.read_csv(FIELDS_SOURCES_LIST)
-            df = self.field_source
-        except FileNotFoundError:
-            text = "Fields-Sources list not found, but required for sosia "\
-                   "to match authors' publications to fields.  Please run "\
-                   "sosia.create_fields_sources_list() and initiate "\
-                   "the class again."
-            raise Exception(text)
-
         # Internal checks
-        if not isinstance(year, int):
-            raise Exception("Argument year must be an integer.")
         if not isinstance(year_margin, (int, float)):
             raise Exception("Argument year_margin must be float or integer.")
         if not isinstance(pub_margin, (int, float)):
@@ -218,9 +204,8 @@ class Original(object):
 
         # Variables
         if isinstance(scientist, (int, str)): 
-            self.id = [str(scientist)]
-        elif isinstance(scientist, list):
-            self.id = [str(s) for s in scientist]
+            scientist = [scientist]
+        self.id = [str(auth_id) for auth_id in scientist]
         self.year = int(year)
         self.year_margin = year_margin
         self.pub_margin = pub_margin
@@ -228,28 +213,8 @@ class Original(object):
         self.eids = eids
         self.refresh = refresh
 
-        # Own information
-        if not self.eids:
-            res = query("docs", 'AU-ID({})'.format(') OR AU-ID('.join(self.id))
-                        , self.refresh)
-        else:
-            q = Template("EID($fill)")
-            func = partial(query, "docs")
-            res, _ =  stacked_query(self.eids, [], q, " OR ", func, self.refresh)
-        self._publications = [p for p in res if int(p.coverDate[:4]) < self.year]
-        if len(self._publications) == 0:
-            text = "No publications for author {} until year {}".format(
-                '-'.join(self.id), self.year)
-            raise Exception(text)
-        self._sources = set([int(p.source_id) for p in self._publications])
-        self._fields = df[df['source_id'].isin(self._sources)]['asjc'].tolist()
-        main = Counter(self._fields).most_common(1)[0][0]
-        code = main // 10 ** (int(log(main, 10)) - 2 + 1)
-        self._main_field = (main, ASJC_2D[code])
-        self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
-        self._coauthors = set([a for p in self._publications
-                              for a in p.authid.split(';') if a not in self.id])
-        self._country = find_country(self.id, self._publications, self.year)
+        # Instantiate superclass to load private variables
+        Scientist.__init__(self, self.id, year, refresh)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False):
         """Define search_group.
