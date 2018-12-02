@@ -137,15 +137,6 @@ def print_progress(iteration, total, decimals=2, length=50):
         print()
 
 
-def raise_non_empty(val, obj):
-    """Auxiliary function to raise exception if provided value is empty or
-    not of the desired object type.
-    """
-    if not isinstance(val, obj) or len(val) == 0:
-        obj_name = str(obj).split("'")[1]
-        raise Exception("Value must be a non-empty {}.".format(obj_name))
-
-
 def query(q_type, q, refresh=False, first_try=True):
     """Auxiliary wrapper function to perform a particular search query."""
     try:
@@ -160,3 +151,80 @@ def query(q_type, q, refresh=False, first_try=True):
             return query(q_type, q, True, False)
         else:
             pass
+
+
+def raise_non_empty(val, obj):
+    """Auxiliary function to raise exception if provided value is empty or
+    not of the desired object type.
+    """
+    if not isinstance(val, obj) or len(val) == 0:
+        obj_name = str(obj).split("'")[1]
+        raise Exception("Value must be a non-empty {}.".format(obj_name))
+
+
+def run(op, *args):
+    """Auxiliary function to call a function passed by partial()."""
+    return op(*args)
+
+
+def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
+    """Auxiliary function to recursively perform queries until they work.
+
+    Parameters
+    ----------
+    group : list of str
+        Scopus IDs (of authors or sources) for which the stacked query should
+        be conducted.
+
+    res : list
+        (Initially empty )Container to which the query results will be
+        appended.
+
+    query : Template()
+        A string template with one paramter named `fill` which will be used
+        as search query.
+
+    joiner : str
+        On wich the group elements should be joined to fill the query.
+
+    func : function object
+        The function to be used (ScopusSearch, AuthorSearch).  Should be
+        provided with partial and additional parameters.
+
+    refresh : bool
+        Whether the cached files should be refreshed or not.
+
+    i : int (optional, default=0)
+        A count variable to be used for printing the progress bar.
+
+    total : int (optional, default=None)
+        The total number of elements in the group.  If provided, a progress
+        bar will be printed.
+
+    Returns
+    -------
+    res : list
+        A list of namedtuples representing publications.
+
+    i : int
+        A running variable to indicate the progress.
+
+    Notes
+    -----
+    Results of each successful query are appended to ´res´.
+    """
+    try:
+        q = query.substitute(fill=joiner.join(group))
+        res.extend(run(func, q, refresh))
+        if total:  # Equivalent of verbose
+            i += len(group)
+            print_progress(i, total)
+    except Exception as e:  # Catches two exceptions (long URL + many results)
+        mid = len(group) // 2
+        params = {"group": group[:mid], "res": res, "query": query, "i": i,
+                  "joiner": joiner, "func": func, "total": total,
+                  "refresh": refresh}
+        res, i = stacked_query(**params)
+        params.update({"group": group[mid:], "i": i})
+        res, i = stacked_query(**params)
+    return res, i

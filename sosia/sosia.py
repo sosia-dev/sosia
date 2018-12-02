@@ -17,8 +17,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, clean_abstract,
-    compute_cosine, find_country, margin_range, print_progress,
-    raise_non_empty, query)
+    compute_cosine, find_country, margin_range, print_progress, query,
+    raise_non_empty, stacked_query)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -235,7 +235,7 @@ class Original(object):
         else:
             q = Template("EID($fill)")
             func = partial(query, "docs")
-            res, _ =  _stacked_query(self.eids, [], q, " OR ", func, self.refresh)
+            res, _ =  stacked_query(self.eids, [], q, " OR ", func, self.refresh)
         self._publications = [p for p in res if int(p.coverDate[:4]) < self.year]
         if len(self._publications) == 0:
             text = "No publications for author {} until year {}".format(
@@ -295,7 +295,7 @@ class Original(object):
             # Today
             q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(self.year))
             params.update({'query': q, "res": []})
-            today.update(_get_authors(_stacked_query(**params)[0]))
+            today.update(_get_authors(stacked_query(**params)[0]))
             # Then
             if len(_years) == 1:
                 q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
@@ -312,14 +312,14 @@ class Original(object):
                     print("Searching authors in {} sources in {}-{}...".format(
                         len(self.search_sources), _min+1, _max-1))
             params.update({'query': q, "res": []})
-            then.update(_get_authors(_stacked_query(**params)[0]))
+            then.update(_get_authors(stacked_query(**params)[0]))
             # Negative
             if verbose:
                 print("Searching authors in {} sources in {}...".format(
                         len(self.search_sources), _min_year-1))
             q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(_min_year-1))
             params.update({'query': q, "res": []})
-            negative.update(_get_authors(_stacked_query(**params)[0]))
+            negative.update(_get_authors(stacked_query(**params)[0]))
         else:
             if verbose:
                 print("Searching authors for search_group in {} "
@@ -434,7 +434,7 @@ class Original(object):
         if verbose:
             print("Pre-filtering...")
             params.update({'total': n})
-        res, _ = _stacked_query(**params)
+        res, _ = stacked_query(**params)
         group = [pub.eid.split('-')[-1] for pub in res
                  if pub.areas.startswith(self.main_field[1])
                  and pub.documents >= str(min(_npapers))]
@@ -452,7 +452,7 @@ class Original(object):
                       "joiner": ") OR AU-ID(", "func": partial(query, "docs")}
             if verbose:
                 params.update({"total": n})
-            res, _ = _stacked_query(**params)
+            res, _ = stacked_query(**params)
             container = _build_dict(res, group)
             # Iterate through container in order to filter results
             for auth, dat in container.items():
@@ -522,33 +522,6 @@ def _build_dict(results, chunk):
             first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
             d[focal]['first_year'] = first_year
     return d
-
-
-def _run(op, *args):
-    """Auxiliary function to call a function passed by partial()."""
-    return op(*args)
-
-
-def _stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
-    """Auxiliary function to recursively perform queries until they work.
-
-    Results of each successful query are appended to ´res´.
-    """
-    try:
-        q = query.substitute(fill=joiner.join(group))
-        res.extend(_run(func, q, refresh))
-        if total:  # Equivalent of verbose
-            i += len(group)
-            print_progress(i, total)
-    except Exception as e:  # Catches two exceptions (long URL + many results)
-        mid = len(group) // 2
-        params = {"group": group[:mid], "res": res, "query": query, "i": i,
-                  "joiner": joiner, "func": func, "total": total,
-                  "refresh": refresh}
-        res, i = _stacked_query(**params)
-        params.update({"group": group[mid:], "i": i})
-        res, i = _stacked_query(**params)
-    return res, i
 
 
 def _get_authors(pubs):
