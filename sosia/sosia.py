@@ -15,8 +15,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
-from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, clean_abstract,\
-    compute_cosine, find_country, margin_range, print_progress, query,\
+from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, compute_cosine,\
+    find_country, margin_range, parse_doc, print_progress, query,\
     raise_non_empty, stacked_query
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
@@ -379,7 +379,7 @@ class Original(Scientist):
                                   pubs=query("docs", 'AU-ID({})'.format(au),
                                              refresh))
                      for au in keep['ID']]
-        tokens = [_get_refs(au, self.year, refresh, verbose) for au
+        tokens = [parse_doc(au, self.year, refresh, verbose) for au
                   in keep['ID'] + [s for s in self.id]]
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
         vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
@@ -418,26 +418,6 @@ def _get_authors(pubs):
     """
     l = [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
     return [au for sl in l for au in sl]
-
-
-def _get_refs(au, year, refresh, verbose):
-    """Auxiliary function to return abstract and references of articles
-    published up until the given year, both as continuous string.
-    """
-    res = query("docs", "AU-ID({})".format(au), refresh)
-    eids = [p.eid for p in res if int(p.coverDate[:4]) <= year]
-    docs = [sco.AbstractRetrieval(eid, view='FULL', refresh=refresh)
-            for eid in eids]
-    # Filter None's
-    absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
-    refs = [ab.references for ab in docs if ab.references]
-    if verbose:
-        miss_abs = len(eids) - len(absts)
-        miss_refs = len(eids) - len(refs)
-        print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
-              "{} documents missing".format(au, miss_abs, miss_refs, len(eids)))
-    return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
-            'abstracts': " ".join(absts)}
 
 
 def _tokenize_and_stem(text):

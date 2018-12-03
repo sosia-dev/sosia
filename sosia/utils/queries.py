@@ -1,7 +1,8 @@
 from collections import Counter
-from scopus import AuthorSearch, ContentAffiliationRetrieval, ScopusSearch
+from scopus import AbstractRetrieval, AuthorSearch,\
+    ContentAffiliationRetrieval, ScopusSearch
 
-from sosia.utils import print_progress, run
+from sosia.utils import clean_abstract, print_progress, run
 
 
 def find_country(auth_ids, pubs, year):
@@ -48,6 +49,48 @@ def find_country(auth_ids, pubs, year):
     countries = [ContentAffiliationRetrieval(afid).country
                  for afid in affs]
     return Counter(countries).most_common(1)[0][0]
+
+
+def parse_doc(au, year, refresh, verbose):
+    """Find abstract and references of articles published up until
+    the given year, both as continuous string.
+
+    Parameters
+    ----------
+    au : int or str
+        Scopus Author Profile ID.
+
+    year : str or int
+        Year until which publications should be considered.
+
+    refresh : bool
+        Whether to refresh the cached files if they exist, or not.
+
+    verbose: bool
+        Whether to print a progress bar and information on missing values.
+
+    Returns
+    -------
+    d : dict
+        A dictionary with two keys: "refs" and "abstracts".  d['refs']
+        includes the continuous string of Scopus Abstract EIDs representing
+        cited references, joined on a blank.  d['abstracts'] includes
+        the continuous string of cleaned abstracts, joined on a blank.
+    """
+    res = query("docs", "AU-ID({})".format(au), refresh)
+    eids = [p.eid for p in res if int(p.coverDate[:4]) <= int(year)]
+    docs = [AbstractRetrieval(eid, view='FULL', refresh=refresh)
+            for eid in eids]
+    # Filter None's
+    absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
+    refs = [ab.references for ab in docs if ab.references]
+    if verbose:
+        miss_abs = len(eids) - len(absts)
+        miss_refs = len(eids) - len(refs)
+        print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
+              "{} documents missing".format(au, miss_abs, miss_refs, len(eids)))
+    return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
+            'abstracts': " ".join(absts)}
 
 
 def query(q_type, q, refresh=False, first_try=True):
