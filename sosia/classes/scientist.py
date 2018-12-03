@@ -9,10 +9,95 @@ from math import log
 import pandas as pd
 
 from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST,
-    create_fields_sources_list, find_country, query)
+    create_fields_sources_list, find_country, query, raise_non_empty)
 
 
 class Scientist(object):
+    @property
+    def country(self):
+        """Country of the scientist's most frequent affiliation
+        in the most recent year (before the given year) that
+        the scientist published.
+        """
+        return self._country
+
+    @country.setter
+    def country(self, val):
+        raise_non_empty(val, str)
+        self._country = val
+
+    @property
+    def coauthors(self):
+        """Set of coauthors of the scientist on all publications until the
+        given year.
+        """
+        return self._coauthors
+
+    @coauthors.setter
+    def coauthors(self, val):
+        raise_non_empty(val, set)
+        self._coauthors = val
+
+    @property
+    def fields(self):
+        """The fields of the scientist until the given year, estimated from
+        the sources (journals, books, etc.) she published in.
+        """
+        return self._fields
+
+    @fields.setter
+    def fields(self, val):
+        raise_non_empty(val, set)
+        self._fields = val
+
+    @property
+    def first_year(self):
+        """The scientist's year of first publication, as integer."""
+        return self._first_year
+
+    @first_year.setter
+    def first_year(self, val):
+        if not isinstance(val, int):
+            raise Exception("Value must be an integer.")
+        self._first_year = val
+
+    @property
+    def main_field(self):
+        """The scientist's main field of research, as tuple in
+        the form (ASJC code, general category).
+        """
+        return self._main_field
+
+    @main_field.setter
+    def main_field(self, val):
+        if not isinstance(val, tuple) or len(val) != 2:
+            raise Exception("Value must be a two-element tuple.")
+        self._main_field = val
+
+    @property
+    def publications(self):
+        """The publications of the scientist published until
+        the given year.
+        """
+        return self._publications
+
+    @publications.setter
+    def publications(self, val):
+        raise_non_empty(val, set)
+        self._publications = val
+
+    @property
+    def sources(self):
+        """The Scopus IDs of sources (journals, books) in which the
+        scientist published until the given year.
+        """
+        return self._sources
+
+    @sources.setter
+    def sources(self, val):
+        raise_non_empty(val, set)
+        self._sources = val
+
     def __init__(self, identifier, year, refresh=False, eids=None):
         """Class to represent a scientist.
 
