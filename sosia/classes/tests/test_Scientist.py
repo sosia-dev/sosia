@@ -80,6 +80,12 @@ def test_main_field():
     assert_equal(scientist3.main_field, (1803, 'DECI'))
 
 
+def test_name():
+    assert_equal(scientist1.name, 'Harhoff, Dietmar')
+    assert_equal(scientist2.name, 'Baruffaldi, Stefano Horst')
+    assert_equal(scientist3.name, 'Baruffaldi, Stefano Horst')
+
+
 def test_publications():
     fields = 'eid doi pii title subtype creator authname authid afid  '\
              'coverDate coverDisplayDate publicationName issn source_id '\

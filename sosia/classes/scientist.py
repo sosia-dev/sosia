@@ -7,6 +7,7 @@ from collections import Counter
 from math import log
 
 import pandas as pd
+from scopus import AuthorRetrieval
 
 from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST,
     create_fields_sources_list, find_country, query, raise_non_empty)
@@ -73,6 +74,16 @@ class Scientist(object):
         if not isinstance(val, tuple) or len(val) != 2:
             raise Exception("Value must be a two-element tuple.")
         self._main_field = val
+
+    @property
+    def name(self):
+        """The scientist's name."""
+        return self._name
+
+    @main_field.setter
+    def main_field(self, val):
+        raise_non_empty(val, str)
+        self._name = val
 
     @property
     def publications(self):
@@ -154,3 +165,5 @@ class Scientist(object):
         self._coauthors = set([a for p in self._publications
                                for a in p.authid.split(';') if a not in identifier])
         self._country = find_country(identifier, self._publications, year)
+        au = AuthorRetrieval(identifier[0], refresh=refresh)
+        self._name = ", ".join([au.surname, au.given_name])
