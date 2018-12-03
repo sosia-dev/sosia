@@ -4,8 +4,9 @@ def clean_abstract(s):
     tokens = s.split(". ")
     if "©" in tokens[0]:
         return ". ".join(tokens[1:])
-    if "©" in tokens[-1]:
-        return ". ".join(tokens[:-1]) + "."
+    for idx in (-2, -1):
+        if "©" in tokens[idx]:
+            return ". ".join(tokens[:idx]) + "."
     else:
         return s
 

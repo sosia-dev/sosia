@@ -44,6 +44,5 @@ def test_parse_doc():
         'that the presence of home linkages directly benefits both '\
         'countries in addition to the indirect benefit of expanding the '\
         'scientific networks. Policy implications and suggestions for '\
-        'further research are discussed. © 2012 Elsevier B.V. All '\
-        'rights reserved.'
+        'further research are discussed.'
     assert_equal(received['abstracts'], expected_abs)
