@@ -16,8 +16,8 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, compute_cosine,\
-    find_country, margin_range, parse_doc, print_progress, query,\
-    raise_non_empty, stacked_query
+    find_country, get_authors, margin_range, parse_doc, print_progress,\
+    query, query_journal, raise_non_empty, stacked_query
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -154,10 +154,6 @@ class Original(Scientist):
             raise Exception(text)
 
         # Variables
-        today = set()
-        then = set()
-        negative = set()
-        auth_count = []
         _min_year = self.first_year-self.year_margin
         _max_pubs = max(margin_range(len(self.publications), self.pub_margin))
         _years = list(range(_min_year, self.first_year+self.year_margin+1))
@@ -176,7 +172,7 @@ class Original(Scientist):
             q = Template("SOURCE-ID($fill) AND PUBYEAR "
                          "IS {}".format(self.year))
             params.update({'query': q, "res": []})
-            today.update(_get_authors(stacked_query(**params)[0]))
+            today = set(get_authors(stacked_query(**params)[0]))
             # Then
             if len(_years) == 1:
                 q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
@@ -193,7 +189,7 @@ class Original(Scientist):
                     print("Searching authors in {} sources in {}-{}...".format(
                         len(self.search_sources), _min+1, _max-1))
             params.update({'query': q, "res": []})
-            then.update(_get_authors(stacked_query(**params)[0]))
+            then = set(get_authors(stacked_query(**params)[0]))
             # Negative
             if verbose:
                 print("Searching authors in {} sources in {}...".format(
@@ -201,46 +197,33 @@ class Original(Scientist):
             q = Template("SOURCE-ID($fill) AND PUBYEAR "
                          "IS {}".format(_min_year-1))
             params.update({'query': q, "res": []})
-            negative.update(_get_authors(stacked_query(**params)[0]))
+            negative = set(get_authors(stacked_query(**params)[0]))
         else:
+            today = set()
+            then = set()
+            negative = set()
+            auth_count = []
             if verbose:
                 print("Searching authors for search_group in {} "
                       "sources...".format(len(self.search_sources)))
                 print_progress(0, n)
-            for i, s in enumerate(self.search_sources):
-                try:  # Try complete publication list first
-                    res = query("docs", 'SOURCE-ID({})'.format(s), refresh)
-                    pubs = [p for p in res if
-                            int(p.coverDate[:4]) == self.year]
-                    today.update(_get_authors(pubs))
-                    pubs = [p for p in res if
-                            int(p.coverDate[:4]) in _years]
-                    then.update(_get_authors(pubs))
-                    pubs = [p for p in res if
-                            int(p.coverDate[:4]) < _min_year]
-                    negative.update(_get_authors(pubs))
-                    pubs = [p for p in res if
-                            int(p.coverDate[:4]) < self.year+1]
-                    auth_count.extend(_get_authors(pubs))
-                except:  # Fall back to year-wise queries
-                    q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, self.year)
-                    today.update(_get_authors(query("docs", q, refresh)))
-                    for y in _years:
-                        q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(s, y)
-                        try:
-                            pubs = query("docs", q, refresh)
-                        except Exception as e:  # Too many publications
-                            continue
-                        new = [x.authid.split(';') for x in pubs
-                               if isinstance(x.authid, str)]
-                        then.update([au for sl in new for au in sl])
+            for i, source_id in enumerate(self.search_sources):
+                d = query_journal(source_id, [self.year] + _years, refresh)
+                today.update(d[str(self.year)])
+                for y in _years:
+                    then.update(d[str(y)])
+                for y in range(int(min(d.keys())), _min_year):
+                    negative.update(d[str(y)])
+                for y in d:
+                    if int(y) <= self.year:
+                        auth_count.extend(d[str(y)])
                 if verbose:
                     print_progress(i+1, n)
+            negative.update({a for a, npubs in Counter(auth_count).items()
+                             if npubs > _max_pubs})
 
         # Finalize
         group = today.intersection(then)
-        negative.update({a for a, npubs in Counter(auth_count).items()
-                         if npubs > _max_pubs})
         self._search_group = sorted(list(group - negative))
         if verbose:
             print("Found {:,} authors for search_group".format(
@@ -412,14 +395,6 @@ def _build_dict(results, chunk):
             first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
             d[focal]['first_year'] = first_year
     return d
-
-
-def _get_authors(pubs):
-    """Auxiliary function to get list of author IDs from a list of
-    namedtuples representing publications.
-    """
-    l = [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
-    return [au for sl in l for au in sl]
 
 
 def _tokenize_and_stem(text):

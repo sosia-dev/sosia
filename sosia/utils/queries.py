@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 from operator import attrgetter
 
 from scopus import AbstractRetrieval, AuthorSearch,\
@@ -49,6 +49,14 @@ def find_country(auth_ids, pubs, year):
         countries = [ContentAffiliationRetrieval(afid).country
                      for afid in affs]
         return Counter(countries).most_common(1)[0][0]
+
+
+def get_authors(pubs):
+    """Get list of author IDs from a list of namedtuples representing
+    publications.
+    """
+    l = [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
+    return [au for sl in l for au in sl]
 
 
 def parse_doc(au, year, refresh, verbose):
@@ -137,6 +145,40 @@ def query(q_type, q, refresh=False, first_try=True):
             return query(q_type, q, True, False)
         else:
             pass
+
+
+def query_journal(source_id, years, refresh):
+    """Get authors by year for a particular source.
+
+    Parameters
+    ----------
+    source_id : str or int
+        The Scopus ID of the source.
+
+    years : container of int or container of str
+        The relevant pulication years to search for.
+
+    refresh : bool (optional)
+
+    Returns
+    -------
+    d : dict
+        Dictionary keyed by year listing all authors who published in
+        that year.
+    """
+    try:  # Try complete publication list first
+        res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh)
+    except ScopusQueryError:  # Fall back to year-wise queries
+        res = []
+        for year in years:
+            q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(source_id, year)
+            res.extend(query("docs", q, refresh))
+    # Sort authors by year
+    d = defaultdict(list)
+    for pub in res:
+        year = pub.coverDate[:4]
+        d[year].extend(get_authors([pub]))
+    return d
 
 
 def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
