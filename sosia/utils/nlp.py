@@ -5,8 +5,11 @@ def clean_abstract(s):
     if "©" in tokens[0]:
         return ". ".join(tokens[1:])
     for idx in (-2, -1):
-        if "©" in tokens[idx]:
-            return ". ".join(tokens[:idx]) + "."
+        try:
+            if "©" in tokens[idx]:
+                return ". ".join(tokens[:idx]) + "."
+        except:
+            pass
     else:
         return s
 
