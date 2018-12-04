@@ -5,6 +5,7 @@
 from collections import namedtuple
 from nose.tools import assert_equal, assert_true
 import warnings
+import pandas as pd
 
 import sosia
 
@@ -57,14 +58,25 @@ def test_find_matches():
     recieved = sorted(scientist1.find_matches())
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
-    for e in MATCHES:
-        print(e)
-        assert_true(e in recieved)
+    cols = ['ID', 'name', 'first_year', 'num_coauthors', 'num_publications',
+            'country', 'reference_sim']
+    df_r = pd.DataFrame(recieved)
+    df_m = pd.DataFrame(MATCHES)
+    pd.testing.assert_frame_equal(df_r[cols], df_m[cols])
+    for e in recieved:
+        assert_true(isinstance(e.abstract_sim,float))
+        assert_true(0 <= e.abstract_sim <= 1)
 
 
 def test_find_matches_stacked():
     recieved = sorted(scientist1.find_matches(stacked=True))
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
-    for e in MATCHES:
-        assert_true(e in recieved)
+    cols = ['ID', 'name', 'first_year', 'num_coauthors', 'num_publications',
+            'country', 'reference_sim']
+    df_r = pd.DataFrame(recieved)
+    df_m = pd.DataFrame(MATCHES)
+    pd.testing.assert_frame_equal(df_r[cols], df_m[cols])
+    for e in recieved:
+        assert_true(isinstance(e.abstract_sim,float))
+        assert_true(0 <= e.abstract_sim <= 1)
