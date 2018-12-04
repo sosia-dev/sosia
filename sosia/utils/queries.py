@@ -57,8 +57,8 @@ def parse_doc(au, year, refresh, verbose):
 
     Parameters
     ----------
-    au : int or str
-        Scopus Author Profile ID.
+    au : int, str or list
+        Scopus Author Profile ID, or list of Scopus Author Profile IDs.
 
     year : str or int
         Year until which publications should be considered.
@@ -77,7 +77,9 @@ def parse_doc(au, year, refresh, verbose):
         cited references, joined on a blank.  d['abstracts'] includes
         the continuous string of cleaned abstracts, joined on a blank.
     """
-    res = query("docs", "AU-ID({})".format(au), refresh)
+    if isinstance(au, (int, str)):
+        au = [au]
+    res = query("docs", 'AU-ID({})'.format(') OR AU-ID('.join(au)), refresh)
     eids = [p.eid for p in res if int(p.coverDate[:4]) <= int(year)]
     docs = [AbstractRetrieval(eid, view='FULL', refresh=refresh)
             for eid in eids]
@@ -88,7 +90,8 @@ def parse_doc(au, year, refresh, verbose):
         miss_abs = len(eids) - len(absts)
         miss_refs = len(eids) - len(refs)
         print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
-              "{} documents missing".format(au, miss_abs, miss_refs, len(eids)))
+              "{} documents missing".format(', '.join(au), miss_abs, 
+                                            miss_refs, len(eids)))
     return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
             'abstracts': " ".join(absts)}
 
