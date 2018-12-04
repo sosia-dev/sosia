@@ -356,6 +356,8 @@ class Original(Scientist):
                     print_progress(i+1, n)
                 res = query("docs", 'AU-ID({})'.format(au), refresh)
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
+                if len(res) == 0:
+                    continue
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
                 authors = set([a for p in res for a in p.authid.split(';')])
@@ -374,7 +376,7 @@ class Original(Scientist):
 
         # Add other information
         profiles = [sco.AuthorRetrieval(auth, refresh) for auth in keep['ID']]
-        names = [", ".join([p.surname, p.given_name]) for p in profiles]
+        names = [", ".join([p.surname or "", p.given_name or ""]) for p in profiles]
         countries = [find_country([au], year=self.year,
                                   pubs=query("docs", 'AU-ID({})'.format(au),
                                              refresh))
