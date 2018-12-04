@@ -1,4 +1,6 @@
 from collections import Counter
+from operator import attrgetter
+
 from scopus import AbstractRetrieval, AuthorSearch,\
     ContentAffiliationRetrieval, ScopusSearch
 
@@ -8,7 +10,7 @@ from sosia.utils import clean_abstract, print_progress, run
 
 def find_country(auth_ids, pubs, year):
     """Find the most common country of affiliations of a scientist using her
-    most recent publications.
+    most recent publications listing valid affiliations.
 
     Parameters
     ----------
@@ -26,30 +28,27 @@ def find_country(auth_ids, pubs, year):
     Returns
     -------
     country : str or None
-        The country of the scientist in a given year (or valid in previous
-        years).  Is None when no valid publications are found.
+        The country of the scientist in the year closest to the given year,
+        given that the publications list valid affiliations.  Equals None when
+        no valid publications are found.
     """
     # Available papers of most recent year with publications
-    papers = []
-    i = 0
-    while len(papers) == 0 & i <= len(pubs):
-        papers = [p for p in pubs if int(p.coverDate[:4]) == year-i]
-        i += 1
-    if len(papers) == 0:
-        return None
-    # List of affiliations on these papers belonging to the actual author
-    affs = []
+    papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
+    papers = sorted(papers, key=attrgetter('coverDate'), reverse=True)
     for p in papers:
+        # Find index of focal author
         authors = p.authid.split(';')
         au_id = [au for au in auth_ids if au in authors][0]
         idx = authors.index(str(au_id))
-        aff = p.afid.split(';')[idx].split('-')
-        affs.extend(aff)
-    affs = [af for af in affs if af != '']
-    # Find most often listed country of affiliations
-    countries = [ContentAffiliationRetrieval(afid).country
-                 for afid in affs]
-    return Counter(countries).most_common(1)[0][0]
+        # Find corresponding affiliations
+        affs = p.afid.split(';')[idx].split('-')
+        affs = [af for af in affs if af != '']
+        if len(affs) == 0:
+            continue
+        # Find most often listed country of affiliations
+        countries = [ContentAffiliationRetrieval(afid).country
+                     for afid in affs]
+        return Counter(countries).most_common(1)[0][0]
 
 
 def parse_doc(au, year, refresh, verbose):
