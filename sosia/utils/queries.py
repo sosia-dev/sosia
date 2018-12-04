@@ -2,6 +2,7 @@ from collections import Counter
 from scopus import AbstractRetrieval, AuthorSearch,\
     ContentAffiliationRetrieval, ScopusSearch
 
+from scopus.exception import Scopus400Error, ScopusQueryError
 from sosia.utils import clean_abstract, print_progress, run
 
 
@@ -188,7 +189,7 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
         if total:  # Equivalent of verbose
             i += len(group)
             print_progress(i, total)
-    except Exception as e:  # Catches two exceptions (long URL + many results)
+    except (Scopus400Error, ScopusQueryError):
         mid = len(group) // 2
         params = {"group": group[:mid], "res": res, "query": query, "i": i,
                   "joiner": joiner, "func": func, "total": total,
