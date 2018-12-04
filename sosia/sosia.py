@@ -217,8 +217,7 @@ class Original(Scientist):
                 for y in d:
                     if int(y) <= self.year:
                         auth_count.extend(d[str(y)])
-                if verbose:
-                    print_progress(i+1, n)
+                print_progress(i+1, n, verbose)
             negative.update({a for a, npubs in Counter(auth_count).items()
                              if npubs > _max_pubs})
 
@@ -335,8 +334,7 @@ class Original(Scientist):
                         keep[key].append(val)
         else:  # Query each author individually
             for i, au in enumerate(group):
-                if verbose:
-                    print_progress(i+1, n)
+                print_progress(i+1, n, verbose)
                 res = query("docs", 'AU-ID({})'.format(au), refresh)
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 if len(res) == 0:
