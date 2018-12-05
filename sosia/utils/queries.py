@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 from operator import attrgetter
+from string import Template
 
 from scopus import AbstractRetrieval, AuthorSearch,\
     ContentAffiliationRetrieval, ScopusSearch
@@ -227,18 +228,29 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
     -----
     Results of each successful query are appended to ´res´.
     """
+    q = query.substitute(fill=joiner.join(group))
     try:
-        q = query.substitute(fill=joiner.join(group))
         res.extend(run(func, q, refresh))
         if total:  # Equivalent of verbose
             i += len(group)
             print_progress(i, total)
     except (Scopus400Error, ScopusQueryError):
-        mid = len(group) // 2
-        params = {"group": group[:mid], "res": res, "query": query, "i": i,
-                  "joiner": joiner, "func": func, "total": total,
-                  "refresh": refresh}
-        res, i = stacked_query(**params)
-        params.update({"group": group[mid:], "i": i})
-        res, i = stacked_query(**params)
+        if len(group)>1:
+            mid = len(group) // 2
+            params = {"group": group[:mid], "res": res, "query": query, "i": i,
+                      "joiner": joiner, "func": func, "total": total,
+                      "refresh": refresh}
+            res, i = stacked_query(**params)
+            params.update({"group": group[mid:], "i": i})
+            res, i = stacked_query(**params)
+        else:
+            groupeids = ["*" + str(n) for n in range(0, 10)]
+            q = Template(q + " AND EID($fill)")
+            params = {"group": groupeids, "res": res, "query": q, "i": i,
+                      "joiner": " OR ", "func": func, "total": None,
+                      "refresh": refresh}
+            try:
+                res, i = stacked_query(**params)
+            except ScopusQueryError:
+                return None, i
     return res, i
