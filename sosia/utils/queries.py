@@ -140,7 +140,7 @@ def query(q_type, q, refresh=False, first_try=True):
             return ScopusSearch(q, refresh=refresh).results
         else:
             raise Exception("Unknown value provided.")
-    except KeyError:  # Cached file broken
+    except (KeyError, UnicodeDecodeError):  # Cached file broken
         if first_try:
             return query(q_type, q, True, False)
         else:
