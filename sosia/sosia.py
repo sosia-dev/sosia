@@ -292,8 +292,8 @@ class Original(Scientist):
                        self.first_year-self.year_margin+1)
         _npapers = margin_range(len(self.publications), self.pub_margin)
         _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
+        n = len(self.search_group)
         if verbose:
-            n = len(self.search_group)
             print("Searching through characteristics of {:,} authors".format(n))
 
         # First round of filtering: minimum publications and main field
