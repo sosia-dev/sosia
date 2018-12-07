@@ -39,7 +39,10 @@ def find_country(auth_ids, pubs, year):
     for p in papers:
         # Find index of focal author
         authors = p.authid.split(';')
-        au_id = [au for au in auth_ids if au in authors][0]
+        try:
+            au_id = [au for au in auth_ids if au in authors][0]
+        except IndexError: # if au_id not in list take first author location
+            au_id = authors[0]
         idx = authors.index(str(au_id))
         # Find corresponding affiliations
         affs = p.afid.split(';')[idx].split('-')
@@ -168,12 +171,12 @@ def query_journal(source_id, years, refresh):
         that year.
     """
     try:  # Try complete publication list first
-        res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh)
+        res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh=refresh)
     except ScopusQueryError:  # Fall back to year-wise queries
         res = []
         for year in years:
             q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(source_id, year)
-            res.extend(query("docs", q, refresh))
+            res.extend(query("docs", q, refresh=refresh))
     # Sort authors by year
     d = defaultdict(list)
     for pub in res:
