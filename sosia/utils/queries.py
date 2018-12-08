@@ -231,6 +231,7 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
     -----
     Results of each successful query are appended to ´res´.
     """
+    group = [str(g) for g in group] # make robust to passing int
     q = query.substitute(fill=joiner.join(group))
     try:
         res.extend(run(func, q, refresh))
