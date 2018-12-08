@@ -1,4 +1,5 @@
 from collections import Counter, defaultdict
+from functools import partial
 from operator import attrgetter
 from string import Template
 
@@ -175,8 +176,10 @@ def query_journal(source_id, years, refresh):
     except ScopusQueryError:  # Fall back to year-wise queries
         res = []
         for year in years:
-            q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(source_id, year)
-            res.extend(query("docs", q, refresh=refresh))
+            q = Template('SOURCE-ID({}) AND PUBYEAR IS $fill'.format(source_id))
+            ext, _ = stacked_query([year], res, q, "", 
+                       partial(query, "docs"), refresh=refresh) 
+            res.extend(ext)
     # Sort authors by year
     d = defaultdict(list)
     for pub in res:
