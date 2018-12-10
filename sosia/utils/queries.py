@@ -1,5 +1,7 @@
 from collections import Counter, defaultdict
+from functools import partial
 from operator import attrgetter
+from string import Template
 
 from scopus import AbstractRetrieval, AuthorSearch,\
     ContentAffiliationRetrieval, ScopusSearch
@@ -38,7 +40,10 @@ def find_country(auth_ids, pubs, year):
     for p in papers:
         # Find index of focal author
         authors = p.authid.split(';')
-        au_id = [au for au in auth_ids if au in authors][0]
+        try:
+            au_id = [au for au in auth_ids if au in authors][0]
+        except IndexError: # if au_id not in list take first author location
+            au_id = authors[0]
         idx = authors.index(str(au_id))
         # Find corresponding affiliations
         affs = p.afid.split(';')[idx].split('-')
@@ -140,7 +145,7 @@ def query(q_type, q, refresh=False, first_try=True):
             return ScopusSearch(q, refresh=refresh).results
         else:
             raise Exception("Unknown value provided.")
-    except KeyError:  # Cached file broken
+    except (KeyError, UnicodeDecodeError):  # Cached file broken
         if first_try:
             return query(q_type, q, True, False)
         else:
@@ -168,12 +173,14 @@ def query_journal(source_id, years, refresh):
         that year.
     """
     try:  # Try complete publication list first
-        res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh)
+        res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh=refresh)
     except ScopusQueryError:  # Fall back to year-wise queries
         res = []
         for year in years:
-            q = 'SOURCE-ID({}) AND PUBYEAR IS {}'.format(source_id, year)
-            res.extend(query("docs", q, refresh))
+            q = Template('SOURCE-ID({}) AND PUBYEAR IS $fill'.format(source_id))
+            ext, _ = stacked_query([year], res, q, "", 
+                       partial(query, "docs"), refresh=refresh) 
+            res.extend(ext)
     # Sort authors by year
     d = defaultdict(list)
     for pub in res:
@@ -231,18 +238,30 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
     -----
     Results of each successful query are appended to ´res´.
     """
+    group = [str(g) for g in group] # make robust to passing int
+    q = query.substitute(fill=joiner.join(group))
     try:
-        q = query.substitute(fill=joiner.join(group))
         res.extend(run(func, q, refresh))
         if total:  # Equivalent of verbose
             i += len(group)
             print_progress(i, total)
     except (Scopus400Error, ScopusQueryError):
-        mid = len(group) // 2
-        params = {"group": group[:mid], "res": res, "query": query, "i": i,
-                  "joiner": joiner, "func": func, "total": total,
-                  "refresh": refresh}
-        res, i = stacked_query(**params)
-        params.update({"group": group[mid:], "i": i})
-        res, i = stacked_query(**params)
+        if len(group)>1:
+            mid = len(group) // 2
+            params = {"group": group[:mid], "res": res, "query": query, "i": i,
+                      "joiner": joiner, "func": func, "total": total,
+                      "refresh": refresh}
+            res, i = stacked_query(**params)
+            params.update({"group": group[mid:], "i": i})
+            res, i = stacked_query(**params)
+        else:
+            groupeids = ["*" + str(n) for n in range(0, 10)]
+            q = Template(q + " AND EID($fill)")
+            params = {"group": groupeids, "res": res, "query": q, "i": i,
+                      "joiner": " OR ", "func": func, "total": None,
+                      "refresh": refresh}
+            try:
+                res, i = stacked_query(**params)
+            except ScopusQueryError:
+                return None, i
     return res, i

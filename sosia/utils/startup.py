@@ -3,7 +3,7 @@ from os.path import exists, expanduser
 
 import pandas as pd
 
-from sosia.utils import FIELDS_SOURCES_LIST
+from sosia.utils import FIELDS_SOURCES_LIST, URL_EXT_LIST, URL_SOURCES
 
 
 def create_fields_sources_list():
