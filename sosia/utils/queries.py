@@ -159,6 +159,7 @@ def query_journal(source_id, years, refresh):
         The relevant pulication years to search for.
 
     refresh : bool (optional)
+        Whether to refresh cached files if they exist, or not.
 
     Returns
     -------
@@ -177,6 +178,9 @@ def query_journal(source_id, years, refresh):
     d = defaultdict(list)
     for pub in res:
         year = pub.coverDate[:4]
+        print(year)
+        if not year.isdigit():
+            print(year)
         d[year].extend(get_authors([pub]))
     return d
 
