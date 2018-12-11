@@ -80,8 +80,8 @@ class Scientist(object):
         """The scientist's name."""
         return self._name
 
-    @main_field.setter
-    def main_field(self, val):
+    @name.setter
+    def name(self, val):
         raise_non_empty(val, str)
         self._name = val
 
