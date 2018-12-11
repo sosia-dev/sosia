@@ -7,7 +7,7 @@ from collections import Counter
 from math import log
 
 import pandas as pd
-from scopus import AuthorRetrieval
+from scopus import AbstractRetrieval, AuthorRetrieval
 
 from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST,
     create_fields_sources_list, find_country, query, raise_non_empty)
@@ -86,6 +86,16 @@ class Scientist(object):
         self._name = val
 
     @property
+    def language(self):
+        """The language(s) of the documents published until the given year."""
+        return self._language
+
+    @language.setter
+    def language(self, val):
+        raise_non_empty(val, str)
+        self._language = val    
+
+    @property
     def publications(self):
         """The publications of the scientist published until
         the given year.
@@ -154,6 +164,9 @@ class Scientist(object):
             text = "No publications for author {} until year {}".format(
                 '-'.join(identifier), year)
             raise Exception(text)
+        if not eids:
+            eids = [p.eid for p in self._publications]
+        self._eids = eids
 
         # Parse information
         self._sources = set([int(p.source_id) for p in self._publications])
@@ -167,3 +180,10 @@ class Scientist(object):
         self._country = find_country(identifier, self._publications, year)
         au = AuthorRetrieval(identifier[0], refresh=refresh)
         self._name = ", ".join([au.surname, au.given_name])
+        self._language = None
+
+    def get_publication_languages(self):
+        """Parse languages of published documents until given year."""
+        langs = [AbstractRetrieval(eid).language for eid in self._eids]
+        self._language = "; ".join(sorted(list(set(langs))))
+        return self
