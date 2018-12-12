@@ -128,3 +128,10 @@ def test_publications():
         coverDisplayDate='1 May 2016', publicationName='Research Policy',
         issn='00487333', source_id='22900', aggregationType='Journal')
     assert_equal(received[0], expected)
+
+def test_language():
+    assert_equal(scientist1.language, None)
+    scientist1.get_publication_languages()
+    assert_equal(scientist1.language, "eng")
+    scientist3.get_publication_languages()
+    assert_equal(scientist3.language, "eng")

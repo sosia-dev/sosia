@@ -43,7 +43,7 @@ def test_search_sources():
 def test_search_group():
     scientist1.define_search_group()
     group = scientist1.search_group
-    assert_equal(len(group), 305)
+    assert_equal(len(group), 223)
     assert_true(isinstance(group, list))
 
 
