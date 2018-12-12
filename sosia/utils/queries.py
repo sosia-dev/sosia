@@ -257,9 +257,15 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
         else:
             groupeids = ["*" + str(n) for n in range(0, 10)]
             q = Template(q + " AND EID($fill)")
-            params = {"group": groupeids, "res": res, "query": q, "i": i,
+            mid = len(groupeids) // 2 # split here to avoid redundant query
+            params = {"group": groupeids[:mid], "res": res, "query": q, "i": i,
                       "joiner": " OR ", "func": func, "total": None,
                       "refresh": refresh}
+            try:
+                res, i = stacked_query(**params)
+            except ScopusQueryError:
+                return None, i            
+            params.update({"group": groupeids[mid:], "i": i})
             try:
                 res, i = stacked_query(**params)
             except ScopusQueryError:
