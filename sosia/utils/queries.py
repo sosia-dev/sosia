@@ -177,6 +177,12 @@ def query_journal(source_id, years, refresh):
     d = defaultdict(list)
     for pub in res:
         year = pub.coverDate[:4]
+        # Verfiy that `year` is integer
+        try:
+            _ = int(year)
+        except ValueError:
+            return query_journal(source_id, years, refresh=True)
+        # Populate dict
         d[year].extend(get_authors([pub]))
     return d
 
