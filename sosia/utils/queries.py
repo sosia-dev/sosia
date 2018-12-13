@@ -6,7 +6,7 @@ from string import Template
 from scopus import AbstractRetrieval, AuthorSearch,\
     ContentAffiliationRetrieval, ScopusSearch
 
-from scopus.exception import Scopus400Error, ScopusQueryError
+from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error
 from sosia.utils import clean_abstract, print_progress, run
 
 
@@ -174,7 +174,7 @@ def query_journal(source_id, years, refresh):
     """
     try:  # Try complete publication list first
         res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh=refresh)
-    except ScopusQueryError:  # Fall back to year-wise queries
+    except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
             q = Template('SOURCE-ID({}) AND PUBYEAR IS $fill'.format(source_id))
@@ -189,6 +189,7 @@ def query_journal(source_id, years, refresh):
         try:
             _ = int(year)
         except ValueError:
+            print("possibly in loop")
             return query_journal(source_id, years, refresh=True)
         # Populate dict
         d[year].extend(get_authors([pub]))
@@ -248,7 +249,7 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
         if total:  # Equivalent of verbose
             i += len(group)
             print_progress(i, total)
-    except (Scopus400Error, ScopusQueryError):
+    except (Scopus400Error, ScopusQueryError, Scopus500Error):
         if len(group)>1:
             mid = len(group) // 2
             params = {"group": group[:mid], "res": res, "query": query, "i": i,
@@ -257,20 +258,16 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
             res, i = stacked_query(**params)
             params.update({"group": group[mid:], "i": i})
             res, i = stacked_query(**params)
-        else:
+        elif not "AND EID(" in q: # skip if already passed inside here
             groupeids = ["*" + str(n) for n in range(0, 10)]
             q = Template(q + " AND EID($fill)")
             mid = len(groupeids) // 2 # split here to avoid redundant query
             params = {"group": groupeids[:mid], "res": res, "query": q, "i": i,
                       "joiner": " OR ", "func": func, "total": None,
                       "refresh": refresh}
-            try:
-                res, i = stacked_query(**params)
-            except ScopusQueryError:
-                return None, i            
+            res, i = stacked_query(**params)        
             params.update({"group": groupeids[mid:], "i": i})
-            try:
-                res, i = stacked_query(**params)
-            except ScopusQueryError:
-                return None, i
+            res, i = stacked_query(**params)
+        else: 
+           return None, i 
     return res, i
