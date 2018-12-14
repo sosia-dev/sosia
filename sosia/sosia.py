@@ -335,14 +335,15 @@ class Original(Scientist):
         else:  # Query each author individually
             for i, au in enumerate(group):
                 print_progress(i+1, n, verbose)
-                res = query("docs", 'AU-ID({})'.format(au), refresh)
-                res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
-                if len(res) == 0:
+                res = query("docs", 'AU-ID({})'.format(au), refresh=False)
+                if not res:
                     continue
+                res = [p for p in res if p.coverDate]
+                res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
-                pubsau = [p.authid for p in res if p.authid is not None]
-                authors = set([a for p in pubsau for a in p.split(';')])                
+                authids = [p.authid for p in res if p.authid]
+                authors = set([a for p in authids for a in p.split(';')])
                 n_coauth = len(authors) - 1  # Subtract 1 for focal author
                 if ((len(res) not in _npapers) or (min_year not in _years) or
                         (n_coauth not in _ncoauth)):
