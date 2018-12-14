@@ -341,7 +341,8 @@ class Original(Scientist):
                     continue
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
-                authors = set([a for p in res for a in p.authid.split(';')])
+                pubsau = [p.authid for p in res if p.authid is not None]
+                authors = set([a for p in pubsau for a in p.split(';')])                
                 n_coauth = len(authors) - 1  # Subtract 1 for focal author
                 if ((len(res) not in _npapers) or (min_year not in _years) or
                         (n_coauth not in _ncoauth)):
