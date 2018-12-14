@@ -140,12 +140,16 @@ def query(q_type, q, refresh=False, first_try=True):
     """
     try:
         if q_type == "author":
-            return AuthorSearch(q, refresh=refresh).authors
+            res =  AuthorSearch(q, refresh=refresh).authors
         elif q_type == "docs":
-            return ScopusSearch(q, refresh=refresh).results
+            res =  ScopusSearch(q, refresh=refresh).results
+            for pub in res:   # Verfiy that `year` is integer
+                year = pub.coverDate[:4]
+                _ = int(year)
         else:
             raise Exception("Unknown value provided.")
-    except (KeyError, UnicodeDecodeError):  # Cached file broken
+        return res
+    except (KeyError, UnicodeDecodeError, ValueError, Scopus500Error):  
         if first_try:
             return query(q_type, q, True, False)
         else:
@@ -185,12 +189,6 @@ def query_journal(source_id, years, refresh):
     d = defaultdict(list)
     for pub in res:
         year = pub.coverDate[:4]
-        # Verfiy that `year` is integer
-        try:
-            _ = int(year)
-        except ValueError:
-            print("possibly in loop")
-            return query_journal(source_id, years, refresh=True)
         # Populate dict
         d[year].extend(get_authors([pub]))
     return d
@@ -268,6 +266,6 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
             res, i = stacked_query(**params)        
             params.update({"group": groupeids[mid:], "i": i})
             res, i = stacked_query(**params)
-        else: 
-           return None, i 
+        else:
+            return None, i 
     return res, i
