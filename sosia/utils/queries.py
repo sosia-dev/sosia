@@ -6,7 +6,8 @@ from string import Template
 from scopus import AbstractRetrieval, AuthorSearch,\
     ContentAffiliationRetrieval, ScopusSearch
 
-from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error
+from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error,\
+    Scopus404Error
 from sosia.utils import clean_abstract, print_progress, run
 
 
@@ -94,8 +95,12 @@ def parse_doc(au, year, refresh, verbose):
         au = [au]
     res = query("docs", 'AU-ID({})'.format(') OR AU-ID('.join(au)), refresh)
     eids = [p.eid for p in res if int(p.coverDate[:4]) <= int(year)]
-    docs = [AbstractRetrieval(eid, view='FULL', refresh=refresh)
-            for eid in eids]
+    docs = []
+    for eid in eids:
+        try:
+            docs.append(AbstractRetrieval(eid, view='FULL', refresh=refresh))
+        except Scopus404Error:
+            continue
     # Filter None's
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     refs = [ab.references for ab in docs if ab.references]
