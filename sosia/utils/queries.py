@@ -154,7 +154,7 @@ def query(q_type, q, refresh=False, first_try=True):
         else:
             raise Exception("Unknown value provided.")
         return res
-    except (KeyError, UnicodeDecodeError, ValueError, Scopus500Error):  
+    except (KeyError, UnicodeDecodeError, ValueError):  
         if first_try:
             return query(q_type, q, True, False)
         else:
