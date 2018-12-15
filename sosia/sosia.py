@@ -208,7 +208,10 @@ class Original(Scientist):
                       "sources...".format(len(self.search_sources)))
                 print_progress(0, n)
             for i, source_id in enumerate(self.search_sources):
-                d = query_journal(source_id, [self.year] + _years, refresh)
+                try:
+                    d = query_journal(source_id, [self.year] + _years, refresh)
+                except TypeError:
+                    continue
                 today.update(d[str(self.year)])
                 for y in _years:
                     then.update(d[str(y)])
