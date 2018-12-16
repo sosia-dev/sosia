@@ -338,11 +338,14 @@ class Original(Scientist):
         else:  # Query each author individually
             for i, au in enumerate(group):
                 print_progress(i+1, n, verbose)
-                res = query("docs", 'AU-ID({})'.format(au), refresh=False)
-                if not res:
+                try:
+                    res = query("docs", 'AU-ID({})'.format(au), refresh=False)
+                except Scopus500Error:
                     continue
                 res = [p for p in res if p.coverDate]
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
+                if not res:
+                    continue
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
                 authids = [p.authid for p in res if p.authid]
