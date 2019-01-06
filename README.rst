@@ -55,8 +55,8 @@ sosia performs a series of queries in the Scopus database using the `scopus pack
     >>> matches = stefano.find_matches()  # List of namedtuples
     >>> matches[0]
     Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
-    num_coauthors=4, num_publications=3, country='Norway', reference_sim=0.026,
-    abstract_sim=0.1205)
+    num_coauthors=4, num_publications=3, country='Norway', language='eng',
+    reference_sim=0.0238, abstract_sim=0.1205)
 
 .. inclusion-marker-end
 

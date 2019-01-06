@@ -160,17 +160,18 @@ The final step is to search within this search group for authors that fulfill cr
     >>> for m in matches:
     ....    print(m)
     >>> matches
-    Match(ID='42661166900', name='Fosaas, Morten', first_year=2011, num_coauthors=4,
-    num_publications=3, country='Norway', reference_sim=0.0233, abstract_sim=0.1205)
+    Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
+    num_coauthors=4, num_publications=3, country='Norway', language='eng',
+    reference_sim=0.0233, abstract_sim=0.1205)
     Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011,
-    num_coauthors=5, num_publications=4, country='France', reference_sim=0.0013,
-    abstract_sim=0.1131)
+    num_coauthors=5, num_publications=4, country='France',
+    language='eng', reference_sim=0.0013, abstract_sim=0.1131)
     Match(ID='55268789000', name='Chen, Chun Liang', first_year=2011,
-    num_coauthors=4, num_publications=5, country='Taiwan', reference_sim=0.0,
-    abstract_sim=0.0889)
+    num_coauthors=4, num_publications=5, country='Taiwan', language='eng',
+    reference_sim=0.0, abstract_sim=0.0889)
     Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011,
-    num_coauthors=5, num_publications=5, country='Mexico', reference_sim=0.0043,
-    abstract_sim=0.1507)
+    num_coauthors=5, num_publications=5, country='Mexico', language='eng',
+    reference_sim=0.0043, abstract_sim=0.1507)
 
 `sosia` provides the following information:
 
@@ -180,6 +181,7 @@ The final step is to search within this search group for authors that fulfill cr
 * `num_coauthors`: The number of coauthors (Scopus Author profiles) in the year of treatment
 * `num_publications`: The number of indexed publications in the year of treatment
 * `country`: The most frequent country of all affiliations listed on publications most recent to the year of treatment
+* `language`: The language(s) of the published documents of an author up until the year of treatment
 * `reference_sim`: The cosine similarity of references listed in publications up until the year of treatment between the matched scientist and the scientist (references may be missing)
 * `abstract_sim`: The cosine similarity of words used in abstract of publications up until the year of treatment between the matched scientist and the scientist, approriately filtered and stemmed using `nltk <https://www.nltk.org/>`_ and `sklearn <https://scikit-learn.org//>`_ (abstracts my be missing)
 
@@ -189,6 +191,7 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
 
     >>> import pandas as pd
     >>> pd.set_option('display.max_columns', 0)
+    >>> pd.set_option('display.width', 0)
     >>> df = pd.DataFrame(matches)
     >>> df = df.set_index('ID')
     >>> df
@@ -199,9 +202,9 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     55268789000        Chen, Chun Liang        2011              3   
     56282273300  Rodríguez, José Carlos        2011              4   
 
-                 num_publications country  reference_sim  abstract_sim  
+                 num_publications country  language reference_sim  abstract_sim  
     ID                                                                  
-    42661166900                 3  Norway         0.026         0.1205  
-    54893528800                 4  Finland        0.0022        0.1131  
-    55268789000                 5  Taiwan         0.0000        0.0889  
-    56282273300                 5  Mexico         0.0068        0.1507
+    42661166900                 3  Norway       eng        0.0238        0.1205  
+    54893528800                 4  France       eng        0.0014        0.1131  
+    55268789000                 5  Taiwan       eng        0.0000        0.0889  
+    56282273300                 5  Mexico       eng        0.0044        0.1507

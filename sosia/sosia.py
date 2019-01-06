@@ -364,6 +364,7 @@ class Original(Scientist):
         n_coauths = [len(p.coauthors) for p in profiles]
         n_pubs = [len(p.publications) for p in profiles]
         countries = [p.country for p in profiles]
+        languages = [p.get_publication_languages().language for p in profiles]
         # Add content analysis
         pubs = [[d.eid for d in p.publications] for p in profiles]
         pubs.append([d.eid for d in self.publications])
@@ -375,9 +376,9 @@ class Original(Scientist):
 
         # Merge information into namedtuple
         t = zip(matches, names, first_years, n_coauths, n_pubs, countries,
-                compute_cosine(ref_m), compute_cosine(abs_m))
+                languages, compute_cosine(ref_m), compute_cosine(abs_m))
         fields = "ID name first_year num_coauthors num_publications country "\
-                 "reference_sim abstract_sim"
+                 "language reference_sim abstract_sim"
         match = namedtuple("Match", fields)
         return [match(*tup) for tup in list(t)]
 

@@ -13,20 +13,20 @@ warnings.filterwarnings("ignore")
 scientist1 = sosia.Original(55208373700, 2017)
 
 fields = "ID name first_year num_coauthors num_publications country "\
-         "reference_sim abstract_sim"
+         "language reference_sim abstract_sim"
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
-        num_coauthors=4, num_publications=2, country='Norway',
+        num_coauthors=4, num_publications=2, country='Norway', language='eng',
         reference_sim=0.026, abstract_sim=0.1205),
     Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011,
-        num_coauthors=3, num_publications=3, country='Finland',
+        num_coauthors=3, num_publications=3, country='Finland', language='eng',
         reference_sim=0.0022, abstract_sim=0.1131),
     Match(ID='55268789000', name='Chen, Chun Liang', first_year=2011,
-        num_coauthors=3, num_publications=3, country='Taiwan',
+        num_coauthors=3, num_publications=3, country='Taiwan', language='eng',
         reference_sim=0.0, abstract_sim=0.0889),
     Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011,
-        num_coauthors=4, num_publications=4, country='Mexico',
+        num_coauthors=4, num_publications=4, country='Mexico', language='eng',
         reference_sim=0.0068, abstract_sim=0.1507)]
 
 
