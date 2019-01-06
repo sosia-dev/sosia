@@ -6,8 +6,8 @@ from string import Template
 from scopus import AbstractRetrieval, AuthorSearch,\
     ContentAffiliationRetrieval, ScopusSearch
 
-from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error,\
-    Scopus404Error
+from scopus.exception import Scopus400Error, ScopusQueryError,\
+    Scopus500Error, Scopus404Error
 from sosia.utils import clean_abstract, print_progress, run
 
 
@@ -65,23 +65,17 @@ def get_authors(pubs):
     return [au for sl in l for au in sl]
 
 
-def parse_doc(au, year, refresh, verbose):
+def parse_doc(eids, refresh):
     """Find abstract and references of articles published up until
     the given year, both as continuous string.
 
     Parameters
     ----------
-    au : int, str or list
-        Scopus Author Profile ID, or list of Scopus Author Profile IDs.
-
-    year : str or int
-        Year until which publications should be considered.
+    eids : list of str
+        Scopus Document EIDs representing documents to be considered.
 
     refresh : bool
         Whether to refresh the cached files if they exist, or not.
-
-    verbose: bool
-        Whether to print a progress bar and information on missing values.
 
     Returns
     -------
@@ -91,27 +85,18 @@ def parse_doc(au, year, refresh, verbose):
         cited references, joined on a blank.  d['abstracts'] includes
         the continuous string of cleaned abstracts, joined on a blank.
     """
-    if isinstance(au, (int, str)):
-        au = [au]
-    res = query("docs", 'AU-ID({})'.format(') OR AU-ID('.join(au)), refresh)
-    eids = [p.eid for p in res if int(p.coverDate[:4]) <= int(year)]
     docs = []
     for eid in eids:
         try:
             docs.append(AbstractRetrieval(eid, view='FULL', refresh=refresh))
         except Scopus404Error:
-            continue
+            docs.append(None)
     # Filter None's
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     refs = [ab.references for ab in docs if ab.references]
-    if verbose:
-        miss_abs = len(eids) - len(absts)
-        miss_refs = len(eids) - len(refs)
-        print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
-              "{} documents missing".format(', '.join(au), miss_abs,
-                                            miss_refs, len(eids)))
     return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
-            'abstracts': " ".join(absts)}
+            'abstracts': " ".join(absts), 'miss_abs': len(eids) - len(absts),
+            'miss_refs': len(eids) - len(refs)}
 
 
 def query(q_type, q, refresh=False, first_try=True):

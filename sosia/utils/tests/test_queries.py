@@ -15,9 +15,8 @@ def test_find_country():
 
 
 def test_parse_doc():
-    received = parse_doc('55208373700', 2012, refresh=False, verbose=False)
-    received_list = parse_doc(['55208373700','55208373700'], 2012, 
-                              refresh=False, verbose=False)
+    eids = ['2-s2.0-84866317084']
+    received = parse_doc(eids, refresh=False)
     expected_refs = '29144517611 57849112238 51249091642 70449099678 '\
         '84865231386 15944370019 8744256776 0004256525 84866333650 '\
         '78650692566 0002969912 0007622058 0000169440 0003685848 '\
@@ -34,7 +33,6 @@ def test_parse_doc():
         '47949124687 84920182751 84887864855 84866332329 84984932935 '\
         '33845620645 0942299814'
     assert_equal(received['refs'], expected_refs)
-    assert_equal(received_list['refs'], expected_refs)
     expected_abs = 'Through an analysis of 497 foreign researchers in Italy '\
         'and Portugal we verify the impact of home linkages on return '\
         'mobility choices and scientific productivity. We consider the '\
@@ -53,5 +51,5 @@ def test_parse_doc():
 
 def test_query_journal():
     # test a journal with more than 5k publications in one year
-    res = query_journal("11000153773",[2006],refresh=False)
+    res = query_journal("11000153773", [2006], refresh=False)
     assert_true(45000 < len(res.get("2006")) < 50000)

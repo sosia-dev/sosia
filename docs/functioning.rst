@@ -152,11 +152,11 @@ The final step is to search within this search group for authors that fulfill cr
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
     Found 4 author(s) matching all criteria
     Adding other information...
-    For researcher 42661166900, 0 abstract(s) and 1 reference list(s) out of 3 documents are missing
-    For researcher 54893528800, 0 abstract(s) and 0 reference list(s) out of 4 documents are missing
-    For researcher 55268789000, 0 abstract(s) and 0 reference list(s) out of 5 documents are missing
-    For researcher 56282273300, 0 abstract(s) and 0 reference list(s) out of 5 documents are missing
-    For researcher 55208373700, 0 abstract(s) and 1 reference list(s) out of 7 documents are missing
+    For researcher 42661166900, 0 abstract(s) and 0 reference list(s) out of 3 documents are missing
+    For researcher 54893528800, 0 abstract(s) and 0 reference list(s) out of 3 documents are missing
+    For researcher 55268789000, 0 abstract(s) and 0 reference list(s) out of 3 documents are missing
+    For researcher 56282273300, 0 abstract(s) and 0 reference list(s) out of 4 documents are missing
+    For researcher 55208373700, 0 abstract(s) and 0 reference list(s) out of 4 documents are missing
     >>> for m in matches:
     ....    print(m)
     >>> matches
@@ -195,13 +195,13 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
                                    name  first_year  num_coauthors  \
     ID                                                               
     42661166900          Fosaas, Morten        2011              4   
-    54893528800       Heimonen, Tomi P.        2011              5   
-    55268789000        Chen, Chun Liang        2011              4   
-    56282273300  Rodríguez, José Carlos        2011              5   
+    54893528800       Heimonen, Tomi P.        2011              3   
+    55268789000        Chen, Chun Liang        2011              3   
+    56282273300  Rodríguez, José Carlos        2011              4   
 
                  num_publications country  reference_sim  abstract_sim  
     ID                                                                  
-    42661166900                 3  Norway         0.0238        0.1205  
-    54893528800                 4  France         0.0014        0.1131  
+    42661166900                 3  Norway         0.026         0.1205  
+    54893528800                 4  Finland        0.0022        0.1131  
     55268789000                 5  Taiwan         0.0000        0.0889  
-    56282273300                 5  Mexico         0.0044        0.1507
+    56282273300                 5  Mexico         0.0068        0.1507

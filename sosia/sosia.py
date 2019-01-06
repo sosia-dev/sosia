@@ -9,15 +9,14 @@ from functools import partial
 from math import inf
 from string import digits, punctuation, Template
 
-import scopus as sco
 from nltk import snowball, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, compute_cosine,\
-    find_country, get_authors, margin_range, parse_doc, print_progress,\
-    query, query_journal, raise_non_empty, stacked_query
+    get_authors, margin_range, parse_doc, print_progress, query,\
+    query_journal, raise_non_empty, stacked_query
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -306,6 +305,7 @@ class Original(Scientist):
         if verbose:
             print("Pre-filtering...")
             params.update({'total': n})
+
         res, _ = stacked_query(**params)
         group = [pub.eid.split('-')[-1] for pub in res
                  if pub.areas.startswith(self.main_field[1]) and
@@ -317,7 +317,7 @@ class Original(Scientist):
                   "conditions...".format(n))
 
         # Second round of filtering: All other conditions
-        keep = defaultdict(list)
+        matches = []
         if stacked:  # Combine searches
             q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year+1))
             params = {"group": group, "res": [], "query": q, "refresh": refresh,
@@ -326,15 +326,13 @@ class Original(Scientist):
                 params.update({"total": n})
             res, _ = stacked_query(**params)
             container = _build_dict(res, group)
-            # Iterate through container in order to filter results
+            # Iterate through container and filter results
             for auth, dat in container.items():
                 dat['n_coauth'] = len(dat['coauth'])
                 dat['n_pubs'] = len(dat['pubs'])
                 if (dat['first_year'] in _years and dat['n_pubs'] in
                         _npapers and dat['n_coauth'] in _ncoauth):
-                    keep['ID'].append(auth)
-                    for key, val in dat.items():
-                        keep[key].append(val)
+                    matches.append(auth)
         else:  # Query each author individually
             for i, au in enumerate(group):
                 print_progress(i+1, n, verbose)
@@ -354,33 +352,30 @@ class Original(Scientist):
                 if ((len(res) not in _npapers) or (min_year not in _years) or
                         (n_coauth not in _ncoauth)):
                     continue
-                # Collect information
-                info = [('n_pubs', len(res)), ('n_coauth', n_coauth),
-                        ('ID', au), ('first_year', min_year)]
-                for key, val in info:
-                    keep[key].append(val)
+                matches.append(au)
         if verbose:
             print("Found {:,} author(s) matching all criteria\nAdding "
-                  "other information...".format(len(keep['ID'])))
+                  "other information...".format(len(matches)))
 
-        # Add other information
-        profiles = [sco.AuthorRetrieval(auth, refresh) for auth in keep['ID']]
-        names = [", ".join([p.surname or "", p.given_name or ""]) for p in profiles]
-        countries = [find_country([au], year=self.year,
-                                  pubs=query("docs", 'AU-ID({})'.format(au),
-                                             refresh))
-                     for au in keep['ID']]
-        tokens = [parse_doc(au, self.year, refresh, verbose) for au
-                  in keep['ID'] + [s for s in self.id]]
+        # Add characteristics
+        profiles = [Scientist([auth], self.year, refresh) for auth in matches]
+        names = [p.name for p in profiles]
+        first_years = [p.first_year for p in profiles]
+        n_coauths = [len(p.coauthors) for p in profiles]
+        n_pubs = [len(p.publications) for p in profiles]
+        countries = [p.country for p in profiles]
+        # Add content analysis
+        pubs = [[d.eid for d in p.publications] for p in profiles]
+        pubs.append([d.eid for d in self.publications])
+        tokens = [parse_doc(pub, refresh) for pub in pubs]
         ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
         vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
                                      tokenizer=_tokenize_and_stem, **kwds)
         abs_m = vectorizer.fit_transform([t['abstracts'] for t in tokens])
 
         # Merge information into namedtuple
-        t = zip(keep['ID'], names, keep['first_year'], keep['n_coauth'],
-                keep['n_pubs'], countries, compute_cosine(ref_m),
-                compute_cosine(abs_m))
+        t = zip(matches, names, first_years, n_coauths, n_pubs, countries,
+                compute_cosine(ref_m), compute_cosine(abs_m))
         fields = "ID name first_year num_coauthors num_publications country "\
                  "reference_sim abstract_sim"
         match = namedtuple("Match", fields)
@@ -401,6 +396,16 @@ def _build_dict(results, chunk):
             first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
             d[focal]['first_year'] = first_year
     return d
+
+
+def _print_missing_docs(auth_id, miss_abs, miss_refs, total, verbose):
+    """Auxiliary function to print information on missing abstracts and
+    reference lists.
+    """
+    if verbose:
+        print("Researcher {}: {} abstract(s) and {} reference "\
+              "list(s) out of {} documents missing".format(auth_id,
+                    miss_abs, miss_refs, total))
 
 
 def _tokenize_and_stem(text):
