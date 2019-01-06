@@ -43,7 +43,7 @@ def find_country(auth_ids, pubs, year):
         authors = p.authid.split(';')
         try:
             au_id = [au for au in auth_ids if au in authors][0]
-        except IndexError: # if au_id not in list take first author location
+        except IndexError:  # if au_id not in list take first author location
             au_id = authors[0]
         idx = authors.index(str(au_id))
         # Find corresponding affiliations
@@ -108,7 +108,7 @@ def parse_doc(au, year, refresh, verbose):
         miss_abs = len(eids) - len(absts)
         miss_refs = len(eids) - len(refs)
         print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
-              "{} documents missing".format(', '.join(au), miss_abs, 
+              "{} documents missing".format(', '.join(au), miss_abs,
                                             miss_refs, len(eids)))
     return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
             'abstracts': " ".join(absts)}
@@ -145,16 +145,15 @@ def query(q_type, q, refresh=False, first_try=True):
     """
     try:
         if q_type == "author":
-            res =  AuthorSearch(q, refresh=refresh).authors
+            res = AuthorSearch(q, refresh=refresh).authors
         elif q_type == "docs":
-            res =  ScopusSearch(q, refresh=refresh).results
-            for pub in res:   # Verfiy that `year` is integer
-                year = pub.coverDate[:4]
-                _ = int(year)
+            res = ScopusSearch(q, refresh=refresh).results
+            for pub in res:   # Verify that `year` is integer
+                int(pub.coverDate[:4])
         else:
             raise Exception("Unknown value provided.")
         return res
-    except (KeyError, UnicodeDecodeError, ValueError):  
+    except (KeyError, UnicodeDecodeError, ValueError):
         if first_try:
             return query(q_type, q, True, False)
         else:
@@ -187,15 +186,14 @@ def query_journal(source_id, years, refresh):
         res = []
         for year in years:
             q = Template('SOURCE-ID({}) AND PUBYEAR IS $fill'.format(source_id))
-            ext, _ = stacked_query([year], res, q, "", 
-                       partial(query, "docs"), refresh=refresh) 
+            ext, _ = stacked_query([year], res, q, "", partial(query, "docs"),
+                                   refresh=refresh)
             res.extend(ext)
     # Sort authors by year
     d = defaultdict(list)
     for pub in res:
         year = pub.coverDate[:4]
-        # Populate dict
-        d[year].extend(get_authors([pub]))
+        d[year].extend(get_authors([pub]))  # Populate dict
     return d
 
 
@@ -245,7 +243,7 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
     -----
     Results of each successful query are appended to ´res´.
     """
-    group = [str(g) for g in group] # make robust to passing int
+    group = [str(g) for g in group]  # make robust to passing int
     q = query.substitute(fill=joiner.join(group))
     try:
         res.extend(run(func, q, refresh))
@@ -253,7 +251,7 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
             i += len(group)
             print_progress(i, total)
     except (Scopus400Error, ScopusQueryError, Scopus500Error):
-        if len(group)>1:
+        if len(group) > 1:
             mid = len(group) // 2
             params = {"group": group[:mid], "res": res, "query": query, "i": i,
                       "joiner": joiner, "func": func, "total": total,
@@ -261,16 +259,16 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
             res, i = stacked_query(**params)
             params.update({"group": group[mid:], "i": i})
             res, i = stacked_query(**params)
-        elif not "AND EID(" in q: # skip if already passed inside here
+        elif "AND EID(" not in q:  # skip if already passed inside here
             groupeids = ["*" + str(n) for n in range(0, 10)]
             q = Template(q + " AND EID($fill)")
-            mid = len(groupeids) // 2 # split here to avoid redundant query
+            mid = len(groupeids) // 2  # split here to avoid redundant query
             params = {"group": groupeids[:mid], "res": res, "query": q, "i": i,
                       "joiner": " OR ", "func": func, "total": None,
                       "refresh": refresh}
-            res, i = stacked_query(**params)        
+            res, i = stacked_query(**params)
             params.update({"group": groupeids[mid:], "i": i})
             res, i = stacked_query(**params)
         else:
-            return None, i 
+            return None, i
     return res, i
