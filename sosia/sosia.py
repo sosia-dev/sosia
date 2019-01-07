@@ -369,14 +369,19 @@ class Original(Scientist):
         pubs = [[d.eid for d in p.publications] for p in profiles]
         pubs.append([d.eid for d in self.publications])
         tokens = [parse_doc(pub, refresh) for pub in pubs]
-        ref_m = TfidfVectorizer().fit_transform([t['refs'] for t in tokens])
-        vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
-                                     tokenizer=_tokenize_and_stem, **kwds)
-        abs_m = vectorizer.fit_transform([t['abstracts'] for t in tokens])
+        ref_cos = []
+        abs_cos = []
+        for idx in range(0, len(matches)):
+            refs = [tokens[idx]['refs'], tokens[-1]['refs']]
+            ref_cos.append(compute_cosine(TfidfVectorizer().fit_transform(refs)))
+            abstracts = [tokens[idx]['abstracts'], tokens[-1]['abstracts']]
+            vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
+                                         tokenizer=_tokenize_and_stem, **kwds)
+            abs_cos.append(compute_cosine(vectorizer.fit_transform(abstracts)))
 
         # Merge information into namedtuple
         t = zip(matches, names, first_years, n_coauths, n_pubs, countries,
-                languages, compute_cosine(ref_m), compute_cosine(abs_m))
+                languages, ref_cos, abs_cos)
         fields = "ID name first_year num_coauthors num_publications country "\
                  "language reference_sim abstract_sim"
         match = namedtuple("Match", fields)

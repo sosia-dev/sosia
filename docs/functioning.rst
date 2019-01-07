@@ -204,7 +204,7 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
 
                  num_publications country  language reference_sim  abstract_sim  
     ID                                                                  
-    42661166900                 3  Norway       eng        0.0238        0.1205  
-    54893528800                 4  France       eng        0.0014        0.1131  
-    55268789000                 5  Taiwan       eng        0.0000        0.0889  
-    56282273300                 5  Mexico       eng        0.0044        0.1507
+    42661166900                 3  Norway       eng        0.0308        0.0667  
+    54893528800                 4  France       eng        0.0035        0.0492  
+    55268789000                 5  Taiwan       eng        0.0000        0.0298  
+    56282273300                 5  Mexico       eng        0.0087        0.1047

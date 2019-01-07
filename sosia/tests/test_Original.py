@@ -18,16 +18,16 @@ Match = namedtuple("Match", fields)
 MATCHES = [
     Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
         num_coauthors=4, num_publications=2, country='Norway', language='eng',
-        reference_sim=0.026, abstract_sim=0.1205),
+        reference_sim=0.0308, abstract_sim=0.0667),
     Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011,
         num_coauthors=3, num_publications=3, country='Finland', language='eng',
-        reference_sim=0.0022, abstract_sim=0.1131),
+        reference_sim=0.0035, abstract_sim=0.0492),
     Match(ID='55268789000', name='Chen, Chun Liang', first_year=2011,
         num_coauthors=3, num_publications=3, country='Taiwan', language='eng',
-        reference_sim=0.0, abstract_sim=0.0889),
+        reference_sim=0.0, abstract_sim=0.0298),
     Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011,
         num_coauthors=4, num_publications=4, country='Mexico', language='eng',
-        reference_sim=0.0068, abstract_sim=0.1507)]
+        reference_sim=0.0087, abstract_sim=0.1047)]
 
 
 def test_search_sources():

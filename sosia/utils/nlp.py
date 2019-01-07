@@ -16,4 +16,4 @@ def clean_abstract(s):
 
 def compute_cosine(matrix, digits=4):
     """Compute cosine given a regular matrix."""
-    return (matrix * matrix.T).toarray().round(digits)[-1]
+    return (matrix * matrix.T).toarray().round(digits)[-1][0]

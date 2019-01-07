@@ -17,6 +17,6 @@ def test_clean_abstract():
 
 
 def test_compute_cosine():
-    expected = [0.6875, 1.0625]
+    expected = 0.6875
     received = compute_cosine(csr_matrix(array([[0.5, 0.75], [1, 0.25]])))
-    assert_equal(list(received), expected)
+    assert_equal(received, expected)
