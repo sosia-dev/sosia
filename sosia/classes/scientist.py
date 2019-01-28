@@ -184,6 +184,6 @@ class Scientist(object):
 
     def get_publication_languages(self):
         """Parse languages of published documents until given year."""
-        langs = [AbstractRetrieval(eid).language for eid in self._eids]
+        langs = [AbstractRetrieval(eid, view="FULL").language for eid in self._eids]
         self._language = "; ".join(sorted(list(set(langs))))
         return self
