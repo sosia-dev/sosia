@@ -40,7 +40,7 @@ def find_country(auth_ids, pubs, year):
     papers = sorted(papers, key=attrgetter('coverDate'), reverse=True)
     for p in papers:
         # Find index of focal author
-        authors = p.authid.split(';')
+        authors = p.author_ids.split(';')
         try:
             au_id = [au for au in auth_ids if au in authors][0]
         except IndexError:  # if au_id not in list take first author location
@@ -48,6 +48,7 @@ def find_country(auth_ids, pubs, year):
         idx = authors.index(str(au_id))
         # Find corresponding affiliations
         affs = p.afid.split(';')[idx].split('-')
+        print(affs)
         affs = [af for af in affs if af != '']
         if len(affs) == 0:
             continue
@@ -61,7 +62,7 @@ def get_authors(pubs):
     """Get list of author IDs from a list of namedtuples representing
     publications.
     """
-    l = [x.authid.split(';') for x in pubs if isinstance(x.authid, str)]
+    l = [x.author_ids.split(';') for x in pubs if isinstance(x.author_ids, str)]
     return [au for sl in l for au in sl]
 
 

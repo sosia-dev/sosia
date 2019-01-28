@@ -308,7 +308,7 @@ class Original(Scientist):
 
         res, _ = stacked_query(**params)
         group = [pub.eid.split('-')[-1] for pub in res
-                 if pub.areas.startswith(self.main_field[1]) and
+                 if self.main_field[1] in pub.areas.split(" ") and
                  pub.documents >= str(min(_npapers))]
         group.sort()
         if verbose:
@@ -338,7 +338,7 @@ class Original(Scientist):
                 print_progress(i+1, n, verbose)
                 try:
                     res = query("docs", 'AU-ID({})'.format(au), refresh=False)
-                except Scopus500Error:
+                except Exception as e:
                     continue
                 res = [p for p in res if p.coverDate]
                 res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
@@ -346,7 +346,7 @@ class Original(Scientist):
                     continue
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
-                authids = [p.authid for p in res if p.authid]
+                authids = [p.author_ids for p in res if p.author_ids]
                 authors = set([a for p in authids for a in p.split(';')])
                 n_coauth = len(authors) - 1  # Subtract 1 for focal author
                 if ((len(res) not in _npapers) or (min_year not in _years) or
@@ -394,7 +394,7 @@ def _build_dict(results, chunk):
     """
     d = defaultdict(lambda: {'first_year': inf, 'pubs': set(), 'coauth': set()})
     for pub in results:
-        authors = set(pub.authid.split(';'))
+        authors = set(pub.author_ids.split(';'))
         for focal in authors.intersection(chunk):
             d[focal]['coauth'].update(authors)
             d[focal]['coauth'].remove(focal)

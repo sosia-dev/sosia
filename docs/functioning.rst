@@ -161,7 +161,7 @@ The final step is to search within this search group for authors that fulfill cr
     ....    print(m)
     >>> matches
     Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
-    num_coauthors=4, num_publications=3, country='Norway', language='eng',
+    num_coauthors=4, num_publications=3, country='Sweden', language='eng',
     reference_sim=0.0233, abstract_sim=0.1205)
     Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011,
     num_coauthors=5, num_publications=4, country='France',
@@ -170,7 +170,7 @@ The final step is to search within this search group for authors that fulfill cr
     num_coauthors=4, num_publications=5, country='Taiwan', language='eng',
     reference_sim=0.0, abstract_sim=0.0889)
     Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011,
-    num_coauthors=5, num_publications=5, country='Mexico', language='eng',
+    num_coauthors=5, num_publications=5, country='Spain', language='eng',
     reference_sim=0.0043, abstract_sim=0.1507)
 
 `sosia` provides the following information:

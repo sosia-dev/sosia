@@ -87,46 +87,115 @@ def test_name():
 
 
 def test_publications():
-    fields = 'eid doi pii title subtype creator authname authid afid  '\
-             'coverDate coverDisplayDate publicationName issn source_id '\
-             'aggregationType volume issueIdentifier pageRange '\
-             'citedby_count openaccess'
+    fields = 'eid doi pii pubmed_id title subtype creator afid affilname '\
+        'affiliation_city affiliation_country author_count author_names '\
+        'author_ids author_afids coverDate coverDisplayDate '\
+        'publicationName issn source_id eIssn aggregationType volume '\
+        'issueIdentifier article_number pageRange description authkeywords '\
+        'citedby_count openaccess fund_acr fund_no fund_sponsor'
     doc = namedtuple('Document', fields)
+    # scientist1
     received = scientist1.publications
     assert_equal(len(received), 8)
-    expected = doc(eid='2-s2.0-0001093103', pii='S004873339900089X',
-        title='Technology policy for a world of skew-distributed outcomes',
-        doi='10.1016/S0048-7333(99)00089-X', source_id='22900',
-        creator='Scherer F.', authname='Scherer F.;Harhoff D.', subtype='ar',
-        authid='7004064836;6701809842', afid='60006332;60028717',
-        volume='29', coverDate='2000-01-01', coverDisplayDate='April 2000',
-        openaccess='0', publicationName='Research Policy', issn='00487333',
-        citedby_count='228', aggregationType='Journal',
-        pageRange='559-566', issueIdentifier='4-5')
+    abstract = 'This paper draws implications for technology policy from '\
+        'evidence on the size distribution of returns from eight sets of '\
+        'data on inventions and innovations attributable to private sector '\
+        'firms and universities. The distributions are all highly skew; the '\
+        'top 10% of sample members captured from 48 to 93 percent of total '\
+        'sample returns. It follows that programs seeking to advance '\
+        'technology should not be judged negatively if they lead to '\
+        'numerous economic failures; rather, emphasis should be placed on '\
+        'the relatively few big successes. To achieve noteworthy success '\
+        'with appreciable confidence, a sizeable array of projects must '\
+        'often be supported. The outcome distributions are sufficiently '\
+        'skewed that, even with large numbers of projects, it is not '\
+        'possible to diversify away substantial residual variability '\
+        'through portfolio strategies.'
+    expected = doc(eid='2-s2.0-0001093103', doi='10.1016/S0048-7333(99)00089-X',
+        pii='S004873339900089X', pubmed_id=None, title='Technology policy for a world of skew-distributed outcomes',
+        subtype='ar', creator='Scherer F.', afid='60006332;60028717',
+        affilname='John F. Kennedy School of Government;Ludwig-Maximilians-Universität München',
+        affiliation_city='Cambridge;Munich', affiliation_country='United States;Germany',
+        author_count='2', author_names='Scherer, F. M.;Harhoff, Dietmar',
+        author_ids='7004064836;6701809842', author_afids='60006332;60028717',
+        coverDate='2000-01-01', coverDisplayDate='April 2000',
+        publicationName='Research Policy', issn='00487333', source_id='22900',
+        eIssn=None, aggregationType='Journal', volume='29', issueIdentifier='4-5',
+        article_number=None, pageRange='559-566', description=abstract,
+        authkeywords='Innovation | Portfolio strategies | Risk | Skewness',
+        citedby_count='235', openaccess='0', fund_acr=None, fund_no='undefined',
+        fund_sponsor='Alfred P. Sloan Foundation')
     assert_equal(received[0], expected)
+    # scientist2
     received = scientist2.publications
     assert_equal(len(received), 4)
-    expected = doc(eid='2-s2.0-84866317084', aggregationType='Journal',
-        doi='10.1016/j.respol.2012.04.005', pii='S004873331200114X',
-        title='Return mobility and scientific productivity of researchers working abroad: The role of home country linkages',
-        subtype='ar', creator='Baruffaldi S.', source_id='22900',
-        authname='Baruffaldi S.;Landoni P.', authid='55208373700;24781156100',
-        afid='60097412;60023256', coverDate='2012-11-01', issn='00487333',
-        coverDisplayDate='November 2012', publicationName='Research Policy',
-        volume='41', issueIdentifier='9', pageRange='1655-1665',
-        citedby_count='38', openaccess='0')
+    abstract = 'Through an analysis of 497 foreign researchers in Italy and '\
+        'Portugal we verify the impact of home linkages on return mobility '\
+        'choices and scientific productivity. We consider the presence of '\
+        'several different types of linkages of the researchers working '\
+        'abroad with their country of origin and control for the most '\
+        'relevant contextual factors (age, research area, position in the '\
+        'host country, etc.). The probability of return to their home '\
+        'country and scientific productivity in the host country are both '\
+        'higher for researchers that maintain home linkages. We conclude '\
+        'that the presence of home linkages directly benefits both '\
+        'countries in addition to the indirect benefit of expanding the '\
+        'scientific networks. Policy implications and suggestions for '\
+        'further research are discussed. © 2012 Elsevier B.V. All rights reserved.'
+    title = 'Return mobility and scientific productivity of researchers '\
+            'working abroad: The role of home country linkages'
+    expected = doc(eid='2-s2.0-84866317084', doi='10.1016/j.respol.2012.04.005',
+        pii='S004873331200114X', pubmed_id=None, title=title,
+        subtype='ar', creator='Baruffaldi S.', afid='60097412;60023256',
+        affilname='CDM;Politecnico di Milano', affiliation_city='Cambridge;Milan',
+        affiliation_country='United States;Italy', author_count='2',
+        author_names='Baruffaldi, Stefano H.;Landoni, Paolo',
+        author_ids='55208373700;24781156100', author_afids='60097412;60023256',
+        coverDate='2012-11-01', coverDisplayDate='November 2012',
+        publicationName='Research Policy', issn='00487333', source_id='22900',
+        eIssn=None, aggregationType='Journal', volume='41', issueIdentifier='9',
+        article_number=None, pageRange='1655-1665', description=abstract,
+        authkeywords='Brain drain | Home country linkages | Migration | Mobility',
+        citedby_count='39', openaccess='0', fund_acr=None, fund_no='undefined',
+        fund_sponsor=None)
     assert_equal(received[-1], expected)
+    # scientist3
     received = scientist3.publications
     assert_equal(len(received), 2)
-    expected = doc(eid='2-s2.0-84959420483', volume='45', issueIdentifier='4',
-        doi='10.1016/j.respol.2015.12.006', pii='S0048733315002000',
-        title="The productivity of science &amp; engineering PhD students hired from supervisors' networks",
-        subtype='ar', creator='Baruffaldi S.', citedby_count='5',
-        authname='Baruffaldi S.;Visentin F.;Conti A.', pageRange='785-796',
-        authid='55208373700;55875219200;36617057700', openaccess='0',
-        afid='60028186;60028186-106299773;60019647', coverDate='2016-05-01',
-        coverDisplayDate='1 May 2016', publicationName='Research Policy',
-        issn='00487333', source_id='22900', aggregationType='Journal')
+    abstract = "© 2016 Elsevier B.V. All rights reserved. We compare the "\
+        "scientific productivity of PhD students who are hired from a "\
+        "fine-grained set of mutually exclusive affiliation types: a PhD "\
+        "supervisor's affiliation, an external affiliation from which the "\
+        "supervisor derives her coauthors, and an external affiliation with "\
+        "which the supervisor has no coauthorship ties. Using a novel "\
+        "dataset of science and engineering PhD students who graduated from "\
+        "two major Swiss universities, we find that the most productive PhD "\
+        "category is the one made of students who are affiliated with "\
+        "universities other than their supervisors' affiliation, but from "\
+        "which the PhD supervisors derive their coauthors. This result "\
+        "suggests an inverted U-shaped relationship between PhD students' "\
+        "productivity and the social distance from their supervisors. "\
+        "Additionally, we find evidence consistent with the role of "\
+        "supervisors' coauthor networks in resolving information "\
+        "asymmetries regarding PhD talent."
+    title = "The productivity of science &amp; engineering PhD students "\
+            "hired from supervisors' networks"
+    expected = doc(eid='2-s2.0-84959420483', doi='10.1016/j.respol.2015.12.006',
+        pii='S0048733315002000', pubmed_id=None, title=title,
+        subtype='ar', creator='Baruffaldi S.', afid='60028186;106299773;60019647',
+        affilname='Swiss Federal Institute of Technology EPFL, Lausanne;BRICK;Georgia Institute of Technology',
+        affiliation_city='Lausanne;Torino;Atlanta',
+        affiliation_country='Switzerland;Italy;United States', author_count='4',
+        author_names='Baruffaldi, Stefano;Visentin, Fabiana;Conti, Annamaria',
+        author_ids='55208373700;55875219200;36617057700',
+        author_afids='60028186;60028186-106299773;60019647',
+        coverDate='2016-05-01', coverDisplayDate='1 May 2016',
+        publicationName='Research Policy', issn='00487333', source_id='22900',
+        eIssn=None, aggregationType='Journal', volume='45', issueIdentifier='4',
+        article_number=None, pageRange='785-796', description=abstract,
+        authkeywords="PhD students | Scientific productivity | Supervisors' networks",
+        citedby_count='5', openaccess='0', fund_acr='UNIL', fund_no='149931',
+        fund_sponsor='Université de Lausanne')
     assert_equal(received[0], expected)
 
 def test_language():

@@ -175,8 +175,8 @@ class Scientist(object):
         code = main // 10 ** (int(log(main, 10)) - 2 + 1)
         self._main_field = (main, ASJC_2D[code])
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
-        self._coauthors = set([a for p in self._publications
-                               for a in p.authid.split(';') if a not in identifier])
+        self._coauthors = set([a for p in self._publications for a
+                               in p.author_ids.split(';') if a not in identifier])
         self._country = find_country(identifier, self._publications, year)
         au = AuthorRetrieval(identifier[0], refresh=refresh)
         self._name = ", ".join([au.surname, au.given_name])
