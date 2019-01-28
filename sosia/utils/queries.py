@@ -1,10 +1,9 @@
-from collections import Counter, defaultdict
+from collections import defaultdict
 from functools import partial
 from operator import attrgetter
 from string import Template
 
-from scopus import AbstractRetrieval, AuthorSearch,\
-    ContentAffiliationRetrieval, ScopusSearch
+from scopus import AbstractRetrieval, AuthorSearch, ScopusSearch
 
 from scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error, Scopus404Error
@@ -39,23 +38,14 @@ def find_country(auth_ids, pubs, year):
     papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
     papers = sorted(papers, key=attrgetter('coverDate'), reverse=True)
     for p in papers:
-        # Find index of focal author
-        authors = p.author_ids.split(';')
-        try:
-            au_id = [au for au in auth_ids if au in authors][0]
-        except IndexError:  # if au_id not in list take first author location
-            au_id = authors[0]
-        idx = authors.index(str(au_id))
-        # Find corresponding affiliations
-        affs = p.afid.split(';')[idx].split('-')
-        print(affs)
-        affs = [af for af in affs if af != '']
-        if len(affs) == 0:
+        authorgroup = AbstractRetrieval(p.eid).authorgroup
+        if not authorgroup:
             continue
-        # Find most often listed country of affiliations
-        countries = [ContentAffiliationRetrieval(afid).country
-                     for afid in affs]
-        return Counter(countries).most_common(1)[0][0]
+        countries = [a.country for a in authorgroup if
+                     a.auid in auth_ids and a.country]
+        if not countries:
+            continue
+        return ";".join(countries)
 
 
 def get_authors(pubs):

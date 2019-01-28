@@ -17,7 +17,7 @@ fields = "ID name first_year num_coauthors num_publications country "\
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
-        num_coauthors=4, num_publications=2, country='Sweden', language='eng',
+        num_coauthors=4, num_publications=2, country='Norway', language='eng',
         reference_sim=0.0308, abstract_sim=0.0667),
     Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011,
         num_coauthors=3, num_publications=3, country='Finland', language='eng',
@@ -26,7 +26,7 @@ MATCHES = [
         num_coauthors=3, num_publications=3, country='Taiwan', language='eng',
         reference_sim=0.0, abstract_sim=0.0298),
     Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011,
-        num_coauthors=4, num_publications=4, country='Spain', language='eng',
+        num_coauthors=4, num_publications=4, country='Mexico', language='eng',
         reference_sim=0.0087, abstract_sim=0.1047)]
 
 
