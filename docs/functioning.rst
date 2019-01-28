@@ -147,31 +147,36 @@ The final step is to search within this search group for authors that fulfill cr
     Searching through characteristics of 527 authors
     Pre-filtering...
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Left with 356 authors
+    Left with 108 authors
     Filtering based on provided conditions...
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Found 4 author(s) matching all criteria
+    Found 7 author(s) matching all criteria
     Adding other information...
     Researcher 42661166900: 0 abstract(s) and 0 reference list(s) out of 2 documents missing
     Researcher 54893528800: 0 abstract(s) and 0 reference list(s) out of 3 documents missing
     Researcher 55268789000: 0 abstract(s) and 0 reference list(s) out of 3 documents missing
+    Researcher 55353556300: 3 abstract(s) and 0 reference list(s) out of 4 documents missing
+    Researcher 55611347500: 0 abstract(s) and 0 reference list(s) out of 2 documents missing
+    Researcher 55916383400: 1 abstract(s) and 0 reference list(s) out of 2 documents missing
     Researcher 56282273300: 0 abstract(s) and 0 reference list(s) out of 4 documents missing
     Researcher 56282273300: 0 abstract(s) and 0 reference list(s) out of 4 documents missing
     >>> for m in matches:
     ....    print(m)
     >>> matches
-    Match(ID='42661166900', name='Fosaas, Morten', first_year=2011,
-    num_coauthors=4, num_publications=3, country='Norway', language='eng',
-    reference_sim=0.0233, abstract_sim=0.1205)
-    Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011,
-    num_coauthors=5, num_publications=4, country='France',
-    language='eng', reference_sim=0.0013, abstract_sim=0.1131)
-    Match(ID='55268789000', name='Chen, Chun Liang', first_year=2011,
-    num_coauthors=4, num_publications=5, country='Taiwan', language='eng',
-    reference_sim=0.0, abstract_sim=0.0889)
-    Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011,
-    num_coauthors=5, num_publications=5, country='Mexico', language='eng',
-    reference_sim=0.0043, abstract_sim=0.1507)
+    Match(ID='42661166900', name='Fosaas, Morten', first_year=2011, num_coauthors=4, num_publications=2,
+    country='Norway', language='eng', reference_sim=0.0308, abstract_sim=0.0667)
+    Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011, num_coauthors=3, num_publications=3,
+    country='Finland', language='eng', reference_sim=0.0035, abstract_sim=0.0492)
+    Match(ID='55268789000', name='Chen, Chun Liang', first_year=2011, num_coauthors=3, num_publications=3,
+    country='Taiwan', language='eng', reference_sim=0.0, abstract_sim=0.0298)
+    Match(ID='55353556300', name='Rosellon, Maureen Ane D.', first_year=2012, num_coauthors=3, num_publications=4,
+    country='Philippines', language='eng', reference_sim=0.0, abstract_sim=0.0314)
+    Match(ID='55611347500', name='Zhao, Yingxin', first_year=2013, num_coauthors=4, num_publications=2,
+    country='China', language='eng', reference_sim=0.0, abstract_sim=0.0298)
+    Match(ID='55916383400', name='Del Prado, Fatima Lourdes E.', first_year=2012, num_coauthors=3, num_publications=2,
+    country='Philippines', language='eng', reference_sim=0.0, abstract_sim=0.1004)
+    Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011, num_coauthors=4, num_publications=4,
+    country='Mexico', language='eng', reference_sim=0.0087, abstract_sim=0.1047)
 
 `sosia` provides the following information:
 
@@ -190,21 +195,37 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
 .. code-block:: python
 
     >>> import pandas as pd
-    >>> pd.set_option('display.max_columns', 0)
-    >>> pd.set_option('display.width', 0)
+    >>> pd.set_option('display.max_columns', None)
     >>> df = pd.DataFrame(matches)
     >>> df = df.set_index('ID')
     >>> df
-                                   name  first_year  num_coauthors  \
-    ID                                                               
-    42661166900          Fosaas, Morten        2011              4   
-    54893528800       Heimonen, Tomi P.        2011              3   
-    55268789000        Chen, Chun Liang        2011              3   
-    56282273300  Rodríguez, José Carlos        2011              4   
+                                         name  first_year  num_coauthors  \
+    ID                                                                     
+    42661166900                Fosaas, Morten        2011              4   
+    54893528800             Heimonen, Tomi P.        2011              3   
+    55268789000              Chen, Chun Liang        2011              3   
+    55353556300      Rosellon, Maureen Ane D.        2012              3   
+    55611347500                 Zhao, Yingxin        2013              4   
+    55916383400  Del Prado, Fatima Lourdes E.        2012              3   
+    56282273300        Rodríguez, José Carlos        2011              4   
 
-                 num_publications country  language reference_sim  abstract_sim  
-    ID                                                                  
-    42661166900                 3  Norway       eng        0.0308        0.0667  
-    54893528800                 4  France       eng        0.0035        0.0492  
-    55268789000                 5  Taiwan       eng        0.0000        0.0298  
-    56282273300                 5  Mexico       eng        0.0087        0.1047
+                 num_publications      country language  reference_sim  \
+    ID                                                                   
+    42661166900                 2       Norway      eng         0.0308   
+    54893528800                 3      Finland      eng         0.0035   
+    55268789000                 3       Taiwan      eng         0.0000   
+    55353556300                 4  Philippines      eng         0.0000   
+    55611347500                 2        China      eng         0.0000   
+    55916383400                 2  Philippines      eng         0.0000   
+    56282273300                 4       Mexico      eng         0.0087   
+
+                 abstract_sim  
+    ID                         
+    42661166900        0.0667  
+    54893528800        0.0492  
+    55268789000        0.0298  
+    55353556300        0.0314  
+    55611347500        0.0298  
+    55916383400        0.1004  
+    56282273300        0.1047
+

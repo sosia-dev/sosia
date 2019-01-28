@@ -291,7 +291,7 @@ class Original(Scientist):
         """
         # Variables
         _years = range(self.first_year-self.year_margin,
-                       self.first_year-self.year_margin+1)
+                       self.first_year+self.year_margin+1)
         _npapers = margin_range(len(self.publications), self.pub_margin)
         _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
         n = len(self.search_group)
