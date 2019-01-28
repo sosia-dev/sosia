@@ -372,12 +372,15 @@ class Original(Scientist):
         ref_cos = []
         abs_cos = []
         for idx in range(0, len(matches)):
-            refs = [tokens[idx]['refs'], tokens[-1]['refs']]
+            d = tokens[idx]
+            refs = [d['refs'], tokens[-1]['refs']]
             ref_cos.append(compute_cosine(TfidfVectorizer().fit_transform(refs)))
-            abstracts = [tokens[idx]['abstracts'], tokens[-1]['abstracts']]
+            abstracts = [d['abstracts'], tokens[-1]['abstracts']]
             vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
                                          tokenizer=_tokenize_and_stem, **kwds)
             abs_cos.append(compute_cosine(vectorizer.fit_transform(abstracts)))
+            _print_missing_docs(matches[idx], d, verbose)
+        _print_missing_docs(matches[-1], tokens[-1], verbose)  # current researcher
 
         # Merge information into namedtuple
         t = zip(matches, names, first_years, n_coauths, n_pubs, countries,
@@ -404,14 +407,14 @@ def _build_dict(results, chunk):
     return d
 
 
-def _print_missing_docs(auth_id, miss_abs, miss_refs, total, verbose):
+def _print_missing_docs(auth_id, info, verbose):
     """Auxiliary function to print information on missing abstracts and
-    reference lists.
+    reference lists stored in a dictionary d.
     """
     if verbose:
         print("Researcher {}: {} abstract(s) and {} reference "\
               "list(s) out of {} documents missing".format(auth_id,
-                    miss_abs, miss_refs, total))
+                    info["miss_abs"], info["miss_refs"], info["total"]))
 
 
 def _tokenize_and_stem(text):
