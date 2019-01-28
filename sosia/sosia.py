@@ -267,11 +267,11 @@ class Original(Scientist):
 
     def find_matches(self, stacked=False, verbose=False, refresh=False,
                      **kwds):
-        """Find matches within search_group based on three criteria:
+        """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
         3. Has about the same number of coauthors in the year of treatment
-        4. Affiliation was in the same country in the year of treatment
+        4. Works in the same field as the scientist's main field
 
         Parameters
         ----------

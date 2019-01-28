@@ -54,7 +54,7 @@ A number of optional parameters will be used throughout the query process in ord
 
 .. code-block:: python
    
-    >>> stefano = Original(55208373700, 2017, year_margin=2
+    >>> stefano = Original(55208373700, 2017, year_margin=2,
                            coauth_margin=0.2, pub_margin=0.2)
 
 This will find matches who started publishing the year of the scientist's first publication plus or minus 2 years, who in the year of treatment have the same number of coauthors plus or minus 20% of that number (at least 1), and who in the year of treatment have the same number of publications plus or minus 20% of that number (at least 1).  If the last two parameters receive integers rather than floats, they will be interpreted as absolute margin.
