@@ -182,8 +182,13 @@ class Scientist(object):
         self._name = ", ".join([au.surname, au.given_name])
         self._language = None
 
-    def get_publication_languages(self):
-        """Parse languages of published documents until given year."""
-        langs = [AbstractRetrieval(eid, view="FULL").language for eid in self._eids]
+    def get_publication_languages(self, refresh=False):
+        """Parse languages of published documents."""
+        langs = []
+        for eid in self._eids:
+            try:
+                langs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh).language)
+            except KeyError:
+                langs.append(AbstractRetrieval(eid, view="FULL", refresh=True).language)
         self._language = "; ".join(sorted(list(set(langs))))
         return self
