@@ -294,8 +294,8 @@ class Original(Scientist):
                        self.first_year+self.year_margin+1)
         _npapers = margin_range(len(self.publications), self.pub_margin)
         _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
-        n = len(self.search_group)
         if verbose:
+            n = len(self.search_group)
             print("Searching through characteristics of {:,} authors".format(n))
 
         # First round of filtering: minimum publications and main field
@@ -337,7 +337,7 @@ class Original(Scientist):
             for i, au in enumerate(group):
                 print_progress(i+1, n, verbose)
                 try:
-                    res = query("docs", 'AU-ID({})'.format(au), refresh=False)
+                    res = query("docs", 'AU-ID({})'.format(au), refresh=refresh)
                 except Exception as e:
                     continue
                 res = [p for p in res if p.coverDate]
