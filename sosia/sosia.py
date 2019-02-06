@@ -9,18 +9,15 @@ from functools import partial
 from math import inf
 from string import digits, punctuation, Template
 
-from nltk import snowball, word_tokenize
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
-from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, compute_cosine,\
-    get_authors, margin_range, parse_doc, print_progress, query,\
-    query_journal, raise_non_empty, stacked_query
+from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, get_authors,\
+    margin_range, parse_doc, print_progress, query, query_journal,\
+    raise_non_empty, stacked_query, tfidf_cos
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
-_stemmer = snowball.SnowballStemmer('english')
 
 
 class Original(Scientist):
@@ -265,8 +262,8 @@ class Original(Scientist):
                                       self.main_field[0], types))
         return self
 
-    def find_matches(self, stacked=False, verbose=False, refresh=False,
-                     **kwds):
+    def find_matches(self, stacked=False, verbose=False, stop_words=STOPWORDS,
+                     refresh=False, **kwds):
         """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -282,6 +279,11 @@ class Original(Scientist):
 
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
+
+        stop_words : list (optional, default=STOPWORDS)
+            A list of words that should be filtered in the analysis of
+            abstracts.  Default list is the list of english stopwords
+            by nltk, augmented with numbers and interpunctuation.
 
         refresh : bool (optional, default=False)
             Whether to refresh cached search files.
@@ -369,19 +371,14 @@ class Original(Scientist):
         pubs = [[d.eid for d in p.publications] for p in profiles]
         pubs.append([d.eid for d in self.publications])
         tokens = [parse_doc(pub, refresh) for pub in pubs]
-        ref_cos = []
-        abs_cos = []
-        for idx in range(0, len(matches)):
-            d = tokens[idx]
-            refs = [d['refs'], tokens[-1]['refs']]
-            ref_cos.append(compute_cosine(TfidfVectorizer().fit_transform(refs)))
-            abstracts = [d['abstracts'], tokens[-1]['abstracts']]
-            vectorizer = TfidfVectorizer(stop_words=STOPWORDS,
-                                         tokenizer=_tokenize_and_stem, **kwds)
-            abs_cos.append(compute_cosine(vectorizer.fit_transform(abstracts)))
-            _print_missing_docs(matches[idx], d, verbose)
-        label = ";".join(self.id) + " (focal)"
-        _print_missing_docs(label, tokens[-1], verbose)  # focal researcher
+        ref_cos = tfidf_cos([d["refs"] for d in tokens], **kwds)
+        abs_cos = tfidf_cos([d["abstracts"] for d in tokens],
+            stop_words=stop_words, tokenize=True, **kwds)
+        if verbose:
+            for auth_id, d in zip(matches, tokens):
+                _print_missing_docs(auth_id, d)
+            label = ";".join(self.id) + " (focal)"
+            _print_missing_docs(label, tokens[-1])  # focal researcher
 
         # Merge information into namedtuple
         t = zip(matches, names, first_years, n_coauths, n_pubs, countries,
@@ -408,16 +405,10 @@ def _build_dict(results, chunk):
     return d
 
 
-def _print_missing_docs(auth_id, info, verbose):
+def _print_missing_docs(auth_id, info):
     """Auxiliary function to print information on missing abstracts and
     reference lists stored in a dictionary d.
     """
-    if verbose:
-        print("Researcher {}: {} abstract(s) and {} reference "\
-              "list(s) out of {} documents missing".format(auth_id,
-                    info["miss_abs"], info["miss_refs"], info["total"]))
-
-
-def _tokenize_and_stem(text):
-    """Auxiliary function to return stemmed tokens of document"""
-    return [_stemmer.stem(t) for t in word_tokenize(text.lower())]
+    print("Researcher {}: {} abstract(s) and {} reference "\
+          "list(s) out of {} documents missing".format(auth_id,
+                info["miss_abs"], info["miss_refs"], info["total"]))

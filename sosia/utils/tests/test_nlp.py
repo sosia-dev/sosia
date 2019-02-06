@@ -2,11 +2,20 @@
 # -*- coding: utf-8 -*-
 """Tests for nlp module."""
 
+from string import digits, punctuation
+import warnings
+
 from nose.tools import assert_equal, assert_true
 from numpy import array
 from scipy.sparse import csr_matrix
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.utils.nlp import clean_abstract, compute_cosine
+from sosia.utils.nlp import clean_abstract, compute_cos, tfidf_cos,\
+    tokenize_and_stem
+
+warnings.filterwarnings("ignore")
+STOPWORDS = list(ENGLISH_STOP_WORDS)
+STOPWORDS.extend(punctuation + digits)
 
 
 def test_clean_abstract():
@@ -16,7 +25,30 @@ def test_clean_abstract():
     assert_equal(clean_abstract(expected), expected)
 
 
-def test_compute_cosine():
+def test_compute_cos():
     expected = 0.6875
-    received = compute_cosine(csr_matrix(array([[0.5, 0.75], [1, 0.25]])))
+    received = compute_cos(csr_matrix(array([[0.5, 0.75], [1, 0.25]])))
+    assert_equal(received, expected)
+
+
+def test_tfidf_cos():
+    expected1 = [0.7093]
+    received1 = tfidf_cos(["Lorem 1 2 3 Ipsum", "Lorem Ipsum Dolor"])
+    assert_equal(expected1, received1)
+    expected2 = [0.5797]
+    received2 = tfidf_cos(["Lorem 1 2 3 Ipsum", "Lorem Ipsum and Dolor"])
+    assert_equal(expected2, received2)
+
+
+def test_tfidf_cos_tokenize():
+    received1 = tfidf_cos(["Lorem 1 2 3 Ipsum", "Lorem Ipsum Dolor"],
+        tokenize=True, stop_words=STOPWORDS)
+    received2 = tfidf_cos(["Lorem 1 2 3 Ipsum", "Lorem Ipsum and Dolor"],
+        tokenize=True, stop_words=STOPWORDS)
+    assert_equal(received1, received2)
+
+
+def test_tokenize_and_stem():
+    expected = ['lorem', '1', '2', '3', 'ipsum']
+    received = tokenize_and_stem("Lorem 1 2 3 Ipsum")
     assert_equal(received, expected)

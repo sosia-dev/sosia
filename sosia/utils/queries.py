@@ -85,9 +85,10 @@ def parse_doc(eids, refresh):
     # Filter None's
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     refs = [ab.references for ab in docs if ab.references]
-    return {'refs': " ".join([ref.id for sl in refs for ref in sl]),
-            'abstracts': " ".join(absts), 'miss_abs': len(eids) - len(absts),
-            'miss_refs': len(eids) - len(refs), 'total': len(eids)}
+    return {'refs': " ".join([ref.id for sl in refs for ref in sl]) or None,
+            'abstracts': " ".join(absts) or None, 'total': len(eids),
+            'miss_abs': len(eids) - len(absts),
+            'miss_refs': len(eids) - len(refs)}
 
 
 def query(q_type, q, refresh=False, first_try=True):
