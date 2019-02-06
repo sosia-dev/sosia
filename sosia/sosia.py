@@ -277,7 +277,7 @@ class Original(Scientist):
         ----------
         stacked : bool (optional, default=False)
             Whether to combine searches in few queries or not.  Cached
-            files with most likely not be resuable.  Set to True if you
+            files will most likely not be resuable.  Set to True if you
             query in distinct fields or you want to minimize API key usage.
 
         verbose : bool (optional, default=False)
@@ -311,8 +311,8 @@ class Original(Scientist):
                  if self.main_field[1] in pub.areas.split(" ") and
                  pub.documents >= str(min(_npapers))]
         group.sort()
+        n = len(group)
         if verbose:
-            n = len(group)
             print("Left with {} authors\nFiltering based on provided "
                   "conditions...".format(n))
 
@@ -418,5 +418,5 @@ def _print_missing_docs(auth_id, info, verbose):
 
 
 def _tokenize_and_stem(text):
-    """Auxiliary funtion to return stemmed tokens of document"""
+    """Auxiliary function to return stemmed tokens of document"""
     return [_stemmer.stem(t) for t in word_tokenize(text.lower())]
