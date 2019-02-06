@@ -380,7 +380,8 @@ class Original(Scientist):
                                          tokenizer=_tokenize_and_stem, **kwds)
             abs_cos.append(compute_cosine(vectorizer.fit_transform(abstracts)))
             _print_missing_docs(matches[idx], d, verbose)
-        _print_missing_docs(matches[-1], tokens[-1], verbose)  # current researcher
+        label = ";".join(self.id) + " (focal)"
+        _print_missing_docs(label, tokens[-1], verbose)  # focal researcher
 
         # Merge information into namedtuple
         t = zip(matches, names, first_years, n_coauths, n_pubs, countries,

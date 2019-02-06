@@ -152,14 +152,21 @@ The final step is to search within this search group for authors that fulfill cr
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
     Found 7 author(s) matching all criteria
     Adding other information...
-    Researcher 42661166900: 0 abstract(s) and 0 reference list(s) out of 2 documents missing
-    Researcher 54893528800: 0 abstract(s) and 0 reference list(s) out of 3 documents missing
-    Researcher 55268789000: 0 abstract(s) and 0 reference list(s) out of 3 documents missing
-    Researcher 55353556300: 3 abstract(s) and 0 reference list(s) out of 4 documents missing
-    Researcher 55611347500: 0 abstract(s) and 0 reference list(s) out of 2 documents missing
-    Researcher 55916383400: 1 abstract(s) and 0 reference list(s) out of 2 documents missing
-    Researcher 56282273300: 0 abstract(s) and 0 reference list(s) out of 4 documents missing
-    Researcher 56282273300: 0 abstract(s) and 0 reference list(s) out of 4 documents missing
+    Researcher 42661166900: 0 abstract(s) and 0 reference list(s)
+    out of 2 documents missing
+    Researcher 54893528800: 0 abstract(s) and 0 reference list(s)
+    out of 3 documents missing
+    Researcher 55268789000: 0 abstract(s) and 0 reference list(s)
+    out of 3 documents missing
+    Researcher 55353556300: 3 abstract(s) and 0 reference list(s)
+    out of 4 documents missing
+    Researcher 55611347500: 0 abstract(s) and 0 reference list(s)
+    out of 2 documents missing
+    Researcher 55916383400: 1 abstract(s) and 0 reference list(s)
+    out of 2 documents missing
+    Researcher 56282273300: 0 abstract(s) and 0 reference list(s)
+    out of 4 documents missing
+    Researcher 55208373700 (focal): 0 abstract(s) and 0 reference list(s) out of 4 documents missing
     >>> for m in matches:
     ....    print(m)
     >>> matches
