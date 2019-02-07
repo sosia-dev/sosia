@@ -189,6 +189,9 @@ class Scientist(object):
             try:
                 langs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh).language)
             except KeyError:
-                langs.append(AbstractRetrieval(eid, view="FULL", refresh=True).language)
+                try:
+                    langs.append(AbstractRetrieval(eid, view="FULL", refresh=True).language)
+                except AttributeError:
+                    continue
         self._language = "; ".join(sorted(list(set(langs))))
         return self
