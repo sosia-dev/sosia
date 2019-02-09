@@ -166,7 +166,7 @@ class Original(Scientist):
             if verbose:
                 params.update({"total": n})
                 print("Searching authors in {} sources in {}...".format(
-                        n, self.year))
+                      n, self.year))
             # Today
             q = Template("SOURCE-ID($fill) AND PUBYEAR "
                          "IS {}".format(self.year))
@@ -178,7 +178,7 @@ class Original(Scientist):
                     _years[0]))
                 if verbose:
                     print("Searching authors in {} sources in {}...".format(
-                        n, _years[0]))
+                          n, _years[0]))
             else:
                 _min = min(_years)-1
                 _max = max(_years)+1
@@ -186,13 +186,13 @@ class Original(Scientist):
                              "PUBYEAR BEF {}".format(_min, _max))
                 if verbose:
                     print("Searching authors in {} sources in {}-{}...".format(
-                        n, _min+1, _max-1))
+                          n, _min+1, _max-1))
             params.update({'query': q, "res": []})
             then = set(get_authors(stacked_query(**params)[0]))
             # Negative
             if verbose:
                 print("Searching authors in {} sources in {}...".format(
-                        n, _min_year-1))
+                      n, _min_year-1))
             q = Template("SOURCE-ID($fill) AND PUBYEAR "
                          "IS {}".format(_min_year-1))
             params.update({'query': q, "res": []})
@@ -381,7 +381,7 @@ class Original(Scientist):
         tokens = [parse_doc(pub, refresh) for pub in pubs]
         ref_cos = tfidf_cos([d["refs"] for d in tokens], **kwds)
         abs_cos = tfidf_cos([d["abstracts"] for d in tokens],
-            stop_words=stop_words, tokenize=True, **kwds)
+                            stop_words=stop_words, tokenize=True, **kwds)
         if verbose:
             for auth_id, d in zip(matches, tokens):
                 _print_missing_docs(auth_id, d)
@@ -417,6 +417,6 @@ def _print_missing_docs(auth_id, info):
     """Auxiliary function to print information on missing abstracts and
     reference lists stored in a dictionary d.
     """
-    print("Researcher {}: {} abstract(s) and {} reference "\
-          "list(s) out of {} documents missing".format(auth_id,
-                info["miss_abs"], info["miss_refs"], info["total"]))
+    print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
+          "{} documents missing".format(auth_id, info["miss_abs"],
+                                        info["miss_refs"], info["total"]))
