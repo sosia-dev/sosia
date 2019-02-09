@@ -152,17 +152,21 @@ class Original(Scientist):
         _min_year = self.first_year-self.year_margin
         _max_pubs = max(margin_range(len(self.publications), self.pub_margin))
         _years = list(range(_min_year, self.first_year+self.year_margin+1))
-        n = len(self.search_sources)
+        if isinstance(self.search_sources[0], tuple):
+            search_sources = [s[0] for s in self.search_sources]
+        else:
+            search_sources = self.search_sources
+        n = len(search_sources)
 
         # Query journals
         if stacked:
-            params = {"group": [str(x) for x in sorted(self.search_sources)],
+            params = {"group": [str(x) for x in sorted(search_sources)],
                       "joiner": " OR ", "refresh": refresh,
                       "func": partial(query, "docs")}
             if verbose:
                 params.update({"total": n})
                 print("Searching authors in {} sources in {}...".format(
-                        len(self.search_sources), self.year))
+                        n, self.year))
             # Today
             q = Template("SOURCE-ID($fill) AND PUBYEAR "
                          "IS {}".format(self.year))
@@ -174,7 +178,7 @@ class Original(Scientist):
                     _years[0]))
                 if verbose:
                     print("Searching authors in {} sources in {}...".format(
-                        len(self.search_sources), _years[0]))
+                        n, _years[0]))
             else:
                 _min = min(_years)-1
                 _max = max(_years)+1
@@ -182,13 +186,13 @@ class Original(Scientist):
                              "PUBYEAR BEF {}".format(_min, _max))
                 if verbose:
                     print("Searching authors in {} sources in {}-{}...".format(
-                        len(self.search_sources), _min+1, _max-1))
+                        n, _min+1, _max-1))
             params.update({'query': q, "res": []})
             then = set(get_authors(stacked_query(**params)[0]))
             # Negative
             if verbose:
                 print("Searching authors in {} sources in {}...".format(
-                        len(self.search_sources), _min_year-1))
+                        n, _min_year-1))
             q = Template("SOURCE-ID($fill) AND PUBYEAR "
                          "IS {}".format(_min_year-1))
             params.update({'query': q, "res": []})
@@ -200,9 +204,9 @@ class Original(Scientist):
             auth_count = []
             if verbose:
                 print("Searching authors for search_group in {} "
-                      "sources...".format(len(self.search_sources)))
+                      "sources...".format(n))
                 print_progress(0, n)
-            for i, source_id in enumerate(self.search_sources):
+            for i, source_id in enumerate(search_sources):
                 try:
                     d = query_journal(source_id, [self.year] + _years, refresh)
                 except TypeError:
@@ -236,8 +240,12 @@ class Original(Scientist):
             Whether to report on the progress of the process.
         """
         df = self.field_source
+        if isinstance(list(self.sources)[0], tuple):
+            sources = [s[0] for s in self.sources]
+        else:
+            sources = self.sources
         # Select types of sources of scientist's publications in main field
-        mask = (df['source_id'].isin(self.sources)) &\
+        mask = (df['source_id'].isin(sources)) &\
                (df['asjc'] == self.main_field[0])
         main_types = set(df[mask]['type'])
         # Select sources in scientist's main field
@@ -251,8 +259,9 @@ class Original(Scientist):
         grouped['drop'] = grouped['asjc'].apply(
             lambda s: any(x for x in s.split() if int(x) not in self.fields))
         # Add own sources
-        sources = set(grouped[~grouped['drop']].index.tolist())
-        sources.update(set(self.sources))
+        sources = set((s, self.source_names.get(s)) for s in
+                      grouped[~grouped['drop']].index.unique())
+        sources.update(self.sources)
         self._search_sources = sorted(list(sources))
         if verbose:
             types = "; ".join(list(main_types))

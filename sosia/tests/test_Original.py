@@ -41,12 +41,12 @@ MATCHES = [
 
 def test_search_sources():
     scientist1.define_search_sources()
-    jour = scientist1.search_sources
-    assert_equal(len(jour), 60)
-    assert_true(14726 in jour)
-    assert_true(22009 in jour)
+    search_sources = scientist1.search_sources
+    assert_equal(len(search_sources), 60)
+    assert_true((14726, 'Technovation') in search_sources)
+    assert_true((22009, 'Corporate Governance (Oxford)') in search_sources)
     for j in scientist1.sources:
-        assert_true(j in jour)
+        assert_true(j in search_sources)
 
 
 def test_search_group():

@@ -58,17 +58,23 @@ def test_first_year():
 
 def test_sources():
     received = scientist1.sources
-    expected = {17472, 28994, 24389, 24204, 22900, 21307, 26878}
+    expected = {(24389, 'Journal of Industrial Economics'),
+        (17472, 'Journal of Banking and Finance'),
+        (24204, 'Review of Economics and Statistics'),
+        (21307, 'Management Science'), (22900, 'Research Policy'),
+        (26878, 'Journal of Population Economics'),
+        (28994, 'Journal of Evolutionary Economics')}
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)
     received = scientist2.sources
-    expected = {18769, 22900, 23013}
+    expected = {(18769, 'Applied Economics Letters'),
+        (22900, 'Research Policy'), (23013, 'Industry and Innovation')}
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)
     received = scientist3.sources
-    expected = {18769, 22900}
+    expected = {(18769, 'Applied Economics Letters'), (22900, 'Research Policy')}
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)

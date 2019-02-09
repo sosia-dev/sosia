@@ -9,7 +9,7 @@ from math import log
 import pandas as pd
 from scopus import AbstractRetrieval, AuthorRetrieval
 
-from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST,
+from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,
     create_fields_sources_list, find_country, query, raise_non_empty)
 
 
@@ -148,10 +148,13 @@ class Scientist(object):
         # Read mapping of fields to sources
         try:
             df = pd.read_csv(FIELDS_SOURCES_LIST)
+            names = pd.read_csv(SOURCES_NAMES_LIST, index_col=0)["title"].to_dict()
         except FileNotFoundError:
             create_fields_sources_list()
             df = pd.read_csv(FIELDS_SOURCES_LIST)
+            names = pd.read_csv(SOURCES_NAMES_LIST, index_col=0)["title"].to_dict()
         self.field_source = df
+        self.source_names = names
 
         # Load list of publications
         if not eids:
@@ -169,8 +172,9 @@ class Scientist(object):
         self._eids = eids
 
         # Parse information
-        self._sources = set([int(p.source_id) for p in self._publications])
-        self._fields = df[df['source_id'].isin(self._sources)]['asjc'].tolist()
+        source_ids = set([int(p.source_id) for p in self._publications])
+        self._sources = set([(s_id, names.get(s_id)) for s_id in source_ids])
+        self._fields = df[df['source_id'].isin(source_ids)]['asjc'].tolist()
         main = Counter(self._fields).most_common(1)[0][0]
         code = main // 10 ** (int(log(main, 10)) - 2 + 1)
         self._main_field = (main, ASJC_2D[code])

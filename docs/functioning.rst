@@ -50,7 +50,7 @@ You can provide a list of Scopus Author IDs, in the case the author you are inte
 .. code-block:: python
    
     >>> eids=['2-s2.0-84959420483', '2-s2.0-84949113230', '2-s2.0-84961390052', '2-s2.0-84866317084']
-    >>> scientist1_eids = sosia.Original(55208373700, 2017, eids=eids)
+    >>> scientist1_eids = sosia.Original(552083s73700, 2017, eids=eids)
 
 A number of optional parameters will be used throughout the query process in order to define "about" similarity.  There are margins for the first year of publication, the number of co-authors and the number of publications:
 
@@ -74,7 +74,8 @@ Upon initation, `scopus` performs queries on the Scopus database under the hood.
     >>> stefano.first_year
     2012
     >>> stefano.sources
-    {18769, 22900, 23013}
+    {(18769, 'Applied Economics Letters'), (23013, 'Industry and Innovation'),
+    (22900, 'Research Policy')}
     >>> stefano.main_field
     (1405, 'BUSI')
     
@@ -96,18 +97,15 @@ The next step is to define a list of sources similar (in type and area) to the s
     >>> stefano = Original(55208373700, 2017)
     >>> stefano.define_search_sources()
     >>> stefano.search_sources
-    [14726, 16680, 17047, 18769, 19929, 20057, 20206, 20639, 20842, 22009,
-    22322, 22369, 22714, 22900, 22949, 23013, 23143, 23656, 24928, 27679,
-    28573, 28581, 28988, 29823, 29933, 30858, 36058, 36062, 36921, 38085,
-    38845, 50127, 53328, 54314, 55221, 69129, 70932, 84544, 89669, 99221,
-    144668, 144961, 145514, 3900148221, 4400151707, 5000156909, 6800153107,
-    9500153991, 11600153421, 12100155405, 17700156704, 19700188275,
-    19900192158, 21100218364, 21100220151, 21100235612, 21100255419,
-    21100307471, 21100431996, 21100874277]
+    [(14726, 'Technovation'), (16680, 'Engineering Science and Education Journal'),
+    (17047, 'Chronicle of Higher Education'), (18769, 'Applied Economics Letters'),
+    # 53 more sources omitted
+    (21100431996, 'Service Industries Review'), (21100874277, 'Wuhan Gongye Daxue
+    Xuebao/Journal of Wuhan University of Technology')]
 
-The results is a list of Scopus Source IDs.  As before, you can override (or predefine )your own set of search_sources.
+Property `search_sources` is a list of tuples storing source ID and source title.  As before, you can override (or predefine )your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the source the scientist publishes in: `stefano.search_sources = stefano.sources`.
 
-Using `verbose=True` you receive additional information:
+Using `verbose=True` you receive additional information on this operation:
 
 .. code-block:: python
 
