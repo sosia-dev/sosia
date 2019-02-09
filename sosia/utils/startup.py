@@ -3,7 +3,8 @@ from os.path import exists, expanduser
 
 import pandas as pd
 
-from sosia.utils import FIELDS_SOURCES_LIST, URL_EXT_LIST, URL_SOURCES
+from sosia.utils import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
+    URL_EXT_LIST, URL_SOURCES
 
 
 def create_fields_sources_list():
@@ -17,10 +18,11 @@ def create_fields_sources_list():
             sheets_sources.pop(drop)
         except KeyError:
             continue
-    cols = ['Scopus SourceID', 'Scopus ASJC Code (Sub-subject Area)', 'Type']
+    cols = ['Scopus SourceID', 'Scopus ASJC Code (Sub-subject Area)',
+            'Type', 'Title']
     out = pd.concat([df[cols].dropna() for df in sheets_sources.values()])
     out = out.drop_duplicates(subset=cols)
-    out.columns = ['source_id', 'asjc', 'type']
+    out.columns = ['source_id', 'asjc', 'type', 'title']
     out['type'] = out['type'].str.lower().str.strip()
 
     # Add information from list of external publication titles
@@ -34,25 +36,37 @@ def create_fields_sources_list():
     def _clean(x):
         return x.replace(';', ' ').replace(',', ' ').replace('  ', ' ').strip()
 
-    keeps = ['Sourcerecord id', 'ASJC code', 'Source Type']
-    cols = ['source_id', 'type', 'asjc']
-    rename = {'All Science Journal Classification Codes (ASJC)': 'ASJC code'}
+    keeps = ['Sourcerecord id', "title", 'ASJC code', 'Source Type']
+    cols = ['source_id', "title", 'type', 'asjc']
+    title_col1 = "Source Title (Medline-sourced journals are indicated in "\
+                 "Green)\nTitles indicated in bold red do not meet the "\
+                 "Scopus quality criteria anymore and therefore Scopus "\
+                 "discontinued the forward capturing"
+    title_col2 = "Source title Titles indicated in bold red do not meet the "\
+                 "Scopus quality criteria anymore and therefore Scopus "\
+                 "discontinued the forward capturing"
+    rename = {'All Science Journal Classification Codes (ASJC)': 'ASJC code',
+              'Source title': 'title', title_col1: 'title', title_col2: 'title'}
     for df in sheets_external.values():
         if 'Source Type' not in df.columns:
             df['Source Type'] = 'conference proceedings'
         subset = df.rename(columns=rename)[keeps].dropna()
         subset['ASJC code'] = (subset['ASJC code'].astype(str).apply(_clean)
                                                   .str.split())
-        subset = subset.set_index(['Sourcerecord id', 'Source Type'])
+        subset = subset.set_index(['Sourcerecord id', "title", 'Source Type'])
         subset = subset['ASJC code'].apply(pd.Series).stack()
-        subset = subset.reset_index().drop('level_2', axis=1)
+        subset = subset.reset_index().drop('level_3', axis=1)
         subset['Source Type'] = subset['Source Type'].str.lower().str.strip()
         subset.columns = cols
         out = pd.concat([out, subset], sort=True)
 
-    # Write out
+    # Write list of names
+    names = out[['source_id', 'title']].drop_duplicates().sort_values("source_id")
+    names.to_csv(SOURCES_NAMES_LIST, index=False)
+
+    # Write list of fields by source
     out['asjc'] = out['asjc'].astype(int)
-    out = out.drop_duplicates()
+    out = out.drop('title').drop_duplicates()
     path = expanduser('~/.sosia/')
     if not exists(path):
         makedirs(path)

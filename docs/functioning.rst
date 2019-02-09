@@ -33,6 +33,8 @@ Initial set-up
     >>> import sosia
     >>> sosia.create_fields_sources_list()
 
+There will also be a list linking source titles and source IDs.
+
 Step-by-Step
 ------------
 
