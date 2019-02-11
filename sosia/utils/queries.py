@@ -163,7 +163,7 @@ def query_journal(source_id, years, refresh):
         res = []
         for year in years:
             q = Template('SOURCE-ID({}) AND PUBYEAR IS $fill'.format(source_id))
-            ext, _ = stacked_query([year], res, q, "", partial(query, "docs"),
+            ext, _ = stacked_query([year], [], q, "", partial(query, "docs"),
                                    refresh=refresh)
             res.extend(ext)
     # Sort authors by year

@@ -120,7 +120,7 @@ The next step is to define a first search group that adhere to conditions 1 to 4
     >>> stefano.define_search_group(verbose=True)
     Searching authors for search_group in 60 sources...
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Found 313 authors for search_group
+    Found 302 authors for search_group
 
 You can inspect the search group using `stefano.search_group`, which you can also override, pre-define or edit.
 

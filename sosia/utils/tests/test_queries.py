@@ -52,4 +52,4 @@ def test_parse_doc():
 def test_query_journal():
     # test a journal with more than 5k publications in one year
     res = query_journal("11000153773", [2006], refresh=False)
-    assert_true(45000 < len(res.get("2006")) < 50000)
+    assert_true(24100 < len(res.get("2006")) < 25000)
