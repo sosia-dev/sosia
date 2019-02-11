@@ -110,7 +110,7 @@ Using `verbose=True` you receive additional information on this operation:
 .. code-block:: python
 
     >>> stefano.define_search_sources(verbose=True)
-    Found 60 sources for main field 1405 and source type(s) journal
+    Found 60 sources matching main field 1405 and type(s) journal
 
 The next step is to define a first search group that adhere to conditions 1 to 4 above and do not violate condition 5 (in the sense that we remove authors have too many publications).
 

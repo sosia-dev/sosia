@@ -262,9 +262,8 @@ class Original(Scientist):
         self._search_sources = sorted(list(sources))
         if verbose:
             types = "; ".join(list(main_types))
-            print("Found {} sources for main field {} and source "
-                  "type(s) {}".format(len(self._search_sources),
-                                      self.main_field[0], types))
+            print(text = "Found {} sources matching main field {} and type(s) {}".format(
+                len(self._search_sources), self.main_field[0], types))
         return self
 
     def find_matches(self, stacked=False, verbose=False, stop_words=STOPWORDS,
