@@ -236,34 +236,38 @@ class Original(Scientist):
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
         """
-        df = self.field_source
+        # Get list of source IDs of scientist's own sources
         if isinstance(list(self.sources)[0], tuple):
-            sources = [s[0] for s in self.sources]
+            own_source_ids = [s[0] for s in self.sources]
+            own_sources = self.sources
         else:
-            sources = self.sources
-        # Select types of sources of scientist's publications in main field
-        mask = (df['source_id'].isin(sources)) &\
-               (df['asjc'] == self.main_field[0])
-        main_types = set(df[mask]['type'])
+            own_source_ids = self.sources
+            own_sources = set((s, self.source_names.get(s)) for s in self.sources)
         # Select sources in scientist's main field
-        mask = (df['asjc'] == self.main_field[0]) &\
-               (df['type'].isin(main_types))
-        sources = df[mask]['source_id'].tolist()
-        sel = df[df['source_id'].isin(sources)].copy()
-        sel['asjc'] = sel['asjc'].astype(str) + " "
-        grouped = sel.groupby('source_id').sum()['asjc'].to_frame()
+        df = self.field_source
+        same_field = df['asjc'] == self.main_field[0]
+        # Select sources of same type as those in scientist's main field
+        same_sources = same_field & df['source_id'].isin(own_source_ids)
+        main_types = set(df[same_sources]['type'])
+        same_type = same_field & df['type'].isin(main_types)
+        source_ids = df[same_type]['source_id'].unique()
+        selected = df[df['source_id'].isin(source_ids)].copy()
+        selected['asjc'] = selected['asjc'].astype(str) + " "
+        grouped = selected.groupby('source_id').sum()['asjc'].to_frame()
         # Deselect sources with alien fields
-        grouped['drop'] = grouped['asjc'].apply(
-            lambda s: any(x for x in s.split() if int(x) not in self.fields))
+        mask = grouped['asjc'].apply(lambda s: any(x for x in s.split() if
+                                                   int(x) not in self.fields))
+        grouped = grouped[~mask]
+        sources = set((s, self.source_names.get(s)) for s in grouped.index)
         # Add own sources
-        sources = set((s, self.source_names.get(s)) for s in
-                      grouped[~grouped['drop']].index.unique())
-        sources.update(self.sources)
+        sources.update(own_sources)
+        # Finalize
         self._search_sources = sorted(list(sources))
         if verbose:
             types = "; ".join(list(main_types))
-            print(text = "Found {} sources matching main field {} and type(s) {}".format(
-                len(self._search_sources), self.main_field[0], types))
+            text = "Found {} sources matching main field {} and type(s) {}".format(
+                len(self._search_sources), self.main_field[0], types)
+            print(text)
         return self
 
     def find_matches(self, stacked=False, verbose=False, stop_words=STOPWORDS,
@@ -342,14 +346,9 @@ class Original(Scientist):
         else:  # Query each author individually
             for i, au in enumerate(group):
                 print_progress(i+1, n, verbose)
-                try:
-                    res = query("docs", 'AU-ID({})'.format(au), refresh=refresh)
-                except Exception as e:
-                    continue
-                res = [p for p in res if p.coverDate]
-                res = [p for p in res if int(p.coverDate[:4]) < self.year+1]
-                if not res:
-                    continue
+                res = query("docs", 'AU-ID({})'.format(au), refresh=refresh)
+                res = [p for p in res if p.coverDate and
+                       int(p.coverDate[:4]) <= self.year]
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
                 authids = [p.author_ids for p in res if p.author_ids]

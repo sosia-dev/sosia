@@ -38,14 +38,10 @@ def find_country(auth_ids, pubs, year):
     papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
     papers = sorted(papers, key=attrgetter('coverDate'), reverse=True)
     for p in papers:
-        authorgroup = AbstractRetrieval(p.eid).authorgroup
-        if not authorgroup:
-            continue
+        authorgroup = AbstractRetrieval(p.eid).authorgroup or []
         countries = [a.country for a in authorgroup if
                      a.auid in auth_ids and a.country]
-        if not countries:
-            continue
-        return ";".join(countries)
+        return ";".join(countries) or None
 
 
 def get_authors(pubs):
