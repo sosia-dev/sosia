@@ -192,10 +192,7 @@ class Scientist(object):
         for eid in self._eids:
             try:
                 langs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh).language)
-            except KeyError:
-                try:
-                    langs.append(AbstractRetrieval(eid, view="FULL", refresh=True).language)
-                except AttributeError:
-                    continue
-        self._language = "; ".join(sorted(list(set(langs))))
+            except KeyError:  # Document likely not loaded in FULL view
+                langs.append(AbstractRetrieval(eid, view="FULL", refresh=True).language)
+        self._language = "; ".join(sorted(list(set(filter(None, langs)))))
         return self
