@@ -125,11 +125,9 @@ def query(q_type, q, refresh=False, first_try=True):
             res = AuthorSearch(q, refresh=refresh).authors
         elif q_type == "docs":
             res = ScopusSearch(q, refresh=refresh).results
-            for pub in res:   # Verify that `year` is integer
-                int(pub.coverDate[:4])
         else:
             raise Exception("Unknown value provided.")
-        return res
+        return res or []
     except (KeyError, UnicodeDecodeError, ValueError):
         if first_try:
             return query(q_type, q, True, False)
@@ -159,17 +157,25 @@ def query_journal(source_id, years, refresh):
     """
     try:  # Try complete publication list first
         res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh=refresh)
+        if not valid_results(res):
+            res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh=True)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
             q = Template('SOURCE-ID({}) AND PUBYEAR IS $fill'.format(source_id))
             ext, _ = stacked_query([year], [], q, "", partial(query, "docs"),
                                    refresh=refresh)
+            if not valid_results(ext):  # Reload queries with missing years
+                ext, _ = stacked_query([year], [], q, "", partial(query, "docs"),
+                                       refresh=True)
             res.extend(ext)
     # Sort authors by year
     d = defaultdict(list)
     for pub in res:
-        year = pub.coverDate[:4]
+        try:
+            year = pub.coverDate[:4]
+        except TypeError:  # missing year
+            continue
         d[year].extend(get_authors([pub]))  # Populate dict
     return d
 
@@ -249,3 +255,12 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
         else:
             return None, i
     return res, i
+
+
+def valid_results(res):
+    """Verify that each element ScopusSearch results `res` contains year info."""
+    try:
+        _ = [int(p.coverDate[:4]) for p in res]
+        return True
+    except:
+        return False
