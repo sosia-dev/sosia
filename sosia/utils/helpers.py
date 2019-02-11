@@ -1,4 +1,21 @@
-from math import ceil
+from math import ceil, inf
+from collections import defaultdict
+
+
+def build_dict(results, chunk):
+    """Create dictionary assigning publication information to authors we
+    are looking for.
+    """
+    d = defaultdict(lambda: {'first_year': inf, 'pubs': set(), 'coauth': set()})
+    for pub in results:
+        authors = set(pub.author_ids.split(';'))
+        for focal in authors.intersection(chunk):
+            d[focal]['coauth'].update(authors)
+            d[focal]['coauth'].remove(focal)
+            d[focal]['pubs'].add(pub.eid)
+            first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
+            d[focal]['first_year'] = first_year
+    return d
 
 
 def margin_range(base, val):

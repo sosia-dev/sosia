@@ -4,16 +4,16 @@
 #            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
-from collections import Counter, defaultdict, namedtuple
+from collections import Counter, namedtuple
 from functools import partial
-from math import inf
 from string import digits, punctuation, Template
 
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
-from sosia.utils import get_authors, margin_range, parse_doc, print_progress,\
-    query, query_journal, raise_non_empty, stacked_query, tfidf_cos
+from sosia.utils import build_dict, get_authors, margin_range, parse_doc,\
+    print_progress, query, query_journal, raise_non_empty, stacked_query,\
+    tfidf_cos
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -335,7 +335,7 @@ class Original(Scientist):
             if verbose:
                 params.update({"total": n})
             res, _ = stacked_query(**params)
-            container = _build_dict(res, group)
+            container = build_dict(res, group)
             # Iterate through container and filter results
             for auth, dat in container.items():
                 dat['n_coauth'] = len(dat['coauth'])
@@ -390,22 +390,6 @@ class Original(Scientist):
                  "language reference_sim abstract_sim"
         match = namedtuple("Match", fields)
         return [match(*tup) for tup in list(t)]
-
-
-def _build_dict(results, chunk):
-    """Create dictionary assigning publication information to authors we
-    are looking for.
-    """
-    d = defaultdict(lambda: {'first_year': inf, 'pubs': set(), 'coauth': set()})
-    for pub in results:
-        authors = set(pub.author_ids.split(';'))
-        for focal in authors.intersection(chunk):
-            d[focal]['coauth'].update(authors)
-            d[focal]['coauth'].remove(focal)
-            d[focal]['pubs'].add(pub.eid)
-            first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
-            d[focal]['first_year'] = first_year
-    return d
 
 
 def _print_missing_docs(auth_id, info):
