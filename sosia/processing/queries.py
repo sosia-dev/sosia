@@ -43,14 +43,10 @@ def query(q_type, q, refresh=False, first_try=True):
             res = AuthorSearch(q, refresh=refresh).authors
         elif q_type == "docs":
             res = ScopusSearch(q, refresh=refresh).results
-        else:
-            raise Exception("Unknown value provided.")
         return res or []
     except (KeyError, UnicodeDecodeError, ValueError):
         if first_try:
             return query(q_type, q, True, False)
-        else:
-            pass
 
 
 def query_journal(source_id, years, refresh):
@@ -74,9 +70,10 @@ def query_journal(source_id, years, refresh):
         that year.
     """
     try:  # Try complete publication list first
-        res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh=refresh)
+        q = 'SOURCE-ID({})'.format(source_id)
+        res = query("docs", q, refresh=refresh)
         if not valid_results(res):
-            res = query("docs", 'SOURCE-ID({})'.format(source_id), refresh=True)
+            res = query("docs", q, refresh=True)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
@@ -151,7 +148,7 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
         if total:  # Equivalent of verbose
             i += len(group)
             print_progress(i, total)
-    except (Scopus400Error, ScopusQueryError, Scopus500Error):
+    except (Scopus400Error, Scopus500Error, ScopusQueryError):
         if len(group) > 1:
             mid = len(group) // 2
             params = {"group": group[:mid], "res": res, "query": query, "i": i,
