@@ -4,16 +4,15 @@
 #            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
-from collections import Counter, namedtuple
+from collections import Counter
 from functools import partial
 from string import digits, punctuation, Template
 
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
-from sosia.utils import build_dict, get_authors, margin_range, parse_doc,\
-    print_progress, query, query_journal, raise_non_empty, stacked_query,\
-    tfidf_cos
+from sosia.utils import build_dict, get_authors, margin_range, inform_matches,\
+    print_progress, query, query_journal, raise_non_empty, stacked_query
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -265,7 +264,7 @@ class Original(Scientist):
         return self
 
     def find_matches(self, stacked=False, verbose=False, stop_words=STOPWORDS,
-                     refresh=False, **kwds):
+                     information=True, refresh=False, **kwds):
         """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -287,11 +286,22 @@ class Original(Scientist):
             abstracts.  Default list is the list of english stopwords
             by nltk, augmented with numbers and interpunctuation.
 
+        information : bool (optional, default=True)
+            Whether to return additional information on the matches that may
+            help in the selection process.
+
         refresh : bool (optional, default=False)
             Whether to refresh cached search files.
 
         kwds : keywords
             Parameters to pass to TfidfVectorizer for abstract vectorization.
+
+        Returns
+        -------
+        matches : list
+            A list of Scopus IDs of scientists matching all the criteria (if
+            information is False) or a list of namedtuples with the Scopus ID
+            and additional information (if information is True).
         """
         # Variables
         _years = range(self.first_year-self.year_margin,
@@ -353,43 +363,13 @@ class Original(Scientist):
                     continue
                 matches.append(au)
         if verbose:
-            print("Found {:,} author(s) matching all criteria\nAdding "
-                  "other information...".format(len(matches)))
+            print("Found {:,} author(s) matching all criteria".format(len(matches)))
 
-        # Add characteristics
-        profiles = [Scientist([auth], self.year, refresh) for auth in matches]
-        names = [p.name for p in profiles]
-        first_years = [p.first_year for p in profiles]
-        n_coauths = [len(p.coauthors) for p in profiles]
-        n_pubs = [len(p.publications) for p in profiles]
-        countries = [p.country for p in profiles]
-        languages = [p.get_publication_languages().language for p in profiles]
-        # Add content analysis
-        pubs = [[d.eid for d in p.publications] for p in profiles]
-        pubs.append([d.eid for d in self.publications])
-        tokens = [parse_doc(pub, refresh) for pub in pubs]
-        ref_cos = tfidf_cos([d["refs"] for d in tokens], **kwds)
-        abs_cos = tfidf_cos([d["abstracts"] for d in tokens],
-                            stop_words=stop_words, tokenize=True, **kwds)
-        if verbose:
-            for auth_id, d in zip(matches, tokens):
-                _print_missing_docs(auth_id, d)
-            label = ";".join(self.identifier) + " (focal)"
-            _print_missing_docs(label, tokens[-1])  # focal researcher
-
-        # Merge information into namedtuple
-        t = zip(matches, names, first_years, n_coauths, n_pubs, countries,
-                languages, ref_cos, abs_cos)
-        fields = "ID name first_year num_coauthors num_publications country "\
-                 "language reference_sim abstract_sim"
-        match = namedtuple("Match", fields)
-        return [match(*tup) for tup in list(t)]
-
-
-def _print_missing_docs(auth_id, info):
-    """Auxiliary function to print information on missing abstracts and
-    reference lists stored in a dictionary d.
-    """
-    print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
-          "{} documents missing".format(auth_id, info["miss_abs"],
-                                        info["miss_refs"], info["total"]))
+        if information and len(matches) > 0:
+            if verbose:
+                print("Providing additional information...")
+            profiles = [Scientist([au], self.year, refresh) for au in matches]
+            return inform_matches(profiles, self, stop_words, verbose,
+                                  refresh, **kwds)
+        else:
+            return matches

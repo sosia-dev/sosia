@@ -185,7 +185,7 @@ The final step is to search within this search group for authors that fulfill cr
     Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011, num_coauthors=4, num_publications=4,
     country='Mexico', language='eng', reference_sim=0.0087, abstract_sim=0.1047)
 
-`sosia` provides the following information:
+By default, `sosia` provides the following information (which you switch off using `information=False` to simply return a list of Scopus IDs):
 
 * `ID`: The Scopus Author ID of the match
 * `name`: The name of the profile

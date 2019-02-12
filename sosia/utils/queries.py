@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from functools import partial
 from operator import attrgetter
 from string import Template
@@ -7,7 +7,7 @@ from scopus import AbstractRetrieval, AuthorSearch, ScopusSearch
 
 from scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error, Scopus404Error
-from sosia.utils import clean_abstract, print_progress, run
+from sosia.utils import clean_abstract, tfidf_cos, print_progress, run
 
 
 def find_country(auth_ids, pubs, year):
@@ -50,6 +50,66 @@ def get_authors(pubs):
     """
     l = [x.author_ids.split(';') for x in pubs if isinstance(x.author_ids, str)]
     return [au for sl in l for au in sl]
+
+
+def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
+    """Create namedtuple adding information to matches.
+
+    Parameters
+    ----------
+    profiles : list of Scientist
+        A list of Scientist objects representing matches.
+
+    focal : Scientist
+        Object of class Scientist representing the focal scientist.
+
+    stop_words : list
+        A list of words that should be filtered in the analysis of abstracts.
+
+    verbose : bool
+        Whether to report on the progress of the process and the completeness
+        of document information.
+
+    refresh : bool
+        Whether to refresh all cached files or not.
+
+    kwds : keywords
+        Parameters to pass to TfidfVectorizer for abstract vectorization.
+
+    Returns
+    -------
+    m : list of namedtuples
+        A list of namedtuples representing matches.  Provided information
+        are "ID name first_year num_coauthors num_publications country
+        language reference_sim abstract_sim".
+    """
+    # Add characteristics
+    ids = [p.identifier[0] for p in profiles]
+    names = [p.name for p in profiles]
+    first_years = [p.first_year for p in profiles]
+    n_coauths = [len(p.coauthors) for p in profiles]
+    n_pubs = [len(p.publications) for p in profiles]
+    countries = [p.country for p in profiles]
+    languages = [p.get_publication_languages().language for p in profiles]
+    # Add content analysis
+    pubs = [[d.eid for d in p.publications] for p in profiles]
+    pubs.append([d.eid for d in focal.publications])
+    tokens = [parse_doc(pub, refresh) for pub in pubs]
+    ref_cos = tfidf_cos([d["refs"] for d in tokens], **kwds)
+    abs_cos = tfidf_cos([d["abstracts"] for d in tokens], tokenize=True,
+                        stop_words=stop_words, **kwds)
+    if verbose:
+        for auth_id, d in zip(ids, tokens):
+            _print_missing_docs(auth_id, d)
+        label = ";".join(focal.identifier) + " (focal)"
+        _print_missing_docs(label, tokens[-1])  # focal researcher
+    # Merge information into list of namedtuple
+    t = zip(ids, names, first_years, n_coauths, n_pubs, countries,
+            languages, ref_cos, abs_cos)
+    fields = "ID name first_year num_coauthors num_publications country "\
+             "language reference_sim abstract_sim"
+    match = namedtuple("Match", fields)
+    return [match(*tup) for tup in list(t)]
 
 
 def parse_doc(eids, refresh):
@@ -260,3 +320,12 @@ def valid_results(res):
         return True
     except:
         return False
+
+
+def _print_missing_docs(auth_id, info):
+    """Auxiliary function to print information on missing abstracts and
+    reference lists stored in a dictionary d.
+    """
+    print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
+          "{} documents missing".format(auth_id, info["miss_abs"],
+                                        info["miss_refs"], info["total"]))

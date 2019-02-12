@@ -98,3 +98,8 @@ def test_find_matches_stacked():
     for e in recieved:
         assert_true(isinstance(e.abstract_sim,float))
         assert_true(0 <= e.abstract_sim <= 1)
+
+
+def test_find_matches_noinfo():
+    recieved = sorted(scientist1.find_matches(information=False))
+    assert_equal(recieved, [m.ID for m in MATCHES])
