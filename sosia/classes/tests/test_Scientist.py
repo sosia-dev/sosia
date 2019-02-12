@@ -80,6 +80,15 @@ def test_sources():
         assert_true(e in received)
 
 
+def test_sources_change():
+    backup = scientist1.sources
+    expected = {(14351, 'Brain Research Reviews'),
+                (18632, 'Progress in Brain Research')}
+    scientist1.sources, _ = zip(*expected)
+    assert_equal(scientist1.sources, expected)
+    scientist1.sources = backup
+
+
 def test_main_field():
     assert_equal(scientist1.main_field, (2002, 'ECON'))
     assert_equal(scientist2.main_field, (1405, 'BUSI'))

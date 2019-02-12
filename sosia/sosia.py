@@ -58,6 +58,8 @@ class Original(Scientist):
     @search_sources.setter
     def search_sources(self, val):
         raise_non_empty(val, (set, list, tuple))
+        if not isinstance(list(val)[0], tuple):
+            val = set([(s_id, self.source_names.get(s_id)) for s_id in val])
         self._search_sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
@@ -152,10 +154,7 @@ class Original(Scientist):
         _min_year = self.first_year-self.year_margin
         _max_pubs = max(margin_range(len(self.publications), self.pub_margin))
         _years = list(range(_min_year, self.first_year+self.year_margin+1))
-        if isinstance(self.search_sources[0], tuple):
-            search_sources = [s[0] for s in self.search_sources]
-        else:
-            search_sources = self.search_sources
+        search_sources, _ = zip(*self.search_sources)
         n = len(search_sources)
 
         # Query journals
@@ -237,12 +236,7 @@ class Original(Scientist):
             Whether to report on the progress of the process.
         """
         # Get list of source IDs of scientist's own sources
-        if isinstance(list(self.sources)[0], tuple):
-            own_source_ids = [s[0] for s in self.sources]
-            own_sources = self.sources
-        else:
-            own_source_ids = self.sources
-            own_sources = set((s, self.source_names.get(s)) for s in self.sources)
+        own_source_ids, _ = zip(*self.sources)
         # Select sources in scientist's main field
         df = self.field_source
         same_field = df['asjc'] == self.main_field[0]
@@ -260,7 +254,7 @@ class Original(Scientist):
         grouped = grouped[~mask]
         sources = set((s, self.source_names.get(s)) for s in grouped.index)
         # Add own sources
-        sources.update(own_sources)
+        sources.update(self.sources)
         # Finalize
         self._search_sources = sorted(list(sources))
         if verbose:

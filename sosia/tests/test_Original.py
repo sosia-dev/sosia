@@ -49,6 +49,15 @@ def test_search_sources():
         assert_true(j in search_sources)
 
 
+def test_search_sources_change():
+    backup = scientist1.search_sources
+    expected = {(14351, 'Brain Research Reviews'),
+                (18632, 'Progress in Brain Research')}
+    scientist1.search_sources, _ = zip(*expected)
+    assert_equal(scientist1.search_sources, expected)
+    scientist1.search_sources = backup
+
+
 def test_search_group():
     scientist1.define_search_group()
     group = scientist1.search_group

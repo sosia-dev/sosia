@@ -117,6 +117,8 @@ class Scientist(object):
     @sources.setter
     def sources(self, val):
         raise_non_empty(val, (set, list, tuple))
+        if not isinstance(list(val)[0], tuple):
+            val = set([(s_id, self.source_names.get(s_id)) for s_id in val])
         self._sources = val
 
     def __init__(self, identifier, year, refresh=False, eids=None):
