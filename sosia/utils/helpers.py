@@ -2,6 +2,13 @@ from math import ceil, inf
 from collections import defaultdict
 
 
+def add_source_names(source_ids, names):
+    """Add names of sources to list of source IDs turning the list into a
+    list of tuples.
+    """
+    return set([(s_id, names.get(s_id)) for s_id in source_ids])
+
+
 def build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.

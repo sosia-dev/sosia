@@ -11,7 +11,7 @@ from scopus import AbstractRetrieval, AuthorRetrieval
 
 from sosia.processing import find_country, query
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
-    create_fields_sources_list, raise_non_empty
+    add_source_names, create_fields_sources_list, raise_non_empty
 
 
 class Scientist(object):
@@ -119,7 +119,7 @@ class Scientist(object):
     def sources(self, val):
         raise_non_empty(val, (set, list, tuple))
         if not isinstance(list(val)[0], tuple):
-            val = set([(s_id, self.source_names.get(s_id)) for s_id in val])
+            val = add_source_names(val, self.source_names)
         self._sources = val
 
     def __init__(self, identifier, year, refresh=False, eids=None):
@@ -178,7 +178,7 @@ class Scientist(object):
 
         # Parse information
         source_ids = set([int(p.source_id) for p in self._publications])
-        self._sources = set([(s_id, names.get(s_id)) for s_id in source_ids])
+        self._sources = add_source_names(source_ids, names)
         self._fields = df[df['source_id'].isin(source_ids)]['asjc'].tolist()
         main = Counter(self._fields).most_common(1)[0][0]
         code = main // 10 ** (int(log(main, 10)) - 2 + 1)

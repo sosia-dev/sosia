@@ -13,8 +13,8 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sosia.classes import Scientist
 from sosia.processing import get_authors, inform_matches, query,\
     query_journal, stacked_query
-from sosia.utils import build_dict, margin_range, print_progress,\
-    raise_non_empty
+from sosia.utils import add_source_names, build_dict, margin_range,\
+    print_progress, raise_non_empty
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -60,7 +60,7 @@ class Original(Scientist):
     def search_sources(self, val):
         raise_non_empty(val, (set, list, tuple))
         if not isinstance(list(val)[0], tuple):
-            val = set([(s_id, self.source_names.get(s_id)) for s_id in val])
+            val = add_source_names(val, self.source_names)
         self._search_sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
