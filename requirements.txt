@@ -1,6 +1,5 @@
 nltk>=3.3
 pandas>=0.23.4
 pbr
-scopus>=1.4.1
+scopus>=1.4.3
 scikit-learn>=0.20.0
-matplotlib
