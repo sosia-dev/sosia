@@ -57,7 +57,7 @@ class Original(Scientist):
 
     @search_sources.setter
     def search_sources(self, val):
-        raise_non_empty(val, list)
+        raise_non_empty(val, (set, list, tuple))
         self._search_sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,

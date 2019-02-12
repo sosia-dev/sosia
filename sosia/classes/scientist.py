@@ -36,7 +36,7 @@ class Scientist(object):
 
     @coauthors.setter
     def coauthors(self, val):
-        raise_non_empty(val, set)
+        raise_non_empty(val, (set, list, tuple))
         self._coauthors = val
 
     @property
@@ -48,7 +48,7 @@ class Scientist(object):
 
     @fields.setter
     def fields(self, val):
-        raise_non_empty(val, set)
+        raise_non_empty(val, (set, list, tuple))
         self._fields = val
 
     @property
@@ -104,7 +104,7 @@ class Scientist(object):
 
     @publications.setter
     def publications(self, val):
-        raise_non_empty(val, set)
+        raise_non_empty(val, (set, list, tuple))
         self._publications = val
 
     @property
@@ -116,7 +116,7 @@ class Scientist(object):
 
     @sources.setter
     def sources(self, val):
-        raise_non_empty(val, set)
+        raise_non_empty(val, (set, list, tuple))
         self._sources = val
 
     def __init__(self, identifier, year, refresh=False, eids=None):

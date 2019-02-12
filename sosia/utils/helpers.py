@@ -61,8 +61,10 @@ def raise_non_empty(val, obj):
     or not of the desired object type.
     """
     if not isinstance(val, obj) or len(val) == 0:
-        obj_name = str(obj).split("'")[1]
-        raise Exception("Value must be a non-empty {}.".format(obj_name))
+        obj_name = str(obj).replace("class ", "")
+        obj_name = obj_name.translate(str.maketrans({c: "" for c in "(<>),'"}))
+        label = " or ".join(obj_name.split())
+        raise Exception("Value must be a non-empty {}.".format(label))
 
 
 def run(op, *args):

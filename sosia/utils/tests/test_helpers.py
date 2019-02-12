@@ -16,6 +16,7 @@ def test_margin_range():
 def test_raise_non_empty():
     raise_non_empty(list('abcd'), list)
     raise_non_empty(set('abcd'), set)
+    raise_non_empty(set('abcd'), (set, list))
 
 
 @raises(Exception)
