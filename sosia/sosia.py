@@ -11,8 +11,10 @@ from string import digits, punctuation, Template
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
-from sosia.utils import build_dict, get_authors, margin_range, inform_matches,\
-    print_progress, query, query_journal, raise_non_empty, stacked_query
+from sosia.processing import get_authors, inform_matches, query,\
+    query_journal, stacked_query
+from sosia.utils import build_dict, margin_range, print_progress,\
+    raise_non_empty
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)

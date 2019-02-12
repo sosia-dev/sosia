@@ -9,8 +9,9 @@ from math import log
 import pandas as pd
 from scopus import AbstractRetrieval, AuthorRetrieval
 
-from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,
-    create_fields_sources_list, find_country, query, raise_non_empty)
+from sosia.processing import find_country, query
+from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
+    create_fields_sources_list, raise_non_empty
 
 
 class Scientist(object):

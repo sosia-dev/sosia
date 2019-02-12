@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for queries module."""
+"""Tests for extraction module."""
 
 from nose.tools import assert_equal, assert_true
 from scopus import ScopusSearch
 
-from sosia.utils import find_country, parse_doc, query_journal
-
+from sosia.processing import find_country, parse_doc
 
 def test_find_country():
     pubs = ScopusSearch('AU-ID(6701809842)').results
@@ -47,9 +46,3 @@ def test_parse_doc():
         'scientific networks. Policy implications and suggestions for '\
         'further research are discussed.'
     assert_equal(received['abstracts'], expected_abs)
-
-
-def test_query_journal():
-    # test a journal with more than 5k publications in one year
-    res = query_journal("11000153773", [2006], refresh=False)
-    assert_true(24100 < len(res.get("2006")) < 25000)

@@ -10,7 +10,7 @@ from numpy import array
 from scipy.sparse import csr_matrix
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.utils.nlp import clean_abstract, compute_cos, tfidf_cos,\
+from sosia.processing import clean_abstract, compute_cos, tfidf_cos,\
     tokenize_and_stem
 
 warnings.filterwarnings("ignore")
