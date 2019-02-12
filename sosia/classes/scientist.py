@@ -147,6 +147,8 @@ class Scientist(object):
             When there are no publications for the author until the
             given year.
         """
+        self.identifier = identifier
+        self.year = year
         # Read mapping of fields to sources
         try:
             df = pd.read_csv(FIELDS_SOURCES_LIST)

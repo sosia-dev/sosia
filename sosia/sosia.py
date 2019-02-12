@@ -117,7 +117,7 @@ class Original(Scientist):
         # Variables
         if isinstance(scientist, (int, str)):
             scientist = [scientist]
-        self.id = [str(auth_id) for auth_id in scientist]
+        self.identifier = [str(auth_id) for auth_id in scientist]
         self.year = int(year)
         self.year_margin = year_margin
         self.pub_margin = pub_margin
@@ -126,7 +126,7 @@ class Original(Scientist):
         self.refresh = refresh
 
         # Instantiate superclass to load private variables
-        Scientist.__init__(self, self.id, year, refresh)
+        Scientist.__init__(self, self.identifier, year, refresh)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False):
         """Define search_group.
@@ -374,7 +374,7 @@ class Original(Scientist):
         if verbose:
             for auth_id, d in zip(matches, tokens):
                 _print_missing_docs(auth_id, d)
-            label = ";".join(self.id) + " (focal)"
+            label = ";".join(self.identifier) + " (focal)"
             _print_missing_docs(label, tokens[-1])  # focal researcher
 
         # Merge information into namedtuple
