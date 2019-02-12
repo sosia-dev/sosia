@@ -8,56 +8,40 @@ from sosia.utils import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
 
 
 def create_fields_sources_list():
-    """Download scopus files and create list of all sources with ids and
-    field information.
+    """Download Scopus files with information on covered sources and create
+    one list of all sources with ids and one with field information.
     """
+    # Set up
+    path = expanduser('~/.sosia/')
+    if not exists(path):
+        makedirs(path)
+    rename = {'All Science Journal Classification Codes (ASJC)': 'asjc',
+              'Scopus ASJC Code (Sub-subject Area)': 'asjc',
+              'ASJC code': 'asjc', 'Source Type': 'type', 'Type': 'type',
+              'Sourcerecord id': 'source_id', 'Scopus SourceID': 'source_id',
+              'Title': 'title', 'Source title': 'title'}
+    keeps = list(set(rename.values()))
+
     # Get Information from Scopus Sources list
-    sheets_sources = pd.read_excel(URL_SOURCES, sheet_name=None, header=1)
-    for drop in ['About CiteScore', 'ASJC Codes', 'Sheet1']:
-        try:
-            sheets_sources.pop(drop)
-        except KeyError:
-            continue
-    cols = ['Scopus SourceID', 'Scopus ASJC Code (Sub-subject Area)',
-            'Type', 'Title']
-    out = pd.concat([df[cols].dropna() for df in sheets_sources.values()])
-    out = out.drop_duplicates(subset=cols)
-    out.columns = ['source_id', 'asjc', 'type', 'title']
-    out['type'] = out['type'].str.lower().str.strip()
+    sources = pd.read_excel(URL_SOURCES, sheet_name=None, header=1)
+    _drop_sheets(sources, ['About CiteScore', 'ASJC Codes', 'Sheet1'])
+    out = pd.concat([df.rename(columns=rename)[keeps].dropna() for
+                     df in sources.values()])
+    out = out.drop_duplicates()
 
     # Add information from list of external publication titles
-    sheets_external = pd.read_excel(URL_EXT_LIST, sheet_name=None)
-    for drop in ['More info Medline', 'ASJC classification codes']:
-        try:
-            sheets_external.pop(drop)
-        except KeyError:
-            continue
+    external = pd.read_excel(URL_EXT_LIST, sheet_name=None)
+    _drop_sheets(external, ['More info Medline', 'ASJC classification codes'])
 
-    def _clean(x):
-        return x.replace(';', ' ').replace(',', ' ').replace('  ', ' ').strip()
-
-    keeps = ['Sourcerecord id', "title", 'ASJC code', 'Source Type']
-    cols = ['source_id', "title", 'type', 'asjc']
-    title_col1 = "Source Title (Medline-sourced journals are indicated in "\
-                 "Green)\nTitles indicated in bold red do not meet the "\
-                 "Scopus quality criteria anymore and therefore Scopus "\
-                 "discontinued the forward capturing"
-    title_col2 = "Source title Titles indicated in bold red do not meet the "\
-                 "Scopus quality criteria anymore and therefore Scopus "\
-                 "discontinued the forward capturing"
-    rename = {'All Science Journal Classification Codes (ASJC)': 'ASJC code',
-              'Source title': 'title', title_col1: 'title', title_col2: 'title'}
-    for df in sheets_external.values():
+    for df in external.values():
+        _update_dict(rename, df.columns, 'source title', 'title')
         if 'Source Type' not in df.columns:
-            df['Source Type'] = 'conference proceedings'
+            df['type'] = 'conference proceedings'
         subset = df.rename(columns=rename)[keeps].dropna()
-        subset['ASJC code'] = (subset['ASJC code'].astype(str).apply(_clean)
-                                                  .str.split())
-        subset = subset.set_index(['Sourcerecord id', "title", 'Source Type'])
-        subset = subset['ASJC code'].apply(pd.Series).stack()
-        subset = subset.reset_index().drop('level_3', axis=1)
-        subset['Source Type'] = subset['Source Type'].str.lower().str.strip()
-        subset.columns = cols
+        subset['asjc'] = subset['asjc'].astype(str).apply(_clean).str.split()
+        subset = (subset.set_index(['source_id', "title", 'type'])
+                        .asjc.apply(pd.Series).stack()
+                        .rename('asjc').reset_index().drop('level_3', axis=1))
         out = pd.concat([out, subset], sort=True)
 
     # Write list of names
@@ -65,9 +49,28 @@ def create_fields_sources_list():
     names.to_csv(SOURCES_NAMES_LIST, index=False)
 
     # Write list of fields by source
-    out['asjc'] = out['asjc'].astype(int)
-    out = out.drop('title').drop_duplicates()
-    path = expanduser('~/.sosia/')
-    if not exists(path):
-        makedirs(path)
-    out.to_csv(FIELDS_SOURCES_LIST, index=False)
+    out['type'] = out['type'].str.lower().str.strip()
+    out.drop('title', axis=1).to_csv(FIELDS_SOURCES_LIST, index=False)
+
+
+def _clean(x):
+    """Auxiliary function to clean a string Series."""
+    return x.replace(';', ' ').replace(',', ' ').replace('  ', ' ').strip()
+
+
+def _drop_sheets(sheets, drops):
+    """Auxiliary function to drop sheets from an Excel DataFrame."""
+    for drop in drops:
+        try:
+            sheets.pop(drop)
+        except KeyError:
+            continue
+
+
+def _update_dict(d, lst, key, replacement):
+    """Auxiliary function to add keys to a dictionary if a given string is
+    included in the key.
+    """
+    for c in lst:
+        if c.lower().startswith(key):
+            d[c] = replacement
