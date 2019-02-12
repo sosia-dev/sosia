@@ -13,8 +13,8 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sosia.classes import Scientist
 from sosia.processing import get_authors, inform_matches, query,\
     query_journal, stacked_query
-from sosia.utils import add_source_names, build_dict, margin_range,\
-    print_progress, raise_non_empty
+from sosia.utils import add_source_names, build_dict, custom_print,\
+    margin_range, print_progress, raise_non_empty
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -159,14 +159,15 @@ class Original(Scientist):
         n = len(search_sources)
 
         # Query journals
+        text = "Searching authors for search_group in {} sources...".format(n)
+        custom_print(text, verbose)
         if stacked:
             params = {"group": [str(x) for x in sorted(search_sources)],
                       "joiner": " OR ", "refresh": refresh,
                       "func": partial(query, "docs")}
             if verbose:
                 params.update({"total": n})
-                print("Searching authors in {} sources in {}...".format(
-                      n, self.year))
+                print("... for {}...".format(self.year))
             # Today
             q = Template("SOURCE-ID($fill) AND PUBYEAR "
                          "IS {}".format(self.year))
@@ -176,23 +177,17 @@ class Original(Scientist):
             if len(_years) == 1:
                 q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
                     _years[0]))
-                if verbose:
-                    print("Searching authors in {} sources in {}...".format(
-                          n, _years[0]))
+                custom_print("...for {}...".format(_years[0]), verbose)
             else:
                 _min = min(_years)-1
                 _max = max(_years)+1
                 q = Template("SOURCE-ID($fill) AND PUBYEAR AFT {} AND "
                              "PUBYEAR BEF {}".format(_min, _max))
-                if verbose:
-                    print("Searching authors in {} sources in {}-{}...".format(
-                          n, _min+1, _max-1))
+                custom_print("...for {}-{}...".format(_min+1, _max-1), verbose)
             params.update({'query': q, "res": []})
             then = set(get_authors(stacked_query(**params)[0]))
             # Negative
-            if verbose:
-                print("Searching authors in {} sources in {}...".format(
-                      n, _min_year-1))
+            custom_print("...for {}...".format(_min_year-1), verbose)
             q = Template("SOURCE-ID($fill) AND PUBYEAR "
                          "IS {}".format(_min_year-1))
             params.update({'query': q, "res": []})
@@ -202,10 +197,7 @@ class Original(Scientist):
             then = set()
             negative = set()
             auth_count = []
-            if verbose:
-                print("Searching authors for search_group in {} "
-                      "sources...".format(n))
-                print_progress(0, n)
+            print_progress(0, n, verbose)
             for i, source_id in enumerate(search_sources):
                 d = query_journal(source_id, [self.year] + _years, refresh)
                 today.update(d[str(self.year)])
@@ -223,9 +215,8 @@ class Original(Scientist):
         # Finalize
         group = today.intersection(then)
         self._search_group = sorted(list(group - negative))
-        if verbose:
-            print("Found {:,} authors for search_group".format(
-                len(self._search_group)))
+        text = "Found {:,} authors for search_group".format(len(self._search_group))
+        custom_print(text, verbose)
         return self
 
     def define_search_sources(self, verbose=False):
@@ -258,11 +249,10 @@ class Original(Scientist):
         sources.update(self.sources)
         # Finalize
         self._search_sources = sorted(list(sources))
-        if verbose:
-            types = "; ".join(list(main_types))
-            text = "Found {} sources matching main field {} and type(s) {}".format(
-                len(self._search_sources), self.main_field[0], types)
-            print(text)
+        types = "; ".join(list(main_types))
+        text = "Found {} sources matching main field {} and type(s) {}".format(
+            len(self._search_sources), self.main_field[0], types)
+        custom_print(text, verbose)
         return self
 
     def find_matches(self, stacked=False, verbose=False, stop_words=STOPWORDS,
@@ -310,9 +300,9 @@ class Original(Scientist):
                        self.first_year+self.year_margin+1)
         _npapers = margin_range(len(self.publications), self.pub_margin)
         _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
-        if verbose:
-            n = len(self.search_group)
-            print("Searching through characteristics of {:,} authors".format(n))
+        n = len(self.search_group)
+        text = "Searching through characteristics of {:,} authors".format(n)
+        custom_print(text, verbose)
 
         # First round of filtering: minimum publications and main field
         params = {"group": self.search_group, "res": [], "refresh": refresh,
@@ -328,9 +318,9 @@ class Original(Scientist):
                  pub.documents >= str(min(_npapers))]
         group.sort()
         n = len(group)
-        if verbose:
-            print("Left with {} authors\nFiltering based on provided "
-                  "conditions...".format(n))
+        text = "Left with {} authors\nFiltering based on provided "\
+               "conditions...".format(n)
+        custom_print(text, verbose)
 
         # Second round of filtering: All other conditions
         matches = []
@@ -364,12 +354,11 @@ class Original(Scientist):
                         (n_coauth not in _ncoauth)):
                     continue
                 matches.append(au)
-        if verbose:
-            print("Found {:,} author(s) matching all criteria".format(len(matches)))
+        text = "Found {:,} author(s) matching all criteria".format(len(matches))
+        custom_print(text, verbose)
 
         if information and len(matches) > 0:
-            if verbose:
-                print("Providing additional information...")
+            custom_print("Providing additional information...", verbose)
             profiles = [Scientist([au], self.year, refresh) for au in matches]
             return inform_matches(profiles, self, stop_words, verbose,
                                   refresh, **kwds)

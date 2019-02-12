@@ -25,6 +25,12 @@ def build_dict(results, chunk):
     return d
 
 
+def custom_print(text, verbose):
+    """Print text if verbose."""
+    if verbose:
+        print(text)
+
+
 def margin_range(base, val):
     """Create a range of margins around a base value.
 
