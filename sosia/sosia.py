@@ -214,6 +214,7 @@ class Original(Scientist):
 
         # Finalize
         group = today.intersection(then)
+        negative.update({str(i) for i in self.identifier})
         self._search_group = sorted(list(group - negative))
         text = "Found {:,} authors for search_group".format(len(self._search_group))
         custom_print(text, verbose)
