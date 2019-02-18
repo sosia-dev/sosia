@@ -4,7 +4,6 @@
 """Super class to represent a scientist."""
 
 from collections import Counter
-from math import log
 
 import pandas as pd
 from scopus import AbstractRetrieval, AuthorRetrieval
@@ -180,9 +179,7 @@ class Scientist(object):
         source_ids = set([int(p.source_id) for p in self._publications])
         self._sources = add_source_names(source_ids, names)
         self._fields = df[df['source_id'].isin(source_ids)]['asjc'].tolist()
-        main = Counter(self._fields).most_common(1)[0][0]
-        code = main // 10 ** (int(log(main, 10)) - 2 + 1)
-        self._main_field = (main, ASJC_2D[code])
+        self._main_field = _get_main_field(self._fields)
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
         self._coauthors = set([a for p in self._publications for a
                                in p.author_ids.split(';') if a not in identifier])
@@ -201,3 +198,15 @@ class Scientist(object):
                 langs.append(AbstractRetrieval(eid, view="FULL", refresh=True).language)
         self._language = "; ".join(sorted(list(set(filter(None, langs)))))
         return self
+
+
+def _get_main_field(fields):
+    """Auxiliary function to get code and name of main field."""
+    c = Counter(fields)
+    try:
+        c.pop(1000)  # Exclude Multidisciplinary
+    except KeyError:
+        pass
+    main = c.most_common(1)[0][0]
+    code = int(str(main)[:2])
+    return (main, ASJC_2D[code])
