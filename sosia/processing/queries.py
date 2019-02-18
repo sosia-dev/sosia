@@ -40,13 +40,17 @@ def query(q_type, q, refresh=False, first_try=True):
     """
     try:
         if q_type == "author":
-            res = AuthorSearch(q, refresh=refresh).authors
+            res = AuthorSearch(q, refresh=refresh).authors or []
         elif q_type == "docs":
-            res = ScopusSearch(q, refresh=refresh).results
-        return res or []
-    except (KeyError, UnicodeDecodeError, ValueError):
+            res = ScopusSearch(q, refresh=refresh).results or []
+            if not valid_results(res):
+                res = query("docs", q, True, False)
+        return res
+    except (KeyError, UnicodeDecodeError, TypeError):
         if first_try:
             return query(q_type, q, True, False)
+        else:
+            return []
 
 
 def query_journal(source_id, years, refresh):
@@ -72,8 +76,6 @@ def query_journal(source_id, years, refresh):
     try:  # Try complete publication list first
         q = 'SOURCE-ID({})'.format(source_id)
         res = query("docs", q, refresh=refresh)
-        if not valid_results(res):
-            res = query("docs", q, refresh=True)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
@@ -173,9 +175,9 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
 
 
 def valid_results(res):
-    """Verify that each element ScopusSearch results `res` contains year info."""
+    """Verify that each element ScopusSearch in `res` contains year info."""
     try:
-        _ = [int(p.coverDate[:4]) for p in res]
+        _ = [p for p in res if p.subtype == "ar" and int(p.coverDate[:4])]
         return True
     except:
         return False
