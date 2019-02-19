@@ -120,7 +120,7 @@ The next step is to define a first search group that adhere to conditions 1 to 4
     >>> stefano.define_search_group(verbose=True)
     Searching authors for search_group in 60 sources...
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Found 302 authors for search_group
+    Found 300 authors for search_group
 
 You can inspect the search group using `stefano.search_group`, which you can also override, pre-define or edit.
 
@@ -135,7 +135,7 @@ An alternative search process will try to minimize the number of queries.  The d
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
     Searching authors in 60 sources in 2010...
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Found 527 authors for search_group
+    Found 522 authors for search_group
 
 The number differs because less information is available.
 
@@ -144,7 +144,7 @@ The final step is to search within this search group for authors that fulfill cr
 .. code-block:: python
 
     >>> matches = stefano.find_matches(verbose=True)
-    Searching through characteristics of 527 authors
+    Searching through characteristics of 522 authors
     Pre-filtering...
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
     Left with 108 authors
