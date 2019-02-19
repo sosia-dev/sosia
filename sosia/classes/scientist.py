@@ -181,7 +181,8 @@ class Scientist(object):
         self._eids = eids
 
         # Parse information
-        source_ids = set([int(p.source_id) for p in self._publications])
+        source_ids = set([int(p.source_id) for p in self._publications
+                          if p.source_id])
         self._sources = add_source_names(source_ids, names)
         self._fields = df[df['source_id'].isin(source_ids)]['asjc'].tolist()
         self._main_field = _get_main_field(self._fields)
