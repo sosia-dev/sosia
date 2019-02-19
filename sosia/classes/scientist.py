@@ -66,6 +66,11 @@ class Scientist(object):
     def main_field(self):
         """The scientist's main field of research, as tuple in
         the form (ASJC code, general category).
+
+        The main field is the field with the most publications, provided it
+        is not Multidisciplinary (ASJC code 1000).  In case of an equal number
+        of publications, preference is given to non-general fields (those
+        whose ASJC ends on a digit other than 0).
         """
         return self._main_field
 
@@ -201,12 +206,22 @@ class Scientist(object):
 
 
 def _get_main_field(fields):
-    """Auxiliary function to get code and name of main field."""
+    """Auxiliary function to get code and name of main field.
+
+    We exclude multidisciplinary and give preference to non-general fields."""
     c = Counter(fields)
     try:
         c.pop(1000)  # Exclude Multidisciplinary
     except KeyError:
         pass
-    main = c.most_common(1)[0][0]
+    top_fields = [f for f, val in c.items() if val == max(c.values())]
+    if len(top_fields) == 1:
+        main = top_fields[0]
+    else:
+        non_general_fields = [f for f in top_fields if f%1000 != 0]
+        if non_general_fields:
+            main = non_general_fields[0]
+        else:
+            main = top_fields[0]
     code = int(str(main)[:2])
     return (main, ASJC_2D[code])
