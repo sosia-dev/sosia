@@ -189,7 +189,7 @@ class Scientist(object):
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
         self._coauthors = set([a for p in self._publications for a
                                in p.author_ids.split(';') if a not in identifier])
-        self._country = find_country(identifier, self._publications, year)
+        self._country = find_country(identifier, self._publications, year, refresh)
         au = AuthorRetrieval(identifier[0], refresh=refresh)
         self._name = ", ".join([au.surname, au.given_name])
         self._language = None

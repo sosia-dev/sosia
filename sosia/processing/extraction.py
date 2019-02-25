@@ -7,7 +7,7 @@ from scopus.exception import Scopus404Error
 from sosia.processing.nlp import clean_abstract, tfidf_cos
 
 
-def find_country(auth_ids, pubs, year):
+def find_country(auth_ids, pubs, year, refresh):
     """Find the most common country of affiliations of a scientist using her
     most recent publications listing valid affiliations.
 
@@ -24,6 +24,9 @@ def find_country(auth_ids, pubs, year):
     year : int
         The year for which we would like to have the country.
 
+    refresh : bool
+        Whether to refresh all cached files or not.
+
     Returns
     -------
     country : str or None
@@ -34,11 +37,14 @@ def find_country(auth_ids, pubs, year):
     # Available papers of most recent year with publications
     papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
     papers = sorted(papers, key=attrgetter('coverDate'), reverse=True)
+    params = {"view": "FULL", "refresh": refresh}
     for p in papers:
-        authorgroup = AbstractRetrieval(p.eid).authorgroup or []
+        authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
         countries = [a.country for a in authorgroup if
                      a.auid in auth_ids and a.country]
-        return ";".join(countries) or None
+        if not countries:
+            continue
+        return "; ".join(sorted(list(set(countries))))
 
 
 def get_authors(pubs):
