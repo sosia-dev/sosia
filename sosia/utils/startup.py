@@ -4,7 +4,35 @@ from os.path import exists, expanduser
 import pandas as pd
 
 from sosia.utils import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
-    URL_EXT_LIST, URL_SOURCES
+    URL_EXT_LIST, URL_SOURCES, CACHE_SQLITE
+
+import sqlite3
+
+
+def create_cache(drop=False):
+    """Create or recreate tables in cache file.
+    """
+    conn = sqlite3.connect(CACHE_SQLITE)
+    c = conn.cursor()
+    # to refresh all cache
+    if drop:
+        c.execute('''DROP TABLE IF EXISTS sources''')
+        c.execute('''DROP TABLE IF EXISTS authors''')
+        c.execute('''DROP TABLE IF EXISTS author_year''')
+    # table for sources
+    c.execute('''CREATE TABLE IF NOT EXISTS sources
+              (source_id int, year int, auids text,
+              PRIMARY KEY(source_id,year))''')
+    # table for authors
+    c.execute('''CREATE TABLE IF NOT EXISTS authors
+              (auth_id int, eid text, surname text, initials text,
+              givenname text, affiliation text, documents text,
+              affiliation_id text, city text, country text, areas text,
+              PRIMARY KEY(auth_id))''')
+    # table for author year publication information
+    c.execute('''CREATE TABLE IF NOT EXISTS author_year
+              (auth_id int, year int, first_year int, n_pubs int, n_coauth int,
+              PRIMARY KEY(auth_id, year))''')
 
 
 def create_fields_sources_list():

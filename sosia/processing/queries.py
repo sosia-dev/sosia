@@ -1,12 +1,14 @@
 from collections import defaultdict
 from functools import partial
 from string import Template
+import pandas as pd
 
 from scopus import AuthorSearch, ScopusSearch
 from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error
 
-from sosia.processing import get_authors
+from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import print_progress, run
+from sosia.utils.cache import cache_sources
 
 
 def query(q_type, q, refresh=False, first_try=True):
@@ -95,6 +97,41 @@ def query_journal(source_id, years, refresh):
             continue
         d[year].extend(get_authors([pub]))  # Populate dict
     return d
+
+
+def query_year(year, source_ids, refresh, verbose):
+    """Get authors in all sources in a particular year and put them in cache.
+
+    Parameters
+    ----------
+    year : int
+        The year of the search.
+
+    source_ids : list
+        List of Scopus IDs of sources to search.
+
+    refresh : bool (optional)
+        Whether to refresh cached files if they exist, or not.
+        
+    verbose : bool (optional)
+        Whether to print information on the search progress.
+    """
+    params = {"group": [str(x) for x in sorted(source_ids)],
+              "joiner": " OR ", "refresh": refresh,
+              "func": partial(query, "docs")}
+    if verbose:
+        params.update({"total": len(source_ids)})
+        print("Searching authors in {} sources in {}...".format(
+                len(source_ids), year))               
+    q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(year))
+    params.update({'query': q, "res": []})
+    res, _ = stacked_query(**params)
+    res = pd.DataFrame(res)
+    res['Year'] = res.apply(lambda x: x.coverDate[:4], axis=1)
+    res = (res.groupby(['source_id','Year'])[['author_ids']].
+                      apply(get_auth_from_df).reset_index())
+    res.columns = ['source_id','year','auids'] # can be avoided by naming as in pubs
+    cache_sources(res)
 
 
 def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):

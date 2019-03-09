@@ -55,6 +55,12 @@ def get_authors(pubs):
     return [au for sl in l for au in sl]
 
 
+def get_auth_from_df(pubs):
+    """Get list of author IDs from a dataframe of publications.
+    """
+    l = [x.split(';') for x in pubs.author_ids if isinstance(x, str)]
+    return [au for sl in l for au in sl]
+
 
 def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
     """Create namedtuple adding information to matches.
