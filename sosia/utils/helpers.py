@@ -21,7 +21,7 @@ def build_dict(results, chunk):
             d[focal]['coauth'].update(authors)
             d[focal]['coauth'].remove(focal)
             d[focal]['pubs'].add(pub.eid)
-            d[focal]['n_pubs'] = len(d[focal]['coauth'])
+            d[focal]['n_pubs'] = len(d[focal]['pubs'])
             d[focal]['n_coauth'] = len(d[focal]['coauth'])
             if pub.coverDate:
                 first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
