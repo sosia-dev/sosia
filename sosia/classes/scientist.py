@@ -171,7 +171,7 @@ class Scientist(object):
         else:
             q = 'EID({})'.format(' OR '.join(eids))
         res = query("docs", q, refresh)
-        self._publications = [p for p in res if int(p.coverDate[:4]) < year]
+        self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if len(self._publications) == 0:
             text = "No publications for author {} until year {}".format(
                 '-'.join(identifier), year)
