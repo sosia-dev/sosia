@@ -25,6 +25,8 @@ MATCHES = [
         Match(ID='55317901900', name='Siepel, Josh', first_year=2013,
           num_coauthors=8, num_publications=7, country='United Kingdom',
           language='eng', reference_sim=0.0079, abstract_sim=0.1275)]
+def test_create_cache():
+    sosia.create_cache()
 
 
 def test_search_sources():
