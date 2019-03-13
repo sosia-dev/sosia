@@ -74,17 +74,19 @@ def query_journal(source_id, years, refresh):
         that year.
     """
     try:  # Try complete publication list first
-        q = 'SOURCE-ID({})'.format(source_id)
+        q = "SOURCE-ID({})".format(source_id)
         res = query("docs", q, refresh=refresh)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
-            q = Template('SOURCE-ID({}) AND PUBYEAR IS $fill'.format(source_id))
-            ext, _ = stacked_query([year], [], q, "", partial(query, "docs"),
-                                   refresh=refresh)
+            q = Template("SOURCE-ID({}) AND PUBYEAR IS $fill".format(source_id))
+            ext, _ = stacked_query(
+                [year], [], q, "", partial(query, "docs"), refresh=refresh
+            )
             if not valid_results(ext):  # Reload queries with missing years
-                ext, _ = stacked_query([year], [], q, "", partial(query, "docs"),
-                                       refresh=True)
+                ext, _ = stacked_query(
+                    [year], [], q, "", partial(query, "docs"), refresh=True
+                )
             res.extend(ext)
     # Sort authors by year
     d = defaultdict(list)
@@ -153,9 +155,16 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
     except (Scopus400Error, Scopus500Error, ScopusQueryError):
         if len(group) > 1:
             mid = len(group) // 2
-            params = {"group": group[:mid], "res": res, "query": query, "i": i,
-                      "joiner": joiner, "func": func, "total": total,
-                      "refresh": refresh}
+            params = {
+                "group": group[:mid],
+                "res": res,
+                "query": query,
+                "i": i,
+                "joiner": joiner,
+                "func": func,
+                "total": total,
+                "refresh": refresh,
+            }
             res, i = stacked_query(**params)
             params.update({"group": group[mid:], "i": i})
             res, i = stacked_query(**params)
@@ -163,9 +172,16 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
             groupeids = ["*" + str(n) for n in range(0, 10)]
             q = Template(q + " AND EID($fill)")
             mid = len(groupeids) // 2  # split here to avoid redundant query
-            params = {"group": groupeids[:mid], "res": res, "query": q, "i": i,
-                      "joiner": " OR ", "func": func, "total": None,
-                      "refresh": refresh}
+            params = {
+                "group": groupeids[:mid],
+                "res": res,
+                "query": q,
+                "i": i,
+                "joiner": " OR ",
+                "func": func,
+                "total": None,
+                "refresh": refresh,
+            }
             res, i = stacked_query(**params)
             params.update({"group": groupeids[mid:], "i": i})
             res, i = stacked_query(**params)

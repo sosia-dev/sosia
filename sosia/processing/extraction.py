@@ -36,12 +36,11 @@ def find_country(auth_ids, pubs, year, refresh):
     """
     # Available papers of most recent year with publications
     papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
-    papers = sorted(papers, key=attrgetter('coverDate'), reverse=True)
+    papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
     params = {"view": "FULL", "refresh": refresh}
     for p in papers:
         authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
-        countries = [a.country for a in authorgroup if
-                     a.auid in auth_ids and a.country]
+        countries = [a.country for a in authorgroup if a.auid in auth_ids and a.country]
         if not countries:
             continue
         return "; ".join(sorted(list(set(countries))))
@@ -51,9 +50,8 @@ def get_authors(pubs):
     """Get list of author IDs from a list of namedtuples representing
     publications.
     """
-    l = [x.author_ids.split(';') for x in pubs if isinstance(x.author_ids, str)]
+    l = [x.author_ids.split(";") for x in pubs if isinstance(x.author_ids, str)]
     return [au for sl in l for au in sl]
-
 
 
 def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
@@ -100,18 +98,30 @@ def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
     pubs.append([d.eid for d in focal.publications])
     tokens = [parse_doc(pub, refresh) for pub in pubs]
     ref_cos = tfidf_cos([d["refs"] for d in tokens], **kwds)
-    abs_cos = tfidf_cos([d["abstracts"] for d in tokens], tokenize=True,
-                        stop_words=stop_words, **kwds)
+    abs_cos = tfidf_cos(
+        [d["abstracts"] for d in tokens], tokenize=True, stop_words=stop_words, **kwds
+    )
     if verbose:
         for auth_id, d in zip(ids, tokens):
             _print_missing_docs(auth_id, d)
         label = ";".join(focal.identifier) + " (focal)"
         _print_missing_docs(label, tokens[-1])  # focal researcher
     # Merge information into list of namedtuple
-    t = zip(ids, names, first_years, n_coauths, n_pubs, countries,
-            languages, ref_cos, abs_cos)
-    fields = "ID name first_year num_coauthors num_publications country "\
-             "language reference_sim abstract_sim"
+    t = zip(
+        ids,
+        names,
+        first_years,
+        n_coauths,
+        n_pubs,
+        countries,
+        languages,
+        ref_cos,
+        abs_cos,
+    )
+    fields = (
+        "ID name first_year num_coauthors num_publications country "
+        "language reference_sim abstract_sim"
+    )
     match = namedtuple("Match", fields)
     return [match(*tup) for tup in list(t)]
 
@@ -139,22 +149,28 @@ def parse_doc(eids, refresh):
     docs = []
     for eid in eids:
         try:
-            docs.append(AbstractRetrieval(eid, view='FULL', refresh=refresh))
+            docs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh))
         except Scopus404Error:
             docs.append(None)
     # Filter None's
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     refs = [ab.references for ab in docs if ab.references]
-    return {'refs': " ".join([ref.id for sl in refs for ref in sl]) or None,
-            'abstracts': " ".join(absts) or None, 'total': len(eids),
-            'miss_abs': len(eids) - len(absts),
-            'miss_refs': len(eids) - len(refs)}
+    return {
+        "refs": " ".join([ref.id for sl in refs for ref in sl]) or None,
+        "abstracts": " ".join(absts) or None,
+        "total": len(eids),
+        "miss_abs": len(eids) - len(absts),
+        "miss_refs": len(eids) - len(refs),
+    }
 
 
 def _print_missing_docs(auth_id, info):
     """Auxiliary function to print information on missing abstracts and
     reference lists stored in a dictionary d.
     """
-    print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
-          "{} documents missing".format(auth_id, info["miss_abs"],
-                                        info["miss_refs"], info["total"]))
+    print(
+        "Researcher {}: {} abstract(s) and {} reference list(s) out of "
+        "{} documents missing".format(
+            auth_id, info["miss_abs"], info["miss_refs"], info["total"]
+        )
+    )
