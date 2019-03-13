@@ -159,7 +159,7 @@ class Original(Scientist):
         self.refresh = refresh
 
         # Instantiate superclass to load private variables
-        Scientist.__init__(self, self.identifier, year, refresh)
+        Scientist.__init__(self, self.identifier, year, refresh, eids=self.eids)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False):
         """Define search_group.
