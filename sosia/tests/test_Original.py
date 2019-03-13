@@ -54,6 +54,10 @@ MATCHES = [
 ]
 
 
+def test_create_cache():
+    sosia.create_cache()
+
+
 def test_search_sources():
     scientist1.define_search_sources()
     search_sources = scientist1.search_sources
@@ -133,4 +137,4 @@ def test_find_matches_stacked():
 
 def test_find_matches_noinfo():
     recieved = sorted(scientist1.find_matches(information=False))
-    assert_equal(recieved, [m.ID for m in MATCHES])
+    assert_equal([str(id) for id in recieved], [m.ID for m in MATCHES])

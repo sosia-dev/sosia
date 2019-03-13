@@ -5,6 +5,7 @@ URL_EXT_LIST = (
     "https://www.elsevier.com/__data/assets/excel_doc/0015/91122/"
     "ext_list_September_2018.xlsx"
 )
+CACHE_SQLITE = expanduser("~/.sosia/") + "cache_sqlite.sqlite"
 FIELDS_SOURCES_LIST = expanduser("~/.sosia/") + "field_sources_list.csv"
 SOURCES_NAMES_LIST = expanduser("~/.sosia/") + "sources_names.csv"
 
