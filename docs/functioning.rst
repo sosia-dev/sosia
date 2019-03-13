@@ -32,6 +32,7 @@ Initial set-up
    
     >>> import sosia
     >>> sosia.create_fields_sources_list()
+    >>> sosia.create_cache()
 
 There will also be a list linking source titles and source IDs.
 
