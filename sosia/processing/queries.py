@@ -1,17 +1,20 @@
 from collections import defaultdict
 from functools import partial
 from string import Template
+import urllib
+from time import sleep
 import pandas as pd
 
 from scopus import AuthorSearch, ScopusSearch
-from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error
-
+from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error,\
+    Scopus404Error, Scopus429Error
+    
 from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import print_progress, run
 from sosia.utils.cache import cache_sources
 
 
-def query(q_type, q, refresh=False, first_try=True):
+def query(q_type, q, refresh=False, tsleep=0):
     """Wrapper function to perform a particular search query
 
     Parameters
@@ -26,9 +29,8 @@ def query(q_type, q, refresh=False, first_try=True):
     refresh : bool (optional, default=False)
         Whether to refresh cached files if they exist, or not.
 
-    first_try: bool (optional, default=True)
-        A flag parameter to indicate whether the function has been called
-        for the first time.  If False, KeyErrors will result in abortion.
+    tsleep: float
+        Seconds to wait in case of failure due to errors.
 
     Returns
     -------
@@ -49,8 +51,18 @@ def query(q_type, q, refresh=False, first_try=True):
                 res = query("docs", q, True, False)
         return res
     except (KeyError, UnicodeDecodeError, TypeError):
-        if first_try:
-            return query(q_type, q, True, False)
+        sleep(tsleep)
+        if tsleep<=10:
+            tsleep = tsleep + 2.5
+            return query(q_type, q, True, tsleep)
+        else:
+            return []
+    except urllib.error.HTTPError as e:
+        print(e)
+        sleep(tsleep)
+        if tsleep<=10:
+            tsleep = tsleep + 2.5
+            return query(q_type, q, True, tsleep)
         else:
             return []
 
