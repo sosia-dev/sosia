@@ -49,6 +49,7 @@ sosia performs a series of queries in the Scopus database using the `scopus pack
 
     >>> import sosia
     >>> sosia.create_fields_sources_list()  # Necessary only once
+    >>> sosia.create_cache()  # Necessary only once
     >>> stefano = sosia.Original(55208373700, 2017)  # Scopus ID and year
     >>> stefano.define_search_sources()  # Sources similiar to scientist
     >>> stefano.define_search_group()  # Authors publishing in similar sources

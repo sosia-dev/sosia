@@ -10,8 +10,7 @@ from numpy import array
 from scipy.sparse import csr_matrix
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.processing import clean_abstract, compute_cos, tfidf_cos,\
-    tokenize_and_stem
+from sosia.processing import clean_abstract, compute_cos, tfidf_cos, tokenize_and_stem
 
 warnings.filterwarnings("ignore")
 STOPWORDS = list(ENGLISH_STOP_WORDS)
@@ -41,14 +40,18 @@ def test_tfidf_cos():
 
 
 def test_tfidf_cos_tokenize():
-    received1 = tfidf_cos(["Lorem 1 2 3 Ipsum", "Lorem Ipsum Dolor"],
-        tokenize=True, stop_words=STOPWORDS)
-    received2 = tfidf_cos(["Lorem 1 2 3 Ipsum", "Lorem Ipsum and Dolor"],
-        tokenize=True, stop_words=STOPWORDS)
+    received1 = tfidf_cos(
+        ["Lorem 1 2 3 Ipsum", "Lorem Ipsum Dolor"], tokenize=True, stop_words=STOPWORDS
+    )
+    received2 = tfidf_cos(
+        ["Lorem 1 2 3 Ipsum", "Lorem Ipsum and Dolor"],
+        tokenize=True,
+        stop_words=STOPWORDS,
+    )
     assert_equal(received1, received2)
 
 
 def test_tokenize_and_stem():
-    expected = ['lorem', '1', '2', '3', 'ipsum']
+    expected = ["lorem", "1", "2", "3", "ipsum"]
     received = tokenize_and_stem("Lorem 1 2 3 Ipsum")
     assert_equal(received, expected)

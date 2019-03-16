@@ -6,15 +6,39 @@
 
 from collections import Counter
 from functools import partial
+from itertools import product
+from math import inf
 from string import digits, punctuation, Template
+import pandas as pd
 
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
-from sosia.processing import get_authors, inform_matches, query,\
-    query_journal, stacked_query
-from sosia.utils import add_source_names, build_dict, custom_print,\
-    margin_range, print_progress, raise_non_empty
+from sosia.processing import (
+    get_authors,
+    inform_matches,
+    query,
+    query_journal,
+    query_year,
+    stacked_query,
+)
+from sosia.utils import (
+    add_source_names,
+    build_dict,
+    custom_print,
+    margin_range,
+    print_progress,
+    raise_non_empty,
+    CACHE_SQLITE,
+)
+from sosia.utils.cache import (
+    cache_sources,
+    sources_in_cache,
+    authors_in_cache,
+    cache_authors,
+    author_year_in_cache,
+    cache_author_year,
+)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -63,8 +87,16 @@ class Original(Scientist):
             val = add_source_names(val, self.source_names)
         self._search_sources = val
 
-    def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
-                 coauth_margin=0.1, refresh=False, eids=None):
+    def __init__(
+        self,
+        scientist,
+        year,
+        year_margin=1,
+        pub_margin=0.1,
+        coauth_margin=0.1,
+        refresh=False,
+        eids=None,
+    ):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -147,51 +179,65 @@ class Original(Scientist):
         """
         # Checks
         if not self.search_sources:
-            text = "No search sources defined.  Please run "\
-                   ".define_search_sources() first."
+            text = (
+                "No search sources defined.  Please run "
+                ".define_search_sources() first."
+            )
             raise Exception(text)
 
         # Variables
-        _min_year = self.first_year-self.year_margin
+        _min_year = self.first_year - self.year_margin
+        _max_year = self.first_year + self.year_margin
         _max_pubs = max(margin_range(len(self.publications), self.pub_margin))
-        _years = list(range(_min_year, self.first_year+self.year_margin+1))
+        _years = list(range(_min_year, _max_year + 1))
+        _years_search = list(range(_min_year, _max_year + 1))
+        _years_search.extend([_min_year - 1, self.year])
         search_sources, _ = zip(*self.search_sources)
         n = len(search_sources)
+
+        # create df of sources by year to search
+        sources_ys = pd.DataFrame(
+            list(product(search_sources, _years_search)), columns=["source_id", "year"]
+        )
+        types = {"source_id": int, "year": int}
+        sources_ys.astype(types, inplace=True)
+        # merge existing data in cache and separate missing records
+        _, sources_ys_search = sources_in_cache(sources_ys)
 
         # Query journals
         text = "Searching authors for search_group in {} sources...".format(n)
         custom_print(text, verbose)
         if stacked:
-            params = {"group": [str(x) for x in sorted(search_sources)],
-                      "joiner": " OR ", "refresh": refresh,
-                      "func": partial(query, "docs")}
-            if verbose:
-                params.update({"total": n})
-                print("... for {}...".format(self.year))
-            # Today
-            q = Template("SOURCE-ID($fill) AND PUBYEAR "
-                         "IS {}".format(self.year))
-            params.update({'query': q, "res": []})
-            today = set(get_authors(stacked_query(**params)[0]))
-            # Then
-            if len(_years) == 1:
-                q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(
-                    _years[0]))
-                custom_print("...for {}...".format(_years[0]), verbose)
-            else:
-                _min = min(_years)-1
-                _max = max(_years)+1
-                q = Template("SOURCE-ID($fill) AND PUBYEAR AFT {} AND "
-                             "PUBYEAR BEF {}".format(_min, _max))
-                custom_print("...for {}-{}...".format(_min+1, _max-1), verbose)
-            params.update({'query': q, "res": []})
-            then = set(get_authors(stacked_query(**params)[0]))
-            # Negative
-            custom_print("...for {}...".format(_min_year-1), verbose)
-            q = Template("SOURCE-ID($fill) AND PUBYEAR "
-                         "IS {}".format(_min_year-1))
-            params.update({'query': q, "res": []})
-            negative = set(get_authors(stacked_query(**params)[0]))
+            _years_search = list(set(sources_ys_search.year.tolist()))
+            for y in _years_search:
+                _sources_search = sources_ys_search[
+                    sources_ys_search.year == y
+                ].source_id.tolist()
+                query_year(y, _sources_search, refresh, verbose)
+            sources_ys, _ = sources_in_cache(sources_ys)
+            today = set(
+                [
+                    au
+                    for l in sources_ys[sources_ys.year == self.year].auids.tolist()
+                    for au in l
+                ]
+            )
+            then = set(
+                [
+                    au
+                    for l in sources_ys[
+                        sources_ys.year.between(_min_year, _max_year, inclusive=True)
+                    ].auids.tolist()
+                    for au in l
+                ]
+            )
+            negative = set(
+                [
+                    au
+                    for l in sources_ys[sources_ys.year < _min_year].auids.tolist()
+                    for au in l
+                ]
+            )
         else:
             today = set()
             then = set()
@@ -208,9 +254,10 @@ class Original(Scientist):
                 for y in d:
                     if int(y) <= self.year:
                         auth_count.extend(d[str(y)])
-                print_progress(i+1, n, verbose)
-            negative.update({a for a, npubs in Counter(auth_count).items()
-                             if npubs > _max_pubs})
+                print_progress(i + 1, n, verbose)
+            negative.update(
+                {a for a, npubs in Counter(auth_count).items() if npubs > _max_pubs}
+            )
 
         # Finalize
         group = today.intersection(then)
@@ -232,18 +279,19 @@ class Original(Scientist):
         own_source_ids, _ = zip(*self.sources)
         # Select sources in scientist's main field
         df = self.field_source
-        same_field = df['asjc'] == self.main_field[0]
+        same_field = df["asjc"] == self.main_field[0]
         # Select sources of same type as those in scientist's main field
-        same_sources = same_field & df['source_id'].isin(own_source_ids)
-        main_types = set(df[same_sources]['type'])
-        same_type = same_field & df['type'].isin(main_types)
-        source_ids = df[same_type]['source_id'].unique()
-        selected = df[df['source_id'].isin(source_ids)].copy()
-        selected['asjc'] = selected['asjc'].astype(str) + " "
-        grouped = selected.groupby('source_id').sum()['asjc'].to_frame()
+        same_sources = same_field & df["source_id"].isin(own_source_ids)
+        main_types = set(df[same_sources]["type"])
+        same_type = same_field & df["type"].isin(main_types)
+        source_ids = df[same_type]["source_id"].unique()
+        selected = df[df["source_id"].isin(source_ids)].copy()
+        selected["asjc"] = selected["asjc"].astype(str) + " "
+        grouped = selected.groupby("source_id").sum()["asjc"].to_frame()
         # Deselect sources with alien fields
-        mask = grouped['asjc'].apply(lambda s: any(x for x in s.split() if
-                                                   int(x) not in self.fields))
+        mask = grouped["asjc"].apply(
+            lambda s: any(x for x in s.split() if int(x) not in self.fields)
+        )
         grouped = grouped[~mask]
         sources = set((s, self.source_names.get(s)) for s in grouped.index)
         # Add own sources
@@ -252,12 +300,20 @@ class Original(Scientist):
         self._search_sources = sorted(list(sources))
         types = "; ".join(list(main_types))
         text = "Found {} sources matching main field {} and type(s) {}".format(
-            len(self._search_sources), self.main_field[0], types)
+            len(self._search_sources), self.main_field[0], types
+        )
         custom_print(text, verbose)
         return self
 
-    def find_matches(self, stacked=False, verbose=False, stop_words=STOPWORDS,
-                     information=True, refresh=False, **kwds):
+    def find_matches(
+        self,
+        stacked=False,
+        verbose=False,
+        stop_words=STOPWORDS,
+        information=True,
+        refresh=False,
+        **kwds
+    ):
         """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -297,8 +353,9 @@ class Original(Scientist):
             and additional information (if information is True).
         """
         # Variables
-        _years = range(self.first_year-self.year_margin,
-                       self.first_year+self.year_margin+1)
+        _years = range(
+            self.first_year - self.year_margin, self.first_year + self.year_margin + 1
+        )
         _npapers = margin_range(len(self.publications), self.pub_margin)
         _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
         n = len(self.search_group)
@@ -306,53 +363,110 @@ class Original(Scientist):
         custom_print(text, verbose)
 
         # First round of filtering: minimum publications and main field
-        params = {"group": self.search_group, "res": [], "refresh": refresh,
-                  "joiner": ") OR AU-ID(", "func": partial(query, "author"),
-                  "query": Template("AU-ID($fill)")}
-        if verbose:
-            print("Pre-filtering...")
-            params.update({'total': n})
+        # create df of authors
+        authors = pd.DataFrame(self.search_group, columns=["auth_id"], dtype="int64")
 
-        res, _ = stacked_query(**params)
-        group = [pub.eid.split('-')[-1] for pub in res
-                 if self.main_field[1] in pub.areas.split(" ") and
-                 pub.documents >= str(min(_npapers))]
+        # merge existing data in cache and separate missing records
+        _, authors_search = authors_in_cache(authors)
+        if authors_search:
+            params = {
+                "group": authors_search,
+                "res": [],
+                "refresh": refresh,
+                "joiner": ") OR AU-ID(",
+                "func": partial(query, "author"),
+                "query": Template("AU-ID($fill)"),
+            }
+            if verbose:
+                print("Pre-filtering...")
+                params.update({"total": len(authors_search)})
+            res, _ = stacked_query(**params)
+            res = pd.DataFrame(res)
+            res["auth_id"] = res.apply(lambda x: x.eid.split("-")[-1], axis=1)
+            res = res[
+                [
+                    "auth_id",
+                    "eid",
+                    "surname",
+                    "initials",
+                    "givenname",
+                    "affiliation",
+                    "documents",
+                    "affiliation_id",
+                    "city",
+                    "country",
+                    "areas",
+                ]
+            ]
+            cache_authors(res)
+        authors_cache, _ = authors_in_cache(authors)
+        group = authors_cache[
+            (authors_cache.areas.str.startswith(self.main_field[1]))
+            & (authors_cache.documents.astype(int) >= int(min(_npapers)))
+        ]["auth_id"].tolist()
         group.sort()
         n = len(group)
-        text = "Left with {} authors\nFiltering based on provided "\
-               "conditions...".format(n)
+        text = (
+            "Left with {} authors\nFiltering based on provided "
+            "conditions...".format(n)
+        )
         custom_print(text, verbose)
 
         # Second round of filtering: All other conditions
+
+        # create df of authors and year of the event
+        authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
+        authors["year"] = int(self.year)
+
+        # merge existing data in cache and separate missing records
+        _, author_year_search = author_year_in_cache(authors)
+
         matches = []
         if stacked:  # Combine searches
-            q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year+1))
-            params = {"group": group, "res": [], "query": q, "refresh": refresh,
-                      "joiner": ") OR AU-ID(", "func": partial(query, "docs")}
-            if verbose:
-                params.update({"total": n})
-            res, _ = stacked_query(**params)
-            container = build_dict(res, group)
-            # Iterate through container and filter results
-            for auth, dat in container.items():
-                dat['n_coauth'] = len(dat['coauth'])
-                dat['n_pubs'] = len(dat['pubs'])
-                if (dat['first_year'] in _years and dat['n_pubs'] in
-                        _npapers and dat['n_coauth'] in _ncoauth):
-                    matches.append(auth)
+            if not author_year_search.empty:
+                q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year + 1))
+                auth_year_group = author_year_search.auth_id.tolist()
+                params = {
+                    "group": auth_year_group,
+                    "res": [],
+                    "query": q,
+                    "refresh": refresh,
+                    "joiner": ") OR AU-ID(",
+                    "func": partial(query, "docs"),
+                }
+                if verbose:
+                    params.update({"total": n})
+                res, _ = stacked_query(**params)
+                res = build_dict(res, auth_year_group)
+                res = pd.DataFrame.from_dict(res, orient="index", dtype="int64")
+                res["year"] = self.year
+                res = res[["year", "first_year", "n_pubs", "n_coauth"]]
+                res.reset_index(inplace=True)
+                res.columns = ["auth_id", "year", "first_year", "n_pubs", "n_coauth"]
+                cache_author_year(res)
+            author_year_cache, _ = author_year_in_cache(authors)
+            matches = author_year_cache[
+                (author_year_cache.first_year.between(min(_years), max(_years)))
+                & (author_year_cache.n_pubs.between(min(_npapers), max(_npapers)))
+                & (author_year_cache.n_coauth.between(min(_ncoauth), max(_ncoauth)))
+            ]["auth_id"].tolist()
         else:  # Query each author individually
             for i, au in enumerate(group):
-                print_progress(i+1, n, verbose)
-                res = query("docs", 'AU-ID({})'.format(au), refresh=refresh)
-                res = [p for p in res if p.coverDate and
-                       int(p.coverDate[:4]) <= self.year]
+                print_progress(i + 1, n, verbose)
+                res = query("docs", "AU-ID({})".format(au), refresh=refresh)
+                res = [
+                    p for p in res if p.coverDate and int(p.coverDate[:4]) <= self.year
+                ]
                 # Filter
                 min_year = int(min([p.coverDate[:4] for p in res]))
                 authids = [p.author_ids for p in res if p.author_ids]
-                authors = set([a for p in authids for a in p.split(';')])
+                authors = set([a for p in authids for a in p.split(";")])
                 n_coauth = len(authors) - 1  # Subtract 1 for focal author
-                if ((len(res) not in _npapers) or (min_year not in _years) or
-                        (n_coauth not in _ncoauth)):
+                if (
+                    (len(res) not in _npapers)
+                    or (min_year not in _years)
+                    or (n_coauth not in _ncoauth)
+                ):
                     continue
                 matches.append(au)
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
@@ -360,8 +474,7 @@ class Original(Scientist):
 
         if information and len(matches) > 0:
             custom_print("Providing additional information...", verbose)
-            profiles = [Scientist([au], self.year, refresh) for au in matches]
-            return inform_matches(profiles, self, stop_words, verbose,
-                                  refresh, **kwds)
+            profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
+            return inform_matches(profiles, self, stop_words, verbose, refresh, **kwds)
         else:
             return matches

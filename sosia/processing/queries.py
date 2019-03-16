@@ -1,15 +1,20 @@
 from collections import defaultdict
 from functools import partial
 from string import Template
+import urllib
+from time import sleep
+import pandas as pd
 
 from scopus import AuthorSearch, ScopusSearch
-from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error
-
-from sosia.processing import get_authors
+from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error,\
+    Scopus404Error, Scopus429Error
+    
+from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import print_progress, run
+from sosia.utils.cache import cache_sources
 
 
-def query(q_type, q, refresh=False, first_try=True):
+def query(q_type, q, refresh=False, tsleep=0):
     """Wrapper function to perform a particular search query
 
     Parameters
@@ -24,9 +29,8 @@ def query(q_type, q, refresh=False, first_try=True):
     refresh : bool (optional, default=False)
         Whether to refresh cached files if they exist, or not.
 
-    first_try: bool (optional, default=True)
-        A flag parameter to indicate whether the function has been called
-        for the first time.  If False, KeyErrors will result in abortion.
+    tsleep: float
+        Seconds to wait in case of failure due to errors.
 
     Returns
     -------
@@ -40,13 +44,27 @@ def query(q_type, q, refresh=False, first_try=True):
     """
     try:
         if q_type == "author":
-            res = AuthorSearch(q, refresh=refresh).authors
+            res = AuthorSearch(q, refresh=refresh).authors or []
         elif q_type == "docs":
-            res = ScopusSearch(q, refresh=refresh).results
-        return res or []
-    except (KeyError, UnicodeDecodeError, ValueError):
-        if first_try:
-            return query(q_type, q, True, False)
+            res = ScopusSearch(q, refresh=refresh).results or []
+            if not valid_results(res):
+                res = query("docs", q, True, False)
+        return res
+    except (KeyError, UnicodeDecodeError, TypeError):
+        sleep(tsleep)
+        if tsleep<=10:
+            tsleep = tsleep + 2.5
+            return query(q_type, q, True, tsleep)
+        else:
+            return []
+    except urllib.error.HTTPError as e:
+        print(e)
+        sleep(tsleep)
+        if tsleep<=10:
+            tsleep = tsleep + 2.5
+            return query(q_type, q, True, tsleep)
+        else:
+            return []
 
 
 def query_journal(source_id, years, refresh):
@@ -70,19 +88,19 @@ def query_journal(source_id, years, refresh):
         that year.
     """
     try:  # Try complete publication list first
-        q = 'SOURCE-ID({})'.format(source_id)
+        q = "SOURCE-ID({})".format(source_id)
         res = query("docs", q, refresh=refresh)
-        if not valid_results(res):
-            res = query("docs", q, refresh=True)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
-            q = Template('SOURCE-ID({}) AND PUBYEAR IS $fill'.format(source_id))
-            ext, _ = stacked_query([year], [], q, "", partial(query, "docs"),
-                                   refresh=refresh)
+            q = Template("SOURCE-ID({}) AND PUBYEAR IS $fill".format(source_id))
+            ext, _ = stacked_query(
+                [year], [], q, "", partial(query, "docs"), refresh=refresh
+            )
             if not valid_results(ext):  # Reload queries with missing years
-                ext, _ = stacked_query([year], [], q, "", partial(query, "docs"),
-                                       refresh=True)
+                ext, _ = stacked_query(
+                    [year], [], q, "", partial(query, "docs"), refresh=True
+                )
             res.extend(ext)
     # Sort authors by year
     d = defaultdict(list)
@@ -93,6 +111,46 @@ def query_journal(source_id, years, refresh):
             continue
         d[year].extend(get_authors([pub]))  # Populate dict
     return d
+
+
+def query_year(year, source_ids, refresh, verbose):
+    """Get authors in all sources in a particular year and put them in cache.
+
+    Parameters
+    ----------
+    year : int
+        The year of the search.
+
+    source_ids : list
+        List of Scopus IDs of sources to search.
+
+    refresh : bool (optional)
+        Whether to refresh cached files if they exist, or not.
+        
+    verbose : bool (optional)
+        Whether to print information on the search progress.
+    """
+    params = {
+        "group": [str(x) for x in sorted(source_ids)],
+        "joiner": " OR ",
+        "refresh": refresh,
+        "func": partial(query, "docs"),
+    }
+    if verbose:
+        params.update({"total": len(source_ids)})
+        print("Searching authors in {} sources in {}...".format(len(source_ids), year))
+    q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(year))
+    params.update({"query": q, "res": []})
+    res, _ = stacked_query(**params)
+    res = pd.DataFrame(res)
+    res["Year"] = res.apply(lambda x: x.coverDate[:4], axis=1)
+    res = (
+        res.groupby(["source_id", "Year"])[["author_ids"]]
+        .apply(get_auth_from_df)
+        .reset_index()
+    )
+    res.columns = ["source_id", "year", "auids"]  # can be avoided by naming as in pubs
+    cache_sources(res)
 
 
 def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
@@ -151,9 +209,16 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
     except (Scopus400Error, Scopus500Error, ScopusQueryError):
         if len(group) > 1:
             mid = len(group) // 2
-            params = {"group": group[:mid], "res": res, "query": query, "i": i,
-                      "joiner": joiner, "func": func, "total": total,
-                      "refresh": refresh}
+            params = {
+                "group": group[:mid],
+                "res": res,
+                "query": query,
+                "i": i,
+                "joiner": joiner,
+                "func": func,
+                "total": total,
+                "refresh": refresh,
+            }
             res, i = stacked_query(**params)
             params.update({"group": group[mid:], "i": i})
             res, i = stacked_query(**params)
@@ -161,9 +226,16 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
             groupeids = ["*" + str(n) for n in range(0, 10)]
             q = Template(q + " AND EID($fill)")
             mid = len(groupeids) // 2  # split here to avoid redundant query
-            params = {"group": groupeids[:mid], "res": res, "query": q, "i": i,
-                      "joiner": " OR ", "func": func, "total": None,
-                      "refresh": refresh}
+            params = {
+                "group": groupeids[:mid],
+                "res": res,
+                "query": q,
+                "i": i,
+                "joiner": " OR ",
+                "func": func,
+                "total": None,
+                "refresh": refresh,
+            }
             res, i = stacked_query(**params)
             params.update({"group": groupeids[mid:], "i": i})
             res, i = stacked_query(**params)
@@ -173,9 +245,9 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
 
 
 def valid_results(res):
-    """Verify that each element ScopusSearch results `res` contains year info."""
+    """Verify that each element ScopusSearch in `res` contains year info."""
     try:
-        _ = [int(p.coverDate[:4]) for p in res]
+        _ = [p for p in res if p.subtype == "ar" and int(p.coverDate[:4])]
         return True
     except:
         return False

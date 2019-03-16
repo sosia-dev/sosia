@@ -13,15 +13,27 @@ def build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.
     """
-    d = defaultdict(lambda: {'first_year': inf, 'pubs': set(), 'coauth': set()})
+    d = defaultdict(
+        lambda: {
+            "first_year": inf,
+            "pubs": set(),
+            "coauth": set(),
+            "n_coauth": inf,
+            "n_pubs": inf,
+        }
+    )
     for pub in results:
-        authors = set(pub.author_ids.split(';'))
-        for focal in authors.intersection(chunk):
-            d[focal]['coauth'].update(authors)
-            d[focal]['coauth'].remove(focal)
-            d[focal]['pubs'].add(pub.eid)
-            first_year = min(d[focal]['first_year'], int(pub.coverDate[:4]))
-            d[focal]['first_year'] = first_year
+        if pub.author_ids:
+            authors = set([int(au) for au in pub.author_ids.split(";")])
+            for focal in authors.intersection(chunk):
+                d[focal]["coauth"].update(authors)
+                d[focal]["coauth"].remove(focal)
+                d[focal]["pubs"].add(pub.eid)
+                d[focal]["n_pubs"] = len(d[focal]["pubs"])
+                d[focal]["n_coauth"] = len(d[focal]["coauth"])
+                if pub.coverDate:
+                    first_year = min(d[focal]["first_year"], int(pub.coverDate[:4]))
+                    d[focal]["first_year"] = first_year
     return d
 
 
@@ -48,10 +60,10 @@ def margin_range(base, val):
         A range object representing the margin range.
     """
     if isinstance(val, float):
-        margin = ceil(val*base)
-        r = range(base-margin, base+margin+1)
+        margin = ceil(val * base)
+        r = range(base - margin, base + margin + 1)
     elif isinstance(val, int):
-        r = range(base-val, base+val+1)
+        r = range(base - val, base + val + 1)
     else:
         raise Exception("Value must be either float or int.")
     return r
@@ -63,8 +75,8 @@ def print_progress(iteration, total, verbose=True, length=50):
         return None
     percent = 100 * (iteration / float(total))
     filled_len = int(length * iteration // total)
-    bar = '█' * filled_len + '-' * (length - filled_len)
-    print('\rProgress: |{}| {:.2f}% Complete'.format(bar, percent), end='\r')
+    bar = "█" * filled_len + "-" * (length - filled_len)
+    print("\rProgress: |{}| {:.2f}% Complete".format(bar, percent), end="\r")
     if iteration == total:
         print()
 

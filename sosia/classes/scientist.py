@@ -9,8 +9,14 @@ import pandas as pd
 from scopus import AbstractRetrieval, AuthorRetrieval
 
 from sosia.processing import find_country, query
-from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
-    add_source_names, create_fields_sources_list, raise_non_empty
+from sosia.utils import (
+    ASJC_2D,
+    FIELDS_SOURCES_LIST,
+    SOURCES_NAMES_LIST,
+    add_source_names,
+    create_fields_sources_list,
+    raise_non_empty,
+)
 
 
 class Scientist(object):
@@ -98,7 +104,7 @@ class Scientist(object):
     @language.setter
     def language(self, val):
         raise_non_empty(val, str)
-        self._language = val    
+        self._language = val
 
     @property
     def publications(self):
@@ -167,32 +173,39 @@ class Scientist(object):
 
         # Load list of publications
         if not eids:
-            q = 'AU-ID({})'.format(') OR AU-ID('.join(identifier))
+            q = "AU-ID({})".format(") OR AU-ID(".join(identifier))
         else:
-            q = 'EID({})'.format(' OR '.join(eids))
+            q = "EID({})".format(" OR ".join(eids))
         res = query("docs", q, refresh)
         try:
-            self._publications = [p for p in res if int(p.coverDate[:4]) < year]
+            self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         except (AttributeError, TypeError):
             res = query("docs", q, True)
-            self._publications = [p for p in res if int(p.coverDate[:4]) < year]
-        if len(self._publications) == 0:
+            self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
+        if not len(self._publications):
             text = "No publications for author {} until year {}".format(
-                '-'.join(identifier), year)
+                "-".join(identifier), year
+            )
             raise Exception(text)
         if not eids:
             eids = [p.eid for p in self._publications]
         self._eids = eids
 
         # Parse information
-        source_ids = set([int(p.source_id) for p in self._publications])
+        source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, names)
-        self._fields = df[df['source_id'].isin(source_ids)]['asjc'].tolist()
+        self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = _get_main_field(self._fields)
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
-        self._coauthors = set([a for p in self._publications for a
-                               in p.author_ids.split(';') if a not in identifier])
-        self._country = find_country(identifier, self._publications, year)
+        self._coauthors = set(
+            [
+                a
+                for p in self._publications
+                for a in p.author_ids.split(";")
+                if a not in identifier
+            ]
+        )
+        self._country = find_country(identifier, self._publications, year, refresh)
         au = AuthorRetrieval(identifier[0], refresh=refresh)
         self._name = ", ".join([au.surname, au.given_name])
         self._language = None
@@ -202,7 +215,9 @@ class Scientist(object):
         langs = []
         for eid in self._eids:
             try:
-                langs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh).language)
+                langs.append(
+                    AbstractRetrieval(eid, view="FULL", refresh=refresh).language
+                )
             except KeyError:  # Document likely not loaded in FULL view
                 langs.append(AbstractRetrieval(eid, view="FULL", refresh=True).language)
         self._language = "; ".join(sorted(list(set(filter(None, langs)))))
@@ -222,7 +237,7 @@ def _get_main_field(fields):
     if len(top_fields) == 1:
         main = top_fields[0]
     else:
-        non_general_fields = [f for f in top_fields if f%1000 != 0]
+        non_general_fields = [f for f in top_fields if f % 1000 != 0]
         if non_general_fields:
             main = non_general_fields[0]
         else:
