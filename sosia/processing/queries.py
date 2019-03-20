@@ -48,7 +48,12 @@ def query(q_type, q, refresh=False, tsleep=0):
         elif q_type == "docs":
             res = ScopusSearch(q, refresh=refresh).results or []
             if not valid_results(res):
-                res = query("docs", q, True, False)
+                sleep(tsleep)
+                if tsleep<=10:
+                    tsleep = tsleep + 2.5
+                    return query(q_type, q, True, tsleep)
+                else:
+                    return []
         return res
     except (KeyError, UnicodeDecodeError, TypeError):
         sleep(tsleep)
