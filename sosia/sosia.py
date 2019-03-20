@@ -202,7 +202,7 @@ class Original(Scientist):
         types = {"source_id": int, "year": int}
         sources_ys.astype(types, inplace=True)
         # merge existing data in cache and separate missing records
-        _, sources_ys_search = sources_in_cache(sources_ys)
+        _, sources_ys_search = sources_in_cache(sources_ys, refresh=refresh)
 
         # Query journals
         text = "Searching authors for search_group in {} sources...".format(n)
@@ -214,7 +214,7 @@ class Original(Scientist):
                     sources_ys_search.year == y
                 ].source_id.tolist()
                 query_year(y, _sources_search, refresh, verbose)
-            sources_ys, _ = sources_in_cache(sources_ys)
+            sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
             today = set(
                 [
                     au

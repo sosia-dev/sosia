@@ -11,7 +11,7 @@ sqlite3.register_adapter(np.int64, lambda val: int(val))
 sqlite3.register_adapter(np.int32, lambda val: int(val))
 
 
-def sources_in_cache(df):
+def sources_in_cache(df, refresh=False):
     """Search sources by year in cache.
 
     Parameters
@@ -25,14 +25,17 @@ def sources_in_cache(df):
         DataFrame of results found in cache.
         
     tosearch: DataFrame
-        DataFrame of sources and years combinations not in cache. 
+        DataFrame of sources and years combinations not in cache.
+
+    refresh : bool (optional, default=False)
+        Whether to refresh cached search files. 
     """
     c.execute("""DROP TABLE IF EXISTS sources_insearch""")
     c.execute(
         """CREATE TABLE IF NOT EXISTS sources_insearch
              (source_id int, year integer,
              PRIMARY KEY(source_id,year))"""
-    )
+    )      
     query = """INSERT INTO sources_insearch (source_id,year) values (?,?) """
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
@@ -54,6 +57,25 @@ def sources_in_cache(df):
         else:
             tosearch = pd.DataFrame(columns=["source_id", "year"])
     else:
+        tosearch = df
+    if refresh:
+        if not incache.empty:
+            auth_incache = list(set(
+                [
+                    au
+                    for l in incache.auids.tolist()
+                    for au in l
+                ]
+            ))
+            auth_incache = pd.DataFrame(auth_incache, columns=["auth_id"], dtype="int64")
+            df.reset_index(inplace=True)
+            query = "DELETE FROM authors WHERE auth_id=? "
+            conn.executemany(query, auth_incache.to_records(index=False))
+            query = "DELETE FROM author_year WHERE auth_id=? "
+            conn.executemany(query, auth_incache.to_records(index=False))
+            query = """DELETE FROM sources WHERE source_id=? AND year=?"""
+            conn.executemany(query, df.to_records(index=False))
+            incache = pd.DataFrame(columns=["source_id", "year"])
         tosearch = df
     return incache, tosearch
 
