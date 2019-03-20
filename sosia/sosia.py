@@ -382,23 +382,24 @@ class Original(Scientist):
                 params.update({"total": len(authors_search)})
             res, _ = stacked_query(**params)
             res = pd.DataFrame(res)
-            res["auth_id"] = res.apply(lambda x: x.eid.split("-")[-1], axis=1)
-            res = res[
-                [
-                    "auth_id",
-                    "eid",
-                    "surname",
-                    "initials",
-                    "givenname",
-                    "affiliation",
-                    "documents",
-                    "affiliation_id",
-                    "city",
-                    "country",
-                    "areas",
+            if not res.empty:
+                res["auth_id"] = res.apply(lambda x: x.eid.split("-")[-1], axis=1)
+                res = res[
+                    [
+                        "auth_id",
+                        "eid",
+                        "surname",
+                        "initials",
+                        "givenname",
+                        "affiliation",
+                        "documents",
+                        "affiliation_id",
+                        "city",
+                        "country",
+                        "areas",
+                    ]
                 ]
-            ]
-            cache_authors(res)
+                cache_authors(res)
         authors_cache, _ = authors_in_cache(authors)
         group = authors_cache[
             (authors_cache.areas.str.startswith(self.main_field[1]))
