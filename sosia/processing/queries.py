@@ -148,14 +148,16 @@ def query_year(year, source_ids, refresh, verbose):
     params.update({"query": q, "res": []})
     res, _ = stacked_query(**params)
     res = pd.DataFrame(res)
-    res["Year"] = res.apply(lambda x: x.coverDate[:4], axis=1)
-    res = (
-        res.groupby(["source_id", "Year"])[["author_ids"]]
-        .apply(get_auth_from_df)
-        .reset_index()
-    )
-    res.columns = ["source_id", "year", "auids"]  # can be avoided by naming as in pubs
-    cache_sources(res)
+    res = res[~res.coverDate.isnull()]
+    if not res.empty:
+        res["Year"] = res.apply(lambda x: x.coverDate[:4], axis=1)
+        res = (
+            res.groupby(["source_id", "Year"])[["author_ids"]]
+            .apply(get_auth_from_df)
+            .reset_index()
+        )
+        res.columns = ["source_id", "year", "auids"]  # can be avoided by naming as in pubs
+        cache_sources(res)
 
 
 def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
