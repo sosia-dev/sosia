@@ -139,7 +139,7 @@ def authors_in_cache(df):
         """CREATE TABLE IF NOT EXISTS authors_insearch
              (auth_id int, PRIMARY KEY(auth_id))"""
     )
-    query = """INSERT INTO authors_insearch (auth_id) values (?) """
+    query = """INSERT OR IGNORE INTO authors_insearch (auth_id) values (?) """
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
     incache = pd.read_sql_query(
