@@ -166,7 +166,6 @@ def cache_authors(df):
     query = """INSERT OR IGNORE INTO authors (auth_id, eid, surname, initials,
                     givenname, affiliation, documents, affiliation_id,
                     city, country, areas) values (?,?,?,?,?,?,?,?,?,?,?)"""
-    print(df)
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
 
