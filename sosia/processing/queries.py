@@ -6,8 +6,8 @@ from time import sleep
 import pandas as pd
 
 from scopus import AuthorSearch, ScopusSearch
-from scopus.exception import Scopus400Error, ScopusQueryError, Scopus500Error,\
-    Scopus404Error, Scopus429Error
+from scopus.exception import Scopus400Error, ScopusQueryError,\
+    Scopus500Error, Scopus404Error, Scopus429Error
     
 from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import print_progress, run
@@ -15,7 +15,7 @@ from sosia.utils.cache import cache_sources
 
 
 def query(q_type, q, refresh=False, tsleep=0):
-    """Wrapper function to perform a particular search query
+    """Wrapper function to perform a particular search query.
 
     Parameters
     ----------
@@ -49,24 +49,16 @@ def query(q_type, q, refresh=False, tsleep=0):
             res = ScopusSearch(q, refresh=refresh).results or []
             if not valid_results(res):
                 sleep(tsleep)
-                if tsleep<=10:
-                    tsleep = tsleep + 2.5
+                if tsleep <= 10:
+                    tsleep = tsleep+2.5
                     return query(q_type, q, True, tsleep)
                 else:
                     return []
         return res
-    except (KeyError, UnicodeDecodeError, TypeError):
+    except (KeyError, UnicodeDecodeError, urllib.error.HTTPError, TypeError):
         sleep(tsleep)
-        if tsleep<=10:
-            tsleep = tsleep + 2.5
-            return query(q_type, q, True, tsleep)
-        else:
-            return []
-    except urllib.error.HTTPError as e:
-        print(e)
-        sleep(tsleep)
-        if tsleep<=10:
-            tsleep = tsleep + 2.5
+        if tsleep <= 10:
+            tsleep = tsleep+2.5
             return query(q_type, q, True, tsleep)
         else:
             return []
@@ -99,13 +91,11 @@ def query_journal(source_id, years, refresh):
         res = []
         for year in years:
             q = Template("SOURCE-ID({}) AND PUBYEAR IS $fill".format(source_id))
-            ext, _ = stacked_query(
-                [year], [], q, "", partial(query, "docs"), refresh=refresh
-            )
+            ext, _ = stacked_query([year], [], q, "", partial(query, "docs"),
+                refresh=refresh)
             if not valid_results(ext):  # Reload queries with missing years
-                ext, _ = stacked_query(
-                    [year], [], q, "", partial(query, "docs"), refresh=True
-                )
+                ext, _ = stacked_query([year], [], q, "",
+                    partial(query, "docs"), refresh=True)
             res.extend(ext)
     # Sort authors by year
     d = defaultdict(list)
@@ -143,7 +133,8 @@ def query_year(year, source_ids, refresh, verbose):
     }
     if verbose:
         params.update({"total": len(source_ids)})
-        print("Searching authors in {} sources in {}...".format(len(source_ids), year))
+        print("Searching authors in {} sources in {}...".format(
+            len(source_ids), year))
     q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(year))
     params.update({"query": q, "res": []})
     res, _ = stacked_query(**params)
@@ -151,11 +142,9 @@ def query_year(year, source_ids, refresh, verbose):
     res = res[~res.coverDate.isnull()]
     if not res.empty:
         res["Year"] = res.apply(lambda x: x.coverDate[:4], axis=1)
-        res = (
-            res.groupby(["source_id", "Year"])[["author_ids"]]
-            .apply(get_auth_from_df)
-            .reset_index()
-        )
+        res = (res.groupby(["source_id", "Year"])[["author_ids"]]
+                  .apply(get_auth_from_df)
+                  .reset_index())
         res.columns = ["source_id", "year", "auids"]  # can be avoided by naming as in pubs
         cache_sources(res)
 
@@ -216,16 +205,9 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
     except (Scopus400Error, Scopus500Error, ScopusQueryError):
         if len(group) > 1:
             mid = len(group) // 2
-            params = {
-                "group": group[:mid],
-                "res": res,
-                "query": query,
-                "i": i,
-                "joiner": joiner,
-                "func": func,
-                "total": total,
-                "refresh": refresh,
-            }
+            params = {"group": group[:mid], "res": res, "query": query,
+                      "i": i, "joiner": joiner, "func": func, "total": total,
+                      "refresh": refresh}
             res, i = stacked_query(**params)
             params.update({"group": group[mid:], "i": i})
             res, i = stacked_query(**params)
@@ -233,16 +215,9 @@ def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
             groupeids = ["*" + str(n) for n in range(0, 10)]
             q = Template(q + " AND EID($fill)")
             mid = len(groupeids) // 2  # split here to avoid redundant query
-            params = {
-                "group": groupeids[:mid],
-                "res": res,
-                "query": q,
-                "i": i,
-                "joiner": " OR ",
-                "func": func,
-                "total": None,
-                "refresh": refresh,
-            }
+            params = {"group": groupeids[:mid], "res": res, "func": func,
+                      "query": q, "i": i, "joiner": " OR ", "total": None,
+                      "refresh": refresh}
             res, i = stacked_query(**params)
             params.update({"group": groupeids[mid:], "i": i})
             res, i = stacked_query(**params)

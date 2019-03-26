@@ -13,27 +13,23 @@ def build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.
     """
-    d = defaultdict(
-        lambda: {
-            "first_year": inf,
-            "pubs": set(),
-            "coauth": set(),
-            "n_coauth": inf,
-            "n_pubs": inf,
-        }
-    )
+    d = defaultdict(lambda:
+                    {"first_year": inf, "pubs": set(), "coauth": set(),
+                    "n_coauth": inf, "n_pubs": inf})
     for pub in results:
-        if pub.author_ids:
-            authors = set([int(au) for au in pub.author_ids.split(";")])
-            for focal in authors.intersection(chunk):
-                d[focal]["coauth"].update(authors)
-                d[focal]["coauth"].remove(focal)
-                d[focal]["pubs"].add(pub.eid)
-                d[focal]["n_pubs"] = len(d[focal]["pubs"])
-                d[focal]["n_coauth"] = len(d[focal]["coauth"])
-                if pub.coverDate:
-                    first_year = min(d[focal]["first_year"], int(pub.coverDate[:4]))
-                    d[focal]["first_year"] = first_year
+        if not pub.author_ids:
+            continue
+        authors = set([int(au) for au in pub.author_ids.split(";")])
+        for focal in authors.intersection(chunk):
+            d[focal]["coauth"].update(authors)
+            d[focal]["coauth"].remove(focal)
+            d[focal]["pubs"].add(pub.eid)
+            d[focal]["n_pubs"] = len(d[focal]["pubs"])
+            d[focal]["n_coauth"] = len(d[focal]["coauth"])
+            if not pub.coverDate:
+                continue
+            first_year = min(d[focal]["first_year"], int(pub.coverDate[:4]))
+            d[focal]["first_year"] = first_year
     return d
 
 

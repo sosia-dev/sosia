@@ -9,14 +9,8 @@ import pandas as pd
 from scopus import AbstractRetrieval, AuthorRetrieval
 
 from sosia.processing import find_country, query
-from sosia.utils import (
-    ASJC_2D,
-    FIELDS_SOURCES_LIST,
-    SOURCES_NAMES_LIST,
-    add_source_names,
-    create_fields_sources_list,
-    raise_non_empty,
-)
+from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,
+    add_source_names, create_fields_sources_list, raise_non_empty)
 
 
 class Scientist(object):
@@ -163,11 +157,10 @@ class Scientist(object):
         # Read mapping of fields to sources
         try:
             df = pd.read_csv(FIELDS_SOURCES_LIST)
-            names = pd.read_csv(SOURCES_NAMES_LIST, index_col=0)["title"].to_dict()
         except FileNotFoundError:
             create_fields_sources_list()
             df = pd.read_csv(FIELDS_SOURCES_LIST)
-            names = pd.read_csv(SOURCES_NAMES_LIST, index_col=0)["title"].to_dict()
+        names = pd.read_csv(SOURCES_NAMES_LIST, index_col=0)["title"].to_dict()
         self.field_source = df
         self.source_names = names
 
@@ -184,8 +177,7 @@ class Scientist(object):
             self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = "No publications for author {} until year {}".format(
-                "-".join(identifier), year
-            )
+                "-".join(identifier), year)
             raise Exception(text)
         if not eids:
             eids = [p.eid for p in self._publications]
@@ -197,14 +189,9 @@ class Scientist(object):
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = _get_main_field(self._fields)
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
-        self._coauthors = set(
-            [
-                a
-                for p in self._publications
-                for a in p.author_ids.split(";")
-                if a not in identifier
-            ]
-        )
+        self._coauthors = set([a for p in self._publications
+                               for a in p.author_ids.split(";")
+                               if a not in identifier])
         self._country = find_country(identifier, self._publications, year, refresh)
         au = AuthorRetrieval(identifier[0], refresh=refresh)
         self._name = ", ".join([au.surname, au.given_name])
@@ -215,11 +202,10 @@ class Scientist(object):
         langs = []
         for eid in self._eids:
             try:
-                langs.append(
-                    AbstractRetrieval(eid, view="FULL", refresh=refresh).language
-                )
+                lang = AbstractRetrieval(eid, view="FULL", refresh=refresh).language
             except KeyError:  # Document likely not loaded in FULL view
-                langs.append(AbstractRetrieval(eid, view="FULL", refresh=True).language)
+                lang = AbstractRetrieval(eid, view="FULL", refresh=True).language
+            langs.append(lang)
         self._language = "; ".join(sorted(list(set(filter(None, langs)))))
         return self
 
@@ -227,7 +213,8 @@ class Scientist(object):
 def _get_main_field(fields):
     """Auxiliary function to get code and name of main field.
 
-    We exclude multidisciplinary and give preference to non-general fields."""
+    We exclude multidisciplinary and give preference to non-general fields.
+    """
     c = Counter(fields)
     try:
         c.pop(1000)  # Exclude Multidisciplinary

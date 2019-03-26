@@ -1,26 +1,20 @@
+import sqlite3
 from os import makedirs
 from os.path import exists, expanduser
 
 import pandas as pd
 
-from sosia.utils import (
-    FIELDS_SOURCES_LIST,
-    SOURCES_NAMES_LIST,
-    URL_EXT_LIST,
-    URL_SOURCES,
-    CACHE_SQLITE,
-)
-
-import sqlite3
+from sosia.utils import (FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST, URL_EXT_LIST,
+    URL_SOURCES, CACHE_SQLITE)
 
 
 def create_cache(drop=False):
     """Create or recreate tables in cache file.
 
     Parameters
-        ----------
-        drop : boolean (optional, default=False)
-            If True, deletes and recreates all tables in cache (irreversible).
+    ----------
+    drop : boolean (optional, default=False)
+        If True, deletes and recreates all tables in cache (irreversible).
     """
     conn = sqlite3.connect(CACHE_SQLITE)
     c = conn.cursor()
@@ -90,14 +84,12 @@ def create_fields_sources_list():
             df["type"] = "conference proceedings"
         subset = df.rename(columns=rename)[keeps].dropna()
         subset["asjc"] = subset["asjc"].astype(str).apply(_clean).str.split()
-        subset = (
-            subset.set_index(["source_id", "title", "type"])
-            .asjc.apply(pd.Series)
-            .stack()
-            .rename("asjc")
-            .reset_index()
-            .drop("level_3", axis=1)
-        )
+        subset = (subset.set_index(["source_id", "title", "type"])
+                        .asjc.apply(pd.Series)
+                        .stack()
+                        .rename("asjc")
+                        .reset_index()
+                        .drop("level_3", axis=1))
         out = pd.concat([out, subset], sort=True)
 
     # Write list of names

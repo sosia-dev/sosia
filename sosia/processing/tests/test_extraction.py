@@ -10,7 +10,7 @@ from sosia.processing import find_country, parse_doc
 
 def test_find_country():
     pubs = ScopusSearch("AU-ID(6701809842)").results
-    received = find_country(["6701809842"], pubs, 2000)
+    received = find_country(["6701809842"], pubs, 2000, True)
     assert_equal(received, "Germany")
 
 

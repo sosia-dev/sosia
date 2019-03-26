@@ -14,35 +14,22 @@ scientist3 = Scientist(["55208373700"], 2017, eids=eids)
 
 
 def test_country():
-    assert_equal(scientist1.country, "Germany")
+    assert_equal(scientist1.country, "United Kingdom")
     assert_equal(scientist2.country, "Switzerland")
     assert_equal(scientist3.country, "Switzerland")
 
 
 def test_coauthors():
     assert_true(isinstance(scientist1.coauthors, set))
-    expected = {
-        "7101829476",
-        "6506756510",
-        "6701494844",
-        "7005044638",
-        "6506426539",
-        "35838036900",
-        "7004064836",
-        "6506571902",
-        "11042582400",
-    }
+    expected = {'7005044638', '6602701792', '35838036900', '6506756510',
+                '24364642400', '6506571902', '6506426539', '6701494844',
+                '11042582400', '7004064836', '7101829476'}
     assert_equal(len(scientist1.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist1.coauthors)
     assert_true(isinstance(scientist2.coauthors, set))
-    expected = {
-        "55875219200",
-        "54929867200",
-        "36617057700",
-        "24781156100",
-        "54930777900",
-    }
+    expected = {'55875219200', '54929867200', '57191249971', '36617057700',
+                '24464562500', '54930777900', '24781156100', '57201906604'}
     assert_equal(len(scientist2.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist2.coauthors)
@@ -54,29 +41,15 @@ def test_coauthors():
 
 
 def test_fields():
-    expected = [
-        1803,
-        1408,
-        1405,
-        1803,
-        1408,
-        3301,
-        2002,
-        2003,
-        2002,
-        3317,
-        2002,
-        1400,
-        2002,
-        1400,
-        1402,
-        2002,
-        2200,
-    ]
+    expected = [1803, 1408, 1405, 1803, 1408, 3301, 2002, 2002, 2308, 2003,
+                2002, 3317, 2002, 1400, 2002, 1400, 1402, 2002, 2200, 2308,
+                2002, 2002, 2003, 2002, 1400, 2002, 1400, 1402, 2002, 3317,
+                1803, 1408, 1405, 1803, 1408, 2002, 3301]
     assert_equal(scientist1.fields, expected)
-    expected = [1803, 1408, 1405, 1400, 1405, 2002, 2200]
+    expected = [1803, 1408, 1405, 3300, 2300, 1400, 1405, 2002, 2200, 2002,
+                1405, 1400, 3300, 2300, 1405, 1803, 1408]
     assert_equal(scientist2.fields, expected)
-    expected = [1803, 1408, 1405, 2002, 2200]
+    expected = [1803, 1408, 1405, 2002, 2200, 2002, 1405, 1803, 1408]
     assert_equal(scientist3.fields, expected)
 
 
@@ -88,24 +61,23 @@ def test_first_year():
 
 def test_sources():
     received = scientist1.sources
-    expected = {
-        (24389, "Journal of Industrial Economics"),
-        (17472, "Journal of Banking and Finance"),
-        (24204, "Review of Economics and Statistics"),
-        (21307, "Management Science"),
-        (22900, "Research Policy"),
-        (26878, "Journal of Population Economics"),
-        (28994, "Journal of Evolutionary Economics"),
-    }
+    expected = {(17472, 'Journal of Banking and Finance'),
+                (26878, 'Journal of Population Economics'),
+                (20022, 'Economic Policy'),
+                (28994, 'Journal of Evolutionary Economics'),
+                (21307, 'Management Science'),
+                (22900, 'Research Policy'),
+                (24204, 'Review of Economics and Statistics'),
+                (24389, 'Journal of Industrial Economics')}
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)
     received = scientist2.sources
-    expected = {
-        (18769, "Applied Economics Letters"),
-        (22900, "Research Policy"),
-        (23013, "Industry and Innovation"),
-    }
+    expected = {(23013, 'Industry and Innovation'),
+                (21100858668, None),
+                (15143, 'Regional Studies'),
+                (18769, 'Applied Economics Letters'),
+                (22900, 'Research Policy')}
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)
@@ -118,10 +90,8 @@ def test_sources():
 
 def test_sources_change():
     backup = scientist1.sources
-    expected = {
-        (14351, "Brain Research Reviews"),
-        (18632, "Progress in Brain Research"),
-    }
+    expected = {(14351, "Brain Research Reviews"),
+                (18632, "Progress in Brain Research")}
     scientist1.sources, _ = zip(*expected)
     assert_equal(scientist1.sources, expected)
     scientist1.sources = backup
@@ -140,18 +110,16 @@ def test_name():
 
 
 def test_publications():
-    fields = (
-        "eid doi pii pubmed_id title subtype creator afid affilname "
-        "affiliation_city affiliation_country author_count author_names "
-        "author_ids author_afids coverDate coverDisplayDate "
-        "publicationName issn source_id eIssn aggregationType volume "
-        "issueIdentifier article_number pageRange description authkeywords "
+    fields = "eid doi pii pubmed_id title subtype creator afid affilname "\
+        "affiliation_city affiliation_country author_count author_names "\
+        "author_ids author_afids coverDate coverDisplayDate "\
+        "publicationName issn source_id eIssn aggregationType volume "\
+        "issueIdentifier article_number pageRange description authkeywords "\
         "citedby_count openaccess fund_acr fund_no fund_sponsor"
-    )
     doc = namedtuple("Document", fields)
     # scientist1
     received = scientist1.publications
-    assert_equal(len(received), 8)
+    assert_equal(len(received), 10)
     abstract = (
         "This paper draws implications for technology policy from "
         "evidence on the size distribution of returns from eight sets of "
@@ -168,45 +136,25 @@ def test_publications():
         "possible to diversify away substantial residual variability "
         "through portfolio strategies."
     )
-    expected = doc(
-        eid="2-s2.0-0001093103",
-        doi="10.1016/S0048-7333(99)00089-X",
-        pii="S004873339900089X",
-        pubmed_id=None,
+    expected = doc(eid="2-s2.0-0001093103", doi="10.1016/S0048-7333(99)00089-X",
+        pii="S004873339900089X", pubmed_id=None, subtype="ar",
         title="Technology policy for a world of skew-distributed outcomes",
-        subtype="ar",
-        creator="Scherer F.",
-        afid="60006332;60028717",
+        creator="Scherer F.", afid="60006332;60028717", author_count="2",
         affilname="John F. Kennedy School of Government;Ludwig-Maximilians-Universität München",
-        affiliation_city="Cambridge;Munich",
-        affiliation_country="United States;Germany",
-        author_count="2",
-        author_names="Scherer, F. M.;Harhoff, Dietmar",
-        author_ids="7004064836;6701809842",
-        author_afids="60006332;60028717",
-        coverDate="2000-01-01",
-        coverDisplayDate="April 2000",
-        publicationName="Research Policy",
-        issn="00487333",
-        source_id="22900",
-        eIssn=None,
-        aggregationType="Journal",
-        volume="29",
-        issueIdentifier="4-5",
-        article_number=None,
-        pageRange="559-566",
-        description=abstract,
+        affiliation_city="Cambridge;Munich", coverDate="2000-01-01",
+        affiliation_country="United States;Germany", volume="29",
+        author_names="Scherer, F. M.;Harhoff, Dietmar", issueIdentifier="4-5",
+        author_ids="7004064836;6701809842", author_afids="60006332;60028717",
+        coverDisplayDate="April 2000", publicationName="Research Policy",
+        issn="00487333", source_id="22900", eIssn=None, citedby_count="235",
+        aggregationType="Journal", article_number=None, pageRange="559-566",
         authkeywords="Innovation | Portfolio strategies | Risk | Skewness",
-        citedby_count="235",
-        openaccess="0",
-        fund_acr=None,
-        fund_no="undefined",
-        fund_sponsor="Alfred P. Sloan Foundation",
-    )
-    assert_equal(received[0], expected)
+        description=abstract, openaccess="0", fund_acr=None, fund_no="undefined",
+        fund_sponsor="Alfred P. Sloan Foundation")
+    assert_equal(received[2], expected)
     # scientist2
     received = scientist2.publications
-    assert_equal(len(received), 4)
+    assert_equal(len(received), 7)
     abstract = (
         "Through an analysis of 497 foreign researchers in Italy and "
         "Portugal we verify the impact of home linkages on return mobility "
@@ -222,45 +170,22 @@ def test_publications():
         "scientific networks. Policy implications and suggestions for "
         "further research are discussed. © 2012 Elsevier B.V. All rights reserved."
     )
-    title = (
-        "Return mobility and scientific productivity of researchers "
-        "working abroad: The role of home country linkages"
-    )
-    expected = doc(
-        eid="2-s2.0-84866317084",
-        doi="10.1016/j.respol.2012.04.005",
-        pii="S004873331200114X",
-        pubmed_id=None,
-        title=title,
-        subtype="ar",
-        creator="Baruffaldi S.",
-        afid="60097412;60023256",
+    title = "Return mobility and scientific productivity of researchers "\
+            "working abroad: The role of home country linkages"
+    expected = doc(eid="2-s2.0-84866317084", doi="10.1016/j.respol.2012.04.005",
+        pii="S004873331200114X", pubmed_id=None, title=title, subtype="ar",
+        creator="Baruffaldi S.", afid="60097412;60023256",
         affilname="CDM;Politecnico di Milano",
-        affiliation_city="Cambridge;Milan",
-        affiliation_country="United States;Italy",
-        author_count="2",
+        affiliation_city="Cambridge;Milan", author_afids="60097412;60023256",
+        affiliation_country="United States;Italy", author_count="2",
         author_names="Baruffaldi, Stefano H.;Landoni, Paolo",
-        author_ids="55208373700;24781156100",
-        author_afids="60097412;60023256",
-        coverDate="2012-11-01",
-        coverDisplayDate="November 2012",
-        publicationName="Research Policy",
-        issn="00487333",
-        source_id="22900",
-        eIssn=None,
-        aggregationType="Journal",
-        volume="41",
-        issueIdentifier="9",
-        article_number=None,
-        pageRange="1655-1665",
-        description=abstract,
+        author_ids="55208373700;24781156100", coverDate="2012-11-01",
+        coverDisplayDate="November 2012", publicationName="Research Policy",
+        issn="00487333", source_id="22900", eIssn=None, volume="41",
+        aggregationType="Journal", issueIdentifier="9", article_number=None,
         authkeywords="Brain drain | Home country linkages | Migration | Mobility",
-        citedby_count="39",
-        openaccess="0",
-        fund_acr=None,
-        fund_no="undefined",
-        fund_sponsor=None,
-    )
+        pageRange="1655-1665", description=abstract, citedby_count="39",
+        openaccess="0", fund_acr=None, fund_no="undefined", fund_sponsor=None)
     assert_equal(received[-1], expected)
     # scientist3
     received = scientist3.publications
@@ -283,45 +208,24 @@ def test_publications():
         "supervisors' coauthor networks in resolving information "
         "asymmetries regarding PhD talent."
     )
-    title = (
-        "The productivity of science &amp; engineering PhD students "
+    title = "The productivity of science &amp; engineering PhD students "\
         "hired from supervisors' networks"
-    )
-    expected = doc(
-        eid="2-s2.0-84959420483",
-        doi="10.1016/j.respol.2015.12.006",
-        pii="S0048733315002000",
-        pubmed_id=None,
-        title=title,
-        subtype="ar",
-        creator="Baruffaldi S.",
-        afid="60028186;106299773;60019647",
+    expected = doc(eid="2-s2.0-84959420483", doi="10.1016/j.respol.2015.12.006",
+        pii="S0048733315002000", pubmed_id=None, title=title, subtype="ar",
+        creator="Baruffaldi S.", afid="60028186;106299773;60019647",
         affilname="Swiss Federal Institute of Technology EPFL, Lausanne;BRICK;Georgia Institute of Technology",
-        affiliation_city="Lausanne;Torino;Atlanta",
+        affiliation_city="Lausanne;Torino;Atlanta", author_count="4",
         affiliation_country="Switzerland;Italy;United States",
-        author_count="4",
         author_names="Baruffaldi, Stefano;Visentin, Fabiana;Conti, Annamaria",
-        author_ids="55208373700;55875219200;36617057700",
-        author_afids="60028186;60028186-106299773;60019647",
-        coverDate="2016-05-01",
-        coverDisplayDate="1 May 2016",
-        publicationName="Research Policy",
-        issn="00487333",
-        source_id="22900",
-        eIssn=None,
-        aggregationType="Journal",
-        volume="45",
-        issueIdentifier="4",
-        article_number=None,
-        pageRange="785-796",
-        description=abstract,
+        author_ids="55208373700;55875219200;36617057700", eIssn=None,
+        author_afids="60028186;60028186-106299773;60019647", volume="45",
+        coverDate="2016-05-01", coverDisplayDate="1 May 2016",
+        publicationName="Research Policy", issn="00487333", source_id="22900",
+        aggregationType="Journal", issueIdentifier="4", article_number=None,
         authkeywords="PhD students | Scientific productivity | Supervisors' networks",
-        citedby_count="5",
-        openaccess="0",
-        fund_acr="UNIL",
-        fund_no="149931",
-        fund_sponsor="Université de Lausanne",
-    )
+        pageRange="785-796", description=abstract, citedby_count="5",
+        openaccess="0", fund_acr="UNIL", fund_no="149931",
+        fund_sponsor="Université de Lausanne")
     assert_equal(received[0], expected)
 
 

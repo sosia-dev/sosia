@@ -30,9 +30,8 @@ def tfidf_cos(docs, stop_words=None, tokenize=False, **kwds):
     if not tokenize:
         vec = TfidfVectorizer(**kwds)
     else:
-        vec = TfidfVectorizer(
-            stop_words=stop_words, tokenizer=tokenize_and_stem, **kwds
-        )
+        vec = TfidfVectorizer(stop_words=stop_words,
+                              tokenizer=tokenize_and_stem, **kwds)
     cos = []
     for i in range(0, len(docs) - 1):
         try:
@@ -44,6 +43,5 @@ def tfidf_cos(docs, stop_words=None, tokenize=False, **kwds):
 
 def tokenize_and_stem(text):
     """Auxiliary function to return stemmed tokens of document"""
-    return [
-        snowball.SnowballStemmer("english").stem(t) for t in word_tokenize(text.lower())
-    ]
+    return [snowball.SnowballStemmer("english").stem(t) for
+            t in word_tokenize(text.lower())]

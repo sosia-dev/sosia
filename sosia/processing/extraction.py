@@ -105,30 +105,18 @@ def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
     pubs.append([d.eid for d in focal.publications])
     tokens = [parse_doc(pub, refresh) for pub in pubs]
     ref_cos = tfidf_cos([d["refs"] for d in tokens], **kwds)
-    abs_cos = tfidf_cos(
-        [d["abstracts"] for d in tokens], tokenize=True, stop_words=stop_words, **kwds
-    )
+    abs_cos = tfidf_cos([d["abstracts"] for d in tokens], tokenize=True,
+                        stop_words=stop_words, **kwds)
     if verbose:
         for auth_id, d in zip(ids, tokens):
             _print_missing_docs(auth_id, d)
         label = ";".join(focal.identifier) + " (focal)"
         _print_missing_docs(label, tokens[-1])  # focal researcher
     # Merge information into list of namedtuple
-    t = zip(
-        ids,
-        names,
-        first_years,
-        n_coauths,
-        n_pubs,
-        countries,
-        languages,
-        ref_cos,
-        abs_cos,
-    )
-    fields = (
-        "ID name first_year num_coauthors num_publications country "
-        "language reference_sim abstract_sim"
-    )
+    t = zip(ids, names, first_years, n_coauths, n_pubs, countries, languages,
+            ref_cos, abs_cos)
+    fields = "ID name first_year num_coauthors num_publications country "\
+             "language reference_sim abstract_sim"
     match = namedtuple("Match", fields)
     return [match(*tup) for tup in list(t)]
 
@@ -175,9 +163,6 @@ def _print_missing_docs(auth_id, info):
     """Auxiliary function to print information on missing abstracts and
     reference lists stored in a dictionary d.
     """
-    print(
-        "Researcher {}: {} abstract(s) and {} reference list(s) out of "
-        "{} documents missing".format(
-            auth_id, info["miss_abs"], info["miss_refs"], info["total"]
-        )
-    )
+    print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
+          "{} documents missing".format(auth_id, info["miss_abs"],
+                                        info["miss_refs"], info["total"]))

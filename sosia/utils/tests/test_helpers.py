@@ -11,10 +11,8 @@ from sosia.utils.helpers import add_source_names, margin_range, raise_non_empty
 
 def test_add_source_names():
     s = Scientist(["55208373700"], 2017)
-    expected = {
-        (14351, "Brain Research Reviews"),
-        (18632, "Progress in Brain Research"),
-    }
+    expected = {(14351, "Brain Research Reviews"),
+                (18632, "Progress in Brain Research")}
     ids, names = zip(*expected)
     received = add_source_names(ids, s.source_names)
     assert_equal(received, expected)
