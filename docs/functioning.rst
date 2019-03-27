@@ -151,40 +151,26 @@ The final step is to search within this search group for authors that fulfill cr
     Left with 108 authors
     Filtering based on provided conditions...
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Found 7 author(s) matching all criteria
+    Found 3 author(s) matching all criteria
     Adding other information...
-    Researcher 42661166900: 0 abstract(s) and 0 reference list(s)
-    out of 2 documents missing
-    Researcher 54893528800: 0 abstract(s) and 0 reference list(s)
-    out of 3 documents missing
-    Researcher 55268789000: 0 abstract(s) and 0 reference list(s)
-    out of 3 documents missing
-    Researcher 55353556300: 3 abstract(s) and 0 reference list(s)
-    out of 4 documents missing
-    Researcher 55611347500: 0 abstract(s) and 0 reference list(s)
-    out of 2 documents missing
-    Researcher 55916383400: 1 abstract(s) and 0 reference list(s)
-    out of 2 documents missing
-    Researcher 56282273300: 0 abstract(s) and 0 reference list(s)
-    out of 4 documents missing
-    Researcher 55208373700 (focal): 0 abstract(s) and 0 reference list(s) out of 4 documents missing
+    Researcher 53164702100: 1 abstract(s) and 0 reference list(s) out of 6 documents
+    missing
+    Researcher 54411022900: 0 abstract(s) and 0 reference list(s) out of 6 documents
+    missing
+    Researcher 55317901900: 0 abstract(s) and 0 reference list(s) out of 7 documents
+    missing
+    Researcher 55208373700 (focal): 1 abstract(s) and 0 reference list(s) out of 7 documents missing
     >>> for m in matches:
     ....    print(m)
     >>> matches
-    Match(ID='42661166900', name='Fosaas, Morten', first_year=2011, num_coauthors=4, num_publications=2,
-    country='Norway', language='eng', reference_sim=0.0308, abstract_sim=0.0667)
-    Match(ID='54893528800', name='Heimonen, Tomi P.', first_year=2011, num_coauthors=3, num_publications=3,
-    country='Finland', language='eng', reference_sim=0.0035, abstract_sim=0.0492)
-    Match(ID='55268789000', name='Chen, Chun Liang', first_year=2011, num_coauthors=3, num_publications=3,
-    country='Taiwan', language='eng', reference_sim=0.0, abstract_sim=0.0298)
-    Match(ID='55353556300', name='Rosellon, Maureen Ane D.', first_year=2012, num_coauthors=3, num_publications=4,
-    country='Philippines', language='eng', reference_sim=0.0, abstract_sim=0.0314)
-    Match(ID='55611347500', name='Zhao, Yingxin', first_year=2013, num_coauthors=4, num_publications=2,
-    country='China', language='eng', reference_sim=0.0, abstract_sim=0.0298)
-    Match(ID='55916383400', name='Del Prado, Fatima Lourdes E.', first_year=2012, num_coauthors=3, num_publications=2,
-    country='Philippines', language='eng', reference_sim=0.0, abstract_sim=0.1004)
-    Match(ID='56282273300', name='Rodríguez, José Carlos', first_year=2011, num_coauthors=4, num_publications=4,
-    country='Mexico', language='eng', reference_sim=0.0087, abstract_sim=0.1047)
+    Match(ID='53164702100', name='Sapprasert, Koson', first_year=2011,
+    num_coauthors=7, num_publications=6, country='Norway', language='eng', reference_sim=0.0212, abstract_sim=0.1695),
+    Match(ID='54411022900', name='Martinelli, Arianna', first_year=2011,
+    num_coauthors=7, num_publications=6, country='Italy', language='eng',
+    reference_sim=0.0041, abstract_sim=0.1966),
+    Match(ID='55317901900', name='Siepel, Josh', first_year=2013, num_coauthors=8,
+    num_publications=7, country='United Kingdom', language='eng',
+    reference_sim=0.0079, abstract_sim=0.1275)
 
 By default, `sosia` provides the following information (which you switch off using `information=False` to simply return a list of Scopus IDs):
 
@@ -207,33 +193,15 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     >>> df = pd.DataFrame(matches)
     >>> df = df.set_index('ID')
     >>> df
-                                         name  first_year  num_coauthors  \
-    ID                                                                     
-    42661166900                Fosaas, Morten        2011              4   
-    54893528800             Heimonen, Tomi P.        2011              3   
-    55268789000              Chen, Chun Liang        2011              3   
-    55353556300      Rosellon, Maureen Ane D.        2012              3   
-    55611347500                 Zhao, Yingxin        2013              4   
-    55916383400  Del Prado, Fatima Lourdes E.        2012              3   
-    56282273300        Rodríguez, José Carlos        2011              4   
+                                name  first_year  num_coauthors  num_publications  \
+    ID                                                                              
+    53164702100    Sapprasert, Koson        2011              7                 6   
+    54411022900  Martinelli, Arianna        2011              7                 6   
+    55317901900         Siepel, Josh        2013              8                 7   
 
-                 num_publications      country language  reference_sim  \
-    ID                                                                   
-    42661166900                 2       Norway      eng         0.0308   
-    54893528800                 3      Finland      eng         0.0035   
-    55268789000                 3       Taiwan      eng         0.0000   
-    55353556300                 4  Philippines      eng         0.0000   
-    55611347500                 2        China      eng         0.0000   
-    55916383400                 2  Philippines      eng         0.0000   
-    56282273300                 4       Mexico      eng         0.0087   
-
-                 abstract_sim  
-    ID                         
-    42661166900        0.0667  
-    54893528800        0.0492  
-    55268789000        0.0298  
-    55353556300        0.0314  
-    55611347500        0.0298  
-    55916383400        0.1004  
-    56282273300        0.1047
+                        country language  reference_sim  abstract_sim  
+    ID                                                                 
+    53164702100          Norway      eng         0.0212        0.1695  
+    54411022900           Italy      eng         0.0041        0.1966  
+    55317901900  United Kingdom      eng         0.0079        0.1275
 
