@@ -9,8 +9,10 @@ import pandas as pd
 from scopus import AbstractRetrieval, AuthorRetrieval
 
 from sosia.processing import find_country, query
-from sosia.utils import (ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,
-    add_source_names, create_fields_sources_list, raise_non_empty)
+from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
+    add_source_names, create_fields_sources_list, raise_non_empty
+
+__all__ = ["Scientist"]
 
 
 class Scientist(object):
@@ -189,9 +191,7 @@ class Scientist(object):
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = _get_main_field(self._fields)
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
-        self._coauthors = set([a for p in self._publications
-                               for a in p.author_ids.split(";")
-                               if a not in identifier])
+        self._coauthors = _find_coauthors(self._publications, identifier)
         self._country = find_country(identifier, self._publications, year, refresh)
         au = AuthorRetrieval(identifier[0], refresh=refresh)
         self._name = ", ".join([au.surname, au.given_name])
@@ -231,3 +231,11 @@ def _get_main_field(fields):
             main = top_fields[0]
     code = int(str(main)[:2])
     return (main, ASJC_2D[code])
+
+
+def _find_coauthors(pubs, exclude):
+    """Auxiliary function to find coauthors from list of publications,
+    excluding the focal author.
+    """
+    return set([a for p in pubs for a in p.author_ids.split(";")
+                if a not in identifier])
