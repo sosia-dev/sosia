@@ -238,4 +238,4 @@ def _find_coauthors(pubs, exclude):
     excluding the focal author.
     """
     return set([a for p in pubs for a in p.author_ids.split(";")
-                if a not in identifier])
+                if a not in exclude])
