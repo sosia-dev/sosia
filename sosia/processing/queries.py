@@ -11,7 +11,7 @@ from scopus.exception import Scopus400Error, ScopusQueryError,\
     
 from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import print_progress, run
-from sosia.utils.cache import cache_sources
+from sosia.cache import cache_sources
 
 
 def query(q_type, q, refresh=False, tsleep=0):

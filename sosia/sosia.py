@@ -18,7 +18,7 @@ from sosia.processing import (get_authors, inform_matches, query,
     query_journal, query_year, stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
-from sosia.utils.cache import (cache_sources, sources_in_cache,
+from sosia.cache import (cache_sources, sources_in_cache,
     authors_in_cache, cache_authors, author_year_in_cache, cache_author_year)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
