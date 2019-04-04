@@ -139,8 +139,10 @@ def query_year(year, source_ids, refresh, verbose):
     res, _ = stacked_query(**params)
     res = pd.DataFrame(res)
     res = res[~res.coverDate.isnull()]
+    res = res[~res.author_ids.isnull()]
     if not res.empty:
         res["Year"] = res.apply(lambda x: x.coverDate[:4], axis=1)
+        res = res.astype(str)
         res = (res.groupby(["source_id", "Year"])[["author_ids"]]
                   .apply(get_auth_from_df)
                   .reset_index())
