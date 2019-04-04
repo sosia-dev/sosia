@@ -133,7 +133,8 @@ def query_year(year, source_ids, refresh, verbose):
     }
     if verbose:
         params.update({"total": len(source_ids)})
-        print("Searching authors in {} sources in {}...".format(len(source_ids), year))
+        print("Searching authors in {} sources in {}...".format(
+            len(source_ids), year))
     q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(year))
     params.update({"query": q, "res": []})
     res, _ = stacked_query(**params)
