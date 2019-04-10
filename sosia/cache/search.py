@@ -73,9 +73,8 @@ def author_year_in_cache(df):
         incache = incache.set_index(["auth_id", "year"])
         tosearch = df[~(df.index.isin(incache.index))]
         incache.reset_index(inplace=True)
-        if not tosearch.empty:
-            tosearch.reset_index(inplace=True)
-        else:
+        tosearch.reset_index(inplace=True)
+        if tosearch.empty:
             cols = ["auth_id", "year", "n_pubs", "n_coauth", "first_year"]
             tosearch = pd.DataFrame(columns=cols)
     else:
@@ -122,9 +121,8 @@ def sources_in_cache(df, refresh=False):
         incache = incache.set_index(["source_id", "year"])
         tosearch = df[~(df.index.isin(incache.index))]
         incache.reset_index(inplace=True)
-        if not tosearch.empty:
-            tosearch.reset_index(inplace=True)[["source_id", "year"]]
-        else:
+        tosearch.reset_index(inplace=True)
+        if tosearch.empty:
             tosearch = pd.DataFrame(columns=["source_id", "year"])
     else:
         tosearch = df
