@@ -73,9 +73,8 @@ def author_year_in_cache(df):
         incache = incache.set_index(["auth_id", "year"])
         tosearch = df[~(df.index.isin(incache.index))]
         incache.reset_index(inplace=True)
-        if not tosearch.empty:
-            tosearch.reset_index(inplace=True)
-        else:
+        tosearch.reset_index(inplace=True)
+        if tosearch.empty:
             cols = ["auth_id", "year", "n_pubs", "n_coauth", "first_year"]
             tosearch = pd.DataFrame(columns=cols)
     else:
@@ -102,6 +101,7 @@ def sources_in_cache(df, refresh=False):
     refresh : bool (optional, default=False)
         Whether to refresh cached search files. 
     """
+#    print(df[["source_id", "year"]])
     c.execute("""DROP TABLE IF EXISTS sources_insearch""")
     c.execute(
         """CREATE TABLE IF NOT EXISTS sources_insearch
@@ -117,14 +117,14 @@ def sources_in_cache(df, refresh=False):
         and a.year=b.year;"""
     incache = pd.read_sql_query(query, conn)
     if not incache.empty:
+#        print(incache[["source_id", "year"]])
         incache["auids"] = incache.apply(lambda x: x["auids"].split(","), axis=1)
         df = df.set_index(["source_id", "year"])
         incache = incache.set_index(["source_id", "year"])
         tosearch = df[~(df.index.isin(incache.index))]
         incache.reset_index(inplace=True)
-        if not tosearch.empty:
-            tosearch.reset_index(inplace=True)[["source_id", "year"]]
-        else:
+        tosearch.reset_index(inplace=True)
+        if tosearch.empty:
             tosearch = pd.DataFrame(columns=["source_id", "year"])
     else:
         tosearch = df
