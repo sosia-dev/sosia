@@ -130,7 +130,7 @@ def sources_in_cache(df, refresh=False):
         tosearch = df
     if refresh:
         if not incache.empty:
-            auth_incache = set([au for l in incache.auids.tolist() for au in l])
+            auth_incache = list(set([au for l in incache.auids.tolist() for au in l]))
             auth_incache = pd.DataFrame(auth_incache, columns=["auth_id"], dtype="int64")
             df.reset_index(inplace=True)
             query = "DELETE FROM authors WHERE auth_id=? "
