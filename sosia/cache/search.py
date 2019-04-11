@@ -133,10 +133,13 @@ def sources_in_cache(df, refresh=False):
             df.reset_index(inplace=True)
             query = "DELETE FROM authors WHERE auth_id=? "
             conn.executemany(query, auth_incache.to_records(index=False))
+            conn.commit()
             query = "DELETE FROM author_year WHERE auth_id=? "
             conn.executemany(query, auth_incache.to_records(index=False))
+            conn.commit()
             query = """DELETE FROM sources WHERE source_id=? AND year=?"""
             conn.executemany(query, df.to_records(index=False))
+            conn.commit()
             incache = pd.DataFrame(columns=["source_id", "year"])
         tosearch = df
     return incache, tosearch
