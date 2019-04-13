@@ -22,7 +22,7 @@ def cache_sources(df):
     """
     df["auids"] = df.apply(lambda x: ",".join([str(a) for a in x["auids"]]), axis=1)
     df = df[["source_id", "year", "auids"]]
-    query = """INSERT INTO sources (source_id,year,auids) values (?,?,?) """
+    query = """INSERT OR IGNORE INTO sources (source_id,year,auids) values (?,?,?) """
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
 
