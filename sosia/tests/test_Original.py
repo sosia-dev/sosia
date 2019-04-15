@@ -48,14 +48,14 @@ def test_search_sources_change():
 def test_search_group():
     scientist1.define_search_group()
     group = scientist1.search_group
-    assert_equal(len(group), 376)
+    assert_equal(len(group), 335)
     assert_true(isinstance(group, list))
 
 
 def test_search_group_stacked():
     scientist1.define_search_group(stacked=True)
     group = scientist1.search_group
-    assert_equal(len(group), 629)
+    assert_equal(len(group), 631)
     assert_true(isinstance(group, list))
 
 
