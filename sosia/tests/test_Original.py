@@ -26,10 +26,6 @@ MATCHES = [Match(ID="53164702100", name="Sapprasert, Koson", first_year=2011,
                  language="eng", reference_sim=0.0079, abstract_sim=0.1275)]
 
 
-def test_create_cache():
-    sosia.create_cache()
-
-
 def test_search_sources():
     scientist1.define_search_sources()
     search_sources = scientist1.search_sources
