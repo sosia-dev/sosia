@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for cache.search module."""
-
-import os
-os.chdir(r'C:\Dropbox\Work_other\sosia_all\sosia')
+"""Tests for cache module."""
 
 from nose.tools import assert_equal, assert_true
 from itertools import product
