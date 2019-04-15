@@ -182,7 +182,9 @@ class Original(Scientist):
             for y in _years_search:
                 mask = sources_ys_search.year == y
                 _sources_search = sources_ys_search[mask].source_id.tolist()
-                query_year(y, _sources_search, refresh, verbose)
+                res = query_year(y, _sources_search, refresh, verbose)
+                if not res.empty:
+                    cache_sources(res)
             sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
             # Authors publishing in provided year
             mask = sources_ys.year == self.year

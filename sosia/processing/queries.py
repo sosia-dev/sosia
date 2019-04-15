@@ -148,7 +148,7 @@ def query_year(year, source_ids, refresh, verbose):
                   .apply(get_auth_from_df)
                   .reset_index())
         res.columns = ["source_id", "year", "auids"]  # can be avoided by naming as in pubs
-        cache_sources(res)
+    return res
 
 
 def stacked_query(group, res, query, joiner, func, refresh, i=0, total=None):
