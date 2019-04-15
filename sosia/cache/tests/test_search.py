@@ -72,7 +72,7 @@ def test_author_year_in_cache():
     res = res[["year", "first_year", "n_pubs", "n_coauth"]]
     res.reset_index(inplace=True)
     res.columns = ["auth_id", "year", "first_year", "n_pubs", "n_coauth"]
-    cache_author_year(res)
+    cache_author_year(res, file=test_file)
     authors = [53164702100,54411022900,55317901900]
     authors_df = pd.DataFrame(authors, columns=["auth_id"], dtype="int64")
     authors_df["year"] = 2016
