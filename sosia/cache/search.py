@@ -3,20 +3,18 @@ import pandas as pd
 import sqlite3
 
 from sosia.utils import CACHE_SQLITE
+from sosia.cache import cache_connect
 
-conn = sqlite3.connect(CACHE_SQLITE)
-c = conn.cursor()
-sqlite3.register_adapter(np.int64, lambda val: int(val))
-sqlite3.register_adapter(np.int32, lambda val: int(val))
-
-
-def authors_in_cache(df):
+def authors_in_cache(df, file=CACHE_SQLITE):
     """Search authors in cache.
 
     Parameters
     ----------
     df : DataFrame
         DataFrame of authors to search.
+
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
 
     Returns
     -------
@@ -26,6 +24,7 @@ def authors_in_cache(df):
     tosearch: list
         List of authors not in cache. 
     """
+    c, conn = cache_connect(file=file)
     c.execute("""DROP TABLE IF EXISTS authors_insearch""")
     c.execute("""CREATE TABLE IF NOT EXISTS authors_insearch
               (auth_id int, PRIMARY KEY(auth_id))""")
@@ -42,13 +41,16 @@ def authors_in_cache(df):
     return incache, tosearch
 
 
-def author_year_in_cache(df):
+def author_year_in_cache(df, file=CACHE_SQLITE):
     """Search authors publication information up to year of event in cache.
 
     Parameters
     ----------
     df : DataFrame
         DataFrame of authors to search with year of the event as second column.
+
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
 
     Returns
     -------
@@ -59,6 +61,7 @@ def author_year_in_cache(df):
         DataFrame of authors not in cache with year of the event as second
         column. 
     """
+    c, conn = cache_connect(file=file)
     c.execute("""DROP TABLE IF EXISTS author_year_insearch""")
     c.execute("""CREATE TABLE IF NOT EXISTS author_year_insearch
         (auth_id int, year int, PRIMARY KEY(auth_id, year))""")
@@ -82,13 +85,16 @@ def author_year_in_cache(df):
     return incache, tosearch
 
 
-def sources_in_cache(df, refresh=False):
+def sources_in_cache(df, refresh=False, file=CACHE_SQLITE):
     """Search sources by year in cache.
 
     Parameters
     ----------
     df : DataFrame
         DataFrame of sources and years combinations to search.
+
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
 
     Returns
     -------
@@ -101,6 +107,7 @@ def sources_in_cache(df, refresh=False):
     refresh : bool (optional, default=False)
         Whether to refresh cached search files. 
     """
+    c, conn = cache_connect(file=file)
     c.execute("""DROP TABLE IF EXISTS sources_insearch""")
     c.execute(
         """CREATE TABLE IF NOT EXISTS sources_insearch

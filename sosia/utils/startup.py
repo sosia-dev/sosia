@@ -8,15 +8,20 @@ from sosia.utils import (FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST, URL_EXT_LIST,
     URL_SOURCES, CACHE_SQLITE)
 
 
-def create_cache(drop=False):
+def create_cache(drop=False, file=CACHE_SQLITE):
     """Create or recreate tables in cache file.
 
     Parameters
     ----------
     drop : boolean (optional, default=False)
         If True, deletes and recreates all tables in cache (irreversible).
+    
+    file : file (optional, default=CACHE_SQLITE)
+        The name of the cache file to be used. By default is named
+        cache_sqlite.sqlite and located in "~/.sosia/".
+        
     """
-    conn = sqlite3.connect(CACHE_SQLITE)
+    conn = sqlite3.connect(file)
     c = conn.cursor()
     # to refresh all cache
     if drop:

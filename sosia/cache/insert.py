@@ -6,35 +6,34 @@ import sqlite3
 
 from sosia.utils import CACHE_SQLITE
 
-conn = sqlite3.connect(CACHE_SQLITE)
-c = conn.cursor()
-sqlite3.register_adapter(np.int64, lambda val: int(val))
-sqlite3.register_adapter(np.int32, lambda val: int(val))
 
-
-def cache_sources(df):
-    """Insert new sources and year list of authors in cache.
+def cache_connect(file=CACHE_SQLITE):
+    """Connect to cache file.
 
     Parameters
     ----------
-    df : DataFrame
-        Dataframe with source, year and list of authors.
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
     """
-    df["auids"] = df.apply(lambda x: ",".join([str(a) for a in x["auids"]]), axis=1)
-    df = df[["source_id", "year", "auids"]]
-    query = """INSERT OR IGNORE INTO sources (source_id,year,auids) values (?,?,?) """
-    conn.executemany(query, df.to_records(index=False))
-    conn.commit()
+    conn = sqlite3.connect(file)
+    c = conn.cursor()
+    sqlite3.register_adapter(np.int64, lambda val: int(val))
+    sqlite3.register_adapter(np.int32, lambda val: int(val))
+    return c, conn
 
 
-def cache_authors(df):
+def cache_authors(df, file=CACHE_SQLITE):
     """Insert new authors informaiton in cache.
 
     Parameters
     ----------
     df : DataFrame
         Dataframe with authors information.
+
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
     """
+    _, conn = cache_connect(file=file)
     query = """INSERT OR IGNORE INTO authors (auth_id, eid, surname, initials,
         givenname, affiliation, documents, affiliation_id, city, country,
         areas) values (?,?,?,?,?,?,?,?,?,?,?)"""
@@ -42,16 +41,39 @@ def cache_authors(df):
     conn.commit()
 
 
-def cache_author_year(df):
+def cache_author_year(df, file=CACHE_SQLITE):
     """Insert new authors' publication information up to year in cache.
 
     Parameters
     ----------
     df : DataFrame
         DataFrame of authors publication information up to year of the event.
+    
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
     """
+    _, conn = cache_connect(file=file)
     query = """INSERT INTO author_year (auth_id, year, first_year, n_pubs,
         n_coauth) values (?,?,?,?,?) """
+    conn.executemany(query, df.to_records(index=False))
+    conn.commit()
+
+
+def cache_sources(df, file=CACHE_SQLITE):
+    """Insert new sources and year list of authors in cache.
+
+    Parameters
+    ----------
+    df : DataFrame
+        Dataframe with source, year and list of authors.
+    
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
+    """
+    _, conn = cache_connect(file=file)
+    df["auids"] = df.apply(lambda x: ",".join([str(a) for a in x["auids"]]), axis=1)
+    df = df[["source_id", "year", "auids"]]
+    query = """INSERT OR IGNORE INTO sources (source_id,year,auids) values (?,?,?) """
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
 
