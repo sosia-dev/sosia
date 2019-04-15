@@ -74,6 +74,7 @@ def test_find_matches():
 
 
 def test_find_matches_stacked():
+    # with additional info
     recieved = sorted(scientist1.find_matches(stacked=True))
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
@@ -85,7 +86,12 @@ def test_find_matches_stacked():
     for e in recieved:
         assert_true(isinstance(e.abstract_sim, float))
         assert_true(0 <= e.abstract_sim <= 1)
-
+    # without additional info
+    recieved = (scientist1.find_matches(stacked=True, information=False)
+                .sort_values(by="ID").astype(str).reset_index(drop=True))
+    df_m = df_m[["ID", "first_year", "num_coauthors", "num_publications"]].astype(str)
+    pd.testing.assert_frame_equal(recieved, df_m)
+    
 
 def test_find_matches_noinfo():
     recieved = sorted(scientist1.find_matches(information=False))

@@ -385,7 +385,8 @@ class Original(Scientist):
             same_pubs = (author_year_cache.n_pubs.between(min(_npapers), max(_npapers)))
             same_coauths = (author_year_cache.n_coauth.between(min(_ncoauth), max(_ncoauth)))
             mask = same_start & same_pubs & same_coauths
-            matches = author_year_cache[mask]["auth_id"].tolist()
+            matches = author_year_cache[mask][["auth_id", "first_year", "n_coauth", "n_pubs"]]
+            matches.columns = ["ID", "first_year", "num_coauthors", "num_publications"]
         else:  # Query each author individually
             for i, au in enumerate(group):
                 print_progress(i + 1, n, verbose)
@@ -404,7 +405,12 @@ class Original(Scientist):
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
         custom_print(text, verbose)
 
-        if information and len(matches) > 0:
+        if information and len(matches) > 0 and not stacked:
+            custom_print("Providing additional information...", verbose)
+            profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
+            return inform_matches(profiles, self, stop_words, verbose, refresh, **kwds)
+        elif information and len(matches) > 0 and stacked:
+            matches = matches["ID"].tolist()
             custom_print("Providing additional information...", verbose)
             profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
             return inform_matches(profiles, self, stop_words, verbose, refresh, **kwds)
