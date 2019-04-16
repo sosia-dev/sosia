@@ -53,7 +53,7 @@ def cache_author_year(df, file=CACHE_SQLITE):
         The cache file to connect to.
     """
     _, conn = cache_connect(file=file)
-    query = """INSERT INTO author_year (auth_id, year, first_year, n_pubs,
+    query = """INSERT OR IGNORE INTO author_year (auth_id, year, first_year, n_pubs,
         n_coauth) values (?,?,?,?,?) """
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
