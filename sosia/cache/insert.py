@@ -42,7 +42,7 @@ def cache_authors(df, file=CACHE_SQLITE):
 
 
 def cache_author_year(df, file=CACHE_SQLITE):
-    """Insert new authors' publication information up to year in cache.
+    """Insert new authors'full publication information up to year in cache.
 
     Parameters
     ----------
@@ -56,6 +56,24 @@ def cache_author_year(df, file=CACHE_SQLITE):
     query = """INSERT OR IGNORE INTO author_year (auth_id, year, first_year, n_pubs,
         n_coauth) values (?,?,?,?,?) """
     conn.executemany(query, df.to_records(index=False))
+    conn.commit()
+    
+    
+def cache_author_size(tp, file=CACHE_SQLITE):
+    """Insert in cache new authors' publication count up to a year from size queries.
+
+    Parameters
+    ----------
+    df : Tuple
+        Tuple with author id, year and publication counts.
+    
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
+    """
+    _, conn = cache_connect(file=file)
+    query = """INSERT OR IGNORE INTO author_size (auth_id, year, n_pubs)
+               values ({},{},{}) """.format(tp[0],tp[1],tp[2])
+    conn.execute(query)
     conn.commit()
 
 

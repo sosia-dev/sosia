@@ -85,6 +85,37 @@ def author_year_in_cache(df, file=CACHE_SQLITE):
     return incache, tosearch
 
 
+def author_size_in_cache(df, file=CACHE_SQLITE):
+    """Search authors publication information up to year of event in cache.
+
+    Parameters
+    ----------
+    df : DataFrame
+        DataFrame of authors to search with year of the event as second column.
+
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
+
+    Returns
+    -------
+    incache : DataFrame
+        DataFrame of results found in cache.
+    """
+    c, conn = cache_connect(file=file)
+    c.execute("""DROP TABLE IF EXISTS author_year_insearch""")
+    c.execute("""CREATE TABLE IF NOT EXISTS author_year_insearch
+        (auth_id int, year int, PRIMARY KEY(auth_id, year))""")
+    query = """INSERT INTO author_year_insearch (auth_id, year) values (?,?) """
+    conn.executemany(query, df.to_records(index=False))
+    conn.commit()
+    query = """SELECT b.* from author_year_insearch as a INNER JOIN 
+        author_size as b on a.auth_id=b.auth_id and a.year=b.year;"""
+    incache = pd.read_sql_query(query, conn)
+    if incache.empty:
+        incache = pd.DataFrame()
+    return incache
+
+
 def sources_in_cache(df, refresh=False, file=CACHE_SQLITE):
     """Search sources by year in cache.
 
@@ -139,6 +170,9 @@ def sources_in_cache(df, refresh=False, file=CACHE_SQLITE):
             auth_incache = pd.DataFrame(auth_incache, columns=["auth_id"], dtype="int64")
             df.reset_index(inplace=True)
             query = "DELETE FROM authors WHERE auth_id=? "
+            conn.executemany(query, auth_incache.to_records(index=False))
+            conn.commit()
+            query = "DELETE FROM author_size WHERE auth_id=? "
             conn.executemany(query, auth_incache.to_records(index=False))
             conn.commit()
             query = "DELETE FROM author_year WHERE auth_id=? "

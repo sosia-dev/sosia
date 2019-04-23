@@ -27,6 +27,7 @@ def create_cache(drop=False, file=CACHE_SQLITE):
     if drop:
         c.execute("""DROP TABLE IF EXISTS sources""")
         c.execute("""DROP TABLE IF EXISTS authors""")
+        c.execute("""DROP TABLE IF EXISTS author_size""")
         c.execute("""DROP TABLE IF EXISTS author_year""")
     # table for sources
     c.execute(
@@ -42,7 +43,13 @@ def create_cache(drop=False, file=CACHE_SQLITE):
               affiliation_id text, city text, country text, areas text,
               PRIMARY KEY(auth_id))"""
     )
-    # table for author year publication information
+    # table for author year publication count from size queries
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS author_size
+              (auth_id int, year int, n_pubs int,
+              PRIMARY KEY(auth_id, year))"""
+    )
+    # table for author year full publication information
     c.execute(
         """CREATE TABLE IF NOT EXISTS author_year
               (auth_id int, year int, first_year int, n_pubs int, n_coauth int,
