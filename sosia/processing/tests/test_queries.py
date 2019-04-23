@@ -5,18 +5,46 @@
 from nose.tools import assert_equal, assert_true
 from string import Template
 
-from sosia.processing import query_journal, query_year
+from sosia.processing import query_journal, query_size, query_year, stacked_query
+
+
+def test_stacked_query():
+    # test a query with one journal-year above 5000
+    group = [18400156716, 19300157101, 19400157208, 19400157312, 19500157223,
+             19600166213, 19700175482, 19700182353, 19800188009, 19900193211,
+             20100195028, 21100208103, 21100225839, 21100228010, 21100244622,
+             21100246535, 21100246537, 21100285035, 21100313905, 21100329904,
+             21100370441, 21100370876, 21100416121, 21100775937, 21100871308,
+             25674]
+    template = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(1998))
+    joiner = " OR "
+    refresh = False,
+    q_type = "docs"
+    res = []
+    stacked_query(group, res, template, joiner, q_type, refresh)
+    assert_equal(len(res), 6441)
 
 
 def test_query_journal():
     # test a journal with more than 5k publications in one year
     res = query_journal("11000153773", [2006], refresh=False)
     assert_true(24100 < len(res.get("2006")) < 25000)
-    
 
+ 
+def test_query_size():
+    # test an author and year
+    q = "AU-ID({}) AND PUBYEAR BEF {}".format(53164702100, 2017)
+    size = query_size("docs", q)
+    assert_equal(size,5)
+    # test size search for authors
+    q = "AU-ID({})".format(53164702100)
+    size = query_size("author", q)
+    assert_equal(size,1)
+    
+    
 def test_query_year():
     # test a journal and year
-    res = query_year(2010,[22900],refresh=False,verbose=False)
+    res = query_year(2010,[22900])
     assert_equal(res.source_id.tolist(), ['22900'])
     assert_equal(res.year.tolist(), ['2010'])
     assert_true(isinstance(res.auids[0], list))

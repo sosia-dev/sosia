@@ -10,8 +10,10 @@ from scopus import ScopusSearch, AuthorSearch
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from sosia.cache import (authors_in_cache, author_year_in_cache, sources_in_cache,
-                        cache_authors, cache_author_year, cache_sources)
+from sosia.cache import (authors_in_cache, author_year_in_cache,
+                         author_size_in_cache, sources_in_cache,
+                         cache_authors, cache_author_year, cache_author_size,
+                         cache_sources)
 from sosia.processing import query_year
 from sosia.utils import build_dict, create_cache
    
@@ -92,6 +94,32 @@ def test_author_year_in_cache():
     assert_equal(author_year_incache.year.tolist(), [2016,2016])
     assert_true(author_year_search.empty)
     
+
+def test_author_size_in_cache():
+    test_file = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
+    create_cache(drop=True, file=test_file) 
+    # test empty cache
+    group = [53164702100]
+    years_check = [2010, 2017]
+    authors_df = pd.DataFrame(list(product(group, years_check)),
+                           columns=["auth_id", "year"])
+    types = {"auth_id": int, "year": int}
+    authors_df.astype(types, inplace=True)
+    authors_size = author_size_in_cache(authors_df, file=test_file)
+    assert_equal(len(authors_size), 0)
+    assert_true(isinstance(authors_size,pd.DataFrame))
+    # test add to cache...
+    tp1 = (53164702100, 2010, 0)
+    cache_author_size(tp1, file=test_file)
+    tp2 = (53164702100, 2017, 6)
+    cache_author_size(tp2, file=test_file)
+    # ...and retrieve
+    authors_size = author_size_in_cache(authors_df, file=test_file)
+    assert_equal(len(authors_size), 2)
+    assert_frame_equal(authors_size[["auth_id","year"]], authors_df)
+    assert_equal(authors_size[authors_size.year==2010]["n_pubs"][0], 0)
+    assert_equal(authors_size[authors_size.year==2017]["n_pubs"][1], 6)
+
     
 def test_sources_in_cache():
     test_file = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
