@@ -12,7 +12,7 @@ from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import print_progress
 
 
-def query(q_type, q, refresh=False, cursor=True, tsleep=0):
+def query(q_type, q, refresh=False, tsleep=0):
     """Wrapper function to perform a particular search query.
 
     Parameters
@@ -44,12 +44,12 @@ def query(q_type, q, refresh=False, cursor=True, tsleep=0):
         if q_type == "author":
             res = AuthorSearch(q, refresh=refresh).authors or []
         elif q_type == "docs":
-            res = ScopusSearch(q, refresh=refresh, cursor=cursor).results or []
+            res = ScopusSearch(q, refresh=refresh).results or []
             if not valid_results(res):
                 sleep(tsleep)
                 if tsleep <= 10:
                     tsleep = tsleep+2.5
-                    return query(q_type, q, True, cursor, tsleep)
+                    return query(q_type, q, True, tsleep)
                 else:
                     return []
         return res
@@ -57,7 +57,7 @@ def query(q_type, q, refresh=False, cursor=True, tsleep=0):
         sleep(tsleep)
         if tsleep <= 10:
             tsleep = tsleep+2.5
-            return query(q_type, q, True, cursor, tsleep)
+            return query(q_type, q, True, tsleep)
         else:
             return []
 
