@@ -5,7 +5,6 @@
 """Main class for sosia."""
 
 from collections import Counter
-from functools import partial
 from itertools import product
 from math import inf
 from string import digits, punctuation, Template
@@ -324,8 +323,8 @@ class Original(Scientist):
                 "res": [],
                 "refresh": refresh,
                 "joiner": ") OR AU-ID(",
-                "func": partial(query, "author"),
-                "query": Template("AU-ID($fill)"),
+                "q_type": "author",
+                "template": Template("AU-ID($fill)"),
             }
             if verbose:
                 print("Pre-filtering...")
@@ -365,10 +364,10 @@ class Original(Scientist):
                 params = {
                     "group": auth_year_group,
                     "res": [],
-                    "query": q,
+                    "template": q,
                     "refresh": refresh,
                     "joiner": ") OR AU-ID(",
-                    "func": partial(query, "docs"),
+                    "q_type": "docs",
                 }
                 if verbose:
                     params.update({"total": n})
