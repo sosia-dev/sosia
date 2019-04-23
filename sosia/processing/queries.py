@@ -9,8 +9,7 @@ from scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error, Scopus404Error, Scopus429Error
     
 from sosia.processing.extraction import get_authors, get_auth_from_df
-from sosia.utils import print_progress, run
-from sosia.cache import cache_sources
+from sosia.utils import print_progress
 
 
 def query(q_type, q, refresh=False, cursor=True, tsleep=0):
