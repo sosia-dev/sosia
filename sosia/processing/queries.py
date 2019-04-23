@@ -62,6 +62,30 @@ def query(q_type, q, refresh=False, tsleep=0):
             return []
 
 
+def query_size(q_type, q, refresh=False):
+    """Wrapper function to perform a query which returns the size of a query.
+
+    Parameters
+    ----------
+    q_type : str
+        Determines the query search that will be used.  Allowed values:
+        "author", "docs".
+        
+    q : str
+        The query string.
+
+    Returns
+    -------
+    s.get_results_size() : int
+        The size of the query, corresponding to the number of documents.
+    """
+    if q_type == "author":
+        s = AuthorSearch(q, download=False, refresh=refresh)    
+    elif q_type == "docs":
+        s = ScopusSearch(q, download=False, refresh=refresh)    
+    return s.get_results_size()
+        
+
 def query_journal(source_id, years, refresh):
     """Get authors by year for a particular source.
 
