@@ -41,11 +41,14 @@ def find_country(auth_ids, pubs, year, refresh):
     papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
     params = {"view": "FULL", "refresh": refresh}
     for p in papers:
-        authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
-        countries = [a.country for a in authorgroup if a.auid in auth_ids and a.country]
-        if not countries:
+        try:
+            authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
+            countries = [a.country for a in authorgroup if a.auid in auth_ids and a.country]
+            if not countries:
+                continue
+            return "; ".join(sorted(list(set(countries))))
+        except KeyError:
             continue
-        return "; ".join(sorted(list(set(countries))))
 
 
 def get_authors(pubs):
