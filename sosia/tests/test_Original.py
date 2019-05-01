@@ -53,7 +53,7 @@ def test_search_group():
 
 
 def test_search_group_stacked():
-    scientist1.define_search_group(stacked=True, verbose=True)
+    scientist1.define_search_group(stacked=True)
     group = scientist1.search_group
     assert_equal(len(group), 631)
     assert_true(isinstance(group, list))
@@ -75,7 +75,7 @@ def test_find_matches():
 
 def test_find_matches_stacked():
     # with additional info
-    recieved = sorted(scientist1.find_matches(stacked=True, verbose=True, information=False))
+    recieved = sorted(scientist1.find_matches(stacked=True))
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
