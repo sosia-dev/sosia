@@ -537,7 +537,6 @@ class Original(Scientist):
             out = []
             matches = matches["ID"].tolist()
             profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
-            print_progress(0, len(profiles), verbose)
             for idx, p in enumerate(profiles):
                 new = m(ID=p.identifier[0],
                 name=p.name,
@@ -547,7 +546,6 @@ class Original(Scientist):
                 num_citations=p.citations,
                 country=p.country)
                 out.append(new)
-                print_progress(idx, len(profiles), verbose)
             matches = out
 
         if information and len(matches) > 0 and not stacked:
