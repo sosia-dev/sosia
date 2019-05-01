@@ -161,7 +161,7 @@ class Original(Scientist):
         _max_pubs = max(margin_range(len(self.publications), self.pub_margin))
         _years = list(range(_min_year, _max_year + 1))
         _years_search = list(range(_min_year, _max_year + 1))
-        _years_search.extend([_min_year - 1, self.year])
+        _years_search.extend([_min_year - 1, self.active_year])
         search_sources, _ = zip(*self.search_sources)
         n = len(search_sources)
 

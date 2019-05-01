@@ -11,8 +11,14 @@ scientist1 = Scientist(["6701809842"], 2001)
 scientist2 = Scientist(["55208373700", "55208373700", "99"], 2017)
 eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
 scientist3 = Scientist(["55208373700"], 2017, eids=eids)
+scientist3b = Scientist(["55208373700"], 2015)
 
-
+def test_active_year():
+    assert_equal(scientist1.active_year, 2001)
+    assert_equal(scientist2.active_year, 2017)
+    assert_equal(scientist3.active_year, 2016)
+    assert_equal(scientist3b.active_year, 2012)
+    
 def test_country():
     assert_equal(scientist1.country, "United Kingdom")
     assert_equal(scientist2.country, "Switzerland")

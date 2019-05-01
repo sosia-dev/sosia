@@ -65,6 +65,17 @@ class Scientist(object):
         self._first_year = val
 
     @property
+    def active_year(self):
+        """The scientist's year of first publication, as integer."""
+        return self._active_year
+
+    @active_year.setter
+    def active_year(self, val):
+        if not isinstance(val, int):
+            raise Exception("Value must be an integer.")
+        self._active_year = val
+
+    @property
     def main_field(self):
         """The scientist's main field of research, as tuple in
         the form (ASJC code, general category).
@@ -191,6 +202,8 @@ class Scientist(object):
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = _get_main_field(self._fields)
         self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
+        self._active_year = int(max([p.coverDate[:4] for p in self._publications
+                                    if int(p.coverDate[:4]) <= year]))
         self._coauthors = _find_coauthors(self._publications, identifier)
         self._country = find_country(identifier, self._publications, year, refresh)
         au = AuthorRetrieval(identifier[0], refresh=refresh)
