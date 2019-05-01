@@ -214,7 +214,6 @@ class Scientist(object):
             q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
                     .format(" OR ".join(eids), self.year + 1,
                             ") AND NOT AU-ID(".join(identifier)))
-        print(q)
         self._citations = query_size("docs", q, refresh=refresh)
 
         # list of eids if not provided

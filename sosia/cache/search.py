@@ -30,7 +30,6 @@ def author_cits_in_cache(df, file=CACHE_SQLITE):
     c.execute("""CREATE TABLE IF NOT EXISTS author_year_insearch
         (auth_id int, year int, PRIMARY KEY(auth_id, year))""")
     query = """INSERT INTO author_year_insearch (auth_id, year) values (?,?) """
-    print(df)
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
     query = """SELECT b.* from author_year_insearch as a INNER JOIN 

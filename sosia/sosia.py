@@ -468,8 +468,6 @@ class Original(Scientist):
             
         authors_cits_incache, _ = author_cits_in_cache(authors)
         
-        print(_ncits)
-        print(authors_cits_incache)
         group = (authors_cits_incache[(authors_cits_incache.n_cits<=max(_ncits))
                                       &(authors_cits_incache.n_cits>=min(_ncits))]
                                      ['auth_id'].tolist())        
@@ -532,8 +530,8 @@ class Original(Scientist):
         
         # complete with info from publication:
         if stacked:
-            fields = "ID name first_year num_coauthors num_publications country "\
-             "language"
+            fields = "ID name first_year num_coauthors num_publications num_citations "\
+             "country language"
             custom_print("Adding info from publications...", verbose)
             m = namedtuple("Match", fields)
             out = []
@@ -546,6 +544,7 @@ class Original(Scientist):
                 first_year=p.first_year,
                 num_coauthors=len(p.coauthors),
                 num_publications=len(p.publications),
+                num_citations=p.citations,
                 country=p.country,
                 language=p.get_publication_languages().language)
                 out.append(new)
