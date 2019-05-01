@@ -406,13 +406,13 @@ class Original(Scientist):
             text = ("Searching through characteristics of {:,} authors \n"
                     .format(len(group_tocheck)))
             custom_print(text, verbose)
-            print_progress(0, n, verbose)
+            print_progress(0, len(group_tocheck), verbose)
             to_loop = [x for x in group_tocheck]
             for i, au in enumerate(to_loop):            
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, min(_years))
                 size = query_size("docs", q, refresh=refresh)
                 cache_author_size((au,min(_years)-1,size))
-                print_progress(i + 1, n, verbose)
+                print_progress(i + 1, len(group_tocheck), verbose)
                 if not size==0:
                     group.remove(au)
                     group_tocheck.remove(au)
@@ -429,12 +429,12 @@ class Original(Scientist):
             text = ("Searching through characteristics of {:,} authors\n"
                     .format(len(group_tocheck)))
             custom_print(text, verbose)
-            print_progress(0, n, verbose)
+            print_progress(0, len(group_tocheck), verbose)
             for i, au in enumerate(group_tocheck):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, self.year + 1)
                 size = query_size("docs", q, refresh=refresh)
                 cache_author_size((au,self.year,size))
-                print_progress(i + 1, n, verbose)
+                print_progress(i + 1, len(group_tocheck), verbose)
                 if size < min(_npapers) or size > max(_npapers):
                     group.remove(au)
                     
@@ -450,7 +450,7 @@ class Original(Scientist):
         authors.astype(types, inplace=True)
         _, authors_cits_search = author_cits_in_cache(authors)
 
-        text = ("Search and filter based on count of citations"
+        text = ("Search and filter based on count of citations\n"
                 "{} to search out of {}.\n"
                 .format(len(authors_cits_search), len(group)))
         custom_print(text, verbose)
@@ -494,7 +494,7 @@ class Original(Scientist):
                     "q_type": "docs",
                 }
                 if verbose:
-                    params.update({"total": n})
+                    params.update({"total": len(auth_year_group)})
                 res, _ = stacked_query(**params)
                 res = build_dict(res, auth_year_group)
                 res = pd.DataFrame.from_dict(res, orient="index", dtype="int64")
@@ -531,13 +531,13 @@ class Original(Scientist):
         # complete with info from publication:
         if stacked:
             fields = "ID name first_year num_coauthors num_publications num_citations "\
-             "country language"
+             "country"
             custom_print("Adding info from publications...", verbose)
             m = namedtuple("Match", fields)
             out = []
             matches = matches["ID"].tolist()
-            custom_print("Providing additional information...", verbose)
             profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
+            print_progress(0, len(profiles), verbose)
             for idx, p in enumerate(profiles):
                 new = m(ID=p.identifier[0],
                 name=p.name,
@@ -545,9 +545,9 @@ class Original(Scientist):
                 num_coauthors=len(p.coauthors),
                 num_publications=len(p.publications),
                 num_citations=p.citations,
-                country=p.country,
-                language=p.get_publication_languages().language)
+                country=p.country)
                 out.append(new)
+                print_progress(idx, len(profiles), verbose)
             matches = out
 
         if information and len(matches) > 0 and not stacked:
