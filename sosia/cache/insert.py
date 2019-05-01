@@ -23,7 +23,7 @@ def cache_connect(file=CACHE_SQLITE):
 
 
 def cache_authors(df, file=CACHE_SQLITE):
-    """Insert new authors informaiton in cache.
+    """Insert new authors information in cache.
 
     Parameters
     ----------
@@ -37,6 +37,24 @@ def cache_authors(df, file=CACHE_SQLITE):
     query = """INSERT OR IGNORE INTO authors (auth_id, eid, surname, initials,
         givenname, affiliation, documents, affiliation_id, city, country,
         areas) values (?,?,?,?,?,?,?,?,?,?,?)"""
+    conn.executemany(query, df.to_records(index=False))
+    conn.commit()
+    
+    
+def cache_author_cits(df, file=CACHE_SQLITE):
+    """Insert new authors citaitons information in cache.
+
+    Parameters
+    ----------
+    df : DataFrame
+        Dataframe with authors citations information.
+
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
+    """
+    _, conn = cache_connect(file=file)
+    query = """INSERT OR IGNORE INTO author_cits_size (auth_id, year, n_cits)
+               values (?,?,?)"""
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
 

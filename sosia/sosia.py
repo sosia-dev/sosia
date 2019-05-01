@@ -4,7 +4,7 @@
 #            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
-from collections import Counter
+from collections import Counter, namedtuple
 from itertools import product
 from string import digits, punctuation, Template
 import pandas as pd
@@ -16,9 +16,9 @@ from sosia.processing import (get_authors, inform_matches, query,
     query_journal, query_size, query_year, stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
-from sosia.cache import (cache_sources, sources_in_cache,
+from sosia.cache import (cache_sources, cache_author_cits, sources_in_cache,
     authors_in_cache, cache_authors, author_year_in_cache, author_size_in_cache,
-    cache_author_year, cache_author_size)
+    cache_author_year, cache_author_size, author_cits_in_cache)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -68,7 +68,7 @@ class Original(Scientist):
         self._search_sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
-                 coauth_margin=0.1, refresh=False, eids=None,):
+                 cits_margin=0.1, coauth_margin=0.1, refresh=False, eids=None):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -89,6 +89,13 @@ class Original(Scientist):
 
         pub_margin : numeric (optional, default=0.1)
             The left and right margin for the number of publications to match
+            possible matches and the scientist on.  If the value is a float,
+            it is interpreted as percentage of the scientists number of
+            publications and the resulting value is rounded up.  If the value
+            is an integer it is interpreted as fixed number of publications.
+        
+        cits_margin : numeric (optional, default=0.1)
+            The left and right margin for the number of citations to match
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientists number of
             publications and the resulting value is rounded up.  If the value
@@ -126,6 +133,7 @@ class Original(Scientist):
         self.year = int(year)
         self.year_margin = year_margin
         self.pub_margin = pub_margin
+        self.cits_margin = cits_margin
         self.coauth_margin = coauth_margin
         self.eids = eids
         self.refresh = refresh
@@ -306,6 +314,7 @@ class Original(Scientist):
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
         _npapers = margin_range(len(self.publications), self.pub_margin)
+        _ncits = margin_range(self.citations, self.cits_margin)
         _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
         n = len(self.search_group)
         text = "Searching through characteristics of {:,} authors".format(n)
@@ -433,8 +442,39 @@ class Original(Scientist):
                 "Downloading publications and filtering based on coauthors\n"
                 .format(len(group)))
         custom_print(text, verbose)
+        
+        # Third round of filtering: citations.
+        authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
+        authors["year"] = self.year
+        types = {"auth_id": int, "year": int}
+        authors.astype(types, inplace=True)
+        _, authors_cits_search = author_cits_in_cache(authors)
+
+        text = ("Search and filter based on count of citations"
+                "{} to search out of {}.\n"
+                .format(len(authors_cits_search), len(group)))
+        custom_print(text, verbose)
+        
+        if not authors_cits_search.empty:
+            authors_cits_search['n_cits'] = 0
+            print_progress(0, len(authors_cits_search), verbose)
+            for i,au in authors_cits_search.iterrows():
+                q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
+                    .format(au['auth_id'], self.year + 1, au['auth_id']))
+                authors_cits_search.at[i,'n_cits'] = query_size("docs", q,
+                                                      refresh=refresh)
+                print_progress(i + 1, len(authors_cits_search), verbose)
+            cache_author_cits(authors_cits_search)
+            
+        authors_cits_incache, _ = author_cits_in_cache(authors)
+        
+        print(_ncits)
+        print(authors_cits_incache)
+        group = (authors_cits_incache[(authors_cits_incache.n_cits<=max(_ncits))
+                                      &(authors_cits_incache.n_cits>=min(_ncits))]
+                                     ['auth_id'].tolist())        
                 
-        # Third round of filtering: Download publications and check coauthors.
+        # Fourth round of filtering: Download publications and check coauthors.
         # Create df of authors and year of the event
         authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
         authors["year"] = int(self.year)
@@ -489,6 +529,27 @@ class Original(Scientist):
                 matches.append(au)
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
         custom_print(text, verbose)
+        
+        # complete with info from publication:
+        if stacked:
+            fields = "ID name first_year num_coauthors num_publications country "\
+             "language"
+            custom_print("Adding info from publications...", verbose)
+            m = namedtuple("Match", fields)
+            out = []
+            matches = matches["ID"].tolist()
+            custom_print("Providing additional information...", verbose)
+            profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
+            for idx, p in enumerate(profiles):
+                new = m(ID=p.identifier[0],
+                name=p.name,
+                first_year=p.first_year,
+                num_coauthors=len(p.coauthors),
+                num_publications=len(p.publications),
+                country=p.country,
+                language=p.get_publication_languages().language)
+                out.append(new)
+            matches = out
 
         if information and len(matches) > 0 and not stacked:
             custom_print("Providing additional information...", verbose)

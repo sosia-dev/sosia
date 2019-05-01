@@ -49,6 +49,12 @@ def create_cache(drop=False, file=CACHE_SQLITE):
               (auth_id int, year int, n_pubs int,
               PRIMARY KEY(auth_id, year))"""
     )
+    # table for author year citations count from size queries
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS author_cits_size
+              (auth_id int, year int, n_cits int,
+              PRIMARY KEY(auth_id, year))"""
+    )
     # table for author year full publication information
     c.execute(
         """CREATE TABLE IF NOT EXISTS author_year

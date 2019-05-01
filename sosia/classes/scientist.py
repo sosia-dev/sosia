@@ -8,7 +8,7 @@ from collections import Counter
 import pandas as pd
 from scopus import AbstractRetrieval, AuthorRetrieval
 
-from sosia.processing import find_country, query
+from sosia.processing import find_country, query, query_size
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
     add_source_names, create_fields_sources_list, raise_non_empty
 
@@ -16,6 +16,18 @@ __all__ = ["Scientist"]
 
 
 class Scientist(object):
+    @property
+    def citations(self):
+        """The citations of the scientist until
+        the given year.
+        """
+        return self._citations
+
+    @citations.setter
+    def citations(self, val):
+        raise_non_empty(val, int)
+        self._citations = val
+        
     @property
     def country(self):
         """Country of the scientist's most frequent affiliation
@@ -192,10 +204,24 @@ class Scientist(object):
             text = "No publications for author {} until year {}".format(
                 "-".join(identifier), year)
             raise Exception(text)
+
+        # get count of citations
+        if not eids:
+            q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
+                    .format(" OR ".join(identifier), self.year + 1,
+                            " OR ".join(identifier)))        
+        else:
+            q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
+                    .format(" OR ".join(eids), self.year + 1,
+                            ") AND NOT AU-ID(".join(identifier)))
+        print(q)
+        self._citations = query_size("docs", q, refresh=refresh)
+
+        # list of eids if not provided
         if not eids:
             eids = [p.eid for p in self._publications]
         self._eids = eids
-
+        
         # Parse information
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, names)
