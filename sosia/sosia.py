@@ -466,7 +466,7 @@ class Original(Scientist):
                 print_progress(i + 1, len(authors_cits_search), verbose)
             cache_author_cits(authors_cits_search)
             
-        authors_cits_incache, _ = author_cits_in_cache(authors)
+        authors_cits_incache, _ = author_cits_in_cache(authors[["auth_id","year"]])
         
         group = (authors_cits_incache[(authors_cits_incache.n_cits<=max(_ncits))
                                       &(authors_cits_incache.n_cits>=min(_ncits))]
