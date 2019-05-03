@@ -47,7 +47,7 @@ def find_country(auth_ids, pubs, year, refresh):
             if not countries:
                 continue
             return "; ".join(sorted(list(set(countries))))
-        except KeyError:
+        except (KeyError, AttributeError):
             continue
 
 
