@@ -13,12 +13,15 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
 from sosia.processing import (get_authors, inform_matches, query,
-    query_journal, query_size, query_year, stacked_query)
+                              query_journal, query_size, query_year,
+                              stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
-    margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
+                         margin_range, print_progress, raise_non_empty,
+                         CACHE_SQLITE)
 from sosia.cache import (cache_sources, cache_author_cits, sources_in_cache,
-    authors_in_cache, cache_authors, author_year_in_cache, author_size_in_cache,
-    cache_author_year, cache_author_size, author_cits_in_cache)
+                         authors_in_cache, cache_authors, author_year_in_cache,
+                         author_size_in_cache, cache_author_year,
+                         cache_author_size, author_cits_in_cache)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
