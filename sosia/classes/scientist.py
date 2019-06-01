@@ -151,7 +151,7 @@ class Scientist(object):
             val = add_source_names(val, self.source_names)
         self._sources = val
 
-    def __init__(self, identifier, year, refresh=False, eids=None, period=False):
+    def __init__(self, identifier, year, refresh=False, eids=None):
         """Class to represent a scientist.
 
         Parameters
@@ -170,10 +170,6 @@ class Scientist(object):
             it is provided, the scientist's properties are set based on these
             publications, instead of the list of publications obtained from
             the Scopus Author ID(s).
-        
-        period: int (optional, default=None)
-            The period in which to consider publications. If not provided,
-            all publications are considered.
 
         Raises
         ------
@@ -200,12 +196,7 @@ class Scientist(object):
             q = "EID({})".format(" OR ".join(eids))
         res = query("docs", q, refresh)
         try:
-            if period:
-                self.year_period = year - period + 1
-                self._publications = [p for p in res if int(p.coverDate[:4]) <= year
-                                      and int(p.coverDate[:4]) >= self.year_period]            
-            else:
-                self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
+            self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         except (AttributeError, TypeError):
             res = query("docs", q, True)
             self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
@@ -214,16 +205,11 @@ class Scientist(object):
                 "-".join(identifier), year)
             raise Exception(text)
 
-        # get count of citations (this all can be sobstituted with downloading
-        # the list of citing ids with all info and creating the necessary counts)
-        if not eids and not period:
+        # get count of citations
+        if not eids:
             q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
                     .format(" OR ".join(identifier), self.year + 1,
-                            ") OR AU-ID(".join(identifier)))
-        elif period and not eids:
-            # get list of eids published in period and obtain citations count
-        elif period and eids:
-            # restrict list of eids published in period and obtain citations count            
+                            ") OR AU-ID(".join(identifier)))        
         else:
             q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
                     .format(" OR ".join(eids), self.year + 1,
