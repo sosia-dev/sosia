@@ -5,7 +5,7 @@
 from nose.tools import assert_equal, assert_true
 from string import Template
 
-from sosia.processing import query_journal, query_size, query_year, stacked_query
+from sosia.processing import query_journal, query_year, stacked_query
 
 
 def test_stacked_query():
