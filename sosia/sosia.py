@@ -93,7 +93,7 @@ class Original(Scientist):
             it is interpreted as percentage of the scientists number of
             publications and the resulting value is rounded up.  If the value
             is an integer it is interpreted as fixed number of publications.
-        
+
         cits_margin : numeric (optional, default=0.1)
             The left and right margin for the number of citations to match
             possible matches and the scientist on.  If the value is a float,
@@ -228,7 +228,8 @@ class Original(Scientist):
         group = today.intersection(then)
         negative.update({str(i) for i in self.identifier})
         self._search_group = sorted(list(group - negative))
-        text = "Found {:,} authors for search_group".format(len(self._search_group))
+        text = "Found {:,} authors for search_group".format(
+            len(self._search_group))
         custom_print(text, verbose)
         return self
 
@@ -322,7 +323,7 @@ class Original(Scientist):
 
         # First round of filtering: minimum publications and main field
         # create df of authors
-        authors = pd.DataFrame(self.search_group, columns=["auth_id"], dtype="int64")
+        authors = pd.DataFrame(self.search_group, columns=["auth_id"])
 
         # merge existing data in cache and separate missing records
         _, authors_search = authors_in_cache(authors)
@@ -344,7 +345,7 @@ class Original(Scientist):
                 res["auth_id"] = res.apply(lambda x: x.eid.split("-")[-1], axis=1)
                 res = res[["auth_id", "eid", "surname", "initials",
                            "givenname", "affiliation", "documents",
-                           "affiliation_id", "city", "country","areas"]]
+                           "affiliation_id", "city", "country", "areas"]]
                 cache_authors(res)
         authors_cache, _ = authors_in_cache(authors)
         same_field = (authors_cache.areas.str.startswith(self.main_field[1]))
@@ -356,8 +357,8 @@ class Original(Scientist):
                 "conditions...".format(n))
         custom_print(text, verbose)
 
-        # Second round of filtering: Check having no publications before minimum
-        # year, and if 0, the number of publications.
+        # Second round of filtering: Check having no publications before
+        # minimum year, and if 0, the number of publications.
         years_check = [min(_years)-1, self.year]
         authors = pd.DataFrame(list(product(group, years_check)),
                                columns=["auth_id", "year"])
@@ -370,37 +371,37 @@ class Original(Scientist):
         if not authors_size.empty:
             # authors that can be removed (either publish before min year
             # or have a publications count out of range, or both)
-            au_remove = (authors_size[((authors_size.year==min(_years)-1)&
-                                       (authors_size.n_pubs>0))|
-                                       ((authors_size.year==self.year)&
-                                       (authors_size.n_pubs<min(_npapers)))|
-                                       ((authors_size.year==self.year)&
-                                       (authors_size.n_pubs>max(_npapers)))
-                                        ]["auth_id"].drop_duplicates().tolist())
+            mask = (((authors_size.year == min(_years)-1) &
+                     (authors_size.n_pubs > 0)) |
+                    ((authors_size.year == self.year) &
+                     (authors_size.n_pubs < min(_npapers))) |
+                    ((authors_size.year == self.year) &
+                     (authors_size.n_pubs > max(_npapers))))
+            au_remove = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
             # authors with no pubs before min year
-            au_ok_miny = (authors_size[((authors_size.year==min(_years)-1)&
-                                        (authors_size.n_pubs==0))
-                                        ]["auth_id"].drop_duplicates().tolist())
+            mask = (((authors_size.year == min(_years)-1) &
+                    (authors_size.n_pubs == 0)))
+            au_ok_miny = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
             # authors with pubs count within the range before the given year
-            au_ok_year = (authors_size[((authors_size.year==self.year)&
-                                        (authors_size.n_pubs>=min(_npapers)))&
-                                        (authors_size.n_pubs<=max(_npapers))
-                                        ]["auth_id"].drop_duplicates().tolist())
+            mask = (((authors_size.year == self.year) &
+                     (authors_size.n_pubs >= min(_npapers))) &
+                    (authors_size.n_pubs <= max(_npapers)))
+            au_ok_year = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
             # authors ok (match both conditions)
             au_ok = list(set(au_ok_miny).intersection(au_ok_year))
             # authors that match only the first condition, but the second is
             # not known, can skip the first cindition check.
             au_skip = [x for x in au_ok_miny if x not in au_remove + au_ok]
-            
+
             group = [x for x in group if x not in au_remove]
             group_tocheck = [x for x in group if x not in au_skip + au_ok]
 
-        text = ("Left with {} authors based on size information\n"
+        text = ("Left with {} authors based on size information \n"
                 "already in cache.\n "
                 "{} to check.\n"
                 .format(len(group), len(group_tocheck)))
         custom_print(text, verbose)
-        
+
         # check the publications before minimum year are 0
         if group_tocheck:
             text = ("Searching through characteristics of {:,} authors \n"
@@ -408,21 +409,21 @@ class Original(Scientist):
             custom_print(text, verbose)
             print_progress(0, len(group_tocheck), verbose)
             to_loop = [x for x in group_tocheck]
-            for i, au in enumerate(to_loop):            
+            for i, au in enumerate(to_loop):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, min(_years))
                 size = query("docs", q, size_only=True)
-                cache_author_size((au,min(_years)-1,size))
+                cache_author_size((au, min(_years)-1, size))
                 print_progress(i + 1, len(group_tocheck), verbose)
-                if not size==0:
+                if not size == 0:
                     group.remove(au)
                     group_tocheck.remove(au)
-                
+
             text = ("Left with {} authors based on size information"
                     "before minium year.\n"
                     "Filtering based on size query before provided year\n"
                     .format(len(group)))
             custom_print(text, verbose)
-        
+
         # check the publications before the given year are in range
         group_tocheck.extend(au_skip)
         if group_tocheck:
@@ -433,16 +434,16 @@ class Original(Scientist):
             for i, au in enumerate(group_tocheck):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, self.year + 1)
                 size = query("docs", q, size_only=True)
-                cache_author_size((au,self.year,size))
+                cache_author_size((au, self.year, size))
                 print_progress(i + 1, len(group_tocheck), verbose)
                 if size < min(_npapers) or size > max(_npapers):
                     group.remove(au)
-                    
+
         text = ("Left with {} authors based on all size information.\n"
                 "Downloading publications and filtering based on coauthors\n"
                 .format(len(group)))
         custom_print(text, verbose)
-        
+
         # Third round of filtering: citations.
         authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
         authors["year"] = self.year
@@ -454,27 +455,26 @@ class Original(Scientist):
                 "{} to search out of {}.\n"
                 .format(len(authors_cits_search), len(group)))
         custom_print(text, verbose)
-        
+
         if not authors_cits_search.empty:
             authors_cits_search['n_cits'] = 0
             print_progress(0, len(authors_cits_search), verbose)
-            for i,au in authors_cits_search.iterrows():
-                q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
-                    .format(au['auth_id'], self.year + 1, au['auth_id']))
+            for i, au in authors_cits_search.iterrows():
+                q = "REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})".format(
+                    au['auth_id'], self.year + 1, au['auth_id'])
                 n = query("docs", q, size_only=True)
-                authors_cits_search.at[i,'n_cits'] = n
+                authors_cits_search.at[i, 'n_cits'] = n
                 print_progress(i + 1, len(authors_cits_search), verbose)
             cache_author_cits(authors_cits_search)
-            
-        authors_cits_incache, _ = author_cits_in_cache(authors[["auth_id","year"]])
-        
-        group = (authors_cits_incache[(authors_cits_incache.n_cits<=max(_ncits))
-                                      &(authors_cits_incache.n_cits>=min(_ncits))]
-                                     ['auth_id'].tolist())        
-                
+
+        authors_cits_incache, _ = author_cits_in_cache(authors[["auth_id", "year"]])
+        mask = ((authors_cits_incache.n_cits <= max(_ncits)) &
+                (authors_cits_incache.n_cits >= min(_ncits)))
+        group = (authors_cits_incache[mask]['auth_id'].tolist())
+
         # Fourth round of filtering: Download publications and check coauthors.
         # Create df of authors and year of the event
-        authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
+        authors = pd.DataFrame(group, columns=["auth_id"])
         authors["year"] = int(self.year)
 
         # merge existing data in cache and separate missing records
@@ -483,32 +483,30 @@ class Original(Scientist):
         matches = []
         if stacked:  # Combine searches
             if not author_year_search.empty:
-                q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(self.year + 1))
+                q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(
+                    self.year + 1))
                 auth_year_group = author_year_search.auth_id.tolist()
-                params = {
-                    "group": auth_year_group,
-                    "res": [],
-                    "template": q,
-                    "refresh": refresh,
-                    "joiner": ") OR AU-ID(",
-                    "q_type": "docs",
-                }
+                params = {"group": auth_year_group, "res": [],
+                          "template": q, "refresh": refresh,
+                          "joiner": ") OR AU-ID(", "q_type": "docs"}
                 if verbose:
                     params.update({"total": len(auth_year_group)})
                 res, _ = stacked_query(**params)
                 res = build_dict(res, auth_year_group)
-                res = pd.DataFrame.from_dict(res, orient="index", dtype="int64")
+                res = pd.DataFrame.from_dict(res, orient="index")
                 res["year"] = self.year
                 res = res[["year", "first_year", "n_pubs", "n_coauth"]]
                 res.reset_index(inplace=True)
-                res.columns = ["auth_id", "year", "first_year", "n_pubs", "n_coauth"]
+                res.columns = ["auth_id", "year", "first_year", "n_pubs",
+                               "n_coauth"]
                 cache_author_year(res)
             author_year_cache, _ = author_year_in_cache(authors)
             same_start = (author_year_cache.first_year.between(min(_years), max(_years)))
             same_pubs = (author_year_cache.n_pubs.between(min(_npapers), max(_npapers)))
             same_coauths = (author_year_cache.n_coauth.between(min(_ncoauth), max(_ncoauth)))
             mask = same_start & same_pubs & same_coauths
-            matches = author_year_cache[mask][["auth_id", "first_year", "n_coauth", "n_pubs"]]
+            cols = ["auth_id", "first_year", "n_coauth", "n_pubs"]
+            matches = author_year_cache[mask][cols]
             matches.columns = ["ID", "first_year", "num_coauthors", "num_publications"]
         else:  # Query each author individually
             for i, au in enumerate(group):
@@ -521,41 +519,35 @@ class Original(Scientist):
                 authids = [p.author_ids for p in res if p.author_ids]
                 authors = set([a for p in authids for a in p.split(";")])
                 n_coauth = len(authors) - 1  # Subtract 1 for focal author
-                if ((len(res) not in _npapers) or (min_year not in _years)
-                        or (n_coauth not in _ncoauth)):
+                if ((len(res) not in _npapers) or (min_year not in _years) or
+                        (n_coauth not in _ncoauth)):
                     continue
                 matches.append(au)
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
         custom_print(text, verbose)
-        
+
         # complete with info from publication:
         if stacked:
-            fields = "ID name first_year num_coauthors num_publications num_citations "\
-             "country"
+            fields = "ID name first_year num_coauthors num_publications "\
+                     "num_citations country"
             custom_print("Adding info from publications...", verbose)
             m = namedtuple("Match", fields)
             out = []
             matches = matches["ID"].tolist()
-            profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
-            for idx, p in enumerate(profiles):
-                new = m(ID=p.identifier[0],
-                name=p.name,
-                first_year=p.first_year,
-                num_coauthors=len(p.coauthors),
-                num_publications=len(p.publications),
-                num_citations=p.citations,
-                country=p.country)
+            profs = [Scientist([str(a)], self.year, refresh) for a in matches]
+            for idx, p in enumerate(profs):
+                new = m(ID=p.identifier[0], first_year=p.first_year,
+                        num_coauthors=len(p.coauthors), name=p.name,
+                        num_publications=len(p.publications),
+                        num_citations=p.citations, country=p.country)
                 out.append(new)
             matches = out
 
-        if information and len(matches) > 0 and not stacked:
+        if information and len(matches) > 0:
+            if stacked:
+                matches = [m.ID for m in matches]
             custom_print("Providing additional information...", verbose)
-            profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
-            return inform_matches(profiles, self, stop_words, verbose, refresh, **kwds)
-        elif information and len(matches) > 0 and stacked:
-            matches = matches["ID"].tolist()
-            custom_print("Providing additional information...", verbose)
-            profiles = [Scientist([str(au)], self.year, refresh) for au in matches]
-            return inform_matches(profiles, self, stop_words, verbose, refresh, **kwds)
+            profs = [Scientist([str(a)], self.year, refresh) for a in matches]
+            return inform_matches(profs, self, stop_words, verbose, refresh, **kwds)
         else:
             return matches
