@@ -7,12 +7,12 @@ import pandas as pd
 from scopus import AuthorSearch, ScopusSearch
 from scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error, Scopus404Error, Scopus429Error
-    
+
 from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import print_progress
 
 
-def query(q_type, q, refresh=False, tsleep=0):
+def query(q_type, q, refresh=False, size_only=False, tsleep=0):
     """Wrapper function to perform a particular search query.
 
     Parameters
@@ -27,64 +27,50 @@ def query(q_type, q, refresh=False, tsleep=0):
     refresh : bool (optional, default=False)
         Whether to refresh cached files if they exist, or not.
 
+    size_only : bool (optional, default=False)
+        Whether to not download results and return the number
+        of results instead.
+
     tsleep: float
         Seconds to wait in case of failure due to errors.
 
     Returns
     -------
-    res : list of namedtuples
+    res : list of namedtuples (if size_only is False)
         Documents represented by namedtuples as returned from scopus.
+
+    n : int (ifsize_only is True)
+        Number of documents
 
     Raises
     ------
     ValueError:
         If q_type is none of the allowed values.
     """
-    try:
-        if q_type == "author":
-            res = AuthorSearch(q, refresh=refresh).authors or []
-        elif q_type == "docs":
-            res = ScopusSearch(q, refresh=refresh).results or []
-            if not valid_results(res):
-                sleep(tsleep)
-                if tsleep <= 10:
-                    tsleep = tsleep+2.5
-                    return query(q_type, q, True, tsleep)
-                else:
-                    return []
-        return res
-    except (KeyError, UnicodeDecodeError, urllib.error.HTTPError, TypeError):
-        sleep(tsleep)
-        if tsleep <= 10:
-            tsleep = tsleep+2.5
-            return query(q_type, q, True, tsleep)
-        else:
-            return []
-
-
-def query_size(q_type, q, refresh=False):
-    """Wrapper function to perform a query which returns the size of a query.
-
-    Parameters
-    ----------
-    q_type : str
-        Determines the query search that will be used.  Allowed values:
-        "author", "docs".
-        
-    q : str
-        The query string.
-
-    Returns
-    -------
-    s.get_results_size() : int
-        The size of the query, corresponding to the number of documents.
-    """
+    params = {"query": q, "refresh": refresh, "download": not size_only}
     if q_type == "author":
-        s = AuthorSearch(q, download=False, refresh=refresh)    
+        obj = AuthorSearch(**params)
     elif q_type == "docs":
-        s = ScopusSearch(q, download=False, refresh=refresh)    
-    return s.get_results_size()
-        
+        obj = ScopusSearch(**params)
+    if size_only:
+        return obj.get_results_size()
+    else:
+        try:
+            if q_type == "author":
+                res = obj.authors or []
+            elif q_type == "docs":
+                res = obj.results or []
+                if not valid_results(res):
+                    raise TypeError
+        except (KeyError, UnicodeDecodeError, urllib.error.HTTPError, TypeError):
+            sleep(tsleep)
+            if tsleep <= 10:
+                tsleep = tsleep+2.5
+                res = query(q_type, q, True, size_only, tsleep)
+            else:
+                res = []
+        return res
+
 
 def query_journal(source_id, years, refresh):
     """Get authors by year for a particular source.
@@ -108,13 +94,14 @@ def query_journal(source_id, years, refresh):
     """
     try:  # Try complete publication list first
         q = "SOURCE-ID({})".format(source_id)
+        if query("docs", q, size_only=True) > 5000:
+            raise ScopusQueryError()
         res = query("docs", q, refresh=refresh)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
             q = Template("SOURCE-ID({}) AND PUBYEAR IS $fill".format(source_id))
-            ext, _ = stacked_query([year], [], q, "", "docs",
-                refresh=refresh)
+            ext, _ = stacked_query([year], [], q, "", "docs", refresh=refresh)
             if not valid_results(ext):  # Reload queries with missing years
                 ext, _ = stacked_query([year], [], q, "",
                     "docs", refresh=True)
@@ -143,16 +130,12 @@ def query_year(year, source_ids, refresh, verbose):
 
     refresh : bool (optional)
         Whether to refresh cached files if they exist, or not.
-        
+
     verbose : bool (optional)
         Whether to print information on the search progress.
     """
-    params = {
-        "group": [str(x) for x in sorted(source_ids)],
-        "joiner": " OR ",
-        "refresh": refresh,
-        "q_type": "docs",
-    }
+    params = {"group": [str(x) for x in sorted(source_ids)],
+              "joiner": " OR ", "refresh": refresh, "q_type": "docs"}
     if verbose:
         params.update({"total": len(source_ids)})
         print("Searching authors in {} sources in {}...".format(
@@ -169,11 +152,13 @@ def query_year(year, source_ids, refresh, verbose):
         res = (res.groupby(["source_id", "Year"])[["author_ids"]]
                   .apply(get_auth_from_df)
                   .reset_index())
-        res.columns = ["source_id", "year", "auids"]  # can be avoided by naming as in pubs
+        # The following can be avoided by naming as in pubs
+        res.columns = ["source_id", "year", "auids"]
     return res
 
 
-def stacked_query(group, res, template, joiner, q_type, refresh, i=0, total=None):
+def stacked_query(group, res, template, joiner, q_type, refresh,
+                  i=0, total=None):
     """Auxiliary function to recursively perform queries until they work.
 
     Parameters
@@ -222,13 +207,15 @@ def stacked_query(group, res, template, joiner, q_type, refresh, i=0, total=None
     group = [str(g) for g in group]  # make robust to passing int
     q = template.substitute(fill=joiner.join(group))
     try:
-        if query_size(q_type,q,refresh)>5000 and len(group)>1:
+        n = query(q_type, q, size_only=True)
+        if n > 5000 and len(group) > 1:
             raise ScopusQueryError()
-        res.extend(query(q_type, q, refresh, False))
-        if total:  # Equivalent of verbose
-            i += len(group)
-            print_progress(i, total)
+        res.extend(query(q_type, q, refresh=refresh))
+        verbose = total is not None
+        i += len(group)
+        print_progress(i, total, verbose)
     except (Scopus400Error, Scopus500Error, ScopusQueryError) as e:
+        # Split query into two equally sized ones
         mid = len(group) // 2
         params = {"group": group[:mid], "res": res, "template": template,
                   "i": i, "joiner": joiner, "q_type": q_type, "total": total,

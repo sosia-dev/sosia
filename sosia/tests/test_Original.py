@@ -12,26 +12,25 @@ import sosia
 warnings.filterwarnings("ignore")
 scientist1 = sosia.Original(55208373700, 2017, cits_margin=200)
 
-fields = "ID name first_year num_coauthors num_publications country "\
-         "language reference_sim abstract_sim"
+fields = "ID name first_year num_coauthors num_publications num_citations "\
+         "country language reference_sim abstract_sim"
 Match = namedtuple("Match", fields)
 MATCHES = [Match(ID="53164702100", name="Sapprasert, Koson", first_year=2011,
-                 num_coauthors=7, num_publications=6, country="Norway",
-                 language="eng", reference_sim=0.0212, abstract_sim=0.1695),
-           Match(ID="54411022900", name="Martinelli, Arianna", first_year=2011,
-                 num_coauthors=7, num_publications=6, country="Italy",
-                 language="eng", reference_sim=0.0041, abstract_sim=0.1966),
+                 num_coauthors=7, num_publications=6, num_citations=190,
+                 country="Norway", language="eng", reference_sim=0.0212,
+                 abstract_sim=0.1695),
            Match(ID="55317901900", name="Siepel, Josh", first_year=2013,
-                 num_coauthors=8, num_publications=7, country="United Kingdom",
-                 language="eng", reference_sim=0.0079, abstract_sim=0.1275)]
+                 num_coauthors=8, num_publications=7, num_citations=52,
+                 country="United Kingdom", language="eng",
+                 reference_sim=0.0079, abstract_sim=0.1275)]
 
 
 def test_search_sources():
     scientist1.define_search_sources()
     search_sources = scientist1.search_sources
-    assert_equal(len(search_sources), 63)
+    assert_equal(len(search_sources), 65)
     assert_true((14726, "Technovation") in search_sources)
-    assert_true((22009, "Corporate Governance (Oxford)") in search_sources)
+    assert_true((15143, 'Regional Studies') in search_sources)
     for j in scientist1.sources:
         assert_true(j in search_sources)
 
@@ -48,14 +47,14 @@ def test_search_sources_change():
 def test_search_group():
     scientist1.define_search_group()
     group = scientist1.search_group
-    assert_equal(len(group), 335)
+    assert_equal(len(group), 376)
     assert_true(isinstance(group, list))
 
 
 def test_search_group_stacked():
     scientist1.define_search_group(stacked=True)
     group = scientist1.search_group
-    assert_equal(len(group), 631)
+    assert_equal(len(group), 629)
     assert_true(isinstance(group, list))
 
 
@@ -74,7 +73,6 @@ def test_find_matches():
 
 
 def test_find_matches_stacked():
-    # with additional info
     recieved = sorted(scientist1.find_matches(stacked=True))
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
@@ -86,12 +84,7 @@ def test_find_matches_stacked():
     for e in recieved:
         assert_true(isinstance(e.abstract_sim, float))
         assert_true(0 <= e.abstract_sim <= 1)
-    # without additional info
-    recieved = (scientist1.find_matches(stacked=True, information=False)
-                .sort_values(by="ID").astype(str).reset_index(drop=True))
-    df_m = df_m[["ID", "first_year", "num_coauthors", "num_publications"]].astype(str)
-    pd.testing.assert_frame_equal(recieved, df_m)
-    
+
 
 def test_find_matches_noinfo():
     recieved = sorted(scientist1.find_matches(information=False))

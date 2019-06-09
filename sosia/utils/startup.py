@@ -3,8 +3,10 @@ from os import makedirs
 from os.path import exists, expanduser
 
 import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 
-from sosia.utils import (FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST, URL_EXT_LIST,
+from sosia.utils import (FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST, URL_CONTENT,
     URL_SOURCES, CACHE_SQLITE)
 
 
@@ -93,7 +95,7 @@ def create_fields_sources_list():
     out = out.drop_duplicates()
 
     # Add information from list of external publication titles
-    external = pd.read_excel(URL_EXT_LIST, sheet_name=None)
+    external = pd.read_excel(_get_source_title_url(), sheet_name=None)
     _drop_sheets(external, ["More info Medline", "ASJC classification codes"])
 
     for df in external.values():
@@ -131,6 +133,16 @@ def _drop_sheets(sheets, drops):
             sheets.pop(drop)
         except KeyError:
             continue
+
+
+def _get_source_title_url():
+    """Extract the link to the most recent Scopus sources list."""
+    resp = requests.get(URL_CONTENT)
+    soup = BeautifulSoup(resp.text, "lxml")
+    try:
+        return soup.find("a", {"title": "source list"})["href"]
+    except AttributeError:
+        raise ValueError("Link to sources list not found.")
 
 
 def _update_dict(d, lst, key, replacement):

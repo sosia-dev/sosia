@@ -50,7 +50,8 @@ You can provide a list of Scopus Author IDs, in the case the author you are inte
 
 .. code-block:: python
    
-    >>> eids=['2-s2.0-84959420483', '2-s2.0-84949113230', '2-s2.0-84961390052', '2-s2.0-84866317084']
+    >>> eids=['2-s2.0-84959420483', '2-s2.0-84949113230',
+              '2-s2.0-84961390052', '2-s2.0-84866317084']
     >>> scientist1_eids = sosia.Original(552083s73700, 2017, eids=eids)
 
 A number of optional parameters will be used throughout the query process in order to define "about" similarity.  There are margins for the first year of publication, the number of co-authors and the number of publications:
@@ -58,7 +59,8 @@ A number of optional parameters will be used throughout the query process in ord
 .. code-block:: python
    
     >>> stefano = Original(55208373700, 2017, year_margin=2,
-                           coauth_margin=0.2, pub_margin=0.2)
+                           coauth_margin=0.2, pub_margin=0.2,
+                           cits_margin=0.2)
 
 This will find matches who started publishing the year of the scientist's first publication plus or minus 2 years, who in the year of treatment have the same number of coauthors plus or minus 20% of that number (at least 1), and who in the year of treatment have the same number of publications plus or minus 20% of that number (at least 1).  If the last two parameters receive integers rather than floats, they will be interpreted as absolute margin.
 
@@ -75,8 +77,9 @@ Upon initation, `scopus` performs queries on the Scopus database under the hood.
     >>> stefano.first_year
     2012
     >>> stefano.sources
-    {(18769, 'Applied Economics Letters'), (23013, 'Industry and Innovation'),
-    (22900, 'Research Policy')}
+    {(21100858668, None), (22900, 'Research Policy'),
+    (23013, 'Industry and Innovation'), (18769, 'Applied Economics Letters'),
+    (15143, 'Regional Studies')}
     >>> stefano.main_field
     (1405, 'BUSI')
     
@@ -95,14 +98,15 @@ The next step is to define a list of sources similar (in type and area) to the s
 
 .. code-block:: python
 
-    >>> stefano = Original(55208373700, 2017)
+    >>> stefano = Original(55208373700, 2017, cits_margin=200)
     >>> stefano.define_search_sources()
     >>> stefano.search_sources
-    [(14726, 'Technovation'), (16680, 'Engineering Science and Education Journal'),
+    [(14726, 'Technovation'), (15143, 'Regional Studies'),
+    (16680, 'Engineering Science and Education Journal'),
     (17047, 'Chronicle of Higher Education'), (18769, 'Applied Economics Letters'),
-    # 53 more sources omitted
-    (21100431996, 'Service Industries Review'), (21100874277, 'Wuhan Gongye Daxue
-    Xuebao/Journal of Wuhan University of Technology')]
+    # 57 more sources omitted
+    (21100889873, 'International Journal of Recent Technology and Engineering'),
+    (21100898637, 'Research Policy: X')]
 
 Property `search_sources` is a list of tuples storing source ID and source title.  As before, you can override (or predefine )your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the source the scientist publishes in: `stefano.search_sources = stefano.sources`.
 
@@ -111,7 +115,7 @@ Using `verbose=True` you receive additional information on this operation:
 .. code-block:: python
 
     >>> stefano.define_search_sources(verbose=True)
-    Found 60 sources matching main field 1405 and type(s) journal
+    Found 65 sources matching main field 1405 and type(s) journal
 
 The next step is to define a first search group that adhere to conditions 1 to 4 above and do not violate condition 5 (in the sense that we remove authors have too many publications).
 
@@ -119,9 +123,9 @@ The next step is to define a first search group that adhere to conditions 1 to 4
 .. code-block:: python
 
     >>> stefano.define_search_group(verbose=True)
-    Searching authors for search_group in 60 sources...
+    Searching authors for search_group in 65 sources...
     Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Found 300 authors for search_group
+    Found 376 authors for search_group
 
 You can inspect the search group using `stefano.search_group`, which you can also override, pre-define or edit.
 
@@ -130,13 +134,18 @@ An alternative search process will try to minimize the number of queries.  The d
 .. code-block:: python
 
     >>> stefano.define_search_group(verbose=True, stacked=True)
-    Searching authors in 60 sources in 2017...
-    Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Searching authors in 60 sources in 2011-2013...
-    Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Searching authors in 60 sources in 2010...
-    Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Found 522 authors for search_group
+    Searching authors for search_group in 65 sources...
+    Searching authors in 30 sources in 2017...
+    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Searching authors in 32 sources in 2010...
+    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Searching authors in 32 sources in 2011...
+    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Searching authors in 32 sources in 2012...
+    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Searching authors in 31 sources in 2013...
+    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Found 629 authors for search_group
 
 The number differs because less information is available.
 
@@ -145,32 +154,36 @@ The final step is to search within this search group for authors that fulfill cr
 .. code-block:: python
 
     >>> matches = stefano.find_matches(verbose=True)
-    Searching through characteristics of 522 authors
+    Searching through characteristics of 629 authors
     Pre-filtering...
-    Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Left with 108 authors
+    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Left with 386 authors
     Filtering based on provided conditions...
-    Progress: |██████████████████████████████████████████████████| 100.0% Complete
-    Found 3 author(s) matching all criteria
-    Adding other information...
-    Researcher 53164702100: 1 abstract(s) and 0 reference list(s) out of 6 documents
-    missing
-    Researcher 54411022900: 0 abstract(s) and 0 reference list(s) out of 6 documents
-    missing
-    Researcher 55317901900: 0 abstract(s) and 0 reference list(s) out of 7 documents
-    missing
+    Left with 15 authors based on size information 
+    already in cache.
+     0 to check.
+
+    Left with 15 authors based on all size information.
+    Downloading publications and filtering based on coauthors
+
+    Search and filter based on count of citations
+    0 to search out of 15.
+
+    Found 2 author(s) matching all criteria----------------------| 3.63% Complete
+    Providing additional information...
+    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Researcher 53164702100: 1 abstract(s) and 0 reference list(s) out of 6 documents missing
+    Researcher 55317901900: 0 abstract(s) and 0 reference list(s) out of 7 documents missing
     Researcher 55208373700 (focal): 1 abstract(s) and 0 reference list(s) out of 7 documents missing
     >>> for m in matches:
     ....    print(m)
     >>> matches
     Match(ID='53164702100', name='Sapprasert, Koson', first_year=2011,
-    num_coauthors=7, num_publications=6, country='Norway', language='eng', reference_sim=0.0212, abstract_sim=0.1695),
-    Match(ID='54411022900', name='Martinelli, Arianna', first_year=2011,
-    num_coauthors=7, num_publications=6, country='Italy', language='eng',
-    reference_sim=0.0041, abstract_sim=0.1966),
-    Match(ID='55317901900', name='Siepel, Josh', first_year=2013, num_coauthors=8,
-    num_publications=7, country='United Kingdom', language='eng',
-    reference_sim=0.0079, abstract_sim=0.1275)
+    num_coauthors=7, num_publications=6, num_citations=190, country='Norway',
+    language='eng', reference_sim=0.0212, abstract_sim=0.1695)
+    Match(ID='55317901900', name='Siepel, Josh', first_year=2013,
+    num_coauthors=8, num_publications=7, num_citations=52, country='United
+    Kingdom', language='eng', reference_sim=0.0079, abstract_sim=0.1275)
 
 By default, `sosia` provides the following information (which you switch off using `information=False` to simply return a list of Scopus IDs):
 
@@ -179,6 +192,7 @@ By default, `sosia` provides the following information (which you switch off usi
 * `first_year`: The year of the first recorded publication
 * `num_coauthors`: The number of coauthors (Scopus Author profiles) in the year of treatment
 * `num_publications`: The number of indexed publications in the year of treatment
+* `num_citations`: The number of citations up until the year of treatment
 * `country`: The most frequent country of all affiliations listed on publications most recent to the year of treatment
 * `language`: The language(s) of the published documents of an author up until the year of treatment
 * `reference_sim`: The cosine similarity of references listed in publications up until the year of treatment between the matched scientist and the scientist (references may be missing)
@@ -193,15 +207,15 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     >>> df = pd.DataFrame(matches)
     >>> df = df.set_index('ID')
     >>> df
-                                name  first_year  num_coauthors  num_publications  \
-    ID                                                                              
-    53164702100    Sapprasert, Koson        2011              7                 6   
-    54411022900  Martinelli, Arianna        2011              7                 6   
-    55317901900         Siepel, Josh        2013              8                 7   
+                ID               name  first_year  num_coauthors  \
+    0  53164702100  Sapprasert, Koson        2011              7   
+    1  55317901900       Siepel, Josh        2013              8   
 
-                        country language  reference_sim  abstract_sim  
-    ID                                                                 
-    53164702100          Norway      eng         0.0212        0.1695  
-    54411022900           Italy      eng         0.0041        0.1966  
-    55317901900  United Kingdom      eng         0.0079        0.1275
+       num_publications  num_citations         country language  reference_sim  \
+    0                 6            190          Norway      eng         0.0212   
+    1                 7             52  United Kingdom      eng         0.0079   
+
+       abstract_sim  
+    0        0.1695  
+    1        0.1275
 

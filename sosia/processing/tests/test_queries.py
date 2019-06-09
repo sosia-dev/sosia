@@ -5,7 +5,18 @@
 from nose.tools import assert_equal, assert_true
 from string import Template
 
-from sosia.processing import query_journal, query_size, query_year, stacked_query
+from sosia.processing import query, query_journal, query_year, stacked_query
+
+
+def test_query():
+    auth_id = 53164702100
+    # test sizes of results sets
+    q = "AU-ID({}) AND PUBYEAR BEF {}".format(auth_id, 2017)
+    size = query("docs", q, size_only=True)
+    assert_equal(size, 5)
+    q = "AU-ID({})".format(auth_id)
+    size = query("author", q, size_only=True)
+    assert_equal(size, 1)
 
 
 def test_stacked_query():
@@ -18,7 +29,7 @@ def test_stacked_query():
              25674]
     template = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(1998))
     joiner = " OR "
-    refresh = False,
+    refresh = False
     q_type = "docs"
     res = []
     stacked_query(group, res, template, joiner, q_type, refresh)
@@ -30,32 +41,21 @@ def test_query_journal():
     res = query_journal("11000153773", [2006], refresh=False)
     assert_true(24100 < len(res.get("2006")) < 25000)
 
- 
-def test_query_size():
-    # test an author and year
-    q = "AU-ID({}) AND PUBYEAR BEF {}".format(53164702100, 2017)
-    size = query_size("docs", q)
-    assert_equal(size,5)
-    # test size search for authors
-    q = "AU-ID({})".format(53164702100)
-    size = query_size("author", q)
-    assert_equal(size,1)
-    
-    
+
 def test_query_year():
     # test a journal and year
-    res = query_year(2010,[22900])
+    res = query_year(2010, [22900], refresh=False, verbose=False)
     assert_equal(res.source_id.tolist(), ['22900'])
     assert_equal(res.year.tolist(), ['2010'])
     assert_true(isinstance(res.auids[0], list))
-    assert_true(len(res.auids[0])>0)
+    assert_true(len(res.auids[0]) > 0)
     # test a journal and year that are not in scopus
-    res = query_year(1969,[22900],refresh=False,verbose=False)
+    res = query_year(1969, [22900], refresh=False, verbose=False)
     assert_true(res.empty)
     # test a large query (>5000 scopus results)
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
-                  14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]  
-    res = query_year(1984,source_ids,refresh=False,verbose=True)
-    assert_true(len(res[~res.auids.isnull()])==17)
+                  14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
+    res = query_year(1984, source_ids, refresh=False, verbose=True)
+    assert_true(len(res[~res.auids.isnull()]) == 17)
     assert_true(isinstance(res.auids[0], list))
-    assert_true(len(res.auids[0])>0)
+    assert_true(len(res.auids[0]) > 0)

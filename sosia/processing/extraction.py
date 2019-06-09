@@ -41,14 +41,12 @@ def find_country(auth_ids, pubs, year, refresh):
     papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
     params = {"view": "FULL", "refresh": refresh}
     for p in papers:
-        try:
-            authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
-            countries = [a.country for a in authorgroup if a.auid in auth_ids and a.country]
-            if not countries:
-                continue
-            return "; ".join(sorted(list(set(countries))))
-        except (KeyError, AttributeError):
+        authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
+        countries = [a.country for a in authorgroup if a.auid in
+                     auth_ids and a.country]
+        if not countries:
             continue
+        return "; ".join(sorted(list(set(countries))))
 
 
 def get_authors(pubs):
@@ -102,8 +100,8 @@ def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
     focal_eids = [d.eid for d in focal.publications]
     focal_refs, focal_refs_n, focal_abs, focal_abs_n = parse_docs(focal_eids, refresh)
     focal_pubs_n = len(focal.publications)
-    fields = "ID name first_year num_coauthors num_publications country "\
-             "language reference_sim abstract_sim"
+    fields = "ID name first_year num_coauthors num_publications "\
+             "num_citations country language reference_sim abstract_sim"
     m = namedtuple("Match", fields)
     out = []
     info = {}  # to collect information on missing information
@@ -127,6 +125,7 @@ def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
                 first_year=p.first_year,
                 num_coauthors=len(p.coauthors),
                 num_publications=len(p.publications),
+                num_citations=p.citations,
                 country=p.country,
                 language=p.get_publication_languages().language,
                 reference_sim=ref_cos,
