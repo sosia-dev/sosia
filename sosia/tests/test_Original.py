@@ -29,7 +29,7 @@ MATCHES = [Match(ID="53164702100", name="Sapprasert, Koson", first_year=2011,
 def test_search_sources():
     scientist1.define_search_sources()
     search_sources = scientist1.search_sources
-    assert_equal(len(search_sources), 63)
+    assert_equal(len(search_sources), 65)
     assert_true((14726, "Technovation") in search_sources)
     assert_true((22009, "Corporate Governance (Oxford)") in search_sources)
     for j in scientist1.sources:
