@@ -5,18 +5,19 @@
 from nose.tools import assert_equal, assert_true
 from scopus import ScopusSearch
 
-from sosia.processing import find_country, parse_doc
+from sosia.processing import find_country, parse_docs
 
 
 def test_find_country():
-    pubs = ScopusSearch("AU-ID(6701809842)").results
-    received = find_country(["6701809842"], pubs, 2000, True)
+    auth_id = 6701809842
+    pubs = ScopusSearch("AU-ID({})".format(auth_id)).results
+    received = find_country([str(auth_id)], pubs, 2000, True)
     assert_equal(received, "Germany")
 
 
-def test_parse_doc():
+def test_parse_docs():
     eids = ["2-s2.0-84866317084"]
-    received = parse_doc(eids, refresh=False)
+    received = parse_docs(eids, refresh=False)
     expected_refs = (
         "29144517611 57849112238 51249091642 70449099678 "
         "84865231386 15944370019 8744256776 0004256525 84866333650 "
@@ -34,7 +35,7 @@ def test_parse_doc():
         "47949124687 84920182751 84887864855 84866332329 84984932935 "
         "33845620645 0942299814"
     )
-    assert_equal(received["refs"], expected_refs)
+    assert_equal(received[0], expected_refs)
     expected_abs = (
         "Through an analysis of 497 foreign researchers in Italy "
         "and Portugal we verify the impact of home linkages on return "
@@ -50,4 +51,4 @@ def test_parse_doc():
         "scientific networks. Policy implications and suggestions for "
         "further research are discussed."
     )
-    assert_equal(received["abstracts"], expected_abs)
+    assert_equal(received[2], expected_abs)
