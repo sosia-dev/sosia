@@ -12,15 +12,17 @@ import sosia
 warnings.filterwarnings("ignore")
 scientist1 = sosia.Original(55208373700, 2017, cits_margin=200)
 
-fields = "ID name first_year num_coauthors num_publications country "\
-         "language reference_sim abstract_sim"
+fields = "ID name first_year num_coauthors num_publications num_citations "\
+         "country language reference_sim abstract_sim"
 Match = namedtuple("Match", fields)
 MATCHES = [Match(ID="53164702100", name="Sapprasert, Koson", first_year=2011,
-                 num_coauthors=7, num_publications=6, country="Norway",
-                 language="eng", reference_sim=0.0212, abstract_sim=0.1695),
+                 num_coauthors=7, num_publications=6, num_citations=190,
+                 country="Norway", language="eng", reference_sim=0.0212,
+                 abstract_sim=0.1695),
            Match(ID="55317901900", name="Siepel, Josh", first_year=2013,
-                 num_coauthors=8, num_publications=7, country="United Kingdom",
-                 language="eng", reference_sim=0.0079, abstract_sim=0.1275)]
+                 num_coauthors=8, num_publications=7, num_citations=52,
+                 country="United Kingdom", language="eng",
+                 reference_sim=0.0079, abstract_sim=0.1275)]
 
 
 def test_search_sources():
@@ -71,7 +73,6 @@ def test_find_matches():
 
 
 def test_find_matches_stacked():
-    # with additional info
     recieved = sorted(scientist1.find_matches(stacked=True))
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
@@ -83,9 +84,6 @@ def test_find_matches_stacked():
     for e in recieved:
         assert_true(isinstance(e.abstract_sim, float))
         assert_true(0 <= e.abstract_sim <= 1)
-    # without additional info
-    recieved = scientist1.find_matches(stacked=True, information=False)
-    assert_equal(recieved, MATCHES)
 
 
 def test_find_matches_noinfo():

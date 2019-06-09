@@ -99,7 +99,7 @@ class Original(Scientist):
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientists number of
             publications and the resulting value is rounded up.  If the value
-            is an integer it is interpreted as fixed number of publications.
+            is an integer it is interpreted as fixed number of citations.
 
         coauth_margin : numeric (optional, default=0.1)
             The left and right margin for the number of coauthors to match
@@ -505,9 +505,7 @@ class Original(Scientist):
             same_pubs = (author_year_cache.n_pubs.between(min(_npapers), max(_npapers)))
             same_coauths = (author_year_cache.n_coauth.between(min(_ncoauth), max(_ncoauth)))
             mask = same_start & same_pubs & same_coauths
-            cols = ["auth_id", "first_year", "n_coauth", "n_pubs"]
-            matches = author_year_cache[mask][cols]
-            matches.columns = ["ID", "first_year", "num_coauthors", "num_publications"]
+            matches = author_year_cache[mask]["auth_id"]
         else:  # Query each author individually
             for i, au in enumerate(group):
                 print_progress(i + 1, n, verbose)
@@ -526,26 +524,7 @@ class Original(Scientist):
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
         custom_print(text, verbose)
 
-        # complete with info from publication:
-        if stacked:
-            fields = "ID name first_year num_coauthors num_publications "\
-                     "num_citations country"
-            custom_print("Adding info from publications...", verbose)
-            m = namedtuple("Match", fields)
-            out = []
-            matches = matches["ID"].tolist()
-            profs = [Scientist([str(a)], self.year, refresh) for a in matches]
-            for idx, p in enumerate(profs):
-                new = m(ID=p.identifier[0], first_year=p.first_year,
-                        num_coauthors=len(p.coauthors), name=p.name,
-                        num_publications=len(p.publications),
-                        num_citations=p.citations, country=p.country)
-                out.append(new)
-            matches = out
-
         if information and len(matches) > 0:
-            if stacked:
-                matches = [m.ID for m in matches]
             custom_print("Providing additional information...", verbose)
             profs = [Scientist([str(a)], self.year, refresh) for a in matches]
             return inform_matches(profs, self, stop_words, verbose, refresh, **kwds)
