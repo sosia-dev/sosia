@@ -8,7 +8,7 @@ from collections import Counter
 import pandas as pd
 from scopus import AbstractRetrieval, AuthorRetrieval
 
-from sosia.processing import find_country, query, query_size
+from sosia.processing import find_country, query
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
     add_source_names, create_fields_sources_list, raise_non_empty
 
@@ -214,7 +214,7 @@ class Scientist(object):
             q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
                     .format(" OR ".join(eids), self.year + 1,
                             ") AND NOT EID(".join(identifier)))
-        self._citations = query_size("docs", q, refresh=refresh)
+        self._citations = query("docs", q, size_only=True)
 
         # list of eids if not provided
         if not eids:

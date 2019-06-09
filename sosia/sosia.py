@@ -13,7 +13,7 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
 from sosia.processing import (get_authors, inform_matches, query,
-    query_journal, query_size, query_year, stacked_query)
+    query_journal, query_year, stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
 from sosia.cache import (cache_sources, cache_author_cits, sources_in_cache,
@@ -410,7 +410,7 @@ class Original(Scientist):
             to_loop = [x for x in group_tocheck]
             for i, au in enumerate(to_loop):            
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, min(_years))
-                size = query_size("docs", q, refresh=refresh)
+                size = query("docs", q, size_only=True)
                 cache_author_size((au,min(_years)-1,size))
                 print_progress(i + 1, len(group_tocheck), verbose)
                 if not size==0:
@@ -432,7 +432,7 @@ class Original(Scientist):
             print_progress(0, len(group_tocheck), verbose)
             for i, au in enumerate(group_tocheck):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, self.year + 1)
-                size = query_size("docs", q, refresh=refresh)
+                size = query("docs", q, size_only=True)
                 cache_author_size((au,self.year,size))
                 print_progress(i + 1, len(group_tocheck), verbose)
                 if size < min(_npapers) or size > max(_npapers):
@@ -461,8 +461,8 @@ class Original(Scientist):
             for i,au in authors_cits_search.iterrows():
                 q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
                     .format(au['auth_id'], self.year + 1, au['auth_id']))
-                authors_cits_search.at[i,'n_cits'] = query_size("docs", q,
-                                                      refresh=refresh)
+                n = query("docs", q, size_only=True)
+                authors_cits_search.at[i,'n_cits'] = n
                 print_progress(i + 1, len(authors_cits_search), verbose)
             cache_author_cits(authors_cits_search)
             

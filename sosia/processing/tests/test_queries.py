@@ -5,7 +5,18 @@
 from nose.tools import assert_equal, assert_true
 from string import Template
 
-from sosia.processing import query_journal, query_year, stacked_query
+from sosia.processing import query, query_journal, query_year, stacked_query
+
+
+def test_query():
+    auth_id = 53164702100
+    # test sizes of results sets
+    q = "AU-ID({}) AND PUBYEAR BEF {}".format(auth_id, 2017)
+    size = query("docs", q, size_only=True)
+    assert_equal(size, 5)
+    q = "AU-ID({})".format(auth_id)
+    size = query("author", q, size_only=True)
+    assert_equal(size, 1)
 
 
 def test_stacked_query():
@@ -31,20 +42,9 @@ def test_query_journal():
     assert_true(24100 < len(res.get("2006")) < 25000)
 
 
-def test_query_size():
-    # test an author and year
-    q = "AU-ID({}) AND PUBYEAR BEF {}".format(53164702100, 2017)
-    size = query_size("docs", q)
-    assert_equal(size, 5)
-    # test size search for authors
-    q = "AU-ID({})".format(53164702100)
-    size = query_size("author", q)
-    assert_equal(size, 1)
-
-
 def test_query_year():
     # test a journal and year
-    res = query_year(2010, [22900])
+    res = query_year(2010, [22900], refresh=False, verbose=False)
     assert_equal(res.source_id.tolist(), ['22900'])
     assert_equal(res.year.tolist(), ['2010'])
     assert_true(isinstance(res.auids[0], list))

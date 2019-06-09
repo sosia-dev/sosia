@@ -12,7 +12,7 @@ from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import print_progress
 
 
-def query(q_type, q, refresh=False, tsleep=0):
+def query(q_type, q, refresh=False, size_only=False, tsleep=0):
     """Wrapper function to perform a particular search query.
 
     Parameters
@@ -27,58 +27,49 @@ def query(q_type, q, refresh=False, tsleep=0):
     refresh : bool (optional, default=False)
         Whether to refresh cached files if they exist, or not.
 
+    size_only : bool (optional, default=False)
+        Whether to not download results and return the number
+        of results instead.
+
     tsleep: float
         Seconds to wait in case of failure due to errors.
 
     Returns
     -------
-    res : list of namedtuples
+    res : list of namedtuples (if size_only is False)
         Documents represented by namedtuples as returned from scopus.
+
+    n : int (ifsize_only is True)
+        Number of documents
 
     Raises
     ------
     ValueError:
         If q_type is none of the allowed values.
     """
-    try:
-        if q_type == "author":
-            res = AuthorSearch(q, refresh=refresh).authors or []
-        elif q_type == "docs":
-            res = ScopusSearch(q, refresh=refresh).results or []
-            if not valid_results(res):
-                raise TypeError
-        return res
-    except (KeyError, UnicodeDecodeError, urllib.error.HTTPError, TypeError):
-        sleep(tsleep)
-        if tsleep <= 10:
-            tsleep = tsleep+2.5
-            return query(q_type, q, True, tsleep)
-        else:
-            return []
-
-
-def query_size(q_type, q, refresh=False):
-    """Wrapper function to perform a query which returns the size of a query.
-
-    Parameters
-    ----------
-    q_type : str
-        Determines the query search that will be used.  Allowed values:
-        "author", "docs".
-
-    q : str
-        The query string.
-
-    Returns
-    -------
-    s.get_results_size() : int
-        The size of the query, corresponding to the number of documents.
-    """
+    params = {"query": q, "refresh": refresh, "download": not size_only}
     if q_type == "author":
-        s = AuthorSearch(q, download=False, refresh=refresh)
+        obj = AuthorSearch(**params)
     elif q_type == "docs":
-        s = ScopusSearch(q, download=False, refresh=refresh)
-    return s.get_results_size()
+        obj = ScopusSearch(**params)
+    if size_only:
+        return obj.get_results_size()
+    else:
+        try:
+            if q_type == "author":
+                res = obj.authors or []
+            elif q_type == "docs":
+                res = obj.results or []
+                if not valid_results(res):
+                    raise TypeError
+        except (KeyError, UnicodeDecodeError, urllib.error.HTTPError, TypeError):
+            sleep(tsleep)
+            if tsleep <= 10:
+                tsleep = tsleep+2.5
+                res = query(q_type, q, True, size_only, tsleep)
+            else:
+                res = []
+        return res
 
 
 def query_journal(source_id, years, refresh):
@@ -103,6 +94,8 @@ def query_journal(source_id, years, refresh):
     """
     try:  # Try complete publication list first
         q = "SOURCE-ID({})".format(source_id)
+        if query("docs", q, size_only=True) > 5000:
+            raise ScopusQueryError()
         res = query("docs", q, refresh=refresh)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
@@ -214,9 +207,10 @@ def stacked_query(group, res, template, joiner, q_type, refresh,
     group = [str(g) for g in group]  # make robust to passing int
     q = template.substitute(fill=joiner.join(group))
     try:
-        if query_size(q_type, q, refresh) > 5000 and len(group) > 1:
+        n = query(q_type, q, size_only=True)
+        if n > 5000 and len(group) > 1:
             raise ScopusQueryError()
-        res.extend(query(q_type, q, refresh, False))
+        res.extend(query(q_type, q, refresh=refresh))
         verbose = total is not None
         i += len(group)
         print_progress(i, total, verbose)
