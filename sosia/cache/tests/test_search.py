@@ -10,10 +10,8 @@ from scopus import ScopusSearch, AuthorSearch
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from sosia.cache import (authors_in_cache, author_year_in_cache,
-                         author_size_in_cache, sources_in_cache,
-                         cache_authors, cache_author_year, cache_author_size,
-                         cache_sources)
+from sosia.cache import (authors_in_cache, author_size_in_cache,
+    author_year_in_cache, cache_insert, sources_in_cache)
 from sosia.processing import query_year
 from sosia.utils import build_dict, create_cache
 
@@ -39,7 +37,7 @@ def test_authors_in_cache():
     res = pd.DataFrame(AuthorSearch(q).authors)
     res["auth_id"] = res["eid"].str.split("-").str[-1]
     res = res[expected_cols]
-    cache_authors(res, file=test_cache)
+    cache_insert(res, table="authors", file=test_cache)
     df2 = pd.DataFrame(expected_auth + search_auth, columns=["auth_id"])
     incache, tosearch = authors_in_cache(df2, file=test_cache)
     assert_equal(tosearch, [55317901900])
@@ -70,7 +68,7 @@ def test_author_year_in_cache():
     res["year"] = year
     cols = ["year", "first_year", "n_pubs", "n_coauth"]
     res = res[cols].reset_index().rename(columns={"index": "auth_id"})
-    cache_author_year(res, file=test_cache)
+    cache_insert(res, table="author_year", file=test_cache)
     df2 = pd.DataFrame(expected_auth + search_auth,
                        columns=["auth_id"])
     df2["year"] = year
@@ -103,9 +101,9 @@ def test_author_size_in_cache():
     assert_true(isinstance(size, pd.DataFrame))
     # Test adding to and retrieving from cache
     tp1 = (expected_auth, expected_years[0], pubs1)
-    cache_author_size(tp1, file=test_cache)
+    cache_insert(tp1, table="author_size", file=test_cache)
     tp2 = (expected_auth, expected_years[1], pubs2)
-    cache_author_size(tp2, file=test_cache)
+    cache_insert(tp2, table="author_size", file=test_cache)
     size = author_size_in_cache(df, file=test_cache)
     assert_equal(len(size), 2)
     assert_frame_equal(size[cols], df)
@@ -127,7 +125,7 @@ def test_sources_in_cache():
     assert_true(sources_ys_incache.empty)
     # Test partial retrieval
     res = query_year(expected_years[0], expected_sources, False, False)
-    cache_sources(res, file=test_cache)
+    cache_insert(res, table="sources", file=test_cache)
     sources_ys_incache, sources_ys_search = sources_in_cache(df, file=test_cache)
     assert_equal(sources_ys_incache.source_id.tolist(), expected_sources)
     assert_equal(sources_ys_incache.year.tolist(), [expected_years[0]])

@@ -22,95 +22,59 @@ def cache_connect(file=CACHE_SQLITE):
     return c, conn
 
 
-def cache_authors(df, file=CACHE_SQLITE):
+def cache_insert(data, table, file=CACHE_SQLITE):
     """Insert new authors information in cache.
 
     Parameters
     ----------
-    df : DataFrame
-        Dataframe with authors information.
+    data : DataFrame or 3-tuple
+        Dataframe with authors information or (when table="source") a
+        3-element tuple.
+
+    table : string
+        The database table to insert into.  The query will be adjusted
+        accordingly.
+        Allowed values: "authors", "author_cits_size", "author_year",
+        "author_size", "sources".
 
     file : file (optional, default=CACHE_SQLITE)
         The cache file to connect to.
+
+    Raises
+    ------
+    ValueError
+        If parameter table is not one of the allowed values.
     """
+    # Build query
+    if table == 'authors':
+        q = """INSERT OR IGNORE INTO authors (auth_id, eid, surname, initials,
+            givenname, affiliation, documents, affiliation_id, city, country,
+            areas) values (?,?,?,?,?,?,?,?,?,?,?)"""
+    elif table == 'author_cits_size':
+        q = """INSERT OR IGNORE INTO author_cits_size (auth_id, year, n_cits)
+            values (?,?,?)"""
+    elif table == 'author_year':
+        q = """INSERT OR IGNORE INTO author_year (auth_id, year, first_year, n_pubs,
+            n_coauth) values (?,?,?,?,?) """
+    elif table == 'author_size':
+        q = """INSERT OR IGNORE INTO author_size (auth_id, year, n_pubs)
+            values ({},{},{}) """.format(data[0], data[1], data[2])
+    elif table == "sources":
+        data["auids"] = data.apply(lambda x: ",".join([str(a) for a in x["auids"]]), axis=1)
+        data = data[["source_id", "year", "auids"]]
+        q = """INSERT OR IGNORE INTO sources (source_id, year, auids) values 
+            (?,?,?) """
+    else:
+        allowed_tables = ('authors', 'author_cits_size', 'author_year',
+                          'author_size', 'sources')
+        msg = 'table parameter must be one of ' + ', '.join(allowed_tables)
+        raise ValueError(msg)
+    # Perform caching
     _, conn = cache_connect(file=file)
-    query = """INSERT OR IGNORE INTO authors (auth_id, eid, surname, initials,
-        givenname, affiliation, documents, affiliation_id, city, country,
-        areas) values (?,?,?,?,?,?,?,?,?,?,?)"""
-    conn.executemany(query, df.to_records(index=False))
-    conn.commit()
-    
-    
-def cache_author_cits(df, file=CACHE_SQLITE):
-    """Insert new authors citaitons information in cache.
-
-    Parameters
-    ----------
-    df : DataFrame
-        Dataframe with authors citations information.
-
-    file : file (optional, default=CACHE_SQLITE)
-        The cache file to connect to.
-    """
-    _, conn = cache_connect(file=file)
-    query = """INSERT OR IGNORE INTO author_cits_size (auth_id, year, n_cits)
-               values (?,?,?)"""
-    conn.executemany(query, df.to_records(index=False))
-    conn.commit()
-
-
-def cache_author_year(df, file=CACHE_SQLITE):
-    """Insert new authors'full publication information up to year in cache.
-
-    Parameters
-    ----------
-    df : DataFrame
-        DataFrame of authors publication information up to year of the event.
-    
-    file : file (optional, default=CACHE_SQLITE)
-        The cache file to connect to.
-    """
-    _, conn = cache_connect(file=file)
-    query = """INSERT OR IGNORE INTO author_year (auth_id, year, first_year, n_pubs,
-        n_coauth) values (?,?,?,?,?) """
-    conn.executemany(query, df.to_records(index=False))
-    conn.commit()
-    
-    
-def cache_author_size(tp, file=CACHE_SQLITE):
-    """Insert in cache new authors' publication count up to a year from size queries.
-
-    Parameters
-    ----------
-    df : Tuple
-        Tuple with author id, year and publication counts.
-    
-    file : file (optional, default=CACHE_SQLITE)
-        The cache file to connect to.
-    """
-    _, conn = cache_connect(file=file)
-    query = """INSERT OR IGNORE INTO author_size (auth_id, year, n_pubs)
-               values ({},{},{}) """.format(tp[0],tp[1],tp[2])
-    conn.execute(query)
-    conn.commit()
-
-
-def cache_sources(df, file=CACHE_SQLITE):
-    """Insert new sources and year list of authors in cache.
-
-    Parameters
-    ----------
-    df : DataFrame
-        Dataframe with source, year and list of authors.
-    
-    file : file (optional, default=CACHE_SQLITE)
-        The cache file to connect to.
-    """
-    _, conn = cache_connect(file=file)
-    df["auids"] = df.apply(lambda x: ",".join([str(a) for a in x["auids"]]), axis=1)
-    df = df[["source_id", "year", "auids"]]
-    query = """INSERT OR IGNORE INTO sources (source_id,year,auids) values (?,?,?) """
-    conn.executemany(query, df.to_records(index=False))
+    if table in ("authors", "author_cits_size", "author_year", "sources"):
+        conn.executemany(q, data.to_records(index=False))
+    else:
+        conn.execute(q)
     conn.commit()
 
 

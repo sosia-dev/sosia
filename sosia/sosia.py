@@ -16,9 +16,8 @@ from sosia.processing import (get_authors, inform_matches, query,
     query_journal, query_year, stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
-from sosia.cache import (cache_sources, cache_author_cits, sources_in_cache,
-    authors_in_cache, cache_authors, author_year_in_cache, author_size_in_cache,
-    cache_author_year, cache_author_size, author_cits_in_cache)
+from sosia.cache import (author_cits_in_cache, authors_in_cache,
+    author_year_in_cache, author_size_in_cache, cache_insert, sources_in_cache)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -191,7 +190,7 @@ class Original(Scientist):
                 _sources_search = sources_ys_search[mask].source_id.tolist()
                 res = query_year(y, _sources_search, refresh, verbose)
                 if not res.empty:
-                    cache_sources(res)
+                    cache_insert(res, table="sources")
             sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
             # Authors publishing in provided year
             mask = sources_ys.year == self.year
@@ -346,7 +345,7 @@ class Original(Scientist):
                 res = res[["auth_id", "eid", "surname", "initials",
                            "givenname", "affiliation", "documents",
                            "affiliation_id", "city", "country", "areas"]]
-                cache_authors(res)
+                cache_insert(res, table="authors")
         authors_cache, _ = authors_in_cache(authors)
         same_field = (authors_cache.areas.str.startswith(self.main_field[1]))
         enough_pubs = (authors_cache.documents.astype(int) >= int(min(_npapers)))
@@ -412,7 +411,8 @@ class Original(Scientist):
             for i, au in enumerate(to_loop):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, min(_years))
                 size = query("docs", q, size_only=True)
-                cache_author_size((au, min(_years)-1, size))
+                tp = (au, min(_years)-1, size)
+                cache_insert(tp, table="author_size")
                 print_progress(i + 1, len(group_tocheck), verbose)
                 if not size == 0:
                     group.remove(au)
@@ -434,7 +434,8 @@ class Original(Scientist):
             for i, au in enumerate(group_tocheck):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, self.year + 1)
                 size = query("docs", q, size_only=True)
-                cache_author_size((au, self.year, size))
+                tp = (au, self.year, size)
+                cache_insert(tp, table=author_size)
                 print_progress(i + 1, len(group_tocheck), verbose)
                 if size < min(_npapers) or size > max(_npapers):
                     group.remove(au)
@@ -465,7 +466,7 @@ class Original(Scientist):
                 n = query("docs", q, size_only=True)
                 authors_cits_search.at[i, 'n_cits'] = n
                 print_progress(i + 1, len(authors_cits_search), verbose)
-            cache_author_cits(authors_cits_search)
+            cache_insert(authors_cits_search, table="author_cits")
 
         authors_cits_incache, _ = author_cits_in_cache(authors[["auth_id", "year"]])
         mask = ((authors_cits_incache.n_cits <= max(_ncits)) &
@@ -499,7 +500,7 @@ class Original(Scientist):
                 res.reset_index(inplace=True)
                 res.columns = ["auth_id", "year", "first_year", "n_pubs",
                                "n_coauth"]
-                cache_author_year(res)
+                cache_insert(res, table="author_year")
             author_year_cache, _ = author_year_in_cache(authors)
             same_start = (author_year_cache.first_year.between(min(_years), max(_years)))
             same_pubs = (author_year_cache.n_pubs.between(min(_npapers), max(_npapers)))
