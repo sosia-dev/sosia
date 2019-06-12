@@ -82,12 +82,24 @@ def raise_non_empty(val, obj):
     or not of the desired object type.
     """
     if not isinstance(val, obj) or len(val) == 0:
-        obj_name = str(obj).replace("class ", "")
-        obj_name = obj_name.translate(str.maketrans({c: "" for c in "(<>),'"}))
+        obj_name = _get_obj_name(obj)
         label = " or ".join(obj_name.split())
         raise Exception("Value must be a non-empty {}.".format(label))
+
+
+def raise_value(val, obj):
+    """Raise a ValueError if the provided value is not of type obj."""
+    if not isinstance(val, obj):
+        label = _get_obj_name(obj)
+        raise Exception("Value must be of type {}.".format(label))
 
 
 def run(op, *args):
     """Call a function passed by partial()."""
     return op(*args)
+
+
+def _get_obj_name(obj):
+    """Auxiliary function to retrieve the name of an object."""
+    name = str(obj).replace("class ", "")
+    return name.translate(str.maketrans({c: "" for c in "(<>),'"}))

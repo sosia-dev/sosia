@@ -10,7 +10,7 @@ from scopus import AbstractRetrieval, AuthorRetrieval
 
 from sosia.processing import find_country, query
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
-    add_source_names, create_fields_sources_list, raise_non_empty
+    add_source_names, create_fields_sources_list, raise_non_empty, raise_value
 
 __all__ = ["Scientist"]
 
@@ -72,8 +72,7 @@ class Scientist(object):
 
     @first_year.setter
     def first_year(self, val):
-        if not isinstance(val, int):
-            raise Exception("Value must be an integer.")
+        raise_value(val, int)
         self._first_year = val
 
     @property
@@ -83,8 +82,7 @@ class Scientist(object):
 
     @active_year.setter
     def active_year(self, val):
-        if not isinstance(val, int):
-            raise Exception("Value must be an integer.")
+        raise_value(val, int)
         self._active_year = val
 
     @property
