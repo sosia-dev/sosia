@@ -195,11 +195,7 @@ class Scientist(object):
         else:
             q = "EID({})".format(" OR ".join(eids))
         res = query("docs", q, refresh)
-        try:
-            self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
-        except (AttributeError, TypeError):
-            res = query("docs", q, True)
-            self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
+        self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = "No publications for author {} until year {}".format(
                 "-".join(identifier), year)
