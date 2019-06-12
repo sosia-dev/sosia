@@ -275,7 +275,8 @@ class Original(Scientist):
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
         3. Has about the same number of coauthors in the year of treatment
-        4. Works in the same field as the scientist's main field
+        4. Has about the same number of citations in the year of treatment
+        5. Works in the same field as the scientist's main field
 
         Parameters
         ----------
