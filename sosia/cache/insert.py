@@ -50,6 +50,13 @@ def cache_insert(data, table, file=CACHE_SQLITE):
         q = """INSERT OR IGNORE INTO authors (auth_id, eid, surname, initials,
             givenname, affiliation, documents, affiliation_id, city, country,
             areas) values (?,?,?,?,?,?,?,?,?,?,?)"""
+        if data.empty:
+            return None
+        data["auth_id"] = data.apply(lambda x: x.eid.split("-")[-1], axis=1)
+        cols = ["auth_id", "eid", "surname", "initials", "givenname",
+                "affiliation", "documents", "affiliation_id", "city",
+                "country", "areas"]
+        data = data[cols]
     elif table == 'author_cits_size':
         q = """INSERT OR IGNORE INTO author_cits_size (auth_id, year, n_cits)
             values (?,?,?)"""
@@ -60,6 +67,8 @@ def cache_insert(data, table, file=CACHE_SQLITE):
         q = """INSERT OR IGNORE INTO author_size (auth_id, year, n_pubs)
             values ({},{},{}) """.format(data[0], data[1], data[2])
     elif table == "sources":
+        if data.empty:
+            return None
         data["auids"] = data.apply(lambda x: ",".join([str(a) for a in x["auids"]]), axis=1)
         data = data[["source_id", "year", "auids"]]
         q = """INSERT OR IGNORE INTO sources (source_id, year, auids) values 

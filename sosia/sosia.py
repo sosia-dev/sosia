@@ -189,8 +189,7 @@ class Original(Scientist):
                 mask = sources_ys_search.year == y
                 _sources_search = sources_ys_search[mask].source_id.tolist()
                 res = query_year(y, _sources_search, refresh, verbose)
-                if not res.empty:
-                    cache_insert(res, table="sources")
+                cache_insert(res, table="sources")
             sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
             # Authors publishing in provided year
             mask = sources_ys.year == self.year
@@ -340,12 +339,7 @@ class Original(Scientist):
                 params.update({"total": len(authors_search)})
             res, _ = stacked_query(**params)
             res = pd.DataFrame(res)
-            if not res.empty:
-                res["auth_id"] = res.apply(lambda x: x.eid.split("-")[-1], axis=1)
-                res = res[["auth_id", "eid", "surname", "initials",
-                           "givenname", "affiliation", "documents",
-                           "affiliation_id", "city", "country", "areas"]]
-                cache_insert(res, table="authors")
+            cache_insert(res, table="authors")
         authors_cache, _ = authors_in_cache(authors)
         same_field = (authors_cache.areas.str.startswith(self.main_field[1]))
         enough_pubs = (authors_cache.documents.astype(int) >= int(min(_npapers)))
