@@ -200,14 +200,13 @@ class Scientist(object):
             raise Exception(text)
 
         # get count of citations
+        ids = " OR ".join(eids or identifier)
+        start = "REF({}) AND PUBYEAR BEF {} AND NOT".format(ids, self.year+1)
         if not eids:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
-                    .format(" OR ".join(identifier), self.year + 1,
-                            ") OR AU-ID(".join(identifier)))        
+            end = "AU-ID({})".format(" OR ".join(identifier))
         else:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
-                    .format(" OR ".join(eids), self.year + 1,
-                            ") AND NOT EID(".join(identifier)))
+            end = "EID({})".format(") AND NOT EID(".join(identifier))
+        q = " ".join([start, end])
         self._citations = query("docs", q, size_only=True)
 
         # list of eids if not provided
