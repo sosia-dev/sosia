@@ -292,9 +292,13 @@ class Original(Scientist):
             abstracts.  Default list is the list of english stopwords
             by nltk, augmented with numbers and interpunctuation.
 
-        information : bool (optional, default=True)
+        information : bool or iterable (optional, default=True)
             Whether to return additional information on the matches that may
-            help in the selection process.
+            help in the selection process.  If an iterable of keywords is
+            provied, only return information for these keywords.  Allowed
+            values are "first_year", "num_coauthors", "num_publications",
+            "num_citations", "country", "language",
+            "reference_sim", "abstract_sim".
 
         refresh : bool (optional, default=False)
             Whether to refresh cached search files.
@@ -308,7 +312,28 @@ class Original(Scientist):
             A list of Scopus IDs of scientists matching all the criteria (if
             information is False) or a list of namedtuples with the Scopus ID
             and additional information (if information is True).
+
+        Raises
+        ------
+        ValueError
+            If information is not bool and contains invalid keywords.
         """
+        # Checks
+        information_values = ["first_year", "num_coauthors",
+            "num_publications", "num_citations", "country", "language",
+            "reference_sim", "abstract_sim"]
+        if isinstance(information, bool):
+            if information:
+                keywords = information_values
+            else:
+                keywords = None
+        else:
+            keywords = information
+            invalid = [x for x in keywords if x not in information_values]
+            if invalid:
+                text = ("Parameter information contains invalid keywords: ",
+                        ", ".join(invalid))
+                raise ValueError(text)
         # Variables
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
@@ -519,9 +544,10 @@ class Original(Scientist):
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
         custom_print(text, verbose)
 
-        if information and len(matches) > 0:
+        # Possibly add information to matches
+        if keywords and len(matches) > 0:
             custom_print("Providing additional information...", verbose)
             profs = [Scientist([str(a)], self.year, refresh) for a in matches]
-            return inform_matches(profs, self, stop_words, verbose, refresh, **kwds)
-        else:
-            return matches
+            matches = inform_matches(profs, self, keywords, stop_words,
+                                     verbose, refresh, **kwds)
+        return matches

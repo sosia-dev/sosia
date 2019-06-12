@@ -187,8 +187,6 @@ The final step is to search within this search group for authors that fulfill cr
 
 By default, `sosia` provides the following information (which you switch off using `information=False` to simply return a list of Scopus IDs):
 
-* `ID`: The Scopus Author ID of the match
-* `name`: The name of the profile
 * `first_year`: The year of the first recorded publication
 * `num_coauthors`: The number of coauthors (Scopus Author profiles) in the year of treatment
 * `num_publications`: The number of indexed publications in the year of treatment
@@ -196,7 +194,9 @@ By default, `sosia` provides the following information (which you switch off usi
 * `country`: The most frequent country of all affiliations listed on publications most recent to the year of treatment
 * `language`: The language(s) of the published documents of an author up until the year of treatment
 * `reference_sim`: The cosine similarity of references listed in publications up until the year of treatment between the matched scientist and the scientist (references may be missing)
-* `abstract_sim`: The cosine similarity of words used in abstract of publications up until the year of treatment between the matched scientist and the scientist, approriately filtered and stemmed using `nltk <https://www.nltk.org/>`_ and `sklearn <https://scikit-learn.org//>`_ (abstracts my be missing)
+* `abstract_sim`: The cosine similarity of words used in abstracts of publications up until the year of treatment between the matched scientist and the scientist, approriately filtered and stemmed using `nltk <https://www.nltk.org/>`_ and `sklearn <https://scikit-learn.org//>`_ (abstracts my be missing)
+
+Alernatively, you can provide a list of above keywords to only obtain information on these keywords.  This is helpful as some information takes time to gather.
 
 It is easy to work with namedtuples.  For example, using `pandas <https://pandas.pydata.org/>`_ you easily turn the list into a pandas DataFrame:
 
