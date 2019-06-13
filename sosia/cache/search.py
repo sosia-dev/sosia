@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import sqlite3
 
 from sosia.utils import CACHE_SQLITE
 from sosia.cache import cache_connect
@@ -21,15 +20,17 @@ def author_cits_in_cache(df, file=CACHE_SQLITE):
     -------
     incache : DataFrame
         DataFrame of results found in cache.
-        
+
     tosearch: pd.DataFrame
-        List of authors not in cache. 
+        List of authors not in cache.
     """
+    types = {"auth_id": int, "year": int}
+    df.astype(types, inplace=True)
     c, conn = cache_connect(file=file)
     c.execute("""DROP TABLE IF EXISTS author_year_insearch""")
     c.execute("""CREATE TABLE IF NOT EXISTS author_year_insearch
         (auth_id int, year int, PRIMARY KEY(auth_id, year))""")
-    query = """INSERT INTO author_year_insearch (auth_id, year) values (?,?) """
+    query = """INSERT INTO author_year_insearch (auth_id, year) values (?,?)"""
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
     query = """SELECT b.* from author_year_insearch as a INNER JOIN 
@@ -61,10 +62,12 @@ def authors_in_cache(df, file=CACHE_SQLITE):
     -------
     incache : DataFrame
         DataFrame of results found in cache.
-        
+
     tosearch: list
-        List of authors not in cache. 
+        List of authors not in cache.
     """
+    types = {"auth_id": int}
+    df.astype(types, inplace=True)
     c, conn = cache_connect(file=file)
     c.execute("""DROP TABLE IF EXISTS authors_insearch""")
     c.execute("""CREATE TABLE IF NOT EXISTS authors_insearch
@@ -72,13 +75,13 @@ def authors_in_cache(df, file=CACHE_SQLITE):
     query = """INSERT OR IGNORE INTO authors_insearch (auth_id) values (?) """
     conn.executemany(query, df.to_records(index=False))
     conn.commit()
-    query = """SELECT b.* from authors_insearch as a 
+    query = """SELECT b.* from authors_insearch as a
         INNER JOIN authors as b on a.auth_id=b.auth_id;"""
     incache = pd.read_sql_query(query, conn)
     tosearch = df.auth_id.tolist()
     if not incache.empty:
         incache_list = incache.auth_id.tolist()
-        tosearch = [au for au in tosearch if au not in incache_list]
+        tosearch = [int(au) for au in tosearch if int(au) not in incache_list]
     return incache, tosearch
 
 
@@ -102,6 +105,8 @@ def author_year_in_cache(df, file=CACHE_SQLITE):
         DataFrame of authors not in cache with year of the event as second
         column. 
     """
+    types = {"auth_id": int, "year": int}
+    df.astype(types, inplace=True)
     c, conn = cache_connect(file=file)
     c.execute("""DROP TABLE IF EXISTS author_year_insearch""")
     c.execute("""CREATE TABLE IF NOT EXISTS author_year_insearch
@@ -142,6 +147,8 @@ def author_size_in_cache(df, file=CACHE_SQLITE):
     incache : DataFrame
         DataFrame of results found in cache.
     """
+    types = {"auth_id": int, "year": int}
+    df.astype(types, inplace=True)
     c, conn = cache_connect(file=file)
     c.execute("""DROP TABLE IF EXISTS author_year_insearch""")
     c.execute("""CREATE TABLE IF NOT EXISTS author_year_insearch
@@ -179,6 +186,8 @@ def sources_in_cache(df, refresh=False, file=CACHE_SQLITE):
     refresh : bool (optional, default=False)
         Whether to refresh cached search files. 
     """
+    types = {"source_id": int, "year": int}
+    df.astype(types, inplace=True)
     c, conn = cache_connect(file=file)
     c.execute("""DROP TABLE IF EXISTS sources_insearch""")
     c.execute(
