@@ -4,8 +4,10 @@
 
 from nose.tools import assert_equal, assert_true
 from string import Template
+import pandas as pd
 
-from sosia.processing import query, query_journal, query_year, stacked_query
+from sosia.processing import (query, query_author_data, query_journal,
+    query_year, stacked_query, screen_pub_counts)
 
 
 def test_query():
@@ -19,21 +21,16 @@ def test_query():
     assert_equal(size, 1)
 
 
-def test_stacked_query():
-    # test a query with one journal-year above 5000
-    group = [18400156716, 19300157101, 19400157208, 19400157312, 19500157223,
-             19600166213, 19700175482, 19700182353, 19800188009, 19900193211,
-             20100195028, 21100208103, 21100225839, 21100228010, 21100244622,
-             21100246535, 21100246537, 21100285035, 21100313905, 21100329904,
-             21100370441, 21100370876, 21100416121, 21100775937, 21100871308,
-             25674]
-    template = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(1998))
-    joiner = " OR "
-    refresh = False
-    q_type = "docs"
-    res = []
-    stacked_query(group, res, template, joiner, q_type, refresh)
-    assert_equal(len(res), 6441)
+def test_query_author_data():
+    auth_list = [6701809842, 55208373700]
+    auth_data = query_author_data(auth_list, refresh=False, verbose=False)
+    assert_true(isinstance(auth_data,  pd.DataFrame))
+    expected_cols = ["auth_id", "eid", "surname", "initials", "givenname",
+                     "affiliation", "documents", "affiliation_id", "city",
+                     "country", "areas"]
+    assert_equal(auth_data.columns.tolist(), expected_cols)
+    assert_equal(auth_data.auth_id.tolist(), auth_list)
+    assert_equal(auth_data.surname.tolist(), ["Harhoff", "Baruffaldi"])
 
 
 def test_query_journal():
@@ -59,3 +56,36 @@ def test_query_year():
     assert_true(len(res[~res.auids.isnull()]) == 17)
     assert_true(isinstance(res.auids[0], list))
     assert_true(len(res.auids[0]) > 0)
+
+
+def test_stacked_query():
+    # test a query with one journal-year above 5000
+    group = [18400156716, 19300157101, 19400157208, 19400157312, 19500157223,
+             19600166213, 19700175482, 19700182353, 19800188009, 19900193211,
+             20100195028, 21100208103, 21100225839, 21100228010, 21100244622,
+             21100246535, 21100246537, 21100285035, 21100313905, 21100329904,
+             21100370441, 21100370876, 21100416121, 21100775937, 21100871308,
+             25674]
+    template = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(1998))
+    joiner = " OR "
+    refresh = False
+    q_type = "docs"
+    res = []
+    stacked_query(group, res, template, joiner, q_type, refresh)
+    assert_equal(len(res), 6441)
+
+
+def test_screen_pub_counts():
+    group = [6701809842, 16319073600, 54984906100, 56148489300, 57131011400,
+             57194816659, 35097480000, 56055501900, 20434039300, 6602070937]
+    npapers = range(2, 60)
+    # with no period year
+    g, pubs, older = screen_pub_counts(group, 1993, 2005, npapers)
+    assert_equal(sorted(g), [6602070937, 6701809842, 35097480000])
+    assert_equal(sorted(pubs), [3, 15, 17])
+    assert_equal(sorted(older), [20434039300, 54984906100, 56148489300])
+    # with period year
+    g, pubs, older = screen_pub_counts(group, 1993, 2005, npapers, yfrom=2005)
+    assert_equal(sorted(g), [6602070937])
+    assert_equal(sorted(pubs), [2])
+    assert_equal(sorted(older), [20434039300, 54984906100, 56148489300])
