@@ -6,9 +6,9 @@
 from collections import Counter
 
 import pandas as pd
-from scopus import AbstractRetrieval, AuthorRetrieval
+from scopus import AbstractRetrieval
 
-from sosia.processing import find_country, query
+from sosia.processing import find_country, query, query_author_data
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
     add_source_names, create_fields_sources_list, raise_non_empty
 
@@ -231,8 +231,12 @@ class Scientist(object):
                                     if int(p.coverDate[:4]) <= year]))
         self._coauthors = _find_coauthors(self._publications, identifier)
         self._country = find_country(identifier, self._publications, year, refresh)
-        au = AuthorRetrieval(identifier[0], refresh=refresh)
-        self._name = ", ".join([au.surname, au.given_name])
+        au = query_author_data(self.identifier, refresh=refresh, verbose=False)
+        au = au.sort_values("documents", ascending=True).iloc[0]
+        self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
+        self._name = ", ".join([au.surname, au.givenname])
+        self._surname = au.surname
+        self._firstname = au.givenname.replace(".", " ").split(" ")[0]
         self._language = None
 
     def get_publication_languages(self, refresh=False):
