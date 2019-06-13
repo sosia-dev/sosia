@@ -23,8 +23,8 @@ test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
 def test_authors_in_cache():
     create_cache(drop=True, file=test_cache)
     # Variables
-    expected_auth = [53164702100, 57197093438]
-    search_auth = [55317901900]
+    expected_auth = ["53164702100", "57197093438"]
+    search_auth = ["55317901900"]
     # Test empty cache
     df1 = pd.DataFrame(expected_auth, columns=["auth_id"])
     incache, tosearch = authors_in_cache(df1, file=test_cache)
@@ -53,8 +53,8 @@ def test_authors_in_cache():
 def test_author_year_in_cache():
     create_cache(drop=True, file=test_cache)
     # Variables
-    expected_auth = [53164702100, 57197093438]
-    search_auth = [55317901900]
+    expected_auth = ["53164702100", "57197093438"]
+    search_auth = ["55317901900"]
     year = 2016
     # Test empty cache
     df1 = pd.DataFrame(expected_auth, columns=["auth_id"])
@@ -90,8 +90,8 @@ def test_author_year_in_cache():
 def test_author_size_in_cache():
     create_cache(drop=True, file=test_cache)
     # Variables
-    expected_auth = 53164702100
-    expected_years = [2010, 2017]
+    expected_auth = "53164702100"
+    expected_years = ["2010", "2017"]
     pubs1 = 0
     pubs2 = 6
     cols = ["auth_id", "year"]
@@ -116,8 +116,8 @@ def test_author_size_in_cache():
 def test_sources_in_cache():
     create_cache(drop=True, file=test_cache)
     # Variables
-    expected_sources = [22900]
-    expected_years = [2010, 2005]
+    expected_sources = ["22900"]
+    expected_years = ["2010", "2005"]
     cols = ["source_id", "year"]
     # Test empty cache
     df = pd.DataFrame(list(product(expected_sources, expected_years)),
