@@ -3,7 +3,7 @@
 """Tests for class `Scientist`."""
 
 from collections import namedtuple
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal, assert_true, assert_false
 
 from sosia.classes import Scientist
 
@@ -11,18 +11,40 @@ scientist1 = Scientist(["6701809842"], 2001)
 scientist2 = Scientist(["55208373700", "55208373700", "99"], 2017)
 eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
 scientist3 = Scientist(["55208373700"], 2017, eids=eids)
-scientist3b = Scientist(["55208373700"], 2015)
+scientist4 = Scientist(["55208373700"], 2015)
+scientist5 = Scientist(["55208373700"], 2018, period=2)
+
 
 def test_active_year():
     assert_equal(scientist1.active_year, 2001)
     assert_equal(scientist2.active_year, 2017)
     assert_equal(scientist3.active_year, 2016)
-    assert_equal(scientist3b.active_year, 2012)
-    
+    assert_equal(scientist4.active_year, 2012)
+    assert_equal(scientist5.active_year, 2018)
+
+
 def test_country():
     assert_equal(scientist1.country, "United Kingdom")
     assert_equal(scientist2.country, "Switzerland")
     assert_equal(scientist3.country, "Switzerland")
+    assert_equal(scientist4.country, "Switzerland")
+    assert_equal(scientist5.country, "Germany")
+
+
+def test_citations():
+    assert_equal(scientist1.citations, 47)
+    assert_equal(scientist2.citations, 28)
+    assert_equal(scientist3.citations, 3)
+    assert_equal(scientist4.citations, 19)
+    assert_equal(scientist5.citations, 44)
+
+
+def test_citations_period():
+    assert_equal(scientist1.citations_period, scientist1.citations)
+    assert_equal(scientist2.citations_period, scientist2.citations)
+    assert_equal(scientist3.citations_period, scientist3.citations)
+    assert_equal(scientist4.citations_period, scientist4.citations)
+    assert_equal(scientist5.citations_period, 2)
 
 
 def test_coauthors():
@@ -35,15 +57,36 @@ def test_coauthors():
         assert_true(coauth in scientist1.coauthors)
     assert_true(isinstance(scientist2.coauthors, set))
     expected = {'55875219200', '54929867200', '57191249971', '36617057700',
-                '24464562500', '54930777900', '24781156100', '57201906604'}
+                '24464562500', '54930777900', '24781156100'}
     assert_equal(len(scientist2.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist2.coauthors)
     assert_true(isinstance(scientist3.coauthors, set))
-    expected = {"36617057700", "55875219200", "54930777900", "54929867200"}
+    expected = {'36617057700', '55875219200', '54930777900', '54929867200'}
     assert_equal(len(scientist3.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist3.coauthors)
+    expected = {'36617057700', '54929867200', '54930777900', '55875219200'}
+    assert_equal(len(scientist3.coauthors), len(expected))
+    for coauth in expected:
+        assert_true(coauth in scientist5.coauthors)
+    expected = {'24464562500', '24781156100', '36617057700', '54929867200',
+                '54930777900', '55875219200', '57131011400', '57191249971'}
+    assert_equal(len(scientist5.coauthors), len(expected))
+    for coauth in expected:
+        assert_true(coauth in scientist5.coauthors)
+
+
+def test_coauthors_period():
+    assert_equal(scientist1.coauthors_period, scientist1.coauthors)
+    assert_equal(scientist2.coauthors_period, scientist2.coauthors)
+    assert_equal(scientist3.coauthors_period, scientist3.coauthors)
+    assert_equal(scientist4.coauthors_period, scientist4.coauthors)
+    expected = {"24464562500", "24781156100", "54930777900", "55875219200",
+                "57131011400", "57191249971"}
+    assert_equal(len(scientist5.coauthors_period), len(expected))
+    for coauth in expected:
+        assert_true(coauth in scientist5.coauthors_period)
 
 
 def test_fields():
@@ -233,6 +276,14 @@ def test_publications():
         openaccess="0", fund_acr="UNIL", fund_no="149931",
         fund_sponsor="Université de Lausanne")
     assert_equal(received[0], expected)
+
+
+def test_publications_period():
+    assert_equal(scientist1.publications_period, scientist1.publications)
+    assert_equal(scientist2.publications_period, scientist2.publications)
+    assert_equal(scientist3.publications_period, scientist3.publications)
+    assert_equal(scientist4.publications_period, scientist4.publications)
+    assert_equal(len(scientist5.publications_period), 4)
 
 
 def test_language():
