@@ -7,13 +7,15 @@
 from collections import Counter, namedtuple
 from itertools import product
 from string import digits, punctuation, Template
+from warnings import warn
 import pandas as pd
 
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
 from sosia.processing import (get_authors, inform_matches, query,
-    query_journal, query_year, stacked_query)
+    query_author_data, query_journal, query_year, screen_pub_counts,
+    stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
 from sosia.cache import (cache_sources, cache_author_cits, sources_in_cache,
@@ -68,7 +70,8 @@ class Original(Scientist):
         self._search_sources = val
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
-                 cits_margin=0.1, coauth_margin=0.1, refresh=False, eids=None):
+                 cits_margin=0.1, coauth_margin=0.1, period=None, refresh=False,
+                 eids=None):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -108,6 +111,10 @@ class Original(Scientist):
             coauthors and the resulting value is rounded up.  If the value
             is an integer it is interpreted as fixed number of coauthors.
 
+        period: int (optional, default=None)
+            The period in which to consider publications. If not provided,
+            all publications are considered.
+
         refresh : boolean (optional, default=False)
             Whether to refresh all cached files or not.
 
@@ -135,13 +142,15 @@ class Original(Scientist):
         self.pub_margin = pub_margin
         self.cits_margin = cits_margin
         self.coauth_margin = coauth_margin
+        self.period = period
         self.eids = eids
         self.refresh = refresh
 
         # Instantiate superclass to load private variables
-        Scientist.__init__(self, self.identifier, year, refresh)
+        Scientist.__init__(self, self.identifier, year, refresh, period)
 
-    def define_search_group(self, stacked=False, verbose=False, refresh=False):
+    def define_search_group(self, stacked=False, verbose=False, refresh=False,
+                            ignore_first_id=False):
         """Define search_group.
 
         Parameters
@@ -156,20 +165,35 @@ class Original(Scientist):
 
         refresh : bool (optional, default=False)
             Whether to refresh cached search files.
+
+        ignore_first_id: boolean (optional, default=False)
+            If True, the authors in the first year of publication of the
+            scientist are not selected based on their Author ID but based on
+            their surname and first name.
         """
         # Checks
         if not self.search_sources:
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise Exception(text)
-
+        # check condition on ignore_first_id
+        self._ignore_first_id = ignore_first_id
+        if ignore_first_id and not self.period:
+            self._ignore_first_id = False
+            warn("ignore_first_id set back to False: period is None or "
+                 "the first year of the period is before the first year "
+                 "of publication of the scientist.")
         # Variables
         _min_year = self.first_year - self.year_margin
         _max_year = self.first_year + self.year_margin
         _max_pubs = max(margin_range(len(self.publications), self.pub_margin))
+        if self.period:
+            _max_pubs = max(margin_range(len(self.publications_period),
+                                         self.pub_margin))
         _years = list(range(_min_year, _max_year + 1))
-        _years_search = list(range(_min_year, _max_year + 1))
-        _years_search.extend([_min_year - 1, self.active_year])
+        _years_search = [_min_year - 1, self.active_year]
+        if not self._ignore_first_id:
+            _years_search.extend(range(_min_year, _max_year + 1))
         search_sources, _ = zip(*self.search_sources)
         n = len(search_sources)
 
@@ -198,9 +222,11 @@ class Original(Scientist):
             today = set([au for l in sources_ys[mask].auids.tolist()
                          for au in l])
             # Authors publishing in year(s) of first publication
-            mask = sources_ys.year.between(_min_year, _max_year, inclusive=True)
-            auids = sources_ys[mask].auids.tolist()
-            then = set([au for l in auids for au in l])
+            if not self._ignore_first_id:
+                mask = sources_ys.year.between(_min_year, _max_year,
+                                               inclusive=True)
+                auids = sources_ys[mask].auids.tolist()
+                then = set([au for l in auids for au in l])
             # Authors with publications before
             auids = sources_ys[sources_ys.year < _min_year].auids.tolist()
             negative = set([au for l in auids for au in l])
@@ -213,8 +239,9 @@ class Original(Scientist):
             for i, source_id in enumerate(search_sources):
                 d = query_journal(source_id, [self.year] + _years, refresh)
                 today.update(d[str(self.year)])
-                for y in _years:
-                    then.update(d[str(y)])
+                if not self._ignore_first_id:
+                    for y in _years:
+                        then.update(d[str(y)])
                 for y in range(int(min(d.keys())), _min_year):
                     negative.update(d[str(y)])
                 for y in d:
@@ -225,11 +252,13 @@ class Original(Scientist):
             negative.update({a for a, npub in c.items() if npub > _max_pubs})
 
         # Finalize
-        group = today.intersection(then)
+        group = today
+        if not self._ignore_first_id:
+            group = today.intersection(then)
         negative.update({str(i) for i in self.identifier})
+        negative.update({str(i) for i in self.coauthors})
         self._search_group = sorted(list(group - negative))
-        text = "Found {:,} authors for search_group".format(
-            len(self._search_group))
+        text = "Found {:,} authors for search_group".format(len(self._search_group))
         custom_print(text, verbose)
         return self
 
@@ -256,8 +285,7 @@ class Original(Scientist):
         grouped = selected.groupby("source_id").sum()["asjc"].to_frame()
         # Deselect sources with alien fields
         mask = grouped["asjc"].apply(
-            lambda s: any(x for x in s.split() if int(x) not in self.fields)
-        )
+            lambda s: any(x for x in s.split() if int(x) not in self.fields))
         grouped = grouped[~mask]
         sources = set((s, self.source_names.get(s)) for s in grouped.index)
         # Add own sources
@@ -266,8 +294,7 @@ class Original(Scientist):
         self._search_sources = sorted(list(sources))
         types = "; ".join(list(main_types))
         text = "Found {} sources matching main field {} and type(s) {}".format(
-            len(self._search_sources), self.main_field[0], types
-        )
+            len(self._search_sources), self.main_field[0], types)
         custom_print(text, verbose)
         return self
 
@@ -314,9 +341,14 @@ class Original(Scientist):
         # Variables
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
-        _npapers = margin_range(len(self.publications), self.pub_margin)
-        _ncits = margin_range(self.citations, self.cits_margin)
-        _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
+        if self.period:
+            _npapers = margin_range(len(self.publications_period), self.pub_margin)
+            _ncits = margin_range(self.citations_period, self.cits_margin)
+            _ncoauth = margin_range(len(self.coauthors_period), self.coauth_margin)
+        else:
+            _npapers = margin_range(len(self.publications), self.pub_margin)
+            _ncits = margin_range(self.citations, self.cits_margin)
+            _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
         n = len(self.search_group)
         text = "Searching through characteristics of {:,} authors".format(n)
         custom_print(text, verbose)
@@ -444,13 +476,16 @@ class Original(Scientist):
             cache_author_cits(authors_cits_search)
 
         authors_cits_incache, _ = author_cits_in_cache(authors[["auth_id", "year"]])
+        # keep if citations are in range
         mask = ((authors_cits_incache.n_cits <= max(_ncits)) &
                 (authors_cits_incache.n_cits >= min(_ncits)))
+        if self.period:
+            mask = (authors_cits_incache.n_cits >= min(_ncits))
         group = (authors_cits_incache[mask]['auth_id'].tolist())
 
-        # Fourth round of filtering: Download publications and check coauthors.
-        # Create df of authors and year of the event
-        authors = pd.DataFrame(group, columns=["auth_id"])
+        # Fourth round of filtering: Download publication, verify coauthors and
+        # first year.
+        authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
         authors["year"] = int(self.year)
 
         # merge existing data in cache and separate missing records
@@ -477,10 +512,23 @@ class Original(Scientist):
                                "n_coauth"]
                 cache_author_year(res)
             author_year_cache, _ = author_year_in_cache(authors)
-            same_start = (author_year_cache.first_year.between(min(_years), max(_years)))
-            same_pubs = (author_year_cache.n_pubs.between(min(_npapers), max(_npapers)))
-            same_coauths = (author_year_cache.n_coauth.between(min(_ncoauth), max(_ncoauth)))
-            mask = same_start & same_pubs & same_coauths
+            if self._ignore_first_id:
+                # only number of coauthors should be big enough
+                mask = author_year_cache.n_coauth >= min(_ncoauth)
+            elif self.period:
+                # number of coauthors should be "big enough" and first year in
+                # window
+                same_start = (author_year_cache.first_year.between(min(_years),
+                              max(_years)))
+                enough_coauths = author_year_cache.n_coauth >= min(_ncoauth)
+                mask = same_start & enough_coauths
+            else:
+                # all restrictions apply
+                same_start = (author_year_cache.first_year.between(min(_years),
+                              max(_years)))
+                same_coauths = (author_year_cache.n_coauth.between(min(_ncoauth),
+                                max(_ncoauth)))
+                mask = same_start & same_coauths
             matches = author_year_cache[mask]["auth_id"]
         else:  # Query each author individually
             for i, au in enumerate(group):
@@ -493,7 +541,15 @@ class Original(Scientist):
                 authids = [p.author_ids for p in res if p.author_ids]
                 authors = set([a for p in authids for a in p.split(";")])
                 n_coauth = len(authors) - 1  # Subtract 1 for focal author
-                if ((len(res) not in _npapers) or (min_year not in _years) or
+                if self._ignore_first_id and (n_coauth < max(_ncoauth)):
+                    # only number of coauthors should be big enough
+                    continue
+                elif (self.period and ((n_coauth < max(_ncoauth)) or
+                      (min_year not in _years))):
+                    # number of coauthors should be "big enough" and first year
+                    # in window
+                    continue
+                elif ((len(res) not in _npapers) or (min_year not in _years) or
                         (n_coauth not in _ncoauth)):
                     continue
                 matches.append(au)
