@@ -72,6 +72,55 @@ def query(q_type, q, refresh=False, size_only=False, tsleep=0):
         return res
 
 
+def query_author_data(authors_list, refresh=False, verbose=False):
+    """Wrapper function to search author data for a list of authors, searching
+    first in cache and then via stacked search.
+    
+    Parameters
+    ----------
+    authors_list : list
+       List of Scopus Author IDs to search.
+
+    refresh : bool (optional, default=False)
+        Whether to refresh scopus cached files if they exist, or not.
+
+    verbose : bool (optional)
+        Whether to print information on the search progress.
+
+    Returns
+    -------
+    authors_data : DataFrame
+        A dataframe with authors data from AuthorSearch for the list provided.
+    """
+    authors = pd.DataFrame(authors_list, columns=["auth_id"], dtype="int64")
+    # merge existing data in cache and separate missing records
+    authors_data, authors_search = authors_in_cache(authors)
+    if authors_search:
+        params = {
+            "group": authors_search,
+            "res": [],
+            "refresh": refresh,
+            "joiner": ") OR AU-ID(",
+            "q_type": "author",
+            "template": Template("AU-ID($fill)"),
+        }
+        if verbose:
+            print("Pre-filtering...")
+            params.update({"total": len(authors_search)})
+        res, _ = stacked_query(**params)
+        res = pd.DataFrame(res)
+        if not res.empty:
+            res["auth_id"] = res.apply(lambda x: x.eid.split("-")[-1], axis=1)
+            res = res[["auth_id", "eid", "surname", "initials",
+                       "givenname", "affiliation", "documents",
+                       "affiliation_id", "city", "country", "areas"]]
+            cache_authors(res)
+        authors_data, _ = authors_in_cache(authors)
+        return authors_data
+    else:
+        return authors_data
+
+
 def query_journal(source_id, years, refresh):
     """Get authors by year for a particular source.
 

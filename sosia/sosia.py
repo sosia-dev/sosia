@@ -323,34 +323,10 @@ class Original(Scientist):
 
         # First round of filtering: minimum publications and main field
         # create df of authors
-        authors = pd.DataFrame(self.search_group, columns=["auth_id"])
-
-        # merge existing data in cache and separate missing records
-        _, authors_search = authors_in_cache(authors)
-        if authors_search:
-            params = {
-                "group": authors_search,
-                "res": [],
-                "refresh": refresh,
-                "joiner": ") OR AU-ID(",
-                "q_type": "author",
-                "template": Template("AU-ID($fill)"),
-            }
-            if verbose:
-                print("Pre-filtering...")
-                params.update({"total": len(authors_search)})
-            res, _ = stacked_query(**params)
-            res = pd.DataFrame(res)
-            if not res.empty:
-                res["auth_id"] = res.apply(lambda x: x.eid.split("-")[-1], axis=1)
-                res = res[["auth_id", "eid", "surname", "initials",
-                           "givenname", "affiliation", "documents",
-                           "affiliation_id", "city", "country", "areas"]]
-                cache_authors(res)
-        authors_cache, _ = authors_in_cache(authors)
-        same_field = (authors_cache.areas.str.startswith(self.main_field[1]))
-        enough_pubs = (authors_cache.documents.astype(int) >= int(min(_npapers)))
-        group = authors_cache[same_field & enough_pubs]["auth_id"].tolist()
+        authors = query_author_data(self.search_group, verbose=verbose)
+        same_field = (authors.areas.str.startswith(self.main_field[1]))
+        enough_pubs = (authors.documents.astype(int) >= int(min(_npapers)))
+        group = authors[same_field & enough_pubs]["auth_id"].tolist()
         group.sort()
         n = len(group)
         text = ("Left with {} authors\nFiltering based on provided "
