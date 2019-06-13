@@ -17,6 +17,17 @@ __all__ = ["Scientist"]
 
 class Scientist(object):
     @property
+    def active_year(self):
+        """The scientist's year of first publication, as integer."""
+        return self._active_year
+
+    @active_year.setter
+    def active_year(self, val):
+        if not isinstance(val, int):
+            raise Exception("Value must be an integer.")
+        self._active_year = val
+
+    @property
     def citations(self):
         """The citations of the scientist until
         the given year.
@@ -27,7 +38,19 @@ class Scientist(object):
     def citations(self, val):
         raise_non_empty(val, int)
         self._citations = val
-        
+
+    @property
+    def citations_period(self):
+        """The citations of the scientist until
+        the given year.
+        """
+        return self._citations_period
+
+    @citations_period.setter
+    def citations_period(self, val):
+        raise_non_empty(val, int)
+        self._citations_period = val
+
     @property
     def country(self):
         """Country of the scientist's most frequent affiliation
@@ -54,6 +77,18 @@ class Scientist(object):
         self._coauthors = val
 
     @property
+    def coauthors_period(self):
+        """Set of coauthors of the scientist on all publications until the
+        given year.
+        """
+        return self._coauthors_period
+
+    @coauthors_period.setter
+    def coauthors_period(self, val):
+        raise_non_empty(val, (set, list, tuple))
+        self._coauthors_period = val
+
+    @property
     def fields(self):
         """The fields of the scientist until the given year, estimated from
         the sources (journals, books, etc.) she published in.
@@ -75,17 +110,6 @@ class Scientist(object):
         if not isinstance(val, int):
             raise Exception("Value must be an integer.")
         self._first_year = val
-
-    @property
-    def active_year(self):
-        """The scientist's year of first publication, as integer."""
-        return self._active_year
-
-    @active_year.setter
-    def active_year(self, val):
-        if not isinstance(val, int):
-            raise Exception("Value must be an integer.")
-        self._active_year = val
 
     @property
     def main_field(self):
@@ -138,6 +162,18 @@ class Scientist(object):
         self._publications = val
 
     @property
+    def publications_period(self):
+        """The publications of the scientist published until
+        the given year.
+        """
+        return self._publications_period
+
+    @publications_period.setter
+    def publications_period(self, val):
+        raise_non_empty(val, (set, list, tuple))
+        self._publications_period = val
+
+    @property
     def sources(self):
         """The Scopus IDs of sources (journals, books) in which the
         scientist published until the given year.
@@ -151,7 +187,18 @@ class Scientist(object):
             val = add_source_names(val, self.source_names)
         self._sources = val
 
-    def __init__(self, identifier, year, refresh=False, eids=None):
+    @property
+    def subjects(self):
+        """The subject areas retrieved from Scopus AuthorSearch.
+        """
+        return self._subjects
+
+    @subjects.setter
+    def subjects(self, val):
+        raise_non_empty(val, (set, list, tuple))
+        self._subjects = val
+
+    def __init__(self, identifier, year, refresh=False, period=None, eids=None):
         """Class to represent a scientist.
 
         Parameters
@@ -171,6 +218,10 @@ class Scientist(object):
             publications, instead of the list of publications obtained from
             the Scopus Author ID(s).
 
+        period: int (optional, default=None)
+            The period in which to consider publications. If not provided,
+            all publications are considered.
+
         Raises
         ------
         Exeption
@@ -179,6 +230,9 @@ class Scientist(object):
         """
         self.identifier = identifier
         self.year = year
+        self.period = period
+        self.year_period = None
+
         # Read mapping of fields to sources
         try:
             df = pd.read_csv(FIELDS_SOURCES_LIST)
@@ -193,44 +247,84 @@ class Scientist(object):
         if not eids:
             q = "AU-ID({})".format(") OR AU-ID(".join(identifier))
         else:
+            print('eids', eids)
             q = "EID({})".format(" OR ".join(eids))
         res = query("docs", q, refresh)
         try:
-            self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
+            self._publications = [p for p in res if int(p.coverDate[:4]) <=
+                                  year]
         except (AttributeError, TypeError):
             res = query("docs", q, True)
-            self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
+            self._publications = [p for p in res if int(p.coverDate[:4]) <=
+                                  year]
         if not len(self._publications):
             text = "No publications for author {} until year {}".format(
                 "-".join(identifier), year)
             raise Exception(text)
+        # if period provided set first year of period, if not smaller than
+        # first year of publication
+        self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
+        if period and year - period + 1 <= self._first_year:
+                self.period = None
+        elif period:
+            self.year_period = year - period + 1
 
-        # get count of citations
-        if not eids:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
-                    .format(" OR ".join(identifier), self.year + 1,
-                            ") OR AU-ID(".join(identifier)))        
-        else:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
-                    .format(" OR ".join(eids), self.year + 1,
-                            ") AND NOT EID(".join(identifier)))
-        self._citations = query("docs", q, size_only=True)
-
+        # if period is int, get publications in period
+        if self.period:
+            self._publications_period = [p for p in self._publications if
+                                         int(p.coverDate[:4]) <= year and
+                                         int(p.coverDate[:4]) >=
+                                         self.year_period]
         # list of eids if not provided
         if not eids:
             eids = [p.eid for p in self._publications]
         self._eids = eids
-        
+        if self.period:
+            eids_period = [p.eid for p in self._publications_period
+                           if int(p.coverDate[:4]) <= year
+                           and int(p.coverDate[:4]) >= self.year_period]
+
+        # get count of citations
+        if not eids:
+            q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
+                 .format(" OR ".join(identifier), self.year + 1,
+                         ") OR AU-ID(".join(identifier)))
+            self._citations = query("docs", q, size_only=True)
+        else:
+            q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
+                 .format(" OR ".join(eids), self.year + 1,
+                         ") AND NOT EID(".join(eids)))
+            self._citations = query("docs", q, size_only=True)
+        if self.period:
+            q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
+                 .format(" OR ".join(eids_period), self.year + 1,
+                         ") AND NOT EID(".join(eids_period)))
+            self._citations_period = query("docs", q, size_only=True)
+
+        # coauthors
+        self._coauthors = _find_coauthors(self._publications, identifier)
+        if self.period:
+            self._coauthors_period = _find_coauthors(self._publications_period,
+                                                     identifier)
+
+        # period counts simply set to total if period is or goes back to None
+        if not self.period:
+            self._coauthors_period = self._coauthors
+            self._publications_period = self._publications
+            self._citations_period = self._citations
+
         # Parse information
+        source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
+        self._sources = add_source_names(source_ids, names)
+        self._active_year = int(max([p.coverDate[:4] for p in self._publications
+                                    if int(p.coverDate[:4]) <= year]))
+        self._country = find_country(identifier, self._publications, year, refresh)
+
+        # Author search information
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, names)
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = _get_main_field(self._fields)
-        self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
-        self._active_year = int(max([p.coverDate[:4] for p in self._publications
-                                    if int(p.coverDate[:4]) <= year]))
-        self._coauthors = _find_coauthors(self._publications, identifier)
-        self._country = find_country(identifier, self._publications, year, refresh)
         au = query_author_data(self.identifier, refresh=refresh, verbose=False)
         au = au.sort_values("documents", ascending=True).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
@@ -238,6 +332,7 @@ class Scientist(object):
         self._surname = au.surname
         self._firstname = au.givenname.replace(".", " ").split(" ")[0]
         self._language = None
+
 
     def get_publication_languages(self, refresh=False):
         """Parse languages of published documents."""
