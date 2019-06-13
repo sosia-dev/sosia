@@ -366,91 +366,10 @@ class Original(Scientist):
         custom_print(text, verbose)
 
         # Second round of filtering: Check having no publications before
-        # minimum year, and if 0, the number of publications.
-        years_check = [min(_years)-1, self.year]
-        authors = pd.DataFrame(list(product(group, years_check)),
-                               columns=["auth_id", "year"])
-        types = {"auth_id": int, "year": int}
-        authors.astype(types, inplace=True)
-        authors_size = author_size_in_cache(authors)
-        au_skip = []
-        group_tocheck = [x for x in group]
-        # use information in cache
-        if not authors_size.empty:
-            # authors that can be removed (either publish before min year
-            # or have a publications count out of range, or both)
-            mask = (((authors_size.year == min(_years)-1) &
-                     (authors_size.n_pubs > 0)) |
-                    ((authors_size.year == self.year) &
-                     (authors_size.n_pubs < min(_npapers))) |
-                    ((authors_size.year == self.year) &
-                     (authors_size.n_pubs > max(_npapers))))
-            au_remove = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
-            # authors with no pubs before min year
-            mask = (((authors_size.year == min(_years)-1) &
-                    (authors_size.n_pubs == 0)))
-            au_ok_miny = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
-            # authors with pubs count within the range before the given year
-            mask = (((authors_size.year == self.year) &
-                     (authors_size.n_pubs >= min(_npapers))) &
-                    (authors_size.n_pubs <= max(_npapers)))
-            au_ok_year = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
-            # authors ok (match both conditions)
-            au_ok = list(set(au_ok_miny).intersection(au_ok_year))
-            # authors that match only the first condition, but the second is
-            # not known, can skip the first cindition check.
-            au_skip = [x for x in au_ok_miny if x not in au_remove + au_ok]
-
-            group = [x for x in group if x not in au_remove]
-            group_tocheck = [x for x in group if x not in au_skip + au_ok]
-
-        text = ("Left with {} authors based on size information \n"
-                "already in cache.\n "
-                "{} to check.\n"
-                .format(len(group), len(group_tocheck)))
-        custom_print(text, verbose)
-
-        # check the publications before minimum year are 0
-        if group_tocheck:
-            text = ("Searching through characteristics of {:,} authors \n"
-                    .format(len(group_tocheck)))
-            custom_print(text, verbose)
-            print_progress(0, len(group_tocheck), verbose)
-            to_loop = [x for x in group_tocheck]
-            for i, au in enumerate(to_loop):
-                q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, min(_years))
-                size = query("docs", q, size_only=True)
-                cache_author_size((au, min(_years)-1, size))
-                print_progress(i + 1, len(group_tocheck), verbose)
-                if not size == 0:
-                    group.remove(au)
-                    group_tocheck.remove(au)
-
-            text = ("Left with {} authors based on size information"
-                    "before minium year.\n"
-                    "Filtering based on size query before provided year\n"
-                    .format(len(group)))
-            custom_print(text, verbose)
-
-        # check the publications before the given year are in range
-        group_tocheck.extend(au_skip)
-        if group_tocheck:
-            text = ("Searching through characteristics of {:,} authors\n"
-                    .format(len(group_tocheck)))
-            custom_print(text, verbose)
-            print_progress(0, len(group_tocheck), verbose)
-            for i, au in enumerate(group_tocheck):
-                q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, self.year + 1)
-                size = query("docs", q, size_only=True)
-                cache_author_size((au, self.year, size))
-                print_progress(i + 1, len(group_tocheck), verbose)
-                if size < min(_npapers) or size > max(_npapers):
-                    group.remove(au)
-
-        text = ("Left with {} authors based on all size information.\n"
-                "Downloading publications and filtering based on coauthors\n"
-                .format(len(group)))
-        custom_print(text, verbose)
+        # minimum year, and if 0, the number of publications in the relevant
+        # period.
+        group, _, _ = screen_pub_counts(group, min(_years)-1, self.year,
+                                        _npapers, self.year_period, verbose)
 
         # Third round of filtering: citations.
         authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
