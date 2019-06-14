@@ -90,10 +90,10 @@ def test_coauthors_period():
 
 
 def test_fields():
-    expected = [1803, 1408, 1405, 1803, 1408, 3301, 2002, 2002, 2308, 2003,
-                2002, 3317, 2002, 1400, 2002, 1400, 1402, 2002, 2200, 2308,
-                2002, 2002, 2003, 2002, 1400, 2002, 1400, 1402, 2002, 3317,
-                1803, 1408, 1405, 1803, 1408, 2002, 3301]
+    expected = [1803, 1408, 1405, 1803, 1408, 3301, 2002, 2002, 2308, 2003, 2002,
+                3317, 2002, 1400, 2002, 1400, 1402, 2002, 2000, 1405, 2200,
+                2308, 2002, 1405, 2000, 2002, 2003, 2002, 1400, 2002, 1400,
+                1402, 2002, 3317, 1803, 1408, 1405, 1803, 1408, 2002, 3301]
     assert_equal(scientist1.fields, expected)
     expected = [1803, 1408, 1405, 3300, 2300, 1400, 1405, 2002, 2200, 2002,
                 1405, 1400, 3300, 2300, 1405, 1803, 1408]
@@ -111,13 +111,14 @@ def test_first_year():
 def test_sources():
     received = scientist1.sources
     expected = {(17472, 'Journal of Banking and Finance'),
-                (26878, 'Journal of Population Economics'),
                 (20022, 'Economic Policy'),
-                (28994, 'Journal of Evolutionary Economics'),
                 (21307, 'Management Science'),
                 (22900, 'Research Policy'),
                 (24204, 'Review of Economics and Statistics'),
-                (24389, 'Journal of Industrial Economics')}
+                (24389, 'Journal of Industrial Economics'),
+                (26878, 'Journal of Population Economics'),
+                (28994, 'Journal of Evolutionary Economics'),
+                (10600153365, 'Economics of Innovation and New Technology')}
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)
@@ -168,7 +169,7 @@ def test_publications():
     doc = namedtuple("Document", fields)
     # scientist1
     received = scientist1.publications
-    assert_equal(len(received), 10)
+    assert_equal(len(received), 11)
     abstract = (
         "This paper draws implications for technology policy from "
         "evidence on the size distribution of returns from eight sets of "
