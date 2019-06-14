@@ -78,7 +78,7 @@ def query(q_type, q, refresh=False, size_only=False, tsleep=0):
 def query_author_data(authors_list, refresh=False, verbose=False):
     """Wrapper function to search author data for a list of authors, searching
     first in cache and then via stacked search.
-    
+
     Parameters
     ----------
     authors_list : list
@@ -411,7 +411,6 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
     # check the publications before the given year are in range
     group_tocheck.extend(au_skip)
     n = len(group_tocheck)
-    print(group_tocheck[:10])
     if group_tocheck:
         text = ("Searching through characteristics of {:,} authors \n"
                 .format(n))
