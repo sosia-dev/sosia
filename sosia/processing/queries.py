@@ -332,11 +332,21 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
     pubs_counts = []
     # use information in cache
     if not authors_size.empty:
+        # authors that can be already removed because older
+        mask = ((authors_size.year <= ybefore) & (authors_size.n_pubs > 0))
+        remove = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
+        older_authors.extend(remove)
+        au_remove.extend(remove)
         # remove if number of pubs in year is in any case too small
-        mask = ((authors_size.year == yupto) &
+        mask = ((authors_size.year >= yupto) &
                 (authors_size.n_pubs < min(npapers)))
         remove = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
         au_remove.extend(remove)
+        # authors with no pubs before min year
+        mask = (((authors_size.year == ybefore) &
+                (authors_size.n_pubs == 0)))
+        au_ok_miny = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
+        # check publications in range
         if yfrom:
             # adjust count by substracting the count before period; keep
             # only authors for which it is possible to do this or when they
@@ -346,28 +356,19 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
             authors_size_bef["year"] = yupto
             authors_size_bef.columns = ["auth_id", "year", "n_pubs_bef"]
             mask = ((authors_size.auth_id.isin(authors_size_bef.
-                    auth_id.tolist())) | (authors_size.year <= ybefore))
+                    auth_id.tolist())) & (authors_size.year == yupto))
             authors_size = authors_size[mask]
             authors_size = authors_size.merge(authors_size_bef,
                              on=["auth_id", "year"], how='left').fillna(0)
             authors_size["n_pubs"] = (authors_size["n_pubs"] -
                                       authors_size["n_pubs_bef"])
         # authors that can be already removed because of pubs count
-        mask = (((authors_size.year == yupto) &
+        mask = (((authors_size.year >= yupto) &
                  (authors_size.n_pubs < min(npapers))) |
                 ((authors_size.year <= yupto) &
                  (authors_size.n_pubs > max(npapers))))
         remove = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
         au_remove.extend(remove)
-        # authors that can be already removed because older
-        mask = ((authors_size.year <= ybefore) & (authors_size.n_pubs > 0))
-        remove = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
-        older_authors.extend(remove)
-        au_remove.extend(remove)
-        # authors with no pubs before min year
-        mask = (((authors_size.year == ybefore) &
-                (authors_size.n_pubs == 0)))
-        au_ok_miny = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
         # authors with pubs count within the range before the given year
         mask = (((authors_size.year == yupto) &
                  (authors_size.n_pubs >= min(npapers))) &
