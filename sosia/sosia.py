@@ -18,9 +18,8 @@ from sosia.processing import (get_authors, inform_matches, query,
     stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
-from sosia.cache import (cache_sources, cache_author_cits, sources_in_cache,
-    authors_in_cache, cache_authors, author_year_in_cache, author_size_in_cache,
-    cache_author_year, cache_author_size, author_cits_in_cache)
+from sosia.cache import (author_cits_in_cache, authors_in_cache,
+    author_year_in_cache, author_size_in_cache, cache_insert, sources_in_cache)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -197,11 +196,9 @@ class Original(Scientist):
         search_sources, _ = zip(*self.search_sources)
         n = len(search_sources)
 
-        # create df of sources by year to search
+        # Sources by year to search through
         sources_ys = pd.DataFrame(list(product(search_sources, _years_search)),
                                   columns=["source_id", "year"])
-        types = {"source_id": int, "year": int}
-        sources_ys.astype(types, inplace=True)
         # merge existing data in cache and separate missing records
         _, sources_ys_search = sources_in_cache(sources_ys, refresh=refresh)
 
@@ -214,8 +211,7 @@ class Original(Scientist):
                 mask = sources_ys_search.year == y
                 _sources_search = sources_ys_search[mask].source_id.tolist()
                 res = query_year(y, _sources_search, refresh, verbose)
-                if not res.empty:
-                    cache_sources(res)
+                cache_insert(res, table="sources")
             sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
             # Authors publishing in provided year
             mask = sources_ys.year == self.year
@@ -304,7 +300,8 @@ class Original(Scientist):
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
         3. Has about the same number of coauthors in the year of treatment
-        4. Works in the same field as the scientist's main field
+        4. Has about the same number of citations in the year of treatment
+        5. Works in the same field as the scientist's main field
 
         Parameters
         ----------
@@ -321,9 +318,13 @@ class Original(Scientist):
             abstracts.  Default list is the list of english stopwords
             by nltk, augmented with numbers and interpunctuation.
 
-        information : bool (optional, default=True)
+        information : bool or iterable (optional, default=True)
             Whether to return additional information on the matches that may
-            help in the selection process.
+            help in the selection process.  If an iterable of keywords is
+            provied, only return information for these keywords.  Allowed
+            values are "first_year", "num_coauthors", "num_publications",
+            "num_citations", "country", "language",
+            "reference_sim", "abstract_sim".
 
         refresh : bool (optional, default=False)
             Whether to refresh cached search files.
@@ -337,7 +338,28 @@ class Original(Scientist):
             A list of Scopus IDs of scientists matching all the criteria (if
             information is False) or a list of namedtuples with the Scopus ID
             and additional information (if information is True).
+
+        Raises
+        ------
+        ValueError
+            If information is not bool and contains invalid keywords.
         """
+        # Checks
+        information_values = ["first_year", "num_coauthors",
+            "num_publications", "num_citations", "country", "language",
+            "reference_sim", "abstract_sim"]
+        if isinstance(information, bool):
+            if information:
+                keywords = information_values
+            else:
+                keywords = None
+        else:
+            keywords = information
+            invalid = [x for x in keywords if x not in information_values]
+            if invalid:
+                text = ("Parameter information contains invalid keywords: ",
+                        ", ".join(invalid))
+                raise ValueError(text)
         # Variables
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
@@ -361,8 +383,8 @@ class Original(Scientist):
         group = authors[same_field & enough_pubs]["auth_id"].tolist()
         group.sort()
         n = len(group)
-        text = ("Left with {} authors\nFiltering based on provided "
-                "conditions...".format(n))
+        text = "Left with {} authors\nFiltering based on provided "\
+               "conditions...".format(n)
         custom_print(text, verbose)
 
         # Second round of filtering: Check having no publications before
@@ -370,19 +392,12 @@ class Original(Scientist):
         # period.
         group, _, _ = screen_pub_counts(group, min(_years)-1, self.year,
                                         _npapers, self.year_period, verbose)
-
         # Third round of filtering: citations.
-        authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
-        authors["year"] = self.year
-        types = {"auth_id": int, "year": int}
-        authors.astype(types, inplace=True)
+        authors = pd.DataFrame({"auth_id": group, "year": self.year})
         _, authors_cits_search = author_cits_in_cache(authors)
-
-        text = ("Search and filter based on count of citations\n"
-                "{} to search out of {}.\n"
-                .format(len(authors_cits_search), len(group)))
+        text = "Search and filter based on count of citations\n{} to search "\
+               "out of {}\n".format(len(authors_cits_search), len(group))
         custom_print(text, verbose)
-
         if not authors_cits_search.empty:
             authors_cits_search['n_cits'] = 0
             print_progress(0, len(authors_cits_search), verbose)
@@ -392,8 +407,7 @@ class Original(Scientist):
                 n = query("docs", q, size_only=True)
                 authors_cits_search.at[i, 'n_cits'] = n
                 print_progress(i + 1, len(authors_cits_search), verbose)
-            cache_author_cits(authors_cits_search)
-
+            cache_insert(authors_cits_search, table="author_cits_size")
         authors_cits_incache, _ = author_cits_in_cache(authors[["auth_id", "year"]])
         # keep if citations are in range
         mask = ((authors_cits_incache.n_cits <= max(_ncits)) &
@@ -404,15 +418,12 @@ class Original(Scientist):
 
         # Fourth round of filtering: Download publication, verify coauthors and
         # first year.
-        authors = pd.DataFrame(group, columns=["auth_id"], dtype="int64")
-        authors["year"] = int(self.year)
-
-        # merge existing data in cache and separate missing records
+        authors = pd.DataFrame({"auth_id": group, "year": self.year}, dtype="int64")
         _, author_year_search = author_year_in_cache(authors)
-
         matches = []
         if stacked:  # Combine searches
             if not author_year_search.empty:
+                print("hier")
                 q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(
                     self.year + 1))
                 auth_year_group = author_year_search.auth_id.tolist()
@@ -426,10 +437,9 @@ class Original(Scientist):
                 res = pd.DataFrame.from_dict(res, orient="index")
                 res["year"] = self.year
                 res = res[["year", "first_year", "n_pubs", "n_coauth"]]
-                res.reset_index(inplace=True)
-                res.columns = ["auth_id", "year", "first_year", "n_pubs",
-                               "n_coauth"]
-                cache_author_year(res)
+                res.index.name = "auth_id"
+                res = res.reset_index()
+                cache_insert(res, table="author_year")
             author_year_cache, _ = author_year_in_cache(authors)
             if self._ignore_first_id:
                 # only number of coauthors should be big enough
@@ -475,9 +485,10 @@ class Original(Scientist):
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
         custom_print(text, verbose)
 
-        if information and len(matches) > 0:
+        # Possibly add information to matches
+        if keywords and len(matches) > 0:
             custom_print("Providing additional information...", verbose)
-            profs = [Scientist([str(a)], self.year, refresh) for a in matches]
-            return inform_matches(profs, self, stop_words, verbose, refresh, **kwds)
-        else:
-            return matches
+            profiles = [Scientist([str(a)], self.year, refresh) for a in matches]
+            matches = inform_matches(profiles, self, keywords, stop_words,
+                                     verbose, refresh, **kwds)
+        return matches

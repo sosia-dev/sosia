@@ -39,11 +39,9 @@ def query(q_type, q, refresh=False, size_only=False, tsleep=0):
 
     Returns
     -------
-    res : list of namedtuples (if size_only is False)
-        Documents represented by namedtuples as returned from scopus.
-
-    n : int (ifsize_only is True)
-        Number of documents
+    res : list of namedtuples (if size_only is False) or int
+        Documents represented by namedtuples as returned from scopus or
+        number of search results.
 
     Raises
     ------

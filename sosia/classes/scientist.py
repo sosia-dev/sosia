@@ -10,7 +10,7 @@ from scopus import AbstractRetrieval
 
 from sosia.processing import find_country, query, query_author_data
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
-    add_source_names, create_fields_sources_list, raise_non_empty
+    add_source_names, create_fields_sources_list, raise_non_empty, raise_value
 
 __all__ = ["Scientist"]
 
@@ -107,8 +107,7 @@ class Scientist(object):
 
     @first_year.setter
     def first_year(self, val):
-        if not isinstance(val, int):
-            raise Exception("Value must be an integer.")
+        raise_value(val, int)
         self._first_year = val
 
     @property
@@ -285,6 +284,8 @@ class Scientist(object):
                            and int(p.coverDate[:4]) >= self.year_period]
 
         # get count of citations
+        ids = " OR ".join(eids or identifier)
+        start = "REF({}) AND PUBYEAR BEF {} AND NOT".format(ids, self.year+1)
         if not eids:
             q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
                  .format(" OR ".join(identifier), self.year + 1,
@@ -312,7 +313,6 @@ class Scientist(object):
             self._coauthors_period = self._coauthors
             self._publications_period = self._publications
             self._citations_period = self._citations
-
         # Parse information
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, names)

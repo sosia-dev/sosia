@@ -64,7 +64,8 @@ def get_auth_from_df(pubs):
     return [au for sl in l for au in sl]
 
 
-def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
+def inform_matches(profiles, focal, keywords, stop_words, verbose,
+                   refresh, **kwds):
     """Create namedtuple adding information to matches.
 
     Parameters
@@ -74,6 +75,9 @@ def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
 
     focal : Scientist
         Object of class Scientist representing the focal scientist.
+
+    keywords : iterable of strings
+        Which information to add to matches.
 
     stop_words : list
         A list of words that should be filtered in the analysis of abstracts.
@@ -92,52 +96,66 @@ def inform_matches(profiles, focal, stop_words, verbose, refresh, **kwds):
     -------
     m : list of namedtuples
         A list of namedtuples representing matches.  Provided information
-        are "ID name first_year num_coauthors num_publications country
-        language reference_sim abstract_sim".
+        depend on provided keywords.
     """
+    # Create Match object
+    fields = "ID name " + " ".join(keywords)
+    m = namedtuple("Match", fields)
+    # Preparation
+    doc_parse = False
+    if "reference_sim" in keywords or "abstract_sim" in keywords:
+        doc_parse = True
     total = len(profiles)
     print_progress(0, total, verbose)
-    focal_eids = [d.eid for d in focal.publications]
-    focal_refs, focal_refs_n, focal_abs, focal_abs_n = parse_docs(focal_eids, refresh)
-    focal_pubs_n = len(focal.publications)
-    fields = "ID name first_year num_coauthors num_publications "\
-             "num_citations country language reference_sim abstract_sim"
-    m = namedtuple("Match", fields)
+    if doc_parse:
+        focal_eids = [d.eid for d in focal.publications]
+        focal_refs, focal_refs_n, focal_abs, focal_abs_n = parse_docs(focal_eids,
+            refresh)
+    # Add selective information
     out = []
     info = {}  # to collect information on missing information
     for idx, p in enumerate(profiles):
-        # Perform content analysis
-        eids = [d.eid for d in p.publications]
-        refs, refs_n, absts, absts_n = parse_docs(eids, refresh)
-        vec = TfidfVectorizer(**kwds)
-        ref_cos = compute_cos(vec.fit_transform([refs, focal_refs]))
-        vec = TfidfVectorizer(stop_words=stop_words,
-                              tokenizer=tokenize_and_stem, **kwds)
-        abs_cos = compute_cos(vec.fit_transform([absts, focal_abs]))
-        # Save info
-        meta = namedtuple("Meta", "refs absts total")
-        meta(refs=refs_n, absts=absts_n, total=len(eids))
-        key = "; ".join(p.identifier)
-        info[key] = meta(refs=refs_n, absts=absts_n, total=len(eids))
         # Add characteristics
-        new = m(ID=p.identifier[0],
-                name=p.name,
-                first_year=p.first_year,
-                num_coauthors=len(p.coauthors),
-                num_publications=len(p.publications),
-                num_citations=p.citations,
-                country=p.country,
-                language=p.get_publication_languages().language,
-                reference_sim=ref_cos,
-                abstract_sim=abs_cos)
+        match_info = {"ID": p.identifier[0], "name": p.name}
+        if "first_year" in keywords:
+            match_info["first_year"] = p.first_year
+        if "num_coauthors" in keywords:
+            match_info["num_coauthors"] = len(p.coauthors)
+        if "num_publications" in keywords:
+            match_info["num_publications"] = len(p.publications)
+        if "num_citations" in keywords:
+            match_info["num_citations"] = p.citations
+        if "country" in keywords:
+            match_info["country"] = p.country
+        if "language" in keywords:
+            match_info["language"] = p.get_publication_languages().language
+        # Abstract and reference similiarity is performed jointly
+        if doc_parse:
+            eids = [d.eid for d in p.publications]
+            refs, refs_n, absts, absts_n = parse_docs(eids, refresh)
+            vec = TfidfVectorizer(**kwds)
+            ref_cos = compute_cos(vec.fit_transform([refs, focal_refs]))
+            vec = TfidfVectorizer(stop_words=stop_words,
+                                  tokenizer=tokenize_and_stem, **kwds)
+            abs_cos = compute_cos(vec.fit_transform([absts, focal_abs]))
+            # Save info for below print statement
+            meta = namedtuple("Meta", "refs absts total")
+            meta(refs=refs_n, absts=absts_n, total=len(eids))
+            key = "; ".join(p.identifier)
+            info[key] = meta(refs=refs_n, absts=absts_n, total=len(eids))
+        if "reference_sim" in keywords:
+            match_info["reference_sim"] = ref_cos
+        if "abstract_sim" in keywords:
+            match_info["abstract_sim"] = abs_cos
         # Finalize
-        out.append(new)
+        out.append(m(**match_info))
         print_progress(idx+1, total, verbose)
     # Print information on missing information
-    if verbose:
+    if verbose and doc_parse:
         for auth_id, info in info.items():
             _print_missing_docs(auth_id, info.refs, info.absts, info.total)
         label = ";".join(focal.identifier) + " (focal)"
+        focal_pubs_n = len(focal.publications)
         _print_missing_docs(label, focal_refs_n, focal_abs_n, focal_pubs_n)
     return out
 
