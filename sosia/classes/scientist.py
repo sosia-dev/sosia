@@ -9,6 +9,7 @@ import pandas as pd
 from scopus import AbstractRetrieval
 
 from sosia.processing import find_country, query, query_author_data
+from sosia.processing import find_coauthors, find_country, query, query_author_data
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
     add_source_names, create_fields_sources_list, raise_non_empty, raise_value
 
@@ -368,11 +369,3 @@ def _get_main_field(fields):
             main = top_fields[0]
     code = int(str(main)[:2])
     return (main, ASJC_2D[code])
-
-
-def _find_coauthors(pubs, exclude):
-    """Auxiliary function to find coauthors from list of publications,
-    excluding the focal author.
-    """
-    return set([a for p in pubs for a in p.author_ids.split(";")
-                if a not in exclude])
