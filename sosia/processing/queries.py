@@ -413,7 +413,6 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
                 cache_insert(tp, table="author_size")
                 size = size - size2
             if size < min(npapers) or size > max(npapers):
-                print(group)
                 group.remove(au)
             else:
                 pubs_counts.append(size)
