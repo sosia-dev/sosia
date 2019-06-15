@@ -482,13 +482,34 @@ class Original(Scientist):
                         (n_coauth not in _ncoauth)):
                     continue
                 matches.append(au)
+        
+        if self.period:
+            # Further screen matches based on period cits and coauths
+            to_loop = [m for m in matches] # temporary copy
+            for m in to_loop:
+                q = "AU-ID({})".format(m)
+                res = query("docs", "AU-ID({})".format(m), refresh=refresh)
+                pubs = [p for p in res if int(p.coverDate[:4]) <= self.year and
+                        int(p.coverDate[:4]) >= self.year_period]
+                coauths = find_coauthors(pubs, [str(m)])
+                if not (min(_ncoauth) <= len(coauths) <= max(_ncoauth)):
+                    matches.remove(m)
+                    continue
+                eids_period = [p.eid for p in pubs]
+                q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
+                     .format(" OR ".join(eids_period), self.year + 1,
+                             ") AND NOT EID(".join(eids_period)))
+                cits = query("docs", q, size_only=True)
+                if not (min(_ncits) <= cits <= max(_ncits)):
+                    matches.remove(m)
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
         custom_print(text, verbose)
 
         # Possibly add information to matches
         if keywords and len(matches) > 0:
             custom_print("Providing additional information...", verbose)
-            profiles = [Scientist([str(a)], self.year, refresh) for a in matches]
+            profiles = [Scientist([str(a)], self.year, period=self.period,
+                                   refresh=refresh) for a in matches]
             matches = inform_matches(profiles, self, keywords, stop_words,
                                      verbose, refresh, **kwds)
         return matches
