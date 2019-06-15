@@ -13,8 +13,8 @@ import pandas as pd
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.classes import Scientist
-from sosia.processing import (get_authors, inform_matches, query,
-    query_author_data, query_journal, query_year, screen_pub_counts,
+from sosia.processing import (get_authors, find_coauthors, inform_matches,
+    query, query_author_data, query_journal, query_year, screen_pub_counts,
     stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
@@ -345,9 +345,10 @@ class Original(Scientist):
             If information is not bool and contains invalid keywords.
         """
         # Checks
-        information_values = ["first_year", "num_coauthors",
-            "num_publications", "num_citations", "country", "language",
-            "reference_sim", "abstract_sim"]
+        information_values = ["first_name", "surname", "first_year", "num_coauthors",
+            "num_publications", "num_citations", "num_coauthors_period",
+            "num_publications_period", "num_citations_period", "subjects",
+            "country", "language", "reference_sim", "abstract_sim"]
         if isinstance(information, bool):
             if information:
                 keywords = information_values
@@ -458,10 +459,10 @@ class Original(Scientist):
                 same_coauths = (author_year_cache.n_coauth.between(min(_ncoauth),
                                 max(_ncoauth)))
                 mask = same_start & same_coauths
-            matches = author_year_cache[mask]["auth_id"]
+            matches = author_year_cache[mask]["auth_id"].tolist()
         else:  # Query each author individually
             for i, au in enumerate(group):
-                print_progress(i + 1, n, verbose)
+                print_progress(i + 1, len(group), verbose)
                 res = query("docs", "AU-ID({})".format(au), refresh=refresh)
                 res = [p for p in res if p.coverDate and
                        int(p.coverDate[:4]) <= self.year]
