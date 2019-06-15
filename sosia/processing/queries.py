@@ -11,9 +11,8 @@ from scopus.exception import Scopus400Error, ScopusQueryError,\
 
 from sosia.processing.extraction import get_authors, get_auth_from_df
 from sosia.utils import custom_print, print_progress
-from sosia.cache import (authors_in_cache, author_size_in_cache,
-    cache_authors, cache_author_size)
-    
+from sosia.cache import (authors_in_cache, author_size_in_cache, cache_insert)
+
 
 def query(q_type, q, refresh=False, size_only=False, tsleep=0):
     """Wrapper function to perform a particular search query.
@@ -95,31 +94,21 @@ def query_author_data(authors_list, refresh=False, verbose=False):
     """
     authors = pd.DataFrame(authors_list, columns=["auth_id"], dtype="int64")
     # merge existing data in cache and separate missing records
-    authors_data, authors_search = authors_in_cache(authors)
-    if authors_search:
-        params = {
-            "group": authors_search,
-            "res": [],
-            "refresh": refresh,
-            "joiner": ") OR AU-ID(",
-            "q_type": "author",
-            "template": Template("AU-ID($fill)"),
-        }
+    auth_done, auth_missing = authors_in_cache(authors)
+    if auth_missing:
+        params = {"group": auth_missing, "res": [],
+            "refresh": refresh, "joiner": ") OR AU-ID(",
+            "q_type": "author", "template": Template("AU-ID($fill)")}
         if verbose:
             print("Pre-filtering...")
-            params.update({"total": len(authors_search)})
+            params.update({"total": len(auth_missing)})
         res, _ = stacked_query(**params)
         res = pd.DataFrame(res)
-        if not res.empty:
-            res["auth_id"] = res.apply(lambda x: x.eid.split("-")[-1], axis=1)
-            res = res[["auth_id", "eid", "surname", "initials",
-                       "givenname", "affiliation", "documents",
-                       "affiliation_id", "city", "country", "areas"]]
-            cache_authors(res)
-        authors_data, _ = authors_in_cache(authors)
-        return authors_data
+        cache_insert(res, table="authors")
+        auth_done, _ = authors_in_cache(authors)
+        return auth_done
     else:
-        return authors_data
+        return auth_done
 
 
 def query_journal(source_id, years, refresh):
@@ -319,7 +308,7 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
     if yfrom:
         years_check.extend([yfrom - 1])
     authors = pd.DataFrame(list(product(group, years_check)),
-                           columns=["auth_id", "year"])
+                           columns=["auth_id", "year"], dtype="int64")
     types = {"auth_id": int, "year": int}
     authors.astype(types, inplace=True)
     authors_size = author_size_in_cache(authors)
@@ -380,51 +369,51 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
         au_skip = [x for x in au_ok_miny if x not in au_remove + au_ok]
         group = [x for x in group if x not in au_remove]
         group_tocheck = [x for x in group if x not in au_skip + au_ok]
-    text = ("Left with {} authors based on size information \n"
-            "already in cache.\n "
-            "{} to check.\n"
-            .format(len(group), len(group_tocheck)))
+    text = "Left with {} authors based on size information already in "\
+           "cache.\n{} to check\n".format(len(group), len(group_tocheck))
     custom_print(text, verbose)
-    # check the publications before minimum year are 0
-    n = len(group_tocheck)
+    # Verify the publications before minimum year are 0
     if group_tocheck:
         text = ("Searching through characteristics of {:,} authors \n"
                 .format(len(group_tocheck)))
         custom_print(text, verbose)
         print_progress(0, len(group_tocheck), verbose)
-        to_loop = [x for x in group_tocheck]
+        to_loop = [x for x in group_tocheck] # Temporary copy
         for i, au in enumerate(to_loop):
             q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, ybefore + 1)
             size = query("docs", q, size_only=True)
-            cache_author_size((au, ybefore, size))
-            print_progress(i + 1, n, verbose)
+            tp = (au, ybefore, size)
+            cache_insert(tp, table="author_size")
+            print_progress(i + 1, len(to_loop), verbose)
             if not size == 0:
                 group.remove(au)
                 group_tocheck.remove(au)
                 older_authors.append(au)
-        text = ("Left with {} authors based on size information"
-                "before minium year.\n"
-                "Filtering based on size query before provided year \n"
-                .format(len(group)))
+        text = "Left with {} authors based on size information before "\
+               "minium year\n Filtering based on size query before "\
+               "provided year\n".format(len(group))
         custom_print(text, verbose)
     # check the publications before the given year are in range
     group_tocheck.extend(au_skip)
     n = len(group_tocheck)
     if group_tocheck:
-        text = ("Searching through characteristics of {:,} authors \n"
-                .format(n))
+        text = "Searching through characteristics of {:,} authors".format(
+            len(group_tocheck))
         custom_print(text, verbose)
         print_progress(0, n, verbose)
         for i, au in enumerate(group_tocheck):
             q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, yupto + 1)
             size = query("docs", q, size_only=True)
-            cache_author_size((au, yupto, size))
+            tp = (au, yupto, size)
+            cache_insert(tp, table="author_size")
             if yfrom and size >= min(npapers):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, yfrom)
                 size2 = query("docs", q, size_only=True)
-                cache_author_size((au, yfrom - 1, size2))
+                tp = (au, yfrom - 1, size2)
+                cache_insert(tp, table="author_size")
                 size = size - size2
             if size < min(npapers) or size > max(npapers):
+                print(group)
                 group.remove(au)
             else:
                 pubs_counts.append(size)
