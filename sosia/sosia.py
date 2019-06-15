@@ -419,12 +419,15 @@ class Original(Scientist):
 
         # Fourth round of filtering: Download publication, verify coauthors and
         # first year.
+        n = len(group)
+        text = "Left with {} authors\nFiltering based on coauthors "\
+               "number...".format(n)
+        custom_print(text, verbose)
         authors = pd.DataFrame({"auth_id": group, "year": self.year}, dtype="int64")
         _, author_year_search = author_year_in_cache(authors)
         matches = []
         if stacked:  # Combine searches
             if not author_year_search.empty:
-                print("hier")
                 q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(
                     self.year + 1))
                 auth_year_group = author_year_search.auth_id.tolist()
