@@ -8,7 +8,6 @@ from collections import Counter
 import pandas as pd
 from scopus import AbstractRetrieval
 
-from sosia.processing import find_country, query, query_author_data
 from sosia.processing import find_coauthors, find_country, query, query_author_data
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
     add_source_names, create_fields_sources_list, raise_non_empty, raise_value
@@ -112,6 +111,16 @@ class Scientist(object):
         self._first_year = val
 
     @property
+    def first_name(self):
+        """The scientist's first name."""
+        return self._first_name
+
+    @first_name.setter
+    def first_name(self, val):
+        raise_non_empty(val, str)
+        self._name = val
+
+    @property
     def main_field(self):
         """The scientist's main field of research, as tuple in
         the form (ASJC code, general category).
@@ -131,7 +140,7 @@ class Scientist(object):
 
     @property
     def name(self):
-        """The scientist's name."""
+        """The scientist's complete name."""
         return self._name
 
     @name.setter
@@ -186,6 +195,16 @@ class Scientist(object):
         if not isinstance(list(val)[0], tuple):
             val = add_source_names(val, self.source_names)
         self._sources = val
+
+    @property
+    def surname(self):
+        """The scientist's surname."""
+        return self._surname
+
+    @surname.setter
+    def surname(self, val):
+        raise_non_empty(val, str)
+        self._name = val
 
     @property
     def subjects(self):
@@ -275,18 +294,19 @@ class Scientist(object):
                                          int(p.coverDate[:4]) <= year and
                                          int(p.coverDate[:4]) >=
                                          self.year_period]
+            if not len(self._publications_period):
+                text = "No publications for author {} until year {} in a {}-"\
+                       "years period".format("-".join(identifier), year,
+                                             self.year_period)
+                raise Exception(text)
         # list of eids if not provided
         if not eids:
             eids = [p.eid for p in self._publications]
         self._eids = eids
         if self.period:
-            eids_period = [p.eid for p in self._publications_period
-                           if int(p.coverDate[:4]) <= year
-                           and int(p.coverDate[:4]) >= self.year_period]
+            eids_period = [p.eid for p in self._publications_period]
 
         # get count of citations
-        ids = " OR ".join(eids or identifier)
-        start = "REF({}) AND PUBYEAR BEF {} AND NOT".format(ids, self.year+1)
         if not eids:
             q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
                  .format(" OR ".join(identifier), self.year + 1,
@@ -304,9 +324,9 @@ class Scientist(object):
             self._citations_period = query("docs", q, size_only=True)
 
         # coauthors
-        self._coauthors = _find_coauthors(self._publications, identifier)
+        self._coauthors = find_coauthors(self._publications, identifier)
         if self.period:
-            self._coauthors_period = _find_coauthors(self._publications_period,
+            self._coauthors_period = find_coauthors(self._publications_period,
                                                      identifier)
 
         # period counts simply set to total if period is or goes back to None
@@ -331,9 +351,8 @@ class Scientist(object):
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
         self._name = ", ".join([au.surname, au.givenname])
         self._surname = au.surname
-        self._firstname = au.givenname.replace(".", " ").split(" ")[0]
+        self._first_name = au.givenname.replace(".", " ").split(" ")[0]
         self._language = None
-
 
     def get_publication_languages(self, refresh=False):
         """Parse languages of published documents."""
