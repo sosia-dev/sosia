@@ -13,6 +13,7 @@ def build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.
     """
+    chunk = [int(au) for au in chunk]
     d = defaultdict(lambda:
                     {"first_year": inf, "pubs": set(), "coauth": set(),
                     "n_coauth": inf, "n_pubs": inf})
