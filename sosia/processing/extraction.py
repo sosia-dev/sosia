@@ -125,6 +125,10 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
     for idx, p in enumerate(profiles):
         # Add characteristics
         match_info = {"ID": p.identifier[0], "name": p.name}
+        if "first_name" in keywords:
+            match_info["first_name"] = p.first_name
+        if "surname" in keywords:
+            match_info["surname"] = p.surname
         if "first_year" in keywords:
             match_info["first_year"] = p.first_year
         if "num_coauthors" in keywords:
@@ -133,6 +137,14 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
             match_info["num_publications"] = len(p.publications)
         if "num_citations" in keywords:
             match_info["num_citations"] = p.citations
+        if "num_coauthors_period" in keywords:
+            match_info["num_coauthors_period"] = len(p.coauthors_period)
+        if "num_publications_period" in keywords:
+            match_info["num_publications_period"] = len(p.publications_period)
+        if "num_citations_period" in keywords:
+            match_info["num_citations_period"] = p.citations_period
+        if "subjects" in keywords:
+            match_info["subjects"] = p.subjects
         if "country" in keywords:
             match_info["country"] = p.country
         if "language" in keywords:
