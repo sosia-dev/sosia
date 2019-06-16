@@ -488,6 +488,9 @@ class Original(Scientist):
                 matches.append(au)
         
         if self.period:
+            text = "Left with {} authors\nFiltering based on exact period "\
+            "citations and coauthors...".format(len(matches))
+            custom_print(text, verbose)
             # Further screen matches based on period cits and coauths
             to_loop = [m for m in matches] # temporary copy
             for m in to_loop:
