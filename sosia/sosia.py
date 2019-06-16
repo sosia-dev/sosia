@@ -368,6 +368,9 @@ class Original(Scientist):
             _npapers = margin_range(len(self.publications_period), self.pub_margin)
             _ncits = margin_range(self.citations_period, self.cits_margin)
             _ncoauth = margin_range(len(self.coauthors_period), self.coauth_margin)
+            _npapers_full = margin_range(len(self.publications), self.pub_margin)
+            _ncits_full = margin_range(self.citations, self.cits_margin)
+            _ncoauth_full = margin_range(len(self.coauthors), self.coauth_margin)
         else:
             _npapers = margin_range(len(self.publications), self.pub_margin)
             _ncits = margin_range(self.citations, self.cits_margin)
@@ -392,8 +395,16 @@ class Original(Scientist):
         # minimum year, and if 0, the number of publications in the relevant
         # period.
         group, _, _ = screen_pub_counts(group, min(_years)-1, self.year,
-                                        _npapers, self.year_period, verbose)
-        # Third round of filtering: citations.
+                                        _npapers, yfrom=self.year_period,
+                                        verbose=verbose)
+        if self.period:
+            # Screen out also ids with too many publications over the full
+            # period
+            group, _, _ = screen_pub_counts(group, min(_years)-1, self.year,
+                                            [1,max(_npapers_full)],
+                                            verbose=verbose)
+
+        # Third round of filtering: citations (in the FULL period).
         authors = pd.DataFrame({"auth_id": group, "year": self.year})
         _, authors_cits_search = author_cits_in_cache(authors)
         text = "Search and filter based on count of citations\n{} to search "\
@@ -414,11 +425,12 @@ class Original(Scientist):
         mask = ((authors_cits_incache.n_cits <= max(_ncits)) &
                 (authors_cits_incache.n_cits >= min(_ncits)))
         if self.period:
-            mask = (authors_cits_incache.n_cits >= min(_ncits))
+            mask = ((authors_cits_incache.n_cits >= min(_ncits)) &
+                    (authors_cits_incache.n_cits <= max(_ncits_full)))
         group = (authors_cits_incache[mask]['auth_id'].tolist())
 
-        # Fourth round of filtering: Download publication, verify coauthors and
-        # first year.
+        # Fourth round of filtering: Download publications, verify coauthors
+        # (in the FULL period) and first year.
         n = len(group)
         text = "Left with {} authors\nFiltering based on coauthors "\
                "number...".format(n)
@@ -447,14 +459,17 @@ class Original(Scientist):
             author_year_cache, _ = author_year_in_cache(authors)
             if self._ignore_first_id:
                 # only number of coauthors should be big enough
-                mask = author_year_cache.n_coauth >= min(_ncoauth)
+                enough = (author_year_cache.n_coauth >= min(_ncoauth))
+                notoomany = (author_year_cache.n_coauth <= max(_ncoauth_full))
+                mask = enough & notoomany
             elif self.period:
                 # number of coauthors should be "big enough" and first year in
                 # window
                 same_start = (author_year_cache.first_year.between(min(_years),
                               max(_years)))
-                enough_coauths = author_year_cache.n_coauth >= min(_ncoauth)
-                mask = same_start & enough_coauths
+                enough = (author_year_cache.n_coauth >= min(_ncoauth))
+                notoomany = (author_year_cache.n_coauth <= max(_ncoauth_full))
+                mask = same_start & enough & notoomany
             else:
                 # all restrictions apply
                 same_start = (author_year_cache.first_year.between(min(_years),
