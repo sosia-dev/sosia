@@ -276,7 +276,8 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
         Scopus IDs of authors to be filtered.
 
     ybefore : int
-        Year to be used as first year. Publications before need to be 0.
+        Year to be used as first year. Publications on this year and before
+        need to be 0.
 
     yupto : int
         Year up to which to count publications.
@@ -336,8 +337,7 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
         # check publications in range
         if yfrom:
             # adjust count by substracting the count before period; keep
-            # only authors for which it is possible to do this or when they
-            # have information on or before the minium year
+            # only authors for which it is possible
             mask = (authors_size.year == yfrom - 1)
             authors_size_bef = authors_size[mask]
             authors_size_bef["year"] = yupto
