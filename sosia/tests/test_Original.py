@@ -147,8 +147,7 @@ def test_find_matches_stacked():
     # scientist2 (period=8) and with ignore_first_id = True
     recieved = sorted(scientist2.find_matches(stacked=True, information=False,
                                               refresh=refresh))
-    expected = [36998825200, 54421093300, 56049973600, 56229681800, 56856438600,
-                56896085200, 57188695848, 57188709931]
+    expected = [36998825200, 56049973600, 56896085200, 57188695848, 57188709931]
     assert_equal(recieved, expected)
 
 
