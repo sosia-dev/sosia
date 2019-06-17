@@ -305,6 +305,7 @@ def screen_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
     -----
     It uses cached values first, and searches for more data if needed.
     """
+    group = [int(x) for x in group]
     years_check = [ybefore, yupto]
     if yfrom:
         years_check.extend([yfrom - 1])
