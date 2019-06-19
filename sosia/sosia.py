@@ -14,9 +14,9 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sosia.cache import (author_cits_in_cache, authors_in_cache,
     author_year_in_cache, author_size_in_cache, cache_insert)
 from sosia.classes import Scientist
-from sosia.filtering import search_group_from_sources
+from sosia.filtering import search_group_from_sources, filter_pub_counts
 from sosia.processing import (get_authors, find_coauthors, inform_matches,
-    query, query_author_data, screen_pub_counts, stacked_query)
+    query, query_author_data, stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
 
@@ -333,15 +333,13 @@ class Original(Scientist):
         # Second round of filtering: Check having no publications before
         # minimum year, and if 0, the number of publications in the relevant
         # period.
-        group, _, _ = screen_pub_counts(group, min(_years)-1, self.year,
-                                        _npapers, yfrom=self.year_period,
-                                        verbose=verbose)
+        params = {"group": group, "ybefore": min(_years)-1, "yupto": self.year,
+                  "verbose": verbose}
         if self.period:
-            # Screen out also ids with too many publications over the full
-            # period
-            group, _, _ = screen_pub_counts(group, min(_years)-1, self.year,
-                                            [1,max(_npapers_full)],
-                                            verbose=verbose)
+            params.update({"npapers": [1, max(_npapers_full)]})
+        else:
+            params.update({"npapers": _npapers, "yfrom": self.year_period})
+        group, _, _ = filter_pub_counts(**params)
 
         # Third round of filtering: citations (in the FULL period).
         authors = pd.DataFrame({"auth_id": group, "year": self.year})
