@@ -5,21 +5,20 @@
 """Main class for sosia."""
 
 from collections import Counter, namedtuple
-from itertools import product
 from string import digits, punctuation, Template
 from warnings import warn
 import pandas as pd
 
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
+from sosia.cache import (author_cits_in_cache, authors_in_cache,
+    author_year_in_cache, author_size_in_cache, cache_insert)
 from sosia.classes import Scientist
+from sosia.filtering import search_group_from_sources
 from sosia.processing import (get_authors, find_coauthors, inform_matches,
-    query, query_author_data, query_journal, query_year, screen_pub_counts,
-    stacked_query)
+    query, query_author_data, screen_pub_counts, stacked_query)
 from sosia.utils import (add_source_names, build_dict, custom_print,
     margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
-from sosia.cache import (author_cits_in_cache, authors_in_cache,
-    author_year_in_cache, author_size_in_cache, cache_insert, sources_in_cache)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -175,79 +174,19 @@ class Original(Scientist):
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise Exception(text)
-        # check condition on ignore_first_id
         self._ignore_first_id = ignore_first_id
         if ignore_first_id and not self.period:
             self._ignore_first_id = False
             warn("ignore_first_id set back to False: period is None or "
                  "the first year of the period is before the first year "
                  "of publication of the scientist.")
-        # Variables
-        _min_year = self.first_year - self.year_margin
-        _max_year = self.first_year + self.year_margin
-        _max_pubs = max(margin_range(len(self.publications), self.pub_margin))
-        if self.period:
-            _max_pubs = max(margin_range(len(self.publications_period),
-                                         self.pub_margin))
-        _years = list(range(_min_year, _max_year + 1))
-        _years_search = [_min_year - 1, self.active_year]
-        if not self._ignore_first_id:
-            _years_search.extend(range(_min_year, _max_year + 1))
-        search_sources, _ = zip(*self.search_sources)
-        n = len(search_sources)
-
-        # Sources by year to search through
-        sources_ys = pd.DataFrame(list(product(search_sources, _years_search)),
-                                  columns=["source_id", "year"])
-        # merge existing data in cache and separate missing records
-        _, sources_ys_search = sources_in_cache(sources_ys, refresh=refresh)
 
         # Query journals
-        text = "Searching authors for search_group in {} sources...".format(n)
-        custom_print(text, verbose)
-        if stacked:  # Make use of SQL cache
-            _years_search = set(sources_ys_search.year.tolist())
-            for y in _years_search:
-                mask = sources_ys_search.year == y
-                _sources_search = sources_ys_search[mask].source_id.tolist()
-                res = query_year(y, _sources_search, refresh, verbose)
-                cache_insert(res, table="sources")
-            sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
-            # Authors publishing in provided year
-            mask = sources_ys.year == self.year
-            today = set([au for l in sources_ys[mask].auids.tolist()
-                         for au in l])
-            # Authors publishing in year(s) of first publication
-            if not self._ignore_first_id:
-                mask = sources_ys.year.between(_min_year, _max_year,
-                                               inclusive=True)
-                auids = sources_ys[mask].auids.tolist()
-                then = set([au for l in auids for au in l])
-            # Authors with publications before
-            auids = sources_ys[sources_ys.year < _min_year].auids.tolist()
-            negative = set([au for l in auids for au in l])
-        else:
-            today = set()
-            then = set()
-            negative = set()
-            auth_count = []
-            print_progress(0, n, verbose)
-            for i, source_id in enumerate(search_sources):
-                d = query_journal(source_id, [self.year] + _years, refresh)
-                today.update(d[str(self.year)])
-                if not self._ignore_first_id:
-                    for y in _years:
-                        then.update(d[str(y)])
-                for y in range(int(min(d.keys())), _min_year):
-                    negative.update(d[str(y)])
-                for y in d:
-                    if int(y) <= self.year:
-                        auth_count.extend(d[str(y)])
-                print_progress(i + 1, n, verbose)
-            c = Counter(auth_count)
-            negative.update({a for a, npub in c.items() if npub > _max_pubs})
+        params = {"self": self, "stacked": stacked,
+                  "refresh": refresh, "verbose": verbose}
+        today, then, negative = search_group_from_sources(**params)
 
-        # Finalize
+        # Finalize and select
         group = today
         if not self._ignore_first_id:
             group = today.intersection(then)
