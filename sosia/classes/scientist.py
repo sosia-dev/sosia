@@ -8,7 +8,8 @@ from collections import Counter
 import pandas as pd
 from pybliometrics.scopus import AbstractRetrieval
 
-from sosia.processing import find_coauthors, find_country, query, query_author_data
+from sosia.processing import build_citation_query, find_coauthors,\
+    find_country, query, query_author_data
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
     add_source_names, create_fields_sources_list, raise_non_empty, raise_value
 
@@ -306,28 +307,27 @@ class Scientist(object):
         if self.period:
             eids_period = [p.eid for p in self._publications_period]
 
-        # get count of citations
+        # Get count of citations
+        params = {"pubyear": self.year+1}
         if not eids:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
-                 .format(" OR ".join(identifier), self.year + 1,
-                         ") OR AU-ID(".join(identifier)))
-            self._citations = query("docs", q, size_only=True)
+            params.update({"search_ids": identifier, "exclusion_key": "AU-ID",
+                           "exclusion_ids": identifier})
         else:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
-                 .format(" OR ".join(eids), self.year + 1,
-                         ") AND NOT EID(".join(eids)))
-            self._citations = query("docs", q, size_only=True)
+            params.update({"search_ids": eids, "exclusion_key": "EID",
+                           "exclusion_ids": eids})
+        q = build_citation_query(**params)
+        self._citations = query("docs", q, size_only=True)
         if self.period:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
-                 .format(" OR ".join(eids_period), self.year + 1,
-                         ") AND NOT EID(".join(eids_period)))
+            params.update({"search_ids": eids_period, "exclusion_key": "EID",
+                           "exclusion_ids": eids_period})
+            q = build_citation_query(**params)
             self._citations_period = query("docs", q, size_only=True)
 
         # coauthors
         self._coauthors = find_coauthors(self._publications, identifier)
         if self.period:
             self._coauthors_period = find_coauthors(self._publications_period,
-                                                     identifier)
+                                                    identifier)
 
         # period counts simply set to total if period is or goes back to None
         if not self.period:

@@ -13,6 +13,17 @@ from sosia.utils import custom_print, print_progress
 from sosia.cache import authors_in_cache, cache_insert
 
 
+def build_citation_query(search_ids, pubyear, exclusion_key, exclusion_ids):
+    """Auxiliary function to build query string to search for citations."""
+    search_ids = " OR ".join(search_ids)
+    exclusion_ids = " OR ".join(exclusion_ids)
+    s = Template("REF($search_ids) AND PUBYEAR BEF $pubyear AND NOT "
+                 "$exclusion_key($exclusion_ids)")
+    q = s.substitute(search_ids=search_ids, pubyear=pubyear,
+                     exclusion_key=exclusion_key, exclusion_ids=exclusion_ids)
+    return q
+
+
 def query(q_type, q, refresh=False, size_only=False, tsleep=0):
     """Wrapper function to perform a particular search query.
 
