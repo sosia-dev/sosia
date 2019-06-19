@@ -6,7 +6,7 @@
 from collections import Counter
 
 import pandas as pd
-from scopus import AbstractRetrieval
+from pybliometrics.scopus import AbstractRetrieval
 
 from sosia.processing import find_coauthors, find_country, query, query_author_data
 from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\

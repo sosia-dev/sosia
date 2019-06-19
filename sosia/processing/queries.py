@@ -1,12 +1,12 @@
+import pandas as pd
 from collections import defaultdict
 from itertools import product
 from string import Template
-import urllib
 from time import sleep
-import pandas as pd
+from urllib.error import HTTPError
 
-from scopus import AuthorSearch, ScopusSearch
-from scopus.exception import Scopus400Error, ScopusQueryError,\
+from pybliometrics.scopus import AuthorSearch, ScopusSearch
+from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error, Scopus404Error, Scopus429Error
 
 from sosia.processing.extraction import get_authors, get_auth_from_df
@@ -62,7 +62,7 @@ def query(q_type, q, refresh=False, size_only=False, tsleep=0):
                 res = obj.results or []
                 if not valid_results(res):
                     raise TypeError
-        except (KeyError, UnicodeDecodeError, urllib.error.HTTPError, TypeError):
+        except (KeyError, UnicodeDecodeError, HTTPError, TypeError):
             sleep(tsleep)
             if tsleep <= 10:
                 tsleep = tsleep+2.5

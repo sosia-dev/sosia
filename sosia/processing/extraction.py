@@ -1,8 +1,8 @@
 from collections import namedtuple
 from operator import attrgetter
 
-from scopus import AbstractRetrieval
-from scopus.exception import Scopus404Error
+from pybliometrics.scopus import AbstractRetrieval
+from pybliometrics.scopus.exception import Scopus404Error
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from sosia.processing.nlp import clean_abstract, compute_cos, tokenize_and_stem
