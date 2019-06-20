@@ -1,5 +1,10 @@
 from math import ceil, inf
-from collections import defaultdict
+from collections import Counter, defaultdict
+
+from pandas import read_csv
+
+from sosia.utils.constants import ASJC_2D, FIELDS_SOURCES_LIST,\
+    SOURCES_NAMES_LIST
 
 
 def add_source_names(source_ids, names):
@@ -38,6 +43,29 @@ def custom_print(text, verbose):
     """Print text if verbose."""
     if verbose:
         print(text)
+
+
+def get_main_field(fields):
+    """Get code and name of main field.
+
+    We exclude multidisciplinary and give preference to non-general fields.
+    """
+    c = Counter(fields)
+    try:
+        c.pop(1000)  # Exclude Multidisciplinary
+    except KeyError:
+        pass
+    top_fields = [f for f, val in c.items() if val == max(c.values())]
+    if len(top_fields) == 1:
+        main = top_fields[0]
+    else:
+        non_general_fields = [f for f in top_fields if f % 1000 != 0]
+        if non_general_fields:
+            main = non_general_fields[0]
+        else:
+            main = top_fields[0]
+    code = int(str(main)[:2])
+    return (main, ASJC_2D[code])
 
 
 def margin_range(base, val):
@@ -93,6 +121,20 @@ def raise_value(val, obj):
     if not isinstance(val, obj):
         label = _get_obj_name(obj)
         raise Exception("Value must be of type {}.".format(label))
+
+
+def read_fields_sources_list():
+    """Auxiliary function to read FIELDS_SOURCES_LIST and create it before,
+    if necessary.
+    """
+    try:
+        sources = read_csv(FIELDS_SOURCES_LIST)
+        names = read_csv(SOURCES_NAMES_LIST)
+    except FileNotFoundError:
+        create_fields_sources_list()
+        sources = read_csv(FIELDS_SOURCES_LIST)
+        names = read_csv(SOURCES_NAMES_LIST)
+    return sources, names
 
 
 def run(op, *args):
