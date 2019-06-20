@@ -17,8 +17,8 @@ from sosia.classes import Scientist
 from sosia.filtering import search_group_from_sources, filter_pub_counts
 from sosia.processing import (get_authors, find_coauthors, inform_matches,
     query, query_author_data, stacked_query)
-from sosia.utils import (add_source_names, build_dict, custom_print,
-    margin_range, print_progress, raise_non_empty, CACHE_SQLITE)
+from sosia.utils import (build_dict, custom_print, margin_range,
+    maybe_add_source_names, print_progress, raise_non_empty, CACHE_SQLITE)
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -63,9 +63,7 @@ class Original(Scientist):
     @search_sources.setter
     def search_sources(self, val):
         raise_non_empty(val, (set, list, tuple))
-        if not isinstance(list(val)[0], tuple):
-            val = add_source_names(val, self.source_names)
-        self._search_sources = val
+        self._search_sources = maybe_add_source_names(val, self.source_names)
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
                  cits_margin=0.1, coauth_margin=0.1, period=None, refresh=False,

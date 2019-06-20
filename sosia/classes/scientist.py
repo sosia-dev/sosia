@@ -8,7 +8,8 @@ from pybliometrics.scopus import AbstractRetrieval
 from sosia.processing import build_citation_query, find_coauthors,\
     find_country, query, query_author_data
 from sosia.utils import ASJC_2D, add_source_names, get_main_field,\
-    raise_non_empty, raise_value, read_fields_sources_list
+    maybe_add_source_names, raise_non_empty, raise_value,\
+    read_fields_sources_list
 
 
 class Scientist(object):
@@ -188,9 +189,7 @@ class Scientist(object):
     @sources.setter
     def sources(self, val):
         raise_non_empty(val, (set, list, tuple))
-        if not isinstance(list(val)[0], tuple):
-            val = add_source_names(val, self.source_names)
-        self._sources = val
+        self._sources = maybe_add_source_names(val, self.source_names)
 
     @property
     def surname(self):

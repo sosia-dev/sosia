@@ -11,7 +11,7 @@ def add_source_names(source_ids, names):
     """Add names of sources to list of source IDs turning the list into a
     list of tuples.
     """
-    return set([(s_id, names.get(s_id)) for s_id in source_ids])
+    return set([(s_id, names.get(int(s_id))) for s_id in source_ids])
 
 
 def build_dict(results, chunk):
@@ -92,6 +92,16 @@ def margin_range(base, val):
     else:
         raise Exception("Value must be either float or int.")
     return r
+
+
+def maybe_add_source_names(source_ids, names):
+    """Add names of sources to list of source IDs turning the list into a
+    list of tuples.
+    """
+    if isinstance(source_ids[0], tuple):
+        return source_ids
+    else:
+        return add_source_names(source_ids, names)
 
 
 def print_progress(iteration, total, verbose=True, length=50):
