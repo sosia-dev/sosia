@@ -258,20 +258,12 @@ class Scientist(object):
         else:
             q = "EID({})".format(" OR ".join(eids))
         res = query("docs", q, refresh)
-        try:
-            self._publications = [p for p in res if int(p.coverDate[:4]) <=
-                                  year]
-        except (AttributeError, TypeError):
-            res = query("docs", q, True)
-            self._publications = [p for p in res if int(p.coverDate[:4]) <=
-                                  year]
+        self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = "No publications for author {} until year {}".format(
                 "-".join(identifier), year)
             raise Exception(text)
-        if not eids:
-            eids = [p.eid for p in self._publications]
-        self._eids = eids
+        self._eids = eids or [p.eid for p in self._publications]
 
         # Fist year (if period provided set first year of period, if
         # not smaller than first year of publication
@@ -297,9 +289,8 @@ class Scientist(object):
         if self.period:
             self.year_period = year-period+1
             self._publications_period = [p for p in self._publications if
-                                         int(p.coverDate[:4]) <= year and
-                                         int(p.coverDate[:4]) >=
-                                         self.year_period]
+            int(p.coverDate[:4]) <= year and
+            int(p.coverDate[:4]) >= self.year_period]
             if not len(self._publications_period):
                 text = "No publications for author {} until year {} in a {}-"\
                        "years period".format("-".join(identifier), year,
@@ -319,8 +310,7 @@ class Scientist(object):
         # Parse information
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, names)
-        self._active_year = int(max([p.coverDate[:4] for p in self._publications
-                                    if int(p.coverDate[:4]) <= year]))
+        self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
         self._country = find_country(identifier, self._publications, year, refresh)
 
         # Author search information
