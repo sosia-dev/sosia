@@ -17,11 +17,10 @@ def create_cache(drop=False, file=CACHE_SQLITE):
     ----------
     drop : boolean (optional, default=False)
         If True, deletes and recreates all tables in cache (irreversible).
-    
+
     file : file (optional, default=CACHE_SQLITE)
         The name of the cache file to be used. By default is named
         cache_sqlite.sqlite and located in "~/.sosia/".
-        
     """
     conn = sqlite3.connect(file)
     c = conn.cursor()
@@ -30,6 +29,7 @@ def create_cache(drop=False, file=CACHE_SQLITE):
         c.execute("""DROP TABLE IF EXISTS sources""")
         c.execute("""DROP TABLE IF EXISTS authors""")
         c.execute("""DROP TABLE IF EXISTS author_size""")
+        c.execute("""DROP TABLE IF EXISTS author_cits_size""")
         c.execute("""DROP TABLE IF EXISTS author_year""")
     # table for sources
     c.execute(
