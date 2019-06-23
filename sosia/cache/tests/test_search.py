@@ -6,8 +6,8 @@ from nose.tools import assert_equal, assert_true
 from itertools import product
 from os.path import expanduser
 
-from scopus import ScopusSearch, AuthorSearch
 import pandas as pd
+from pybliometrics.scopus import ScopusSearch, AuthorSearch
 from pandas.testing import assert_frame_equal
 
 from sosia.cache import (authors_in_cache, author_size_in_cache,

@@ -6,7 +6,8 @@ import pandas as pd
 from nose.tools import assert_equal, assert_true, raises
 
 from sosia.classes import Scientist
-from sosia.utils.helpers import add_source_names, margin_range, raise_non_empty
+from sosia.utils.helpers import add_source_names, margin_range,\
+    raise_non_empty, read_fields_sources_list
 
 
 def test_add_source_names():
@@ -37,3 +38,9 @@ def test_raise_non_empty_set():
 @raises(Exception)
 def test_raise_non_empty_list():
     raise_non_empty([], list)
+
+
+def test_read_fields_sources_list():
+    sources, names = read_fields_sources_list()
+    assert_equal(str(type(sources)), "<class 'pandas.core.frame.DataFrame'>")
+    assert_equal(str(type(names)), "<class 'pandas.core.frame.DataFrame'>")

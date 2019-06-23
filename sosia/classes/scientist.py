@@ -3,16 +3,13 @@
 # Author:   Michael E. Rose <michael.ernst.rose@gmail.com>
 """Super class to represent a scientist."""
 
-from collections import Counter
+from pybliometrics.scopus import AbstractRetrieval
 
-import pandas as pd
-from scopus import AbstractRetrieval
-
-from sosia.processing import find_coauthors, find_country, query, query_author_data
-from sosia.utils import ASJC_2D, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
-    add_source_names, create_fields_sources_list, raise_non_empty, raise_value
-
-__all__ = ["Scientist"]
+from sosia.processing import build_citation_query, find_coauthors,\
+    find_country, query, query_author_data
+from sosia.utils import ASJC_2D, add_source_names, get_main_field,\
+    maybe_add_source_names, raise_non_empty, raise_value,\
+    read_fields_sources_list
 
 
 class Scientist(object):
@@ -192,9 +189,7 @@ class Scientist(object):
     @sources.setter
     def sources(self, val):
         raise_non_empty(val, (set, list, tuple))
-        if not isinstance(list(val)[0], tuple):
-            val = add_source_names(val, self.source_names)
-        self._sources = val
+        self._sources = maybe_add_source_names(val, self.source_names)
 
     @property
     def surname(self):
@@ -253,99 +248,76 @@ class Scientist(object):
         self.year_period = None
 
         # Read mapping of fields to sources
-        try:
-            df = pd.read_csv(FIELDS_SOURCES_LIST)
-        except FileNotFoundError:
-            create_fields_sources_list()
-            df = pd.read_csv(FIELDS_SOURCES_LIST)
-        names = pd.read_csv(SOURCES_NAMES_LIST, index_col=0)["title"].to_dict()
+        df, names = read_fields_sources_list()
         self.field_source = df
-        self.source_names = names
+        self.source_names = names["title"].to_dict()
 
         # Load list of publications
         if not eids:
             q = "AU-ID({})".format(") OR AU-ID(".join(identifier))
         else:
-            print('eids', eids)
             q = "EID({})".format(" OR ".join(eids))
         res = query("docs", q, refresh)
-        try:
-            self._publications = [p for p in res if int(p.coverDate[:4]) <=
-                                  year]
-        except (AttributeError, TypeError):
-            res = query("docs", q, True)
-            self._publications = [p for p in res if int(p.coverDate[:4]) <=
-                                  year]
+        self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = "No publications for author {} until year {}".format(
                 "-".join(identifier), year)
             raise Exception(text)
-        # if period provided set first year of period, if not smaller than
-        # first year of publication
-        self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
-        if period and year - period + 1 <= self._first_year:
-                self.period = None
-        elif period:
-            self.year_period = year - period + 1
+        self._eids = eids or [p.eid for p in self._publications]
 
-        # if period is int, get publications in period
+        # Fist year (if period provided set first year of period, if
+        # not smaller than first year of publication
+        self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
+        if period and year-period+1 <= self._first_year:
+            self.period = None
+
+        # Count of citations
+        if not eids:
+            key = "AU-ID"
+            search_ids = identifier
+        else:
+            key = "EID"
+            search_ids = eids
+        q = build_citation_query(search_ids=search_ids, pubyear=self.year+1,
+                                 exclusion_key=key, exclusion_ids=search_ids)
+        self._citations = query("docs", q, size_only=True)
+
+        # Coauthors
+        self._coauthors = find_coauthors(self._publications, identifier)
+
+        # Period counts simply set to total if period is or goes back to None
         if self.period:
+            self.year_period = year-period+1
             self._publications_period = [p for p in self._publications if
-                                         int(p.coverDate[:4]) <= year and
-                                         int(p.coverDate[:4]) >=
-                                         self.year_period]
+            int(p.coverDate[:4]) <= year and
+            int(p.coverDate[:4]) >= self.year_period]
             if not len(self._publications_period):
                 text = "No publications for author {} until year {} in a {}-"\
                        "years period".format("-".join(identifier), year,
                                              self.year_period)
                 raise Exception(text)
-        # list of eids if not provided
-        if not eids:
-            eids = [p.eid for p in self._publications]
-        self._eids = eids
-        if self.period:
             eids_period = [p.eid for p in self._publications_period]
-
-        # get count of citations
-        if not eids:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
-                 .format(" OR ".join(identifier), self.year + 1,
-                         ") OR AU-ID(".join(identifier)))
-            self._citations = query("docs", q, size_only=True)
-        else:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
-                 .format(" OR ".join(eids), self.year + 1,
-                         ") AND NOT EID(".join(eids)))
-            self._citations = query("docs", q, size_only=True)
-        if self.period:
-            q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
-                 .format(" OR ".join(eids_period), self.year + 1,
-                         ") AND NOT EID(".join(eids_period)))
+            q = build_citation_query(search_ids=eids_period, pubyear=self.year+1,
+                exclusion_key="EID", exclusion_ids=eids_period)
             self._citations_period = query("docs", q, size_only=True)
-
-        # coauthors
-        self._coauthors = find_coauthors(self._publications, identifier)
-        if self.period:
             self._coauthors_period = find_coauthors(self._publications_period,
-                                                     identifier)
-
-        # period counts simply set to total if period is or goes back to None
-        if not self.period:
+                                                    identifier)
+        else:
             self._coauthors_period = self._coauthors
             self._publications_period = self._publications
             self._citations_period = self._citations
+
         # Parse information
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, names)
-        self._active_year = int(max([p.coverDate[:4] for p in self._publications
-                                    if int(p.coverDate[:4]) <= year]))
+        self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
         self._country = find_country(identifier, self._publications, year, refresh)
 
         # Author search information
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, names)
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
-        self._main_field = _get_main_field(self._fields)
+        self._main_field = get_main_field(self._fields)
         au = query_author_data(self.identifier, refresh=refresh, verbose=False)
         au = au.sort_values("documents", ascending=True).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
@@ -365,26 +337,3 @@ class Scientist(object):
             langs.append(lang)
         self._language = "; ".join(sorted(list(set(filter(None, langs)))))
         return self
-
-
-def _get_main_field(fields):
-    """Auxiliary function to get code and name of main field.
-
-    We exclude multidisciplinary and give preference to non-general fields.
-    """
-    c = Counter(fields)
-    try:
-        c.pop(1000)  # Exclude Multidisciplinary
-    except KeyError:
-        pass
-    top_fields = [f for f, val in c.items() if val == max(c.values())]
-    if len(top_fields) == 1:
-        main = top_fields[0]
-    else:
-        non_general_fields = [f for f in top_fields if f % 1000 != 0]
-        if non_general_fields:
-            main = non_general_fields[0]
-        else:
-            main = top_fields[0]
-    code = int(str(main)[:2])
-    return (main, ASJC_2D[code])

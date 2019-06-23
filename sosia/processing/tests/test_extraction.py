@@ -3,7 +3,7 @@
 """Tests for extraction module."""
 
 from nose.tools import assert_equal, assert_true
-from scopus import ScopusSearch
+from pybliometrics.scopus import ScopusSearch
 
 from sosia.processing import find_country, parse_docs
 
