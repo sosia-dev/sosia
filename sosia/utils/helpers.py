@@ -5,6 +5,7 @@ from pandas import read_csv
 
 from sosia.utils.constants import ASJC_2D, FIELDS_SOURCES_LIST,\
     SOURCES_NAMES_LIST
+from sosia.utils.startup import create_fields_sources_list
 
 
 def add_source_names(source_ids, names):
