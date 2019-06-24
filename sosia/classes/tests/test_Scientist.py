@@ -8,11 +8,33 @@ from nose.tools import assert_equal, assert_true, assert_false
 from sosia.classes import Scientist
 
 scientist1 = Scientist(["6701809842"], 2001, refresh=True)
-scientist2 = Scientist(["55208373700", "55208373700", "99"], 2017, refresh=True)
+scientist2 = Scientist(["55208373700", "55208373700"], 2017, refresh=True)
 eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
 scientist3 = Scientist(["55208373700"], 2017, eids=eids, refresh=True)
 scientist4 = Scientist(["55208373700"], 2015, refresh=True)
 scientist5 = Scientist(["55208373700"], 2018, period=2, refresh=True)
+
+
+def test_affiliation():
+    org = 'University of Essex; Universität München'
+    assert_equal(scientist1.organization, org)
+    org = 'École Polytechnique Fédérale de Lausanne (EPFL)'
+    assert_equal(scientist2.organization, org)
+    org = 'Department of Economics and Management of Innovation, '\
+          'École Polytechnique Fédérale de Lausanne'
+    assert_equal(scientist3.organization, org)
+    org = 'École Polytechnique Fédérale de Lausanne, CEMI, CDM MTEI-GE'
+    assert_equal(scientist4.organization, org)
+    org = 'Max Planck Institute for Innovation and Competition'
+    assert_equal(scientist5.organization, org)
+
+
+def test_affiliation_id():
+    assert_equal(scientist1.affiliation_id, '60001359; 60028717')
+    assert_equal(scientist2.affiliation_id, '60028186')
+    assert_equal(scientist3.affiliation_id, '60028186')
+    assert_equal(scientist4.affiliation_id, '60097412, 60028186')
+    assert_equal(scientist5.affiliation_id, '60105007')
 
 
 def test_active_year():
@@ -21,6 +43,14 @@ def test_active_year():
     assert_equal(scientist3.active_year, 2016)
     assert_equal(scientist4.active_year, 2012)
     assert_equal(scientist5.active_year, 2018)
+
+
+def test_city():
+    assert_equal(scientist1.city, "Mannheim")
+    assert_equal(scientist2.city, "Lausanne")
+    assert_equal(scientist3.city, "Lausanne")
+    assert_equal(scientist4.city, [])
+    assert_equal(scientist5.city, "Munich")
 
 
 def test_country():
