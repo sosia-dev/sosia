@@ -16,7 +16,10 @@ from sosia.cache import authors_in_cache, cache_insert
 def build_citation_query(search_ids, pubyear, exclusion_key, exclusion_ids):
     """Auxiliary function to build query string to search for citations."""
     search_ids = " OR ".join(search_ids)
-    exclusion_ids = " OR ".join(exclusion_ids)
+    if exclusion_key == "AU-ID":
+        exclusion_ids = ") AND NOT AU-ID(".join(exclusion_ids)
+    if exclusion_key == "EID":
+        exclusion_ids = " OR ".join(exclusion_ids)
     s = Template("REF($search_ids) AND PUBYEAR BEF $pubyear AND NOT "
                  "$exclusion_key($exclusion_ids)")
     q = s.substitute(search_ids=search_ids, pubyear=pubyear,
