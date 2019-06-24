@@ -5,7 +5,8 @@ from pandas import DataFrame
 
 from sosia.cache import cache_insert, author_size_in_cache, sources_in_cache
 from sosia.processing.queries import query, query_journal, query_year
-from sosia.utils import custom_print, margin_range, print_progress
+from sosia.utils import custom_print, flat_set_from_df, margin_range,\
+    print_progress
 
 
 def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
@@ -216,13 +217,14 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         # Get full cache
         sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
         # Authors publishing in provided year
-        today = _extract_auids(sources_ys, sources_ys.year == self.year)
+        mask = sources_ys.year == self.year
+        today = flat_set_from_df(sources_ys, "auids", mask)
         # Authors publishing in year(s) of first publication
         if not self._ignore_first_id:
             mask = sources_ys.year.between(min_year, max_year, inclusive=True)
-            then = _extract_auids(sources_ys, mask)
+            then = flat_set_from_df(sources_ys, "auids", mask)
         # Authors with publications before
-        negative = _extract_auids(sources_ys, sources_ys.year < min_year)
+        negative = flat_set_from_df(sources_ys, "auids", sources_ys.year < min_year)
     else:
         today = set()
         then = set()
@@ -245,11 +247,3 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         negative.update({a for a, npub in c.items() if npub > max_pubs})
 
     return today, then, negative
-
-
-def _extract_auids(df, condition):
-    """Auxiliary function to retrieve a set of Author IDs from a DataFrame
-    holding author information from the cache.
-    """
-    auids = sources_ys[condition].auids.tolist()
-    return set([au for l in auids for au in l])

@@ -45,6 +45,16 @@ def custom_print(text, verbose):
         print(text)
 
 
+def flat_set_from_df(df, col, condition=None):
+    """Flatten Series from DataFrame which contains lists and
+    return as set, optionally after filtering the DataFrame.
+    """
+    if condition is not None:
+        df = df[condition]
+    lists = df[col].tolist()
+    return set([item for l in lists for item in l])
+
+
 def get_main_field(fields):
     """Get code and name of main field.
 
