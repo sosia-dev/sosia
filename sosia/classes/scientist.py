@@ -250,7 +250,7 @@ class Scientist(object):
         # Read mapping of fields to sources
         df, names = read_fields_sources_list()
         self.field_source = df
-        self.source_names = names["title"].to_dict()
+        self.source_names = names.set_index("source_id")["title"].to_dict()
 
         # Load list of publications
         if not eids:
@@ -307,15 +307,11 @@ class Scientist(object):
             self._publications_period = self._publications
             self._citations_period = self._citations
 
-        # Parse information
-        source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
-        self._sources = add_source_names(source_ids, names)
-        self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
-        self._country = find_country(identifier, self._publications, year, refresh)
-
         # Author search information
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
-        self._sources = add_source_names(source_ids, names)
+        self._sources = add_source_names(source_ids, self.source_names)
+        self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
+        self._country = find_country(identifier, self._publications, year, refresh)
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = get_main_field(self._fields)
         au = query_author_data(self.identifier, refresh=refresh, verbose=False)
