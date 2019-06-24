@@ -6,8 +6,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from sosia.utils import (FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST, URL_CONTENT,
-    URL_SOURCES, CACHE_SQLITE)
+from sosia.utils import (CACHE_SQLITE, CACHE_TABLES, FIELDS_SOURCES_LIST,
+    SOURCES_NAMES_LIST, URL_CONTENT, URL_SOURCES)
 
 
 def create_cache(drop=False, file=CACHE_SQLITE):
@@ -24,45 +24,15 @@ def create_cache(drop=False, file=CACHE_SQLITE):
     """
     conn = sqlite3.connect(file)
     c = conn.cursor()
-    # to refresh all cache
-    if drop:
-        c.execute("""DROP TABLE IF EXISTS sources""")
-        c.execute("""DROP TABLE IF EXISTS authors""")
-        c.execute("""DROP TABLE IF EXISTS author_size""")
-        c.execute("""DROP TABLE IF EXISTS author_cits_size""")
-        c.execute("""DROP TABLE IF EXISTS author_year""")
-    # table for sources
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS sources
-              (source_id int, year int, auids text,
-              PRIMARY KEY(source_id,year))"""
-    )
-    # table for authors
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS authors
-              (auth_id int, eid text, surname text, initials text,
-              givenname text, affiliation text, documents text,
-              affiliation_id text, city text, country text, areas text,
-              PRIMARY KEY(auth_id))"""
-    )
-    # table for author year publication count from size queries
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS author_size
-              (auth_id int, year int, n_pubs int,
-              PRIMARY KEY(auth_id, year))"""
-    )
-    # table for author year citations count from size queries
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS author_cits_size
-              (auth_id int, year int, n_cits int,
-              PRIMARY KEY(auth_id, year))"""
-    )
-    # table for author year full publication information
-    c.execute(
-        """CREATE TABLE IF NOT EXISTS author_year
-              (auth_id int, year int, first_year int, n_pubs int, n_coauth int,
-              PRIMARY KEY(auth_id, year))"""
-    )
+    for table, variables in CACHE_TABLES.items():
+        if drop:
+            q = "DROP TABLE IF EXISTS {}".format(table)
+            c.execute(q)
+        columns = ", ".join(" ".join(v) for v in variables["columns"])
+        prim_keys = ", ".join(variables["primary"])
+        q = "CREATE TABLE IF NOT EXISTS {} ({}, PRIMARY KEY({}))".format(
+            table, columns, prim_keys)
+        c.execute(q)
 
 
 def create_fields_sources_list():
