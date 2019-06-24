@@ -80,6 +80,7 @@ def create_fields_sources_list():
         "Source Type": "type",
         "Type": "type",
         "Sourcerecord id": "source_id",
+        "Scopus Source ID": "source_id",
         "Scopus SourceID": "source_id",
         "Title": "title",
         "Source title": "title",
