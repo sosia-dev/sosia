@@ -17,9 +17,9 @@ def find_coauthors(pubs, exclude):
                 if a not in exclude])
 
 
-def find_country(auth_ids, pubs, year, refresh):
-    """Find the most common country of affiliations of a scientist using her
-    most recent publications listing valid affiliations.
+def find_location(auth_ids, pubs, year, refresh):
+    """Find the most common country, city, affiliation ID, and affiliation name
+    of a scientist using her most recent publications with valid information.
 
     Parameters
     ----------
@@ -39,22 +39,47 @@ def find_country(auth_ids, pubs, year, refresh):
 
     Returns
     -------
-    country : str or None
-        The country of the scientist in the year closest to the given year,
-        given that the publications list valid affiliations.  Equals None when
+    country, city, affiliation_id, organization : str or None
+        The country, city, affiliation ID, and affiliation name of the
+        scientist in the year closest to the given year, given that the
+        publications list valid information for each output. Equals None when
         no valid publications are found.
     """
     # Available papers of most recent year with publications
     papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
     papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
     params = {"view": "FULL", "refresh": refresh}
+    countries = []
+    affiliation_id = []
+    organization = []
+    city = []
     for p in papers:
         authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
-        countries = [a.country for a in authorgroup if a.auid in
-                     auth_ids and a.country]
         if not countries:
+            countries = [a.country for a in authorgroup if a.auid in
+                         auth_ids and a.country]
+        if not city:
+            city = [a.city for a in authorgroup if a.auid in
+                    auth_ids and a.city]
+        if not affiliation_id:
+            affiliation_id = [a.affiliation_id for a in authorgroup if a.auid in
+                              auth_ids and a.affiliation_id]
+        if not organization:
+            organization = [a.organization for a in authorgroup if a.auid in
+                            auth_ids and a.organization]
+        if not countries or not affiliation_id or not organization or not city:
             continue
-        return "; ".join(sorted(list(set(countries))))
+        else:
+            break
+    if countries:
+        countries = "; ".join(sorted(list(set(countries))))
+    if city:
+        city = "; ".join(sorted(list(set(city))))
+    if affiliation_id:
+        affiliation_id = "; ".join(sorted(list(set(affiliation_id))))
+    if organization:
+        organization = "; ".join(sorted(list(set(organization))))
+    return (countries, city, affiliation_id, organization)
 
 
 def get_authors(pubs):
@@ -147,6 +172,12 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
             match_info["subjects"] = p.subjects
         if "country" in keywords:
             match_info["country"] = p.country
+        if "city" in keywords:
+            match_info["city"] = p.city
+        if "affiliation_id" in keywords:
+            match_info["affiliation_id"] = p.affiliation_id
+        if "affiliation" in keywords:
+            match_info["affiliation"] = p.organization
         if "language" in keywords:
             match_info["language"] = p.get_publication_languages().language
         # Abstract and reference similiarity is performed jointly

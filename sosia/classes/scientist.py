@@ -6,7 +6,7 @@
 from pybliometrics.scopus import AbstractRetrieval
 
 from sosia.processing import build_citation_query, find_coauthors,\
-    find_country, query, query_author_data
+    find_location, query, query_author_data
 from sosia.utils import ASJC_2D, add_source_names, get_main_field,\
     maybe_add_source_names, raise_non_empty, raise_value,\
     read_fields_sources_list
@@ -23,6 +23,19 @@ class Scientist(object):
         if not isinstance(val, int):
             raise Exception("Value must be an integer.")
         self._active_year = val
+
+    @property
+    def affiliation_id(self):
+        """The affiliation ID of the scientist's most frequent affiliation
+        in the most recent year (before the given year) that
+        the scientist published.
+        """
+        return self._affiliation_id
+
+    @affiliation_id.setter
+    def affiliation_id(self, val):
+        raise_non_empty(val, str)
+        self._affiliation_id = val
 
     @property
     def citations(self):
@@ -47,6 +60,19 @@ class Scientist(object):
     def citations_period(self, val):
         raise_non_empty(val, int)
         self._citations_period = val
+
+    @property
+    def city(self):
+        """City of the scientist's most frequent affiliation
+        in the most recent year (before the given year) that
+        the scientist published.
+        """
+        return self._city
+
+    @city.setter
+    def city(self, val):
+        raise_non_empty(val, str)
+        self._city = val
 
     @property
     def country(self):
@@ -154,6 +180,19 @@ class Scientist(object):
     def language(self, val):
         raise_non_empty(val, str)
         self._language = val
+
+    @property
+    def organization(self):
+        """The affiliation name of the scientist's most frequent affiliation
+        in the most recent year (before the given year) that
+        the scientist published.
+        """
+        return self._organization
+
+    @organization.setter
+    def organization(self, val):
+        raise_non_empty(val, str)
+        self._organization = val
 
     @property
     def publications(self):
@@ -311,11 +350,14 @@ class Scientist(object):
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, names)
         self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
-        self._country = find_country(identifier, self._publications, year, refresh)
+        ctry, city, afid, org = find_location(identifier, self._publications,
+                                              year, refresh=refresh)
+        self._country = ctry
+        self._city = city
+        self._affiliation_id = afid
+        self._organization = org
 
         # Author search information
-        source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
-        self._sources = add_source_names(source_ids, names)
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = get_main_field(self._fields)
         au = query_author_data(self.identifier, refresh=refresh, verbose=False)
