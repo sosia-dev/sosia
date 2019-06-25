@@ -289,7 +289,7 @@ class Scientist(object):
         # Read mapping of fields to sources
         df, names = read_fields_sources_list()
         self.field_source = df
-        self.source_names = names["title"].to_dict()
+        self.source_names = names.set_index("source_id")["title"].to_dict()
 
         # Load list of publications
         if not eids:
@@ -348,7 +348,7 @@ class Scientist(object):
 
         # Parse information
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
-        self._sources = add_source_names(source_ids, names)
+        self._sources = add_source_names(source_ids, self.source_names)
         self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
         ctry, city, afid, org = find_location(identifier, self._publications,
                                               year, refresh=refresh)
