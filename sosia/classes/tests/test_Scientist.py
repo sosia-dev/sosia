@@ -120,15 +120,16 @@ def test_coauthors_period():
 
 
 def test_fields():
-    expected = [1803, 1408, 1405, 1803, 1408, 3301, 2002, 2002, 2308, 2003, 2002,
-                3317, 2002, 1400, 2002, 1400, 1402, 2002, 2000, 1405, 2200,
-                2308, 2002, 1405, 2000, 2002, 2003, 2002, 1400, 2002, 1400,
-                1402, 2002, 3317, 1803, 1408, 1405, 1803, 1408, 2002, 3301]
+    expected = [1803, 1405, 1408, 1803, 1408, 3301, 2002, 2002, 2308, 2003,
+                2002, 2000, 1405, 3317, 2002, 1400, 2002, 1402, 1400, 2002,
+                2200, 2308, 2002, 1405, 2000, 2002, 2003, 2002, 1400, 2002,
+                1400, 1402, 2002, 3317, 1803, 1408, 1405, 1803, 1408, 2002,
+                3301]
     assert_equal(scientist1.fields, expected)
-    expected = [1803, 1408, 1405, 3300, 2300, 1400, 1405, 2002, 2200, 2002,
+    expected = [1803, 1405, 1408, 3300, 2300, 1400, 1405, 2002, 2200, 2002,
                 1405, 1400, 3300, 2300, 1405, 1803, 1408]
     assert_equal(scientist2.fields, expected)
-    expected = [1803, 1408, 1405, 2002, 2200, 2002, 1405, 1803, 1408]
+    expected = [1803, 1405, 1408, 2002, 2200, 2002, 1405, 1803, 1408]
     assert_equal(scientist3.fields, expected)
 
 
@@ -174,7 +175,7 @@ def test_sources_change():
                 (18632, "Progress in Brain Research")}
     scientist1.sources, _ = zip(*expected)
     assert_equal(scientist1.sources, expected)
-    scientist1.sources = backup
+#    scientist1.sources = backup
 
 
 def test_main_field():
