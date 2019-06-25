@@ -101,7 +101,7 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
         mask = (((authors_size.year == yupto) &
                  (authors_size.n_pubs >= min(npapers))) &
                 (authors_size.n_pubs <= max(npapers)))
-        au_ok_year = authors_size[mask][["auth_id","n_pubs"]].drop_duplicates()
+        au_ok_year = authors_size[mask][["auth_id", "n_pubs"]].drop_duplicates()
         # authors ok (match both conditions)
         au_ok = list(set(au_ok_miny).intersection(set(au_ok_year["auth_id"])))
         mask = au_ok_year["auth_id"].isin(au_ok)
@@ -116,11 +116,11 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
     custom_print(text, verbose)
     # Verify the publications before minimum year are 0
     if group_tocheck:
-        text = ("Searching through characteristics of {:,} authors \n"
-                .format(len(group_tocheck)))
+        text = "Searching through characteristics of {:,} authors...".format(
+            len(group_tocheck))
         custom_print(text, verbose)
         print_progress(0, len(group_tocheck), verbose)
-        to_loop = [x for x in group_tocheck] # Temporary copy
+        to_loop = [x for x in group_tocheck]  # Temporary copy
         for i, au in enumerate(to_loop):
             q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, ybefore + 1)
             size = query("docs", q, size_only=True)
@@ -224,7 +224,8 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
             mask = sources_ys.year.between(min_year, max_year, inclusive=True)
             then = flat_set_from_df(sources_ys, "auids", mask)
         # Authors with publications before
-        negative = flat_set_from_df(sources_ys, "auids", sources_ys.year < min_year)
+        mask = sources_ys.year < min_year
+        negative = flat_set_from_df(sources_ys, "auids", mask)
     else:
         today = set()
         then = set()
