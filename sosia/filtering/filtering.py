@@ -201,6 +201,9 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
     n = len(search_sources)
     text = "Searching authors for search_group in {} sources...".format(n)
     custom_print(text, verbose)
+    today = set()
+    then = set()
+    negative = set()
 
     if stacked:  # Make use of SQL cache
         # Get already cached sources from cache
@@ -227,9 +230,6 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         mask = sources_ys.year < min_year
         negative = flat_set_from_df(sources_ys, "auids", mask)
     else:
-        today = set()
-        then = set()
-        negative = set()
         auth_count = []
         print_progress(0, n, verbose)
         for i, source_id in enumerate(search_sources):
