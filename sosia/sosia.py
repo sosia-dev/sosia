@@ -332,13 +332,15 @@ class Original(Scientist):
         # Second round of filtering: Check having no publications before
         # minimum year, and if 0, the number of publications in the relevant
         # period.
-        params = {"group": group, "ybefore": min(_years)-1, "yupto": self.year,
-                  "verbose": verbose}
+        group, _, _ = filter_pub_counts(group, min(_years)-1, self.year,
+                                        _npapers, yfrom=self.year_period,
+                                        verbose=verbose)
+        # Screen out also ids with too many publications over the full
+        # period
         if self.period:
-            params.update({"npapers": [1, max(_npapers_full)]})
-        else:
-            params.update({"npapers": _npapers, "yfrom": self.year_period})
-        group, _, _ = filter_pub_counts(**params)
+            group, _, _ = filter_pub_counts(group, min(_years)-1, self.year,
+                                            [1,max(_npapers_full)],
+                                            verbose=verbose)        
 
         # Third round of filtering: citations (in the FULL period).
         authors = pd.DataFrame({"auth_id": group, "year": self.year})
