@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from sosia.utils import CACHE_SQLITE
+from sosia.utils import CACHE_SQLITE, flat_set_from_df
 from sosia.cache import cache_connect
 
 
@@ -216,8 +216,8 @@ def sources_in_cache(df, refresh=False, file=CACHE_SQLITE):
         tosearch = df
     if refresh:
         if not incache.empty:
-            auth_incache = list(set([au for l in incache.auids.tolist() for au in l]))
-            auth_incache = pd.DataFrame(auth_incache, columns=["auth_id"], dtype="int64")
+            auth_incache = pd.DataFrame(flat_set_from_df(incache, "auids"),
+                                        columns=["auth_id"], dtype="int64")
             df.reset_index(inplace=True)
             query = "DELETE FROM authors WHERE auth_id=? "
             conn.executemany(query, auth_incache.to_records(index=False))

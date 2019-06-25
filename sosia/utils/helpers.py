@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 
 from pandas import read_csv
 
+from sosia.utils.startup import create_fields_sources_list
 from sosia.utils.constants import ASJC_2D, FIELDS_SOURCES_LIST,\
     SOURCES_NAMES_LIST
 from sosia.utils.startup import create_fields_sources_list
@@ -44,6 +45,16 @@ def custom_print(text, verbose):
     """Print text if verbose."""
     if verbose:
         print(text)
+
+
+def flat_set_from_df(df, col, condition=None):
+    """Flatten Series from DataFrame which contains lists and
+    return as set, optionally after filtering the DataFrame.
+    """
+    if condition is not None:
+        df = df[condition]
+    lists = df[col].tolist()
+    return set([item for l in lists for item in l])
 
 
 def get_main_field(fields):

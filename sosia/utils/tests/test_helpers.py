@@ -6,8 +6,8 @@ import pandas as pd
 from nose.tools import assert_equal, assert_true, raises
 
 from sosia.classes import Scientist
-from sosia.utils.helpers import add_source_names, margin_range,\
-    raise_non_empty, read_fields_sources_list
+from sosia.utils.helpers import add_source_names, flat_set_from_df,\
+    margin_range, raise_non_empty, read_fields_sources_list
 
 
 def test_add_source_names():
@@ -16,6 +16,23 @@ def test_add_source_names():
                 (18632, "Progress in Brain Research")}
     ids, names = zip(*expected)
     received = add_source_names(ids, s.source_names)
+    assert_equal(received, expected)
+
+
+def test_flat_set_from_df():
+    d = {'col1': [[1, 2], [10, 20]], "col2": ["a", "b"]}
+    df = pd.DataFrame(d)
+    expected = [1, 2, 10, 20]
+    received = sorted(list(flat_set_from_df(df, "col1")))
+    assert_equal(received, expected)
+
+
+def test_flat_set_from_df_condition():
+    d = {'col1': [[1, 2], [10, 20]], "col2": ["a", "b"]}
+    df = pd.DataFrame(d)
+    condition = df["col2"] == "b"
+    expected = [10, 20]
+    received = sorted(list(flat_set_from_df(df, "col1", condition)))
     assert_equal(received, expected)
 
 
