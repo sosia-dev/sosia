@@ -95,22 +95,25 @@ def test_search_sources_change():
 def test_search_group():
     scientist1.define_search_group(refresh=refresh)
     group = scientist1.search_group
-    assert_equal(len(group), 371)
+    assert_equal(len(group), 370)
     assert_true(isinstance(group, list))
-    # scientist2 with ignore_first_id option
+
+
+def test_search_group_period():
     scientist2.define_search_group(ignore_first_id=True, refresh=refresh)
     group = scientist2.search_group
-    assert_equal(len(group), 4377)
+    assert_equal(len(group), 4361)
     assert_true(isinstance(group, list))
 
 
 def test_search_group_stacked():
-    # scientist 1
     scientist1.define_search_group(stacked=True,refresh=refresh)
     group = scientist1.search_group
     assert_equal(len(group), 628)
     assert_true(isinstance(group, list))
-    # scientist2 with ignore_first_id option
+
+
+def test_search_group_stacked_period():
     scientist2.define_search_group(stacked=True, ignore_first_id=True, refresh=refresh)
     group = scientist2.search_group
     assert_equal(len(group), 4998)
@@ -132,8 +135,7 @@ def test_find_matches():
 
 
 def test_find_matches_stacked():
-    # scientist1
-    recieved = sorted(scientist1.find_matches(stacked=True, refresh=refresh))
+    recieved = sorted(scientist1.find_matches(stacked=True, refresh=refresh, verbose=True))
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
@@ -144,9 +146,11 @@ def test_find_matches_stacked():
     for e in recieved:
         assert_true(isinstance(e.abstract_sim, float))
         assert_true(0 <= e.abstract_sim <= 1)
-    # scientist2 (period=8) and with ignore_first_id = True
+
+
+def test_find_matches_stacked():
     recieved = sorted(scientist2.find_matches(stacked=True, information=False,
-                                              refresh=refresh))
+                                              refresh=refresh, verbose=True))
     expected = [36998825200, 56049973600, 56896085200, 57188695848, 57188709931]
     assert_equal(recieved, expected)
 
