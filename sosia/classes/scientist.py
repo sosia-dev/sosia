@@ -350,10 +350,9 @@ class Scientist(object):
         source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
         self._sources = add_source_names(source_ids, self.source_names)
         self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
-        ctry, city, afid, org = find_location(identifier, self._publications,
+        ctry, afid, org = find_location(identifier, self._publications,
                                               year, refresh=refresh)
         self._country = ctry
-        self._city = city
         self._affiliation_id = afid
         self._organization = org
 

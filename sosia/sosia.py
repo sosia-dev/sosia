@@ -285,7 +285,7 @@ class Original(Scientist):
         information_values = ["first_name", "surname", "first_year", "num_coauthors",
             "num_publications", "num_citations", "num_coauthors_period",
             "num_publications_period", "num_citations_period", "subjects",
-            "country", "city", "affiliation_id", "affiliation", "language",
+            "country", "affiliation_id", "affiliation", "language",
             "reference_sim", "abstract_sim"]
         if isinstance(information, bool):
             if information:

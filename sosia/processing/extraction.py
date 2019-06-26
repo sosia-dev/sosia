@@ -18,7 +18,7 @@ def find_coauthors(pubs, exclude):
 
 
 def find_location(auth_ids, pubs, year, refresh):
-    """Find the most common country, city, affiliation ID, and affiliation name
+    """Find the most common country, affiliation ID, and affiliation name
     of a scientist using her most recent publications with valid information.
 
     Parameters
@@ -39,7 +39,7 @@ def find_location(auth_ids, pubs, year, refresh):
 
     Returns
     -------
-    country, city, affiliation_id, organization : str or None
+    country, affiliation_id, organization : str or None
         The country, city, affiliation ID, and affiliation name of the
         scientist in the year closest to the given year, given that the
         publications list valid information for each output. Equals None when
@@ -52,34 +52,28 @@ def find_location(auth_ids, pubs, year, refresh):
     countries = []
     affiliation_id = []
     organization = []
-    city = []
     for p in papers:
         authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
         if not countries:
             countries = [a.country for a in authorgroup if a.auid in
                          auth_ids and a.country]
-        if not city:
-            city = [a.city for a in authorgroup if a.auid in
-                    auth_ids and a.city]
         if not affiliation_id:
             affiliation_id = [a.affiliation_id for a in authorgroup if a.auid in
                               auth_ids and a.affiliation_id]
         if not organization:
             organization = [a.organization for a in authorgroup if a.auid in
                             auth_ids and a.organization]
-        if not countries or not affiliation_id or not organization or not city:
+        if not countries or not affiliation_id or not organization:
             continue
         else:
             break
     if countries:
         countries = "; ".join(sorted(list(set(countries))))
-    if city:
-        city = "; ".join(sorted(list(set(city))))
     if affiliation_id:
         affiliation_id = "; ".join(sorted(list(set(affiliation_id))))
     if organization:
         organization = "; ".join(sorted(list(set(organization))))
-    return (countries, city, affiliation_id, organization)
+    return (countries, affiliation_id, organization)
 
 
 def get_authors(pubs):

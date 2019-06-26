@@ -45,14 +45,6 @@ def test_active_year():
     assert_equal(scientist5.active_year, 2018)
 
 
-def test_city():
-    assert_equal(scientist1.city, "Mannheim")
-    assert_equal(scientist2.city, "Lausanne")
-    assert_equal(scientist3.city, "Lausanne")
-    assert_equal(scientist4.city, [])
-    assert_equal(scientist5.city, "Munich")
-
-
 def test_country():
     assert_equal(scientist1.country, "United Kingdom")
     assert_equal(scientist2.country, "Switzerland")
