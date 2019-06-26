@@ -56,7 +56,7 @@ def test_country():
 def test_citations():
     assert_equal(scientist1.citations, 47)
     assert_equal(scientist2.citations, 28)
-    assert_equal(scientist3.citations, 3)
+    assert_equal(scientist3.citations, 2)
     assert_equal(scientist4.citations, 19)
     assert_equal(scientist5.citations, 44)
 
