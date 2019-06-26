@@ -389,11 +389,13 @@ class Original(Scientist):
                 res, _ = stacked_query(**params)
                 res = build_dict(res, auth_year_group)
                 res = pd.DataFrame.from_dict(res, orient="index")
-                res["year"] = self.year
-                res = res[["year", "first_year", "n_pubs", "n_coauth"]]
-                res.index.name = "auth_id"
-                res = res.reset_index()
-                cache_insert(res, table="author_year")
+                if res:
+                    # res can become empty after build_dict if a au_id is old
+                    res["year"] = self.year
+                    res = res[["year", "first_year", "n_pubs", "n_coauth"]]
+                    res.index.name = "auth_id"
+                    res = res.reset_index()
+                    cache_insert(res, table="author_year")
             author_year_cache, _ = author_year_in_cache(authors)
             if self._ignore_first_id:
                 # only number of coauthors should be big enough
