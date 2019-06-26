@@ -53,7 +53,10 @@ def find_location(auth_ids, pubs, year, refresh):
     affiliation_id = []
     organization = []
     for p in papers:
-        authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
+        try:
+            authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
+        except Scopus404Error:
+            continue
         if not countries:
             countries = [a.country for a in authorgroup if a.auid in
                          auth_ids and a.country]
