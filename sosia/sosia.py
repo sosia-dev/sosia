@@ -458,9 +458,8 @@ class Original(Scientist):
                     matches.remove(m)
                     continue
                 eids_period = [p.eid for p in pubs]
-                q = ("REF({}) AND PUBYEAR BEF {} AND NOT EID({})"
-                     .format(" OR ".join(eids_period), self.year + 1,
-                             ") AND NOT EID(".join(eids_period)))
+                q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
+                     .format(" OR ".join(eids_period), self.year + 1, m))
                 cits = query("docs", q, size_only=True)
                 if not (min(_ncits) <= cits <= max(_ncits)):
                     matches.remove(m)
