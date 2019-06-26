@@ -312,13 +312,11 @@ class Scientist(object):
 
         # Count of citations
         if not eids:
-            key = "AU-ID"
             search_ids = identifier
         else:
-            key = "EID"
             search_ids = eids
         q = build_citation_query(search_ids=search_ids, pubyear=self.year+1,
-                                 exclusion_key=key, exclusion_ids=search_ids)
+                                 exclusion_key="AU-ID", exclusion_ids=identifier)
         self._citations = query("docs", q, size_only=True)
 
         # Coauthors
@@ -337,7 +335,7 @@ class Scientist(object):
                 raise Exception(text)
             eids_period = [p.eid for p in self._publications_period]
             q = build_citation_query(search_ids=eids_period, pubyear=self.year+1,
-                exclusion_key="EID", exclusion_ids=eids_period)
+                exclusion_key="AU-ID", exclusion_ids=identifier)
             self._citations_period = query("docs", q, size_only=True)
             self._coauthors_period = find_coauthors(self._publications_period,
                                                     identifier)
