@@ -388,9 +388,9 @@ class Original(Scientist):
                     params.update({"total": len(auth_year_group)})
                 res, _ = stacked_query(**params)
                 res = build_dict(res, auth_year_group)
-                res = pd.DataFrame.from_dict(res, orient="index")
                 if res:
                     # res can become empty after build_dict if a au_id is old
+                    res = pd.DataFrame.from_dict(res, orient="index")
                     res["year"] = self.year
                     res = res[["year", "first_year", "n_pubs", "n_coauth"]]
                     res.index.name = "auth_id"
