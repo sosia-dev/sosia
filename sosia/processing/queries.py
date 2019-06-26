@@ -16,10 +16,10 @@ from sosia.cache import authors_in_cache, cache_insert
 def build_citation_query(search_ids, pubyear, exclusion_key, exclusion_ids):
     """Auxiliary function to build query string to search for citations."""
     search_ids = " OR ".join(search_ids)
+    joiner = " OR "
     if exclusion_key == "AU-ID":
-        exclusion_ids = ") AND NOT AU-ID(".join(exclusion_ids)
-    if exclusion_key == "EID":
-        exclusion_ids = " OR ".join(exclusion_ids)
+        joiner = ") AND NOT AU-ID("
+    exclusion_ids = joiner.join(exclusion_ids)
     s = Template("REF($search_ids) AND PUBYEAR BEF $pubyear AND NOT "
                  "$exclusion_key($exclusion_ids)")
     q = s.substitute(search_ids=search_ids, pubyear=pubyear,
@@ -110,8 +110,8 @@ def query_author_data(authors_list, refresh=False, verbose=False):
     auth_done, auth_missing = authors_in_cache(authors)
     if auth_missing:
         params = {"group": auth_missing, "res": [],
-            "refresh": refresh, "joiner": ") OR AU-ID(",
-            "q_type": "author", "template": Template("AU-ID($fill)")}
+                  "refresh": refresh, "joiner": ") OR AU-ID(",
+                  "q_type": "author", "template": Template("AU-ID($fill)")}
         if verbose:
             print("Pre-filtering...")
             params.update({"total": len(auth_missing)})
@@ -151,10 +151,12 @@ def query_journal(source_id, years, refresh):
         res = []
         for year in years:
             q = Template("SOURCE-ID({}) AND PUBYEAR IS $fill".format(source_id))
-            ext, _ = stacked_query([year], [], q, "", "docs", refresh=refresh)
+            params = {"group": [year], "res": [], "template": q,
+                      "joiner": "", "q_type": "docs", "refresh": refresh}
+            ext, _ = stacked_query(**params)
             if not valid_results(ext):  # Reload queries with missing years
-                ext, _ = stacked_query([year], [], q, "",
-                    "docs", refresh=True)
+                params.update({"refresh": True})
+                ext, _ = stacked_query(**params)
             res.extend(ext)
     # Sort authors by year
     d = defaultdict(list)
@@ -265,7 +267,7 @@ def stacked_query(group, res, template, joiner, q_type, refresh,
         i += len(group)
         print_progress(i, total, verbose)
     except (Scopus400Error, Scopus500Error, ScopusQueryError) as e:
-        # Split query into two equally sized ones
+        # Split query group into two equally sized groups
         mid = len(group) // 2
         params = {"group": group[:mid], "res": res, "template": template,
                   "i": i, "joiner": joiner, "q_type": q_type, "total": total,
