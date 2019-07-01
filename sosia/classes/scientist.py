@@ -358,7 +358,7 @@ class Scientist(object):
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = get_main_field(self._fields)
         au = query_author_data(self.identifier, refresh=refresh, verbose=False)
-        au = au.sort_values("documents", ascending=True).iloc[0]
+        au = au.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
         self._name = ", ".join([au.surname, au.givenname])
         self._surname = au.surname
