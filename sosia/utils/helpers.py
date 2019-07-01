@@ -13,7 +13,7 @@ def add_source_names(source_ids, names):
     """Add names of sources to list of source IDs turning the list into a
     list of tuples.
     """
-    return set([(s_id, names.get(int(s_id))) for s_id in source_ids])
+    return sorted([(s_id, names.get(int(s_id))) for s_id in set(source_ids)])
 
 
 def build_dict(results, chunk):
