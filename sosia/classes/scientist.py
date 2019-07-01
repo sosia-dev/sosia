@@ -311,12 +311,9 @@ class Scientist(object):
             self.period = None
 
         # Count of citations
-        if not eids:
-            search_ids = identifier
-        else:
-            search_ids = eids
+        search_ids = eids or identifier
         q = build_citation_query(search_ids=search_ids, pubyear=self.year+1,
-                                 exclusion_key="AU-ID", exclusion_ids=identifier)
+            exclusion_key="AU-ID", exclusion_ids=identifier)
         self._citations = query("docs", q, size_only=True)
 
         # Coauthors
@@ -325,9 +322,10 @@ class Scientist(object):
         # Period counts simply set to total if period is or goes back to None
         if self.period:
             self.year_period = year-period+1
-            self._publications_period = [p for p in self._publications if
-            int(p.coverDate[:4]) <= year and
-            int(p.coverDate[:4]) >= self.year_period]
+            pubs = [p for p in self._publications if
+                    int(p.coverDate[:4]) <= year and
+                    int(p.coverDate[:4]) >= self.year_period]
+            self._publications_period = pubs
             if not len(self._publications_period):
                 text = "No publications for author {} until year {} in a {}-"\
                        "years period".format("-".join(identifier), year,
@@ -345,11 +343,12 @@ class Scientist(object):
             self._citations_period = self._citations
 
         # Parse information
-        source_ids = set([int(p.source_id) for p in self._publications if p.source_id])
+        source_ids = set([int(p.source_id) for p in self._publications
+                          if p.source_id])
         self._sources = add_source_names(source_ids, self.source_names)
         self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
         ctry, afid, org = find_location(identifier, self._publications,
-                                              year, refresh=refresh)
+                                        year, refresh=refresh)
         self._country = ctry
         self._affiliation_id = afid
         self._organization = org
@@ -360,14 +359,15 @@ class Scientist(object):
         au = query_author_data(self.identifier, refresh=refresh, verbose=False)
         au = au.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
-        self._surname = None
-        self._name = None
-        self._first_name = None
-        if au.surname:
-            self._surname = au.surname
-            if au.givenname:
-                self._name = ", ".join([au.surname, au.givenname])
-                self._first_name = au.givenname.replace(".", " ").split(" ")[0]
+        self._surname = au.surname or None
+        if au.givenname:
+            self._first_name = au.givenname.replace(".", " ").split(" ")[0]
+        else:
+            self._first_name = None
+        if self._surname and au.givenname:
+            self._name = ", ".join([self._surname, au.givenname])
+        else:
+            self._name = None
         self._language = None
 
     def get_publication_languages(self, refresh=False):
@@ -375,9 +375,9 @@ class Scientist(object):
         langs = []
         for eid in self._eids:
             try:
-                lang = AbstractRetrieval(eid, view="FULL", refresh=refresh).language
+                l = AbstractRetrieval(eid, view="FULL", refresh=refresh).language
             except KeyError:  # Document likely not loaded in FULL view
-                lang = AbstractRetrieval(eid, view="FULL", refresh=True).language
-            langs.append(lang)
+                l = AbstractRetrieval(eid, view="FULL", refresh=True).language
+            langs.append(l)
         self._language = "; ".join(sorted(list(set(filter(None, langs)))))
         return self
