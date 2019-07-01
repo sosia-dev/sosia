@@ -133,7 +133,7 @@ def test_first_year():
 
 def test_sources():
     received = scientist1.sources
-    expected = {(17472, 'Journal of Banking and Finance'),
+    expected = [(17472, 'Journal of Banking and Finance'),
                 (20022, 'Economic Policy'),
                 (21307, 'Management Science'),
                 (22900, 'Research Policy'),
@@ -141,21 +141,22 @@ def test_sources():
                 (24389, 'Journal of Industrial Economics'),
                 (26878, 'Journal of Population Economics'),
                 (28994, 'Journal of Evolutionary Economics'),
-                (10600153365, 'Economics of Innovation and New Technology')}
+                (10600153365, 'Economics of Innovation and New Technology')]
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)
     received = scientist2.sources
-    expected = {(23013, 'Industry and Innovation'),
+    expected = [(23013, 'Industry and Innovation'),
                 (21100858668, None),
                 (15143, 'Regional Studies'),
                 (18769, 'Applied Economics Letters'),
-                (22900, 'Research Policy')}
+                (22900, 'Research Policy')]
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)
     received = scientist3.sources
-    expected = {(18769, "Applied Economics Letters"), (22900, "Research Policy")}
+    expected = [(18769, "Applied Economics Letters"),
+                (22900, "Research Policy")]
     assert_equal(len(received), len(expected))
     for e in expected:
         assert_true(e in received)
@@ -163,8 +164,8 @@ def test_sources():
 
 def test_sources_change():
     backup = scientist1.sources
-    expected = {(14351, "Brain Research Reviews"),
-                (18632, "Progress in Brain Research")}
+    expected = [(14351, "Brain Research Reviews"),
+                (18632, "Progress in Brain Research")]
     scientist1.sources, _ = zip(*expected)
     assert_equal(scientist1.sources, expected)
     scientist1.sources = backup

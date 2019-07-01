@@ -227,7 +227,7 @@ class Scientist(object):
 
     @sources.setter
     def sources(self, val):
-        raise_non_empty(val, (set, list, tuple))
+        raise_non_empty(val, (list, tuple))
         self._sources = maybe_add_source_names(val, self.source_names)
 
     @property

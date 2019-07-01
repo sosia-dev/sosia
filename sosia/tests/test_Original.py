@@ -85,8 +85,8 @@ def test_search_sources():
 
 def test_search_sources_change():
     backup = scientist1.search_sources
-    expected = {(14351, "Brain Research Reviews"),
-                (18632, "Progress in Brain Research")}
+    expected = [(14351, "Brain Research Reviews"),
+                (18632, "Progress in Brain Research")]
     scientist1.search_sources, _ = zip(*expected)
     assert_equal(scientist1.search_sources, expected)
     scientist1.search_sources = backup
