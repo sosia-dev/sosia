@@ -360,9 +360,14 @@ class Scientist(object):
         au = query_author_data(self.identifier, refresh=refresh, verbose=False)
         au = au.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
-        self._name = ", ".join([au.surname, au.givenname])
-        self._surname = au.surname
-        self._first_name = au.givenname.replace(".", " ").split(" ")[0]
+        self._surname = None
+        self._name = None
+        self._first_name = None
+        if au.surname:
+            self._surname = au.surname
+            if au.givenname:
+                self._name = ", ".join([au.surname, au.givenname])
+                self._first_name = au.givenname.replace(".", " ").split(" ")[0]
         self._language = None
 
     def get_publication_languages(self, refresh=False):
