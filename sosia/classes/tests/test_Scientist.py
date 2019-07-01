@@ -167,7 +167,7 @@ def test_sources_change():
                 (18632, "Progress in Brain Research")}
     scientist1.sources, _ = zip(*expected)
     assert_equal(scientist1.sources, expected)
-#    scientist1.sources = backup
+    scientist1.sources = backup
 
 
 def test_main_field():
@@ -191,14 +191,12 @@ def test_publications():
     assert_equal(len(received), 11)
     assert_equal(received[2].eid, '2-s2.0-0001093103')
     for p in received:
-        print(list(p._fields))
         assert_true(all(c in p._fields for c in cols))
     # scientist2
     received = scientist2.publications
     assert_equal(len(received), 7)
     assert_equal(received[-1].eid, "2-s2.0-84866317084")
     for p in received:
-        print(list(p._fields))
         assert_true(all(c in p._fields for c in cols))
     # scientist3
     received = scientist3.publications
@@ -207,7 +205,6 @@ def test_publications():
     assert_equal(len(received), 7)
     assert_equal(received[0].eid, "2-s2.0-85015636484")
     for p in received:
-        print(list(p._fields))
         assert_true(all(c in p._fields for c in cols))
 
 
