@@ -95,28 +95,28 @@ def test_search_sources_change():
 def test_search_group():
     scientist1.define_search_group(refresh=refresh)
     group = scientist1.search_group
-    assert_equal(len(group), 370)
+    assert_true(365 <= len(group) <= 375)
     assert_true(isinstance(group, list))
 
 
 def test_search_group_period():
     scientist2.define_search_group(ignore_first_id=True, refresh=refresh)
     group = scientist2.search_group
-    assert_equal(len(group), 4361)
+    assert_true(4355 <= len(group) <= 4365)
     assert_true(isinstance(group, list))
 
 
 def test_search_group_stacked():
     scientist1.define_search_group(stacked=True,refresh=refresh)
     group = scientist1.search_group
-    assert_equal(len(group), 628)
+    assert_true(620 <= len(group) <= 630)
     assert_true(isinstance(group, list))
 
 
 def test_search_group_stacked_period():
     scientist2.define_search_group(stacked=True, ignore_first_id=True, refresh=refresh)
     group = scientist2.search_group
-    assert_equal(len(group), 4998)
+    assert_true(4960 <= len(group) <= 5000)
     assert_true(isinstance(group, list))
 
 
