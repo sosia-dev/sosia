@@ -11,7 +11,7 @@ from sosia.processing import find_location, parse_docs
 def test_find_location():
     auth_id = 6701809842
     pubs = ScopusSearch("AU-ID({})".format(auth_id)).results
-    ctry, aid, aff = find_location([str(auth_id)], pubs, 2000, True)
+    ctry, aid, aff = find_location([str(auth_id)], pubs, 2000, refresh=False)
     assert_equal(ctry, "Germany")
     assert_equal(aid, "60028717")
     assert_equal(aff, "University of Munich")

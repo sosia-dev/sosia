@@ -49,34 +49,22 @@ def find_location(auth_ids, pubs, year, refresh):
     papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
     papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
     params = {"view": "FULL", "refresh": refresh}
-    countries = []
-    affiliation_id = []
-    organization = []
+    # Return most recent complete information
     for p in papers:
         try:
             authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
         except Scopus404Error:
             continue
-        if not countries:
-            countries = [a.country for a in authorgroup if a.auid in
-                         auth_ids and a.country]
-        if not affiliation_id:
-            affiliation_id = [a.affiliation_id for a in authorgroup if a.auid in
-                              auth_ids and a.affiliation_id]
-        if not organization:
-            organization = [a.organization for a in authorgroup if a.auid in
-                            auth_ids and a.organization]
-        if not countries or not affiliation_id or not organization:
+        authorgroup = [a for a in authorgroup if a.auid in auth_ids
+                       and a.country and a.affiliation_id and a.organization]
+        countries = "; ".join(sorted(set([a.country for a in authorgroup])))
+        aff_ids = "; ".join(sorted(set([a.affiliation_id for a in authorgroup])))
+        orgs = "; ".join(sorted(set([a.organization for a in authorgroup])))
+        if not countries and not aff_ids and not orgs:
             continue
-        else:
-            break
-    if countries:
-        countries = "; ".join(sorted(list(set(countries))))
-    if affiliation_id:
-        affiliation_id = "; ".join(sorted(list(set(affiliation_id))))
-    if organization:
-        organization = "; ".join(sorted(list(set(organization))))
-    return (countries, affiliation_id, organization)
+        return (countries, aff_ids, orgs)
+    # Return None-triple if all else fails
+    return (countries, aff_ids, orgs)
 
 
 def get_authors(pubs):
