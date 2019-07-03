@@ -300,7 +300,8 @@ class Scientist(object):
 
         # Fist year (if period provided set first year of period, if
         # not smaller than first year of publication
-        self._first_year = int(min([p.coverDate[:4] for p in self._publications]))
+        pub_years = [p.coverDate[:4] for p in self._publications]
+        self._first_year = int(min(pub_years))
         if period and year-period+1 <= self._first_year:
             self.period = None
 
@@ -336,20 +337,23 @@ class Scientist(object):
             self._publications_period = self._publications
             self._citations_period = self._citations
 
-        # Parse information
+        # Author search information
         source_ids = set([int(p.source_id) for p in self._publications
                           if p.source_id])
         self._sources = add_source_names(source_ids, self.source_names)
-        self._active_year = int(max([p.coverDate[:4] for p in self._publications]))
+        self._active_year = int(max(pub_years))
+        self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
+        self._main_field = get_main_field(self._fields)
+
+        # Most recent geolocation
         ctry, afid, org = find_location(identifier, self._publications,
                                         year, refresh=refresh)
         self._country = ctry
         self._affiliation_id = afid
         self._organization = org
+        self._language = None
 
-        # Author search information
-        self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
-        self._main_field = get_main_field(self._fields)
+        # Author name from profile with most documents
         au = query_author_data(self.identifier, refresh=refresh, verbose=False)
         au = au.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
@@ -362,7 +366,6 @@ class Scientist(object):
             self._name = ", ".join([self._surname, au.givenname])
         else:
             self._name = None
-        self._language = None
 
     def get_publication_languages(self, refresh=False):
         """Parse languages of published documents."""
