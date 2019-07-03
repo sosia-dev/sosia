@@ -128,23 +128,6 @@ def print_progress(iteration, total, verbose=True, length=50):
         print()
 
 
-def raise_non_empty(val, obj):
-    """Raise exception if provided value is empty,
-    or not of the desired object type.
-    """
-    if not isinstance(val, obj) or len(val) == 0:
-        obj_name = _get_obj_name(obj)
-        label = " or ".join(obj_name.split())
-        raise Exception("Value must be a non-empty {}.".format(label))
-
-
-def raise_value(val, obj):
-    """Raise a ValueError if the provided value is not of type obj."""
-    if not isinstance(val, obj):
-        label = _get_obj_name(obj)
-        raise Exception("Value must be of type {}.".format(label))
-
-
 def read_fields_sources_list():
     """Auxiliary function to read FIELDS_SOURCES_LIST and create it before,
     if necessary.

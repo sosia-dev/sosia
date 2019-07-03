@@ -7,9 +7,8 @@ from pybliometrics.scopus import AbstractRetrieval
 
 from sosia.processing import build_citation_query, find_coauthors,\
     find_location, query, query_author_data
-from sosia.utils import ASJC_2D, add_source_names, get_main_field,\
-    maybe_add_source_names, raise_non_empty, raise_value,\
-    read_fields_sources_list
+from sosia.utils import ASJC_2D, accepts, add_source_names, get_main_field,\
+    maybe_add_source_names, read_fields_sources_list
 
 
 class Scientist(object):
@@ -19,46 +18,41 @@ class Scientist(object):
         return self._active_year
 
     @active_year.setter
+    @accepts(int)
     def active_year(self, val):
-        if not isinstance(val, int):
-            raise Exception("Value must be an integer.")
         self._active_year = val
 
     @property
     def affiliation_id(self):
-        """The affiliation ID of the scientist's most frequent affiliation
-        in the most recent year (before the given year) that
+        """The affiliation ID (as string) of the scientist's most frequent
+        affiliation in the most recent year (before the given year) that
         the scientist published.
         """
         return self._affiliation_id
 
     @affiliation_id.setter
+    @accepts(str)
     def affiliation_id(self, val):
-        raise_non_empty(val, str)
         self._affiliation_id = val
 
     @property
     def citations(self):
-        """The citations of the scientist until
-        the given year.
-        """
+        """The citations of the scientist until the given year."""
         return self._citations
 
     @citations.setter
+    @accepts(int)
     def citations(self, val):
-        raise_non_empty(val, int)
         self._citations = val
 
     @property
     def citations_period(self):
-        """The citations of the scientist until
-        the given year.
-        """
+        """The citations of the scientist until during the given period."""
         return self._citations_period
 
     @citations_period.setter
+    @accepts(int)
     def citations_period(self, val):
-        raise_non_empty(val, int)
         self._citations_period = val
 
     @property
@@ -70,8 +64,8 @@ class Scientist(object):
         return self._city
 
     @city.setter
+    @accepts(str)
     def city(self, val):
-        raise_non_empty(val, str)
         self._city = val
 
     @property
@@ -83,8 +77,8 @@ class Scientist(object):
         return self._country
 
     @country.setter
+    @accepts(str)
     def country(self, val):
-        raise_non_empty(val, str)
         self._country = val
 
     @property
@@ -95,20 +89,20 @@ class Scientist(object):
         return self._coauthors
 
     @coauthors.setter
+    @accepts((set, list, tuple))
     def coauthors(self, val):
-        raise_non_empty(val, (set, list, tuple))
         self._coauthors = val
 
     @property
     def coauthors_period(self):
-        """Set of coauthors of the scientist on all publications until the
-        given year.
+        """Set of coauthors of the scientist on all publications during the
+        given period.
         """
         return self._coauthors_period
 
     @coauthors_period.setter
+    @accepts((set, list, tuple))
     def coauthors_period(self, val):
-        raise_non_empty(val, (set, list, tuple))
         self._coauthors_period = val
 
     @property
@@ -119,8 +113,8 @@ class Scientist(object):
         return self._fields
 
     @fields.setter
+    @accepts((set, list, tuple))
     def fields(self, val):
-        raise_non_empty(val, (set, list, tuple))
         self._fields = val
 
     @property
@@ -129,8 +123,8 @@ class Scientist(object):
         return self._first_year
 
     @first_year.setter
+    @accepts(int)
     def first_year(self, val):
-        raise_value(val, int)
         self._first_year = val
 
     @property
@@ -139,8 +133,8 @@ class Scientist(object):
         return self._first_name
 
     @first_name.setter
+    @accepts(str)
     def first_name(self, val):
-        raise_non_empty(val, str)
         self._name = val
 
     @property
@@ -167,8 +161,8 @@ class Scientist(object):
         return self._name
 
     @name.setter
+    @accepts(str)
     def name(self, val):
-        raise_non_empty(val, str)
         self._name = val
 
     @property
@@ -177,8 +171,8 @@ class Scientist(object):
         return self._language
 
     @language.setter
+    @accepts(str)
     def language(self, val):
-        raise_non_empty(val, str)
         self._language = val
 
     @property
@@ -190,8 +184,8 @@ class Scientist(object):
         return self._organization
 
     @organization.setter
+    @accepts(str)
     def organization(self, val):
-        raise_non_empty(val, str)
         self._organization = val
 
     @property
@@ -202,8 +196,8 @@ class Scientist(object):
         return self._publications
 
     @publications.setter
+    @accepts((set, list, tuple))
     def publications(self, val):
-        raise_non_empty(val, (set, list, tuple))
         self._publications = val
 
     @property
@@ -214,8 +208,8 @@ class Scientist(object):
         return self._publications_period
 
     @publications_period.setter
+    @accepts((set, list, tuple))
     def publications_period(self, val):
-        raise_non_empty(val, (set, list, tuple))
         self._publications_period = val
 
     @property
@@ -226,8 +220,8 @@ class Scientist(object):
         return self._sources
 
     @sources.setter
+    @accepts((list, tuple))
     def sources(self, val):
-        raise_non_empty(val, (list, tuple))
         self._sources = maybe_add_source_names(val, self.source_names)
 
     @property
@@ -236,8 +230,8 @@ class Scientist(object):
         return self._surname
 
     @surname.setter
+    @accepts(str)
     def surname(self, val):
-        raise_non_empty(val, str)
         self._name = val
 
     @property
@@ -247,8 +241,8 @@ class Scientist(object):
         return self._subjects
 
     @subjects.setter
+    @accepts((set, list, tuple))
     def subjects(self, val):
-        raise_non_empty(val, (set, list, tuple))
         self._subjects = val
 
     def __init__(self, identifier, year, refresh=False, period=None, eids=None):
