@@ -13,6 +13,7 @@ Overview
 5. In the year of treatment, has about the same number of publications
 6. Started publishing around the same year as the scientist
 7. In the year of treatment, has about the same number of co-authors
+8. In the year of treatment, has about the same number of citations (excluding self-ciations)
 
 You obtain results after only four steps:
 
@@ -21,7 +22,7 @@ You obtain results after only four steps:
 3. Define a first search group
 4. Filter the search group to obtain a matching group
 
-Depending on the number of search sources and the first search group, one query may take up to 6 hours.  Each query on the Scopus database will make use of your API Key, which allows 5000 requests per week.  `scopus` makes sure that all information are cached, so that subsequent queries will take less than a minute.  The main classes and all methods have a boolean `refresh` parameter, which steers whether to refresh the cached queries (default is `False`).
+Depending on the number of search sources and the first search group, one query may take up to 6 hours.  Each query on the Scopus database will make use of your API Key, which allows 5000 requests per week. `sosia` and `scopus` makes sure that all information are cached, so that subsequent queries will take less than a minute.  The main classes and all methods have a boolean `refresh` parameter, which steers whether to refresh the cached queries (default is `False`).
 
 Initial set-up
 --------------
@@ -108,7 +109,7 @@ The next step is to define a list of sources similar (in type and area) to the s
     (21100889873, 'International Journal of Recent Technology and Engineering'),
     (21100898637, 'Research Policy: X')]
 
-Property `search_sources` is a list of tuples storing source ID and source title.  As before, you can override (or predefine )your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the source the scientist publishes in: `stefano.search_sources = stefano.sources`.
+Property `search_sources` is a list of tuples storing source ID and source title.  As before, you can override (or predefine) your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the source the scientist publishes in: `stefano.search_sources = stefano.sources`.
 
 Using `verbose=True` you receive additional information on this operation:
 
@@ -185,18 +186,29 @@ The final step is to search within this search group for authors that fulfill cr
     num_coauthors=8, num_publications=7, num_citations=52, country='United
     Kingdom', language='eng', reference_sim=0.0079, abstract_sim=0.1275)
 
+With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to change this behavior in order to focus on a shorter period of time before the year of treatment. This is done by initiating the class :doc:`Original <../reference/sosia.Original>` and setting the option `period` equal to the desired number of years,
+
+.. code-block:: python
+    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
+                                          coauth_margin=1, period=3)
+
+and then proceeding normally with the other steps. `sosia` will return authors starting publishing within 1 year before or after the first year of publication, with maximum 1 publication more or less, 1 citation more or less and 1 coauthor more or less the scientists, between 2017 and 2015 included. More precisely, for citations and coauthors, `sosia` counts: only citations (excluding self-citations) up to 2017 to papers published within the period; the number of unique coauthors in publications within the period. It is left to the user to further restrict the sample of matches based on similarity over the full period (the necessary variables can be obtained as output).
+
 By default, `sosia` provides the following information (which you switch off using `information=False` to simply return a list of Scopus IDs):
 
 * `first_year`: The year of the first recorded publication
-* `num_coauthors`: The number of coauthors (Scopus Author profiles) in the year of treatment
-* `num_publications`: The number of indexed publications in the year of treatment
-* `num_citations`: The number of citations up until the year of treatment
+* `num_coauthors`: The number of coauthors (Scopus Author profiles) up to the year of treatment
+* `num_publications`: The number of indexed publications up to the year of treatment
+* `num_citations`: The number of citations up until up to year of treatment
+* `num_coauthors_period`: The number of coauthors (Scopus Author profiles) within the `period` desired (if not provided, equal to num_coauthors)
+* `num_publications_period`: The number of indexed publications within the `period` desired (if not provided, equal to num_publications)
+* `num_citations_period`: The number of citations within the `period` desired  (if not provided, equal to num_citations)
 * `country`: The most frequent country of all affiliations listed on publications most recent to the year of treatment
 * `language`: The language(s) of the published documents of an author up until the year of treatment
 * `reference_sim`: The cosine similarity of references listed in publications up until the year of treatment between the matched scientist and the scientist (references may be missing)
 * `abstract_sim`: The cosine similarity of words used in abstracts of publications up until the year of treatment between the matched scientist and the scientist, approriately filtered and stemmed using `nltk <https://www.nltk.org/>`_ and `sklearn <https://scikit-learn.org//>`_ (abstracts my be missing)
 
-Alernatively, you can provide a list of above keywords to only obtain information on these keywords.  This is helpful as some information takes time to gather.
+Alternatively, you can provide a list of above keywords to only obtain information on these keywords.  This is helpful as some information takes time to gather.
 
 It is easy to work with namedtuples.  For example, using `pandas <https://pandas.pydata.org/>`_ you easily turn the list into a pandas DataFrame:
 
@@ -219,3 +231,11 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     0        0.1695  
     1        0.1275
 
+Finally, for demanding users, there exists an option to attenuate the issue of disambiguation of names in Scopus. Scopus Author IDs are curated and fairly correct, on average. However, in some cases they are incorrect. In most of these cases, more than one Author ID is associated to one same author. In `sosia` it is left to the user to verify whether the Author IDs obtained in the list of matches are precise. At the same time, with default settings, there may be a "hypothetical author" that is in theory a good match, but that is not found because she does not have a unique Author ID. This is the type of error that can be attenuated. First, use the option `period` to base the search on a shorter period. This increases the likelihood of finding one Author ID of the "hypothetical author" which is valid within the period. Second, set the option `ignore_first_id` equal to `True` in the function `define_search_group`.
+
+.. code-block:: python
+    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
+                                          coauth_margin=1, period=3)
+    >>> scientist_period.define_search_group(ignore_first_id=True)
+
+This allows to ignore whether or not the same Author ID is valid for the full period down to the first year of publication of the target scientist. `sosia` will still filter out Author IDs whose first year of publication is too old, but it will maintain as potential matches Author IDs whose first year of publication is after the year margin provided (this is, the first year of publication of the Author IDs can be later than the upper margin of first year of publication of the target scientist). By now, it is left to the user to complete the profiles of the authors obtained and to reevaluate in a second stage whether they are indeed good matches.
