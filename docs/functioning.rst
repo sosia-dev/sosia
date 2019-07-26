@@ -189,6 +189,7 @@ The final step is to search within this search group for authors that fulfill cr
 With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to change this behavior in order to focus on a shorter period of time before the year of treatment. This is done by initiating the class :doc:`Original <../reference/sosia.Original>` and setting the option `period` equal to the desired number of years,
 
 .. code-block:: python
+
     >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                                           coauth_margin=1, period=3)
 
@@ -204,6 +205,9 @@ By default, `sosia` provides the following information (which you switch off usi
 * `num_publications_period`: The number of indexed publications within the `period` desired (if not provided, equal to num_publications)
 * `num_citations_period`: The number of citations within the `period` desired  (if not provided, equal to num_citations)
 * `country`: The most frequent country of all affiliations listed on publications most recent to the year of treatment
+* `subjects`: List of research subjects in which the matched author has published up to the year of treatment
+* `affiliation_id`: The most frequent Scopus Affiliation ID of all affiliations listed on publications most recent to the year of treatment
+* `affiliation`: The most frequent affiliation of all affiliations listed on publications most recent to the year of treatment
 * `language`: The language(s) of the published documents of an author up until the year of treatment
 * `reference_sim`: The cosine similarity of references listed in publications up until the year of treatment between the matched scientist and the scientist (references may be missing)
 * `abstract_sim`: The cosine similarity of words used in abstracts of publications up until the year of treatment between the matched scientist and the scientist, approriately filtered and stemmed using `nltk <https://www.nltk.org/>`_ and `sklearn <https://scikit-learn.org//>`_ (abstracts my be missing)
@@ -234,6 +238,7 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
 Finally, for demanding users, there exists an option to attenuate the issue of disambiguation of names in Scopus. Scopus Author IDs are curated and fairly correct, on average. However, in some cases they are incorrect. In most of these cases, more than one Author ID is associated to one same author. In `sosia` it is left to the user to verify whether the Author IDs obtained in the list of matches are precise. At the same time, with default settings, there may be a "hypothetical author" that is in theory a good match, but that is not found because she does not have a unique Author ID. This is the type of error that can be attenuated. First, use the option `period` to base the search on a shorter period. This increases the likelihood of finding one Author ID of the "hypothetical author" which is valid within the period. Second, set the option `ignore_first_id` equal to `True` in the function `define_search_group`.
 
 .. code-block:: python
+
     >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                                           coauth_margin=1, period=3)
     >>> scientist_period.define_search_group(ignore_first_id=True)
