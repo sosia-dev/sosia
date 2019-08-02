@@ -54,11 +54,11 @@ def test_country():
 
 
 def test_citations():
-    assert_equal(scientist1.citations, 47)
-    assert_equal(scientist2.citations, 28)
-    assert_equal(scientist3.citations, 2)
-    assert_equal(scientist4.citations, 19)
-    assert_equal(scientist5.citations, 44)
+    assert_true(scientist1.citations >= 47)
+    assert_true(scientist2.citations >= 28)
+    assert_true(scientist3.citations >= 2)
+    assert_true(scientist4.citations >= 19)
+    assert_true(scientist5.citations >= 44)
 
 
 def test_citations_period():
@@ -189,21 +189,21 @@ def test_publications():
             "citedby_count", "description"]
     # scientist1
     received = scientist1.publications
-    assert_equal(len(received), 11)
+    assert_true(len(received) >= 11)
     assert_equal(received[2].eid, '2-s2.0-0001093103')
     for p in received:
         assert_true(all(c in p._fields for c in cols))
     # scientist2
     received = scientist2.publications
-    assert_equal(len(received), 7)
+    assert_true(len(received) >= 7)
     assert_equal(received[-1].eid, "2-s2.0-84866317084")
     for p in received:
         assert_true(all(c in p._fields for c in cols))
     # scientist3
     received = scientist3.publications
-    assert_equal(len(received), 2)
+    assert_true(len(received) >= 2)
     received = scientist2.publications
-    assert_equal(len(received), 7)
+    assert_true(len(received) >= 7)
     assert_equal(received[0].eid, "2-s2.0-85015636484")
     for p in received:
         assert_true(all(c in p._fields for c in cols))

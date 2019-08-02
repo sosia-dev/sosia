@@ -78,14 +78,14 @@ def test_author_year_in_cache():
     auth_y_incache, auth_y_search = author_year_in_cache(df2, file=test_cache)
     expected_auth = [int(au) for au in expected_auth]
     search_auth = [int(au) for au in search_auth]
-    assert_equal(auth_y_incache.auth_id.tolist(), expected_auth)
+    assert_equal(sorted(auth_y_incache.auth_id.tolist()), expected_auth)
     assert_equal(auth_y_incache.year.tolist(), [year, year])
     assert_equal(auth_y_search.auth_id.tolist(), search_auth)
     assert_equal(auth_y_search.year.tolist(), [year])
     # Test full retrieval
     author_year_incache, author_year_search = author_year_in_cache(df1,
         file=test_cache)
-    assert_equal(author_year_incache.auth_id.tolist(), expected_auth)
+    assert_equal(sorted(author_year_incache.auth_id.tolist()), expected_auth)
     assert_equal(author_year_incache.year.tolist(), [year, year])
     assert_true(author_year_search.empty)
 
@@ -93,7 +93,7 @@ def test_author_year_in_cache():
 def test_author_size_in_cache():
     create_cache(drop=True, file=test_cache)
     # Variables
-    expected_auth = "53164702100"
+    expected_auth = 53164702100
     expected_years = [2010, 2017]
     pubs1 = 0
     pubs2 = 6
@@ -119,7 +119,7 @@ def test_author_size_in_cache():
 def test_sources_in_cache():
     create_cache(drop=True, file=test_cache)
     # Variables
-    expected_sources = ["22900"]
+    expected_sources = [22900]
     expected_years = [2010, 2005]
     cols = ["source_id", "year"]
     # Test empty cache
