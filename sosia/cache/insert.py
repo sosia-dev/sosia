@@ -69,10 +69,11 @@ def cache_insert(data, table, file=CACHE_SQLITE):
     elif table == "sources":
         if data.empty:
             return None
-        data["auids"] = data.apply(lambda x: ",".join([str(a) for a in x["auids"]]), axis=1)
+        data["auids"] = data.apply(lambda x: ",".join([str(a) for a in x["auids"]]),
+                                   axis=1)
         data = data[["source_id", "year", "auids"]]
-        q = """INSERT OR IGNORE INTO sources (source_id, year, auids) values 
-            (?,?,?) """
+        q = """INSERT OR IGNORE INTO sources (source_id, year, auids)
+            VALUES (?,?,?) """
     else:
         allowed_tables = ('authors', 'author_cits_size', 'author_year',
                           'author_size', 'sources')
@@ -126,8 +127,8 @@ def d_to_df_for_cache(d, source_id):
     Parameters
     ----------
     d : dict
-        dictionary where keys are the years and values are the list of authors.
-        
+        Dictionary of year-list of author pairs.
+
     source_id: int
         Scopus identifier of the source.
     """

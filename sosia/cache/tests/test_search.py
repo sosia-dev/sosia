@@ -10,8 +10,8 @@ import pandas as pd
 from pybliometrics.scopus import ScopusSearch, AuthorSearch
 from pandas.testing import assert_frame_equal
 
-from sosia.cache import (authors_in_cache, author_size_in_cache,
-    author_year_in_cache, cache_insert, sources_in_cache)
+from sosia.cache import authors_in_cache, author_size_in_cache,\
+    author_year_in_cache, cache_insert, sources_in_cache
 from sosia.processing import query_year
 from sosia.utils import build_dict, create_cache
 
@@ -83,11 +83,10 @@ def test_author_year_in_cache():
     assert_equal(auth_y_search.auth_id.tolist(), search_auth)
     assert_equal(auth_y_search.year.tolist(), [year])
     # Test full retrieval
-    author_year_incache, author_year_search = author_year_in_cache(df1,
-        file=test_cache)
-    assert_equal(sorted(author_year_incache.auth_id.tolist()), expected_auth)
-    assert_equal(author_year_incache.year.tolist(), [year, year])
-    assert_true(author_year_search.empty)
+    auth_year_incache, auth_year_search = author_year_in_cache(df1, file=test_cache)
+    assert_equal(sorted(auth_year_incache.auth_id.tolist()), expected_auth)
+    assert_equal(auth_year_incache.year.tolist(), [year, year])
+    assert_true(auth_year_search.empty)
 
 
 def test_author_size_in_cache():

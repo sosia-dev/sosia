@@ -107,7 +107,7 @@ def test_search_group_period():
 
 
 def test_search_group_stacked():
-    scientist1.define_search_group(stacked=True,refresh=refresh)
+    scientist1.define_search_group(stacked=True, refresh=refresh)
     group = scientist1.search_group
     assert_true(620 <= len(group) <= 630)
     assert_true(isinstance(group, list))
@@ -135,12 +135,13 @@ def test_find_matches():
 
 
 def test_find_matches_stacked():
-    recieved = sorted(scientist1.find_matches(stacked=True, refresh=refresh, verbose=True))
+    recieved = scientist1.find_matches(stacked=True, refresh=refresh,
+                                       verbose=True)
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
             "country", "reference_sim"]
-    df_r = pd.DataFrame(recieved)
+    df_r = pd.DataFrame(sorted(recieved))
     df_m = pd.DataFrame(MATCHES)
     pd.testing.assert_frame_equal(df_r[cols], df_m[cols])
     for e in recieved:
@@ -149,12 +150,12 @@ def test_find_matches_stacked():
 
 
 def test_find_matches_stacked():
-    recieved = sorted(scientist2.find_matches(stacked=True, information=False,
-                                              refresh=refresh, verbose=True))
+    recieved = scientist2.find_matches(stacked=True, information=False,
+                                       refresh=refresh, verbose=True)
     expected = [36998825200, 56049973600, 56896085200, 57188695848, 57188709931]
-    assert_equal(recieved, expected)
+    assert_equal(sorted(recieved), expected)
 
 
 def test_find_matches_noinfo():
-    recieved = sorted(scientist1.find_matches(information=False, refresh=refresh))
-    assert_equal([str(id) for id in recieved], [m.ID for m in MATCHES])
+    recieved = scientist1.find_matches(information=False, refresh=refresh)
+    assert_equal(sorted(recieved), [int(m.ID) for m in MATCHES])

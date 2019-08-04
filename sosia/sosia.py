@@ -11,14 +11,14 @@ import pandas as pd
 
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.cache import (author_cits_in_cache, authors_in_cache,
-    author_year_in_cache, author_size_in_cache, cache_insert)
+from sosia.cache import author_cits_in_cache, authors_in_cache,\
+    author_year_in_cache, author_size_in_cache, cache_insert
 from sosia.classes import Scientist
 from sosia.filtering import search_group_from_sources, filter_pub_counts
-from sosia.processing import (get_authors, find_coauthors, inform_matches,
-    query, query_author_data, stacked_query)
-from sosia.utils import (accepts, build_dict, custom_print, margin_range,
-    maybe_add_source_names, print_progress, CACHE_SQLITE)
+from sosia.processing import get_authors, find_coauthors, inform_matches,\
+    query, query_author_data, stacked_query
+from sosia.utils import accepts, build_dict, custom_print, margin_range,\
+    maybe_add_source_names, print_progress, CACHE_SQLITE
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)
@@ -282,19 +282,19 @@ class Original(Scientist):
             If information is not bool and contains invalid keywords.
         """
         # Checks
-        information_values = ["first_name", "surname", "first_year", "num_coauthors",
-            "num_publications", "num_citations", "num_coauthors_period",
-            "num_publications_period", "num_citations_period", "subjects",
-            "country", "affiliation_id", "affiliation", "language",
-            "reference_sim", "abstract_sim"]
+        info_keys = ["first_name", "surname", "first_year", "num_coauthors",
+                     "num_publications", "num_citations", "num_coauthors_period",
+                     "num_publications_period", "num_citations_period",
+                     "subjects", "country", "affiliation_id", "affiliation",
+                     "language", "reference_sim", "abstract_sim"]
         if isinstance(information, bool):
             if information:
-                keywords = information_values
+                keywords = info_keys
             else:
                 keywords = None
         else:
             keywords = information
-            invalid = [x for x in keywords if x not in information_values]
+            invalid = [x for x in keywords if x not in info_keys]
             if invalid:
                 text = ("Parameter information contains invalid keywords: ",
                         ", ".join(invalid))
@@ -329,18 +329,18 @@ class Original(Scientist):
                "conditions...".format(n)
         custom_print(text, verbose)
 
-        # Second round of filtering: Check having no publications before
-        # minimum year, and if 0, the number of publications in the relevant
-        # period.
-        group, _, _ = filter_pub_counts(group, min(_years)-1, self.year,
-                                        _npapers, yfrom=self.year_period,
-                                        verbose=verbose)
-        # Screen out also ids with too many publications over the full
-        # period
+        # Second round of filtering:
+        # Check having no publications before minimum year, and if 0, the
+        # number of publications in the relevant period.
+        params = {"group": group, "ybefore": min(_years)-1,
+                  "yupto": self.year, "npapers": _npapers,
+                  "yfrom": self.year_period, "verbose": verbose}
+        group, _, _ = filter_pub_counts(**params)
+        # Also screen out ids with too many publications over the full period
         if self.period:
-            group, _, _ = filter_pub_counts(group, min(_years)-1, self.year,
-                                            [1,max(_npapers_full)],
-                                            verbose=verbose)        
+            params.update({"npapers": [1, max(_npapers_full)], "yfrom": None,
+                           "group": group})
+            group, _, _ = filter_pub_counts(**params)
 
         # Third round of filtering: citations (in the FULL period).
         authors = pd.DataFrame({"auth_id": group, "year": self.year})
@@ -358,14 +358,14 @@ class Original(Scientist):
                 authors_cits_search.at[i, 'n_cits'] = n
                 print_progress(i + 1, len(authors_cits_search), verbose)
             cache_insert(authors_cits_search, table="author_cits_size")
-        authors_cits_incache, _ = author_cits_in_cache(authors[["auth_id", "year"]])
+        auth_cits_incache, _ = author_cits_in_cache(authors[["auth_id", "year"]])
         # keep if citations are in range
-        mask = ((authors_cits_incache.n_cits <= max(_ncits)) &
-                (authors_cits_incache.n_cits >= min(_ncits)))
+        mask = ((auth_cits_incache.n_cits <= max(_ncits)) &
+                (auth_cits_incache.n_cits >= min(_ncits)))
         if self.period:
-            mask = ((authors_cits_incache.n_cits >= min(_ncits)) &
-                    (authors_cits_incache.n_cits <= max(_ncits_full)))
-        group = (authors_cits_incache[mask]['auth_id'].tolist())
+            mask = ((auth_cits_incache.n_cits >= min(_ncits)) &
+                    (auth_cits_incache.n_cits <= max(_ncits_full)))
+        group = (auth_cits_incache[mask]['auth_id'].tolist())
 
         # Fourth round of filtering: Download publications, verify coauthors
         # (in the FULL period) and first year.
@@ -373,7 +373,8 @@ class Original(Scientist):
         text = "Left with {} authors\nFiltering based on coauthors "\
                "number...".format(n)
         custom_print(text, verbose)
-        authors = pd.DataFrame({"auth_id": group, "year": self.year}, dtype="int64")
+        authors = pd.DataFrame({"auth_id": group, "year": self.year},
+                               dtype="uint64")
         _, author_year_search = author_year_in_cache(authors)
         matches = []
         if stacked:  # Combine searches
@@ -441,13 +442,13 @@ class Original(Scientist):
                         (n_coauth not in _ncoauth)):
                     continue
                 matches.append(au)
-        
+
         if self.period:
             text = "Left with {} authors\nFiltering based on exact period "\
-            "citations and coauthors...".format(len(matches))
+                   "citations and coauthors...".format(len(matches))
             custom_print(text, verbose)
             # Further screen matches based on period cits and coauths
-            to_loop = [m for m in matches] # temporary copy
+            to_loop = [m for m in matches]  # temporary copy
             for m in to_loop:
                 q = "AU-ID({})".format(m)
                 res = query("docs", "AU-ID({})".format(m), refresh=refresh)
@@ -470,7 +471,7 @@ class Original(Scientist):
         if keywords and len(matches) > 0:
             custom_print("Providing additional information...", verbose)
             profiles = [Scientist([str(a)], self.year, period=self.period,
-                                   refresh=refresh) for a in matches]
+                                  refresh=refresh) for a in matches]
             matches = inform_matches(profiles, self, keywords, stop_words,
                                      verbose, refresh, **kwds)
         return matches

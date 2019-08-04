@@ -9,7 +9,8 @@ from os.path import expanduser, isfile
 import pandas as pd
 from nose.tools import assert_equal, assert_true
 
-from sosia.utils.constants import CACHE_SQLITE, FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST
+from sosia.utils.constants import CACHE_SQLITE, FIELDS_SOURCES_LIST,\
+    SOURCES_NAMES_LIST
 from sosia.utils.startup import create_fields_sources_list, create_cache
 
 try:
@@ -27,7 +28,7 @@ def test_create_cache():
     create_cache()
     assert_true(isfile(CACHE_SQLITE))
     test_file = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
-    create_cache(file=test_file)    
+    create_cache(file=test_file)
     assert_true(isfile(test_file))
 
 

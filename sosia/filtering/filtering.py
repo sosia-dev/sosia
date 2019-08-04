@@ -87,8 +87,9 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
             mask = ((authors_size["auth_id"].isin(bef_auth)) &
                     (authors_size["year"] == yupto))
             authors_size = authors_size[mask]
-            authors_size = authors_size.merge(authors_size_bef,
-                on=["auth_id", "year"], how='left').fillna(0)
+            authors_size = authors_size.merge(authors_size_bef, "left",
+                                              on=["auth_id", "year"])
+            authors_size = authors_size.fillna(0)
             authors_size["n_pubs"] -= authors_size["n_pubs_bef"]
         # authors that can be already removed because of pubs count
         mask = (((authors_size.year >= yupto) &

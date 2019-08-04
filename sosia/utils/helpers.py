@@ -21,9 +21,9 @@ def build_dict(results, chunk):
     are looking for.
     """
     chunk = [int(au) for au in chunk]
-    d = defaultdict(lambda:
-                    {"first_year": inf, "pubs": set(), "coauth": set(),
-                    "n_coauth": inf, "n_pubs": inf})
+    d = defaultdict(
+        lambda: {"first_year": inf, "pubs": set(), "coauth": set(),
+                 "n_coauth": inf, "n_pubs": inf})
     for pub in results:
         if not pub.author_ids:
             continue

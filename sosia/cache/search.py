@@ -27,7 +27,7 @@ def author_cits_in_cache(df, file=CACHE_SQLITE):
     cols = ["auth_id", "year"]
     insert_temporary_table(df, merge_cols=cols, file=file)
     incache = temporary_merge(df, "author_cits_size", merge_cols=cols,
-        file=file)
+                              file=file)
     if not incache.empty:
         df = df.set_index(cols)
         incache = incache.set_index(cols)
@@ -58,7 +58,7 @@ def authors_in_cache(df, file=CACHE_SQLITE):
     tosearch: list
         List of authors not in cache.
     """
-    
+
     cols = ["auth_id"]
     insert_temporary_table(df, merge_cols=cols, file=file)
     incache = temporary_merge(df, "authors", merge_cols=cols, file=file)
@@ -84,7 +84,7 @@ def author_year_in_cache(df, file=CACHE_SQLITE):
     -------
     incache : DataFrame
         DataFrame of results found in cache.
-        
+
     tosearch: DataFrame
         DataFrame of authors not in cache with year of the event as second
         column.
@@ -155,7 +155,7 @@ def sources_in_cache(tosearch, refresh=False, file=CACHE_SQLITE):
     cols = ["source_id", "year"]
     insert_temporary_table(tosearch, merge_cols=cols, file=file)
     c, conn = cache_connect(file=file)
-    q = """SELECT a.source_id, a.year, b.auids FROM temp AS a 
+    q = """SELECT a.source_id, a.year, b.auids FROM temp AS a
         INNER JOIN sources AS b ON a.source_id=b.source_id
         AND a.year=b.year;"""
     incache = pd.read_sql_query(q, conn)
@@ -168,7 +168,7 @@ def sources_in_cache(tosearch, refresh=False, file=CACHE_SQLITE):
                                         columns=["auth_id"], dtype="uint64")
             tables = ("authors", "author_size", "author_cits_size", "author_year")
             for table in tables:
-                q = "DELETE FROM {} WHERE auth_id=? ".format(table)
+                q = "DELETE FROM {} WHERE auth_id=?".format(table)
                 conn.executemany(q, auth_incache.to_records(index=False))
                 conn.commit()
             q = "DELETE FROM sources WHERE source_id=? AND year=?"
@@ -184,6 +184,6 @@ def temporary_merge(df, table, merge_cols, file):
     """Perform merge with temp table and `table` and retrieve all columns."""
     c, conn = cache_connect(file=file)
     conditions = " and ".join(["a.{0}=b.{0}".format(c) for c in merge_cols])
-    q = "SELECT b.* from temp as a INNER JOIN {} as b on {};".format(
+    q = "SELECT b.* FROM temp AS a INNER JOIN {} AS b ON {};".format(
         table, conditions)
     return pd.read_sql_query(q, conn)

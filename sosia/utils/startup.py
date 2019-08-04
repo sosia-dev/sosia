@@ -6,8 +6,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from sosia.utils import (CACHE_SQLITE, CACHE_TABLES, FIELDS_SOURCES_LIST,
-    SOURCES_NAMES_LIST, URL_CONTENT, URL_SOURCES)
+from sosia.utils import CACHE_SQLITE, CACHE_TABLES, FIELDS_SOURCES_LIST,\
+    SOURCES_NAMES_LIST, URL_CONTENT, URL_SOURCES
 
 
 def create_cache(drop=False, file=CACHE_SQLITE):
@@ -85,7 +85,8 @@ def create_fields_sources_list():
         out = pd.concat([out, subset], sort=True)
 
     # Write list of names
-    names = out[["source_id", "title"]].drop_duplicates().sort_values("source_id")
+    order = ["source_id", "title"]
+    names = out[order].drop_duplicates().sort_values("source_id")
     names.to_csv(SOURCES_NAMES_LIST, index=False)
 
     # Write list of fields by source
