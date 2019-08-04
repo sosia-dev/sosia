@@ -87,6 +87,37 @@ def cache_insert(data, table, file=CACHE_SQLITE):
     conn.commit()
 
 
+def insert_temporary_table(df, merge_cols, file=CACHE_SQLITE):
+    """Temporarily create a table in SQL cache in order to prepare a
+    merge with `table`.
+
+    Parameters
+    ----------
+    data : DataFrame
+        Dataframe with authors information that should be entered.
+
+    merge_cols : list of str
+        The columns that should be created and filled.  Must correspond in
+        length to the number of columns of `df`.
+
+    file : file (optional, default=CACHE_SQLITE)
+        The cache file to connect to.
+    """
+    df = df.astype({c: int for c in merge_cols})
+    c, conn = cache_connect(file=file)
+    # Drop table
+    c.execute("DROP TABLE IF EXISTS temp")
+    # Create table
+    names = ", ".join(merge_cols)
+    q = "CREATE TABLE temp ({0}, PRIMARY KEY({0}))".format(names)
+    c.execute(q)
+    # Insert values
+    wildcards = ", ".join(["?"] * len(merge_cols))
+    q = "INSERT OR IGNORE INTO temp ({}) values ({})".format(names, wildcards)
+    conn.executemany(q, df.to_records(index=False))
+    conn.commit()
+
+
 def d_to_df_for_cache(d, source_id):
     """Function to create a DataFrame of sources, years and list of authors
     from a dictionary where keys are the years and values are the list of
