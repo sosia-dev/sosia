@@ -127,7 +127,9 @@ def test_find_matches():
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
             "country", "reference_sim"]
     df_r = pd.DataFrame(recieved)
+    df_r["reference_sim"] = df_r["reference_sim"].round(3)
     df_m = pd.DataFrame(MATCHES)
+    df_m["reference_sim"] = df_m["reference_sim"].round(3)
     pd.testing.assert_frame_equal(df_r[cols], df_m[cols])
     for e in recieved:
         assert_true(isinstance(e.abstract_sim, float))
