@@ -58,10 +58,26 @@ def flat_set_from_df(df, col, condition=None):
 
 
 def get_main_field(fields):
-    """Get code and name of main field.
+    """Get main 4-digit ASJC field (code) and main 2-digit ASJC field (name).
 
+
+    Parameters
+    ----------
+    fields : iterable of int
+        Lists of fields the researcher is active in.
+
+    Returns
+    -------
+    t : tuple
+        A 2-element tuple where the first element is the most common 4-digit
+        ASJC field and the second element the short name of the most common
+        2-digit ASJC field.
+
+    Note
+    ----
     We exclude multidisciplinary and give preference to non-general fields.
     """
+    # 4 digit field
     c = Counter(fields)
     try:
         c.pop(1000)  # Exclude Multidisciplinary
@@ -69,15 +85,21 @@ def get_main_field(fields):
         pass
     top_fields = [f for f, val in c.items() if val == max(c.values())]
     if len(top_fields) == 1:
-        main = top_fields[0]
+        main_4 = top_fields[0]
     else:
         non_general_fields = [f for f in top_fields if f % 1000 != 0]
         if non_general_fields:
-            main = non_general_fields[0]
+            main_4 = non_general_fields[0]
         else:
-            main = top_fields[0]
-    code = int(str(main)[:2])
-    return (main, ASJC_2D[code])
+            main_4 = top_fields[0]
+    # 2 digit field
+    c = Counter([str(f)[:2] for f in fields])
+    try:
+        c.pop(10)  # Exclude Multidisciplinary
+    except KeyError:
+        pass
+    main_2 = int(c.most_common(1)[0][0])
+    return (main_4, ASJC_2D[main_2])
 
 
 def margin_range(base, val):

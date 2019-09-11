@@ -174,7 +174,7 @@ def test_sources_change():
 def test_main_field():
     assert_equal(scientist1.main_field, (2002, "ECON"))
     assert_equal(scientist2.main_field, (1405, "BUSI"))
-    assert_equal(scientist3.main_field, (1803, "DECI"))
+    assert_equal(scientist3.main_field, (1803, "BUSI"))
 
 
 def test_name():
