@@ -221,7 +221,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         # Get full cache
         sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
         # Authors publishing in provided year
-        mask = sources_ys.year == self.year_active
+        mask = sources_ys.year == self.year
         today = flat_set_from_df(sources_ys, "auids", mask)
         # Authors publishing in year(s) of first publication
         if not self._ignore_first_id:
@@ -234,15 +234,15 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         auth_count = []
         print_progress(0, n, verbose)
         for i, source_id in enumerate(search_sources):
-            info = query_journal(source_id, [self.year_active] + years, refresh)
-            today.update(info[str(self.year_active)])
+            info = query_journal(source_id, [self.year] + years, refresh)
+            today.update(info[str(self.year)])
             if not self._ignore_first_id:
                 for y in years:
                     then.update(info[str(y)])
             for y in range(int(min(info.keys())), min_year):
                 negative.update(info[str(y)])
             for y in info:
-                if int(y) <= self.year_active:
+                if int(y) <= self.year:
                     auth_count.extend(info[str(y)])
             print_progress(i+1, n, verbose)
         c = Counter(auth_count)
