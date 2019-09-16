@@ -20,7 +20,7 @@ if not file_exists:
     config.set('Cache', 'File path', _cache_default)
     with open(CONFIG_FILE, 'w') as f:
         config.write(f)
-config.read(f)
+config.read(CONFIG_FILE)
 
 
 def create_cache(drop=False, file=None):
