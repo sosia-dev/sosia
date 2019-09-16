@@ -1,11 +1,14 @@
 import numpy as np
 import pandas as pd
 
-from sosia.utils import CACHE_SQLITE, flat_set_from_df
+from sosia.utils import flat_set_from_df
 from sosia.cache import cache_connect, insert_temporary_table
+from sosia.utils.startup import config
+
+cache_file = config.get('Cache', 'File path')
 
 
-def author_cits_in_cache(df, file=CACHE_SQLITE):
+def author_cits_in_cache(df, file=cache_file):
     """Search authors citations in cache.
 
     Parameters
@@ -13,7 +16,7 @@ def author_cits_in_cache(df, file=CACHE_SQLITE):
     df : DataFrame
         DataFrame of authors to search in a year.
 
-    file : file (optional, default=CACHE_SQLITE)
+    file : file (optional, default=cache_file)
         The cache file to connect to.
 
     Returns
@@ -39,7 +42,7 @@ def author_cits_in_cache(df, file=CACHE_SQLITE):
     return incache, tosearch
 
 
-def authors_in_cache(df, file=CACHE_SQLITE):
+def authors_in_cache(df, file=cache_file):
     """Search authors in cache.
 
     Parameters
@@ -47,7 +50,7 @@ def authors_in_cache(df, file=CACHE_SQLITE):
     df : DataFrame
         DataFrame of authors to search.
 
-    file : file (optional, default=CACHE_SQLITE)
+    file : file (optional, default=cache_file)
         The cache file to connect to.
 
     Returns
@@ -58,7 +61,6 @@ def authors_in_cache(df, file=CACHE_SQLITE):
     tosearch: list
         List of authors not in cache.
     """
-
     cols = ["auth_id"]
     insert_temporary_table(df, merge_cols=cols, file=file)
     incache = temporary_merge(df, "authors", merge_cols=cols, file=file)
@@ -69,7 +71,7 @@ def authors_in_cache(df, file=CACHE_SQLITE):
     return incache, tosearch
 
 
-def author_year_in_cache(df, file=CACHE_SQLITE):
+def author_year_in_cache(df, file=cache_file):
     """Search authors publication information up to year of event in cache.
 
     Parameters
@@ -77,7 +79,7 @@ def author_year_in_cache(df, file=CACHE_SQLITE):
     df : DataFrame
         DataFrame of authors to search with year of the event as second column.
 
-    file : file (optional, default=CACHE_SQLITE)
+    file : file (optional, default=cache_file)
         The cache file to connect to.
 
     Returns
@@ -106,7 +108,7 @@ def author_year_in_cache(df, file=CACHE_SQLITE):
     return incache, tosearch
 
 
-def author_size_in_cache(df, file=CACHE_SQLITE):
+def author_size_in_cache(df, file=cache_file):
     """Search authors publication information up to year of event in cache.
 
     Parameters
@@ -114,7 +116,7 @@ def author_size_in_cache(df, file=CACHE_SQLITE):
     df : DataFrame
         DataFrame of authors to search with year of the event as second column.
 
-    file : file (optional, default=CACHE_SQLITE)
+    file : file (optional, default=cache_file)
         The cache file to connect to.
 
     Returns
@@ -130,7 +132,7 @@ def author_size_in_cache(df, file=CACHE_SQLITE):
     return incache
 
 
-def sources_in_cache(tosearch, refresh=False, file=CACHE_SQLITE):
+def sources_in_cache(tosearch, refresh=False, file=cache_file):
     """Search sources by year in cache.
 
     Parameters
@@ -141,7 +143,7 @@ def sources_in_cache(tosearch, refresh=False, file=CACHE_SQLITE):
     refresh : bool (optional, default=False)
         Whether to refresh cached search files.
 
-    file : file (optional, default=CACHE_SQLITE)
+    file : file (optional, default=cache_file)
         The cache file to connect to.
 
     Returns

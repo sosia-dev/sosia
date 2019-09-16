@@ -3,16 +3,16 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 import sqlite3
+from sosia.utils.startup import config
 
-from sosia.utils import CACHE_SQLITE
+cache_file = config.get('Cache', 'File path')
 
-
-def cache_connect(file=CACHE_SQLITE):
+def cache_connect(file=cache_file):
     """Connect to cache file.
 
     Parameters
     ----------
-    file : file (optional, default=CACHE_SQLITE)
+    file : file (optional, default=cache_file)
         The cache file to connect to.
     """
     conn = sqlite3.connect(file)
@@ -22,7 +22,7 @@ def cache_connect(file=CACHE_SQLITE):
     return c, conn
 
 
-def cache_insert(data, table, file=CACHE_SQLITE):
+def cache_insert(data, table, file=cache_file):
     """Insert new authors information in cache.
 
     Parameters
@@ -37,7 +37,7 @@ def cache_insert(data, table, file=CACHE_SQLITE):
         Allowed values: "authors", "author_cits_size", "author_year",
         "author_size", "sources".
 
-    file : file (optional, default=CACHE_SQLITE)
+    file : file (optional, default=cache_file)
         The cache file to connect to.
 
     Raises
@@ -88,7 +88,7 @@ def cache_insert(data, table, file=CACHE_SQLITE):
     conn.commit()
 
 
-def insert_temporary_table(df, merge_cols, file=CACHE_SQLITE):
+def insert_temporary_table(df, merge_cols, file=cache_file):
     """Temporarily create a table in SQL cache in order to prepare a
     merge with `table`.
 
@@ -101,10 +101,10 @@ def insert_temporary_table(df, merge_cols, file=CACHE_SQLITE):
         The columns that should be created and filled.  Must correspond in
         length to the number of columns of `df`.
 
-    file : file (optional, default=CACHE_SQLITE)
+    file : file (optional, default=cache_file)
         The cache file to connect to.
     """
-    df = df.astype({c: int for c in merge_cols})
+    df = df.astype({c: "int64" for c in merge_cols})
     c, conn = cache_connect(file=file)
     # Drop table
     c.execute("DROP TABLE IF EXISTS temp")

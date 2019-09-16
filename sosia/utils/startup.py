@@ -1,16 +1,29 @@
 import sqlite3
 from os import makedirs
 from os.path import exists, expanduser
+import configparser
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from sosia.utils import CACHE_SQLITE, CACHE_TABLES, FIELDS_SOURCES_LIST,\
+from sosia.utils import CACHE_TABLES, CONFIG_FILE, FIELDS_SOURCES_LIST,\
     SOURCES_NAMES_LIST, URL_CONTENT, URL_SOURCES
 
+# Configuration setup
+file_exists = exists(CONFIG_FILE)
+config = configparser.ConfigParser()
+config.optionxform = str
+if not file_exists:
+    config.add_section('Cache')
+    _cache_default = expanduser("~/.sosia/") + "cache_sqlite.sqlite"
+    config.set('Cache', 'File path', _cache_default)
+    with open(CONFIG_FILE, 'w') as f:
+        config.write(f)
+config.read(f)
 
-def create_cache(drop=False, file=CACHE_SQLITE):
+
+def create_cache(drop=False, file=None):
     """Create or recreate tables in cache file.
 
     Parameters
@@ -22,6 +35,8 @@ def create_cache(drop=False, file=CACHE_SQLITE):
         The name of the cache file to be used. By default is named
         cache_sqlite.sqlite and located in "~/.sosia/".
     """
+    if not file:
+        file = config.get("Cache", "File path")
     conn = sqlite3.connect(file)
     c = conn.cursor()
     for table, variables in CACHE_TABLES.items():
@@ -33,6 +48,11 @@ def create_cache(drop=False, file=CACHE_SQLITE):
         q = "CREATE TABLE IF NOT EXISTS {} ({}, PRIMARY KEY({}))".format(
             table, columns, prim_keys)
         c.execute(q)
+
+
+def create_config():
+    """Initiates process to generate configuration file."""
+    
 
 
 def create_fields_sources_list():
