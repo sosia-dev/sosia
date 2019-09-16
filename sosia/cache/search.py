@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from sosia.utils import flat_set_from_df
+from sosia.utils import config, flat_set_from_df
 from sosia.cache import cache_connect, insert_temporary_table
-from sosia.utils.startup import config
+
 
 cache_file = config.get('Cache', 'File path')
 

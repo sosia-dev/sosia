@@ -50,11 +50,6 @@ def create_cache(drop=False, file=None):
         c.execute(q)
 
 
-def create_config():
-    """Initiates process to generate configuration file."""
-    
-
-
 def create_fields_sources_list():
     """Download Scopus files with information on covered sources and create
     one list of all sources with ids and one with field information.

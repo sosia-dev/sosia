@@ -3,7 +3,9 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 import sqlite3
-from sosia.utils.startup import config
+
+from sosia.utils import config
+
 
 cache_file = config.get('Cache', 'File path')
 
