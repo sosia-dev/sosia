@@ -18,7 +18,7 @@ from sosia.filtering import search_group_from_sources, filter_pub_counts
 from sosia.processing import get_authors, find_coauthors, inform_matches,\
     query, query_author_data, stacked_query
 from sosia.utils import accepts, build_dict, custom_print, margin_range,\
-    maybe_add_source_names, print_progress, CACHE_SQLITE
+    maybe_add_source_names, print_progress
 
 STOPWORDS = list(ENGLISH_STOP_WORDS)
 STOPWORDS.extend(punctuation + digits)

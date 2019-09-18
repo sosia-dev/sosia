@@ -9,8 +9,7 @@ from os.path import expanduser, isfile
 import pandas as pd
 from nose.tools import assert_equal, assert_true
 
-from sosia.utils.constants import CACHE_SQLITE, FIELDS_SOURCES_LIST,\
-    SOURCES_NAMES_LIST
+from sosia.utils.constants import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST
 from sosia.utils.startup import create_fields_sources_list, create_cache
 
 try:
@@ -25,11 +24,12 @@ create_fields_sources_list()
 
 
 def test_create_cache():
+    cache_file = expanduser("~/.sosia/") + "cache_sqlite.sqlite"
+    cache_file_test = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
     create_cache()
-    assert_true(isfile(CACHE_SQLITE))
-    test_file = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
-    create_cache(file=test_file)
-    assert_true(isfile(test_file))
+    assert_true(isfile(cache_file))
+    create_cache(file=cache_file_test)
+    assert_true(isfile(cache_file_test))
 
 
 def test_fields_sources_list():
