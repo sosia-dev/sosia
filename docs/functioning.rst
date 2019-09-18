@@ -14,6 +14,7 @@ Overview
 6. Started publishing around the same year as the scientist
 7. In the year of treatment, has about the same number of co-authors
 8. In the year of treatment, has about the same number of citations (excluding self-ciations)
+9. Optional: is affiliated to a similar institution (from a user-provided list of affiliations)
 
 You obtain results after only four steps:
 
@@ -186,7 +187,16 @@ The final step is to search within this search group for authors that fulfill cr
     num_coauthors=8, num_publications=7, num_citations=52, country='United
     Kingdom', language='eng', reference_sim=0.0079, abstract_sim=0.1275)
 
-With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to change this behavior in order to focus on a shorter period of time before the year of treatment. This is done by initiating the class :doc:`Original <../reference/sosia.Original>` and setting the option `period` equal to the desired number of years,
+Additional search options are available to the user. First, the user can restrict the search of potential matches to authors affiliated to given institutions. This is achieved by providing a list of Scopus Affiliation IDs as value of the optional parameter `search_affiliations` in the class `Original`. For instance:
+
+.. code-block:: python
+
+    >>> affiliations = [60002612, 60032111, 60000765]
+    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
+                                          coauth_margin=1, period=3,
+                                          search_affiliations=affiliations)
+
+A second option allows to change the window of time within which the similarity between scientist and potential matches is considered. With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to change this behavior in order to focus on a shorter period of time before the year of treatment. This is done by initiating the class :doc:`Original <../reference/sosia.Original>` and setting the option `period` equal to the desired number of years,
 
 .. code-block:: python
 
