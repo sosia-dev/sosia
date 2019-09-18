@@ -18,6 +18,9 @@ affs = [60002612, 60032111, 60000765]
 scientist3 = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                             coauth_margin=1, period=3, refresh=refresh,
                             search_affiliations=affs)
+affs = [60010348, 60022109, 60017317]
+scientist4 = sosia.Original(55208373700, 2017, cits_margin=200,
+                            refresh=refresh, search_affiliations=affs)
 fields = "ID name first_year num_coauthors num_publications num_citations "\
          "country language reference_sim abstract_sim"
 Match = namedtuple("Match", fields)
@@ -69,7 +72,7 @@ MATCHES = [
 
 
 def test_search_sources():
-    scientists_list = [scientist1, scientist2, scientist3]
+    scientists_list = [scientist1, scientist2, scientist3, scientist4]
     for s in scientists_list:
         s.define_search_sources()
         search_sources = s.search_sources
@@ -124,6 +127,14 @@ def test_search_group_stacked_period_affiliations():
     assert_true(isinstance(group, list))
 
 
+def test_search_group_stacked_affiliations():
+    scientist4.define_search_group(stacked=True, ignore_first_id=True,
+                                   refresh=refresh, verbose=True)
+    group = scientist4.search_group
+    assert_true(15 <= len(group) <= 22)
+    assert_true(isinstance(group, list))
+
+
 def test_find_matches():
     recieved = sorted(scientist1.find_matches(refresh=refresh))
     assert_equal(len(recieved), len(MATCHES))
@@ -162,7 +173,7 @@ def test_find_matches_stacked():
     assert_equal(sorted(recieved), expected)
 
 
-def test_find_matches_stacked_affiliations():
+def test_find_matches_stacked_period_affiliations():
     info = ["first_name", "surname", "first_year", "num_coauthors",
             "num_publications", "num_citations", "num_coauthors_period",
             "num_publications_period", "num_citations_period", "subjects",
@@ -172,6 +183,17 @@ def test_find_matches_stacked_affiliations():
     recieved = pd.DataFrame(recieved)
     expect_ids = ['56049973600', '56896085200', '57188695848', '57188709931']
     expect_afids = ['60000765', '60000765', '60002612', '60032111']
+    assert_equal(sorted(recieved.ID.tolist()), expect_ids)
+    assert_equal(sorted(recieved.affiliation_id.tolist()), expect_afids)
+    
+
+def test_find_matches_stacked_affiliations():
+    recieved = scientist4.find_matches(stacked=True, refresh=refresh,
+                                       verbose=True)
+    recieved = pd.DataFrame(recieved)
+    expect_m = [m for m in MATCHES if m.ID != '55804519400']
+    expect_ids = [m.ID for m in expect_m]
+    expect_afids = ['60010348', '60017317', '60022109']
     assert_equal(sorted(recieved.ID.tolist()), expect_ids)
     assert_equal(sorted(recieved.affiliation_id.tolist()), expect_afids)
 
