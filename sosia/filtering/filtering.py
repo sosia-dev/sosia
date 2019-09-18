@@ -193,7 +193,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         _margin_setter = self.publications
     max_pubs = max(margin_range(len(_margin_setter), self.pub_margin))
     years = list(range(min_year, max_year+1))
-    search_years = [min_year-1, self.active_year]
+    search_years = [min_year-1]
     if not self._ignore_first_id:
         search_years.extend(range(min_year, max_year+1))
     search_sources, _ = zip(*self.search_sources)
@@ -207,6 +207,21 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
     negative = set()
 
     if stacked:  # Make use of SQL cache
+        # Year provided (select also based on location)
+        # Get already cached sources from cache
+        sources_ay = DataFrame(list(product(search_sources, [self.active_year])),
+                               columns=["source_id", "year"])
+        _, _search = sources_in_cache(sources_ay, refresh=refresh, afid=True)
+        res = query_year(self.active_year, _search.source_id.tolist(), refresh,
+                         verbose, afid=True)
+        cache_insert(res, table="sources_afids")
+        sources_ay, _ = sources_in_cache(sources_ay, refresh=refresh, afid=True)
+        # Authors publishing in provided year and locations
+        mask = None
+        if self.search_affiliations:
+            mask = sources_ay.afid.isin(self.search_affiliations)
+        today = flat_set_from_df(sources_ay, "auids", mask)
+        # Years before active year
         # Get already cached sources from cache
         sources_ys = DataFrame(list(product(search_sources, search_years)),
                                columns=["source_id", "year"])
@@ -220,9 +235,6 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
             cache_insert(res, table="sources")
         # Get full cache
         sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
-        # Authors publishing in provided year
-        mask = sources_ys.year == self.active_year
-        today = flat_set_from_df(sources_ys, "auids", mask)
         # Authors publishing in year(s) of first publication
         if not self._ignore_first_id:
             mask = sources_ys.year.between(min_year, max_year, inclusive=True)
