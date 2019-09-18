@@ -67,7 +67,7 @@ class Original(Scientist):
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
                  cits_margin=0.1, coauth_margin=0.1, period=None, refresh=False,
-                 eids=None):
+                 eids=None, search_affiliations=None):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -120,6 +120,10 @@ class Original(Scientist):
             properties and the control group are set based on this list of
             publications, instead of the list of publications obtained from
             the Scopus Author ID.
+
+        affiliations : list (optional, default=None)
+            A list of scopus affiliation IDs. If provided, sosia searches
+            for matches within this affiliation in the year provided.
         """
         # Internal checks
         if not isinstance(year_margin, (int, float)):
@@ -140,6 +144,11 @@ class Original(Scientist):
         self.coauth_margin = coauth_margin
         self.period = period
         self.eids = eids
+        if isinstance(search_affiliations, (int, str)):
+            search_affiliations = [search_affiliations]
+        if search_affiliations:
+            search_affiliations = [int(a) for a in search_affiliations]
+        self.search_affiliations = search_affiliations
         self.refresh = refresh
 
         # Instantiate superclass to load private variables
