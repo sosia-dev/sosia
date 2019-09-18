@@ -18,9 +18,13 @@ if not file_exists:
     config.add_section('Cache')
     _cache_default = expanduser("~/.sosia/") + "cache_sqlite.sqlite"
     config.set('Cache', 'File path', _cache_default)
-    with open(CONFIG_FILE, 'w') as f:
-        config.write(f)
-config.read(CONFIG_FILE)
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            config.write(f)
+    except FileNotFoundError:  # Fix for sphinx build
+        pass
+else:
+    config.read(CONFIG_FILE)
 
 
 def create_cache(drop=False, file=None):
