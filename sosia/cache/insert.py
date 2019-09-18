@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import sqlite3
 
-from sosia.utils import config
+from sosia.utils import config, flat_set_from_df
 
 
 cache_file = config.get('Cache', 'File path')
@@ -71,6 +71,11 @@ def cache_insert(data, table, file=cache_file):
     elif table == "sources":
         if data.empty:
             return None
+        if "afid" in data.columns.tolist():
+            data = (data.groupby(["source_id", "year"])[["auids"]]
+                    .apply(lambda x: list(flat_set_from_df(x, "auids")))
+                    .rename("auids")
+                    .reset_index())
         data["auids"] = data.apply(lambda x: ",".join([str(a) for a in x["auids"]]),
                                    axis=1)
         data = data[["source_id", "year", "auids"]]
