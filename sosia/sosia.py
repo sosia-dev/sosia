@@ -4,15 +4,13 @@
 #            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
-from collections import Counter, namedtuple
 from string import digits, punctuation, Template
 from warnings import warn
 import pandas as pd
 
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
-from sosia.cache import author_cits_in_cache, authors_in_cache,\
-    author_year_in_cache, author_size_in_cache, cache_insert
+from sosia.cache import author_cits_in_cache, author_year_in_cache, cache_insert
 from sosia.classes import Scientist
 from sosia.filtering import search_group_from_sources, filter_pub_counts
 from sosia.processing import get_authors, find_coauthors, inform_matches,\

@@ -117,7 +117,8 @@ def test_search_group_stacked_period():
 
 
 def test_search_group_stacked_period_affiliations():
-    scientist3.define_search_group(stacked=True, ignore_first_id=True, refresh=refresh, verbose=True)
+    scientist3.define_search_group(stacked=True, ignore_first_id=True,
+                                   refresh=refresh, verbose=True)
     group = scientist3.search_group
     assert_true(45 <= len(group) <= 54)
     assert_true(isinstance(group, list))
@@ -163,9 +164,9 @@ def test_find_matches_stacked():
 
 def test_find_matches_stacked_affiliations():
     info = ["first_name", "surname", "first_year", "num_coauthors",
-        "num_publications", "num_citations", "num_coauthors_period",
-        "num_publications_period", "num_citations_period", "subjects",
-        "country", "affiliation_id", "affiliation"]    
+            "num_publications", "num_citations", "num_coauthors_period",
+            "num_publications_period", "num_citations_period", "subjects",
+            "country", "affiliation_id", "affiliation"]
     recieved = scientist3.find_matches(stacked=True, refresh=refresh,
                                        verbose=True, information=info)
     recieved = pd.DataFrame(recieved)

@@ -7,14 +7,14 @@ from string import Template
 import pandas as pd
 
 from sosia.processing import (build_citation_query, query, query_author_data,
-    query_journal, query_year, stacked_query)
+                              query_journal, query_year, stacked_query)
 
 
 def test_build_citation_query():
-    q = build_citation_query(["1","2"], 2000, "AU-ID", ["3","4"])
+    q = build_citation_query(["1", "2"], 2000, "AU-ID", ["3", "4"])
     expect = "REF(1 OR 2) AND PUBYEAR BEF 2000 AND NOT AU-ID(3) AND NOT AU-ID(4)"
     assert_equal(q, expect)
-    q = build_citation_query(["1","2"], 2000, "EID", ["3","4"])
+    q = build_citation_query(["1", "2"], 2000, "EID", ["3", "4"])
     expect = "REF(1 OR 2) AND PUBYEAR BEF 2000 AND NOT EID(3 OR 4)"
     assert_equal(q, expect)
 
