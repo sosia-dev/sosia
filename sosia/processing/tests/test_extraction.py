@@ -2,10 +2,23 @@
 # -*- coding: utf-8 -*-
 """Tests for extraction module."""
 
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal, assert_true, assert_false
 from pybliometrics.scopus import ScopusSearch
+import pandas as pd
 
-from sosia.processing import find_location, parse_docs
+from sosia.processing import expand_affiliation, find_location, parse_docs
+
+
+def test_expand_affiliation():
+    auth_id = 6701809842
+    pubs = ScopusSearch("AU-ID({})".format(auth_id)).results
+    res = pd.DataFrame(pubs)
+    res = expand_affiliation(res)
+    assert_equal(len(res), 184)
+    expect_columns = ['source_id', 'author_ids', 'afid']
+    assert_equal(set(res.columns.tolist()), set(expect_columns))
+    assert_true(any(res.author_ids.str.contains(";")))
+    assert_false(any(res.afid.str.contains(";")))
 
 
 def test_find_location():

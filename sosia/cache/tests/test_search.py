@@ -144,3 +144,58 @@ def test_sources_in_cache():
     assert_equal(sources_ys_incache.source_id.tolist(), expected_sources)
     assert_equal(sources_ys_incache.year.tolist(), [expected_years[0]])
     assert_true(sources_ys_search.empty)
+    
+
+def test_sources_afids_in_cache():
+    create_cache(drop=True, file=test_cache)
+    # Variables
+    expected_sources = [22900]
+    expected_years = [2010, 2005]
+    cols = ["source_id", "year"]
+    # Test empty cache
+    df = pd.DataFrame(list(product(expected_sources, expected_years)),
+                      columns=cols, dtype="int64")
+    sa_incache, sa_search = sources_in_cache(df, file=test_cache, afid=True)
+    assert_frame_equal(sa_search, df)
+    assert_true(sa_incache.empty)
+    # Test partial retrieval
+    res = query_year(expected_years[0], expected_sources, False, False, afid=True)
+    cache_insert(res, table="sources_afids", file=test_cache)
+    sa_incache, sa_search = sources_in_cache(df, file=test_cache, afid=True)
+    expected_sources = set([int(s) for s in expected_sources])
+    assert_equal(set(sa_incache.source_id.tolist()), set(expected_sources))
+    assert_equal(set(sa_incache.year.tolist()), set([expected_years[0]]))
+    assert_equal(set(sa_search.source_id.tolist()), set(expected_sources))
+    assert_equal(set(sa_search.year.tolist()), set([expected_years[1]]))
+    assert_equal(len(sa_incache), 181) # this may change
+    assert_equal(len(sa_incache.afid.drop_duplicates()), 181) # this may change
+    # Test full retrieval
+    sources_ys = sa_incache[cols].drop_duplicates()
+    sa_incache, sa_search = sources_in_cache(sources_ys, file=test_cache,
+                                             afid=True)
+    expected_sources = set([int(s) for s in expected_sources])
+    assert_equal(set(sa_incache.source_id.tolist()), set(expected_sources))
+    assert_equal(set(sa_incache.year.tolist()), set([expected_years[0]]))
+    assert_equal(len(sa_incache), 181) # this may change
+    assert_equal(len(sa_incache.afid.drop_duplicates()), 181) # this may change
+    assert_true(sa_search.empty)
+
+
+def test_sources_afids_in_sources_cache():
+    create_cache(drop=True, file=test_cache)
+    # Variables
+    expected_sources = [22900]
+    expected_years = [2010, 2005]
+    cols = ["source_id", "year"]
+    df = pd.DataFrame(list(product(expected_sources, expected_years)),
+                      columns=cols, dtype="int64")
+    # Test partial retrieval
+    res = query_year(expected_years[0], expected_sources, False, False, afid=True)
+    cache_insert(res, table="sources", file=test_cache)
+    sources_ys_incache, sources_ys_search = sources_in_cache(df, file=test_cache)
+    expected_sources = [int(s) for s in expected_sources]
+    assert_equal(sources_ys_incache.source_id.tolist(), expected_sources)
+    assert_equal(sources_ys_incache.year.tolist(), [expected_years[0]])
+    assert_equal(sources_ys_search.source_id.tolist(), expected_sources)
+    assert_equal(sources_ys_search.year.tolist(), [expected_years[1]])
+

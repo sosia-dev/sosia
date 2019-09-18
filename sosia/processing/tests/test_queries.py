@@ -67,6 +67,16 @@ def test_query_year():
     assert_true(len(res.auids[0]) > 0)
 
 
+def test_query_year_afid():
+    # test keeping affiliation id column
+    source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
+                  14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
+    res = query_year(1984, source_ids, refresh=False, verbose=True, afid=True)
+    assert_true(len(res[~res.auids.isnull()]) == 3081)
+    assert_true(res.columns.tolist(), ['source_id', 'year', 'afid', 'auids'])
+    assert_true(len(res.auids[0]) > 0)
+
+
 def test_stacked_query():
     # test a query with one journal-year above 5000
     group = [18400156716, 19300157101, 19400157208, 19400157312, 19500157223,
