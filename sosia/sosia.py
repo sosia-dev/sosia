@@ -297,6 +297,9 @@ class Original(Scientist):
         if isinstance(information, bool):
             if information:
                 keywords = info_keys
+            elif self.search_affiliations:
+                information = True
+                keywords = ["affiliation_id"]
             else:
                 keywords = None
         else:
@@ -306,6 +309,8 @@ class Original(Scientist):
                 text = ("Parameter information contains invalid keywords: ",
                         ", ".join(invalid))
                 raise ValueError(text)
+            if self.search_affiliations and "affiliation_id" not in keywords:
+                keywords.append("affiliation_id")
         # Variables
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
@@ -481,4 +486,7 @@ class Original(Scientist):
                                   refresh=refresh) for a in matches]
             matches = inform_matches(profiles, self, keywords, stop_words,
                                      verbose, refresh, **kwds)
+        if self.search_affiliations:
+            matches = [m for m in matches if int(m.affiliation_id)
+                       in self.search_affiliations]
         return matches
