@@ -34,4 +34,8 @@ CACHE_TABLES = {
          "primary": ("auth_id",)},
     "sources":
         {"columns": (("source_id", "int"), ("year", "int"), ("auids", "text")),
-         "primary": ("source_id", "year")}}
+         "primary": ("source_id", "year")},
+    "sources_afids":
+        {"columns": (("source_id", "int"), ("year", "int"), ("afid", "int"),
+                     ("auids", "text")),
+         "primary": ("source_id", "year", "afid")}}

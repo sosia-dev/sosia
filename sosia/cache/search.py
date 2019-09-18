@@ -132,7 +132,7 @@ def author_size_in_cache(df, file=cache_file):
     return incache
 
 
-def sources_in_cache(tosearch, refresh=False, file=cache_file):
+def sources_in_cache(tosearch, refresh=False, file=cache_file, afid=False):
     """Search sources by year in cache.
 
     Parameters
@@ -146,6 +146,9 @@ def sources_in_cache(tosearch, refresh=False, file=cache_file):
     file : file (optional, default=cache_file)
         The cache file to connect to.
 
+    afid : bool (optional, default=False)
+        If True, search in sources_afids table.
+
     Returns
     -------
     incache : DataFrame
@@ -157,14 +160,20 @@ def sources_in_cache(tosearch, refresh=False, file=cache_file):
     cols = ["source_id", "year"]
     insert_temporary_table(tosearch, merge_cols=cols, file=file)
     c, conn = cache_connect(file=file)
-    q = """SELECT a.source_id, a.year, b.auids FROM temp AS a
-        INNER JOIN sources AS b ON a.source_id=b.source_id
-        AND a.year=b.year;"""
+    table = "sources"
+    select = "a.source_id, a.year, b.auids"
+    if afid:
+        table = "sources_afids"
+        select = "a.source_id, a.year, b.afid, b.auids"
+    q = """SELECT {} FROM temp AS a
+        INNER JOIN {} AS b ON a.source_id=b.source_id
+        AND a.year=b.year;""".format(select, table)
     incache = pd.read_sql_query(q, conn)
     if not incache.empty:
         incache["auids"] = incache["auids"].str.split(",")
         tosearch = tosearch.merge(incache, "left", on=cols, indicator=True)
         tosearch = tosearch[tosearch["_merge"] == "left_only"].drop("_merge", axis=1)
+        tosearch = tosearch[["source_id", "year"]]
         if refresh:
             auth_incache = pd.DataFrame(flat_set_from_df(incache, "auids"),
                                         columns=["auth_id"], dtype="uint64")
@@ -173,9 +182,11 @@ def sources_in_cache(tosearch, refresh=False, file=cache_file):
                 q = "DELETE FROM {} WHERE auth_id=?".format(table)
                 conn.executemany(q, auth_incache.to_records(index=False))
                 conn.commit()
-            q = "DELETE FROM sources WHERE source_id=? AND year=?"
-            conn.executemany(q, tosearch.to_records(index=False))
-            conn.commit()
+            tables = ("sources", "sources_afids")
+            for table in tables:
+                q = "DELETE FROM {} WHERE source_id=? AND year=?".format(table)
+                conn.executemany(q, tosearch.to_records(index=False))
+                conn.commit()
             incache = pd.DataFrame(columns=cols)
     if tosearch.empty:
         tosearch = pd.DataFrame(columns=cols)

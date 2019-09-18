@@ -81,14 +81,23 @@ def cache_insert(data, table, file=cache_file):
         data = data[["source_id", "year", "auids"]]
         q = """INSERT OR IGNORE INTO sources (source_id, year, auids)
             VALUES (?,?,?) """
+    elif table == "sources_afids":
+        if data.empty:
+            return None
+        data["auids"] = data.apply(lambda x: ",".join([str(a) for a in x["auids"]]),
+                                   axis=1)
+        data = data[["source_id", "year", "afid", "auids"]]
+        q = """INSERT OR IGNORE INTO sources_afids (source_id, year, afid, auids)
+            VALUES (?,?,?,?) """
     else:
         allowed_tables = ('authors', 'author_cits_size', 'author_year',
-                          'author_size', 'sources')
+                          'author_size', 'sources', 'sources_afids')
         msg = 'table parameter must be one of ' + ', '.join(allowed_tables)
         raise ValueError(msg)
     # Perform caching
     _, conn = cache_connect(file=file)
-    if table in ("authors", "author_cits_size", "author_year", "sources"):
+    if table in ("authors", "author_cits_size", "author_year", "sources",
+                 "sources_afids"):
         conn.executemany(q, data.to_records(index=False))
     else:
         conn.execute(q)
