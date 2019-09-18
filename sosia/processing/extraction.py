@@ -1,5 +1,6 @@
 from collections import namedtuple
 from operator import attrgetter
+import pandas as pd
 
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
@@ -7,6 +8,21 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 from sosia.processing.nlp import clean_abstract, compute_cos, tokenize_and_stem
 from sosia.utils import print_progress
+
+
+def expand_affiliation(df):
+    """Auxiliary function to expand the information about the affiliation
+    in publications from ScopusSearch.
+    """
+    res = df[["source_id", "author_ids", "afid"]]
+    res['afid'] = res["afid"].str.split(';')
+    res = (res["afid"].apply(pd.Series)
+              .merge(res, right_index=True, left_index=True)
+              .drop(["afid"], axis=1)
+              .melt(id_vars=['source_id', 'author_ids'], value_name="afid")
+              .drop("variable", axis=1)
+              .dropna())
+    return res
 
 
 def find_coauthors(pubs, exclude):

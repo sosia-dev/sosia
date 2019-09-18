@@ -8,7 +8,8 @@ from pybliometrics.scopus import AuthorSearch, ScopusSearch
 from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error, Scopus404Error, Scopus429Error
 
-from sosia.processing.extraction import get_authors, get_auth_from_df
+from sosia.processing.extraction import get_authors, get_auth_from_df,\
+    expand_affiliation
 from sosia.utils import custom_print, print_progress
 from sosia.cache import authors_in_cache, cache_insert
 
@@ -169,7 +170,7 @@ def query_journal(source_id, years, refresh):
     return d
 
 
-def query_year(year, source_ids, refresh, verbose):
+def query_year(year, source_ids, refresh, verbose, afid=False):
     """Get authors lists for each source in a list and in a particular year.
 
     Parameters
@@ -185,6 +186,9 @@ def query_year(year, source_ids, refresh, verbose):
 
     verbose : bool (optional)
         Whether to print information on the search progress.
+
+    afid : bool (optional)
+        If True, mantains information on the Scopus affiliation ID in res.
     """
     params = {"group": [str(x) for x in sorted(source_ids)],
               "joiner": " OR ", "refresh": refresh, "q_type": "docs"}
@@ -199,13 +203,16 @@ def query_year(year, source_ids, refresh, verbose):
     if not res.empty:
         res = res[~res.author_ids.isnull()]
     if not res.empty:
-        res["Year"] = year
+        group = ["source_id", "year"]
+        if afid:
+            res = expand_affiliation(res.copy())
+            group.append("afid")
+        res["year"] = year
         res = res.astype(str)
-        res = (res.groupby(["source_id", "Year"])[["author_ids"]]
+        res = (res.groupby(group)[["author_ids"]]
                   .apply(get_auth_from_df)
+                  .rename("auids")
                   .reset_index())
-        # The following can be avoided by naming as in pubs
-        res.columns = ["source_id", "year", "auids"]
     return res
 
 
