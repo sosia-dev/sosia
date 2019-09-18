@@ -1,7 +1,7 @@
 sosia: Automatic author matching in Scopus on-line
 ==================================================
 
-sosia is a Python library match authors in the Scopus database, using the `scopus package <https://scopus.readthedocs.io/en/latest/index.html>`_.
+sosia is a Python library match authors in the Scopus database, using the `pybliometrics package <https://pybliometrics.readthedocs.io/en/latest/index.html>`_.
 
 .. include:: installation.rst
 
