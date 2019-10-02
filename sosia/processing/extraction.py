@@ -136,9 +136,7 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
     fields = "ID name " + " ".join(keywords)
     m = namedtuple("Match", fields)
     # Preparation
-    doc_parse = False
-    if "reference_sim" in keywords or "abstract_sim" in keywords:
-        doc_parse = True
+    doc_parse = "reference_sim" in keywords or "abstract_sim" in keywords
     total = len(profiles)
     print_progress(0, total, verbose)
     if doc_parse:
@@ -242,10 +240,11 @@ def parse_docs(eids, refresh):
             continue
     refs = [ab.references for ab in docs if ab.references]
     valid_refs = len(refs)
+    refs = " ".join([ref.id for sl in refs for ref in sl])
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     valid_absts = len(absts)
-    return (" ".join([ref.id for sl in refs for ref in sl]) or None, valid_refs,
-            " ".join(absts) or None, valid_absts)
+    absts = " ".join(absts)
+    return (refs, valid_refs, absts, valid_absts)
 
 
 def _print_missing_docs(auth_id, valid_abs, valid_refs, total, verbose=True):
