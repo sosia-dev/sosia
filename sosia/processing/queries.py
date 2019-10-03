@@ -200,19 +200,19 @@ def query_year(year, source_ids, refresh, verbose, afid=False):
     params.update({"template": q, "res": []})
     res, _ = stacked_query(**params)
     res = pd.DataFrame(res)
-    if not res.empty:
-        res = res[~res.author_ids.isnull()]
-    if not res.empty:
-        group = ["source_id", "year"]
-        if afid:
-            res = expand_affiliation(res.copy())
-            group.append("afid")
-        res["year"] = year
-        res = res.astype(str)
-        res = (res.groupby(group)[["author_ids"]]
-                  .apply(get_auth_from_df)
-                  .rename("auids")
-                  .reset_index())
+    if res.empty:
+        return res
+    res = res[~res["author_ids"].isnull()]
+    grouping_cols = ["source_id", "year"]
+    if afid:
+        res = expand_affiliation(res.copy())
+        grouping_cols.append("afid")
+    res["year"] = year
+    res = res.astype(str)
+    res = (res.groupby(grouping_cols)[["author_ids"]]
+              .apply(get_auth_from_df)
+              .reset_index()
+              .rename(columns={0: "auids"}))
     return res
 
 
