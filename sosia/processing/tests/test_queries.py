@@ -6,8 +6,8 @@ from nose.tools import assert_equal, assert_true
 from string import Template
 import pandas as pd
 
-from sosia.processing import (build_citation_query, query, query_author_data,
-                              query_journal, query_year, stacked_query)
+from sosia.processing import build_citation_query, query, query_author_data,\
+    query_journal, query_year, stacked_query
 
 
 def test_build_citation_query():
@@ -51,10 +51,10 @@ def test_query_journal():
 def test_query_year():
     # test a journal and year
     res = query_year(2010, [22900], refresh=False, verbose=False)
-    assert_equal(res.source_id.tolist(), ['22900'])
-    assert_equal(res.year.tolist(), ['2010'])
-    assert_true(isinstance(res.auids[0], list))
-    assert_true(len(res.auids[0]) > 0)
+    assert_equal(res["source_id"].tolist(), ['22900'])
+    assert_equal(res["year"].tolist(), ['2010'])
+    assert_true(isinstance(res["auids"][0], list))
+    assert_true(len(res["auids"][0]) > 0)
     # test a journal and year that are not in scopus
     res = query_year(1969, [22900], refresh=False, verbose=False)
     assert_true(res.empty)
@@ -62,9 +62,9 @@ def test_query_year():
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_year(1984, source_ids, refresh=False, verbose=True)
-    assert_true(len(res[~res.auids.isnull()]) == 17)
-    assert_true(isinstance(res.auids[0], list))
-    assert_true(len(res.auids[0]) > 0)
+    assert_true(len(res[~res["auids"].isnull()]) == 17)
+    assert_true(isinstance(res["auids"][0], list))
+    assert_true(len(res["auids"][0]) > 0)
 
 
 def test_query_year_afid():
@@ -72,9 +72,10 @@ def test_query_year_afid():
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_year(1984, source_ids, refresh=False, verbose=True, afid=True)
-    assert_true(len(res[~res.auids.isnull()]) == 3081)
+    expected = range(3077-5, 3077+5)
+    assert_true(len(res[~res["auids"].isnull()]) in expected)
     assert_true(res.columns.tolist(), ['source_id', 'year', 'afid', 'auids'])
-    assert_true(len(res.auids[0]) > 0)
+    assert_true(len(res["auids"][0]) > 0)
 
 
 def test_stacked_query():
