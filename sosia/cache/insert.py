@@ -47,6 +47,9 @@ def cache_insert(data, table, file=cache_file):
     ValueError
         If parameter table is not one of the allowed values.
     """
+    def join_flat_auids(s):
+        return ",".join([str(a) for a in s["auids"]])
+
     # Build query
     if table == 'authors':
         q = """INSERT OR IGNORE INTO authors (auth_id, eid, surname, initials,
@@ -76,16 +79,14 @@ def cache_insert(data, table, file=cache_file):
                     .apply(lambda x: list(flat_set_from_df(x, "auids")))
                     .rename("auids")
                     .reset_index())
-        data["auids"] = data.apply(lambda x: ",".join([str(a) for a in x["auids"]]),
-                                   axis=1)
+        data["auids"] = data.apply(join_flat_auids, axis=1)
         data = data[["source_id", "year", "auids"]]
         q = """INSERT OR IGNORE INTO sources (source_id, year, auids)
             VALUES (?,?,?) """
     elif table == "sources_afids":
         if data.empty:
             return None
-        data["auids"] = data.apply(lambda x: ",".join([str(a) for a in x["auids"]]),
-                                   axis=1)
+        data["auids"] = data.apply(join_flat_auids, axis=1)
         data = data[["source_id", "year", "afid", "auids"]]
         q = """INSERT OR IGNORE INTO sources_afids (source_id, year, afid, auids)
             VALUES (?,?,?,?) """
