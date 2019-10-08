@@ -132,6 +132,7 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
         A list of namedtuples representing matches.  Provided information
         depend on provided keywords.
     """
+    from sosia.classes import Scientist
     # Create Match object
     fields = "ID name " + " ".join(keywords)
     m = namedtuple("Match", fields)
@@ -149,6 +150,12 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
     for idx, p in enumerate(profiles):
         # Add characteristics
         match_info = {"ID": p.identifier[0], "name": p.name}
+        if "language" in keywords:
+            try:
+                match_info["language"] = p.get_publication_languages().language
+            except Scopus404Error:  # Refresh profile
+                p = Scientist(p.identifier, p.year, refresh=True)
+                match_info["language"] = p.get_publication_languages().language
         if "first_name" in keywords:
             match_info["first_name"] = p.first_name
         if "surname" in keywords:
@@ -177,8 +184,6 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
             match_info["affiliation_id"] = p.affiliation_id
         if "affiliation" in keywords:
             match_info["affiliation"] = p.organization
-        if "language" in keywords:
-            match_info["language"] = p.get_publication_languages().language
         # Abstract and reference similiarity is performed jointly
         if doc_parse:
             eids = [d.eid for d in p.publications]
