@@ -105,7 +105,7 @@ def test_search_group_period():
 
 
 def test_search_group_stacked():
-    scientist1.define_search_group(stacked=True, refresh=refresh, verbose=True)
+    scientist1.define_search_group(stacked=True, refresh=refresh)
     group = scientist1.search_group
     assert_true(600 <= len(group) <= 610)
     assert_true(isinstance(group, list))
@@ -113,7 +113,7 @@ def test_search_group_stacked():
 
 def test_search_group_stacked_period():
     scientist2.define_search_group(stacked=True, ignore_first_id=True,
-                                   verbose = True, refresh=refresh)
+                                   refresh=refresh)
     group = scientist2.search_group
     assert_true(4850 <= len(group) <= 4950)
     assert_true(isinstance(group, list))
@@ -121,7 +121,7 @@ def test_search_group_stacked_period():
 
 def test_search_group_stacked_period_affiliations():
     scientist3.define_search_group(stacked=True, ignore_first_id=True,
-                                   refresh=refresh, verbose=True)
+                                   refresh=refresh)
     group = scientist3.search_group
     assert_true(45 <= len(group) <= 54)
     assert_true(isinstance(group, list))
@@ -129,7 +129,7 @@ def test_search_group_stacked_period_affiliations():
 
 def test_search_group_stacked_affiliations():
     scientist4.define_search_group(stacked=True, ignore_first_id=True,
-                                   refresh=refresh, verbose=True)
+                                   refresh=refresh)
     group = scientist4.search_group
     assert_true(15 <= len(group) <= 22)
     assert_true(isinstance(group, list))
@@ -152,8 +152,7 @@ def test_find_matches():
 
 
 def test_find_matches_stacked():
-    recieved = scientist1.find_matches(stacked=True, refresh=refresh,
-                                       verbose=True)
+    recieved = scientist1.find_matches(stacked=True, refresh=refresh)
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
@@ -168,7 +167,7 @@ def test_find_matches_stacked():
 
 def test_find_matches_stacked():
     recieved = scientist2.find_matches(stacked=True, refresh=refresh,
-                                       information=False, verbose=True)
+                                       information=False)
     expected = [36998825200, 56049973600, 56896085200, 57188695848, 57188709931]
     assert_equal(sorted(recieved), expected)
 
@@ -179,7 +178,7 @@ def test_find_matches_stacked_period_affiliations():
             "num_publications_period", "num_citations_period", "subjects",
             "country", "affiliation_id", "affiliation"]
     recieved = scientist3.find_matches(stacked=True, refresh=refresh,
-                                       verbose=True, information=info)
+                                       information=info)
     recieved = pd.DataFrame(recieved)
     expect_ids = ['56049973600', '56896085200', '57188695848', '57188709931']
     expect_afids = ['60000765', '60000765', '60002612', '60032111']
@@ -188,8 +187,7 @@ def test_find_matches_stacked_period_affiliations():
     
 
 def test_find_matches_stacked_affiliations():
-    recieved = scientist4.find_matches(stacked=True, refresh=refresh,
-                                       verbose=True)
+    recieved = scientist4.find_matches(stacked=True, refresh=refresh)
     recieved = pd.DataFrame(recieved)
     expect_m = [m for m in MATCHES if m.ID != '55804519400']
     expect_ids = [m.ID for m in expect_m]
