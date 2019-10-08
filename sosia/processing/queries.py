@@ -205,7 +205,7 @@ def query_year(year, source_ids, refresh, verbose, afid=False):
     res = res[~res["author_ids"].isnull()]
     grouping_cols = ["source_id", "year"]
     if afid:
-        res = expand_affiliation(res.copy())
+        res = expand_affiliation(res)
         grouping_cols.append("afid")
     res["year"] = year
     res = res.astype(str)
