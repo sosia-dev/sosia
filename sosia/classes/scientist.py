@@ -371,10 +371,7 @@ class Scientist(object):
         """Parse languages of published documents."""
         langs = []
         for eid in self._eids:
-            try:
-                l = AbstractRetrieval(eid, view="FULL", refresh=refresh).language
-            except KeyError:  # Document likely not loaded in FULL view
-                l = AbstractRetrieval(eid, view="FULL", refresh=True).language
+            l = AbstractRetrieval(eid, view="FULL", refresh=refresh).language
             langs.append(l)
         self._language = "; ".join(sorted(list(set(filter(None, langs)))))
         return self

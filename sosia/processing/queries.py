@@ -76,7 +76,7 @@ def query(q_type, q, refresh=False, size_only=False, tsleep=0):
                 res = obj.results or []
                 if not valid_results(res):
                     raise TypeError
-        except (KeyError, UnicodeDecodeError, HTTPError, TypeError):
+        except (UnicodeDecodeError, HTTPError, TypeError):
             sleep(tsleep)
             if tsleep <= 10:
                 tsleep = tsleep+2.5
