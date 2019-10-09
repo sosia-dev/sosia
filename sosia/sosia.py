@@ -239,7 +239,7 @@ class Original(Scientist):
         return self
 
     def find_matches(self, stacked=False, verbose=False, stop_words=STOPWORDS,
-                     information=True, refresh=False, **kwds):
+                     information=True, refresh=False, **tfidf_kwds):
         """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -273,8 +273,12 @@ class Original(Scientist):
         refresh : bool (optional, default=False)
             Whether to refresh cached search files.
 
-        kwds : keywords
-            Parameters to pass to TfidfVectorizer for abstract vectorization.
+        tfidf_kwds : keywords
+            Parameters to pass to TfidfVectorizer from the sklearn package
+            for abstract vectorization.  Not used when `information=False` or
+            or when "abstract_sim" is not in `information`.  See
+            https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
+            for possible values.
 
         Returns
         -------
@@ -485,7 +489,7 @@ class Original(Scientist):
             profiles = [Scientist([str(a)], self.year, period=self.period,
                                   refresh=refresh) for a in matches]
             matches = inform_matches(profiles, self, keywords, stop_words,
-                                     verbose, refresh, **kwds)
+                                     verbose, refresh, **tfidf_kwds)
         if self.search_affiliations:
             matches = [m for m in matches if int(m.affiliation_id)
                        in self.search_affiliations]
