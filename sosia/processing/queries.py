@@ -62,28 +62,31 @@ def query(q_type, q, refresh=False, size_only=False, tsleep=0):
         If q_type is none of the allowed values.
     """
     params = {"query": q, "refresh": refresh, "download": not size_only}
-    if q_type == "author":
-        obj = AuthorSearch(**params)
-    elif q_type == "docs":
-        obj = ScopusSearch(**params)
+    try:
+        if q_type == "author":
+            obj = AuthorSearch(**params)
+        elif q_type == "docs":
+            obj = ScopusSearch(**params)
+    except Scopus500Error:
+        return query(q_type, **params)
     if size_only:
         return obj.get_results_size()
-    else:
-        try:
-            if q_type == "author":
-                res = obj.authors or []
-            elif q_type == "docs":
-                res = obj.results or []
-                if not valid_results(res):
-                    raise TypeError
-        except (UnicodeDecodeError, HTTPError, TypeError):
-            sleep(tsleep)
-            if tsleep <= 10:
-                tsleep = tsleep+2.5
-                res = query(q_type, q, True, size_only, tsleep)
-            else:
-                res = []
-        return res
+    try:
+        if q_type == "author":
+            res = obj.authors or []
+        elif q_type == "docs":
+            res = obj.results or []
+            if not valid_results(res):
+                raise TypeError
+    except (HTTPError, Scopus500Error, TypeError):
+        # Attempt to repeat the query up to four times after pausing
+        sleep(tsleep)
+        if tsleep <= 10:
+            tsleep += 2.5
+            res = query(q_type, q, True, size_only, tsleep)
+        else:
+            res = []
+    return res
 
 
 def query_author_data(authors_list, refresh=False, verbose=False):
