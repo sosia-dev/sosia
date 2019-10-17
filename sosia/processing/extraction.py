@@ -60,14 +60,14 @@ def find_location(auth_ids, pubs, year, refresh):
     # Return most recent complete information
     for p in papers:
         try:
-            authorgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
+            authgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
         except Scopus404Error:
             continue
-        authorgroup = [a for a in authorgroup if a.auid in auth_ids
-                       and a.country and a.affiliation_id and a.organization]
-        countries = "; ".join(sorted(set([a.country for a in authorgroup])))
-        aff_ids = "; ".join(sorted(set([a.affiliation_id for a in authorgroup])))
-        orgs = "; ".join(sorted(set([a.organization for a in authorgroup])))
+        authgroup = [a for a in authgroup if a.auid in auth_ids
+                     and a.country and a.affiliation_id and a.organization]
+        countries = "; ".join(sorted(set([a.country for a in authgroup])))
+        aff_ids = "; ".join(sorted(set([a.affiliation_id for a in authgroup])))
+        orgs = "; ".join(sorted(set([a.organization for a in authgroup])))
         if not countries and not aff_ids and not orgs:
             continue
         return (countries, aff_ids, orgs)
@@ -116,7 +116,8 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
         Whether to refresh all cached files or not.
 
     kwds : keywords
-        Parameters to pass to TfidfVectorizer for abstract vectorization.
+        Parameters to pass to sklearn.feature_extraction.text.TfidfVectorizer
+        for abstract and reference vectorization.
 
     Returns
     -------
@@ -134,8 +135,8 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
     print_progress(0, total, verbose)
     if doc_parse:
         focal_eids = [d.eid for d in focal.publications]
-        focal_refs, focal_refs_n, focal_abs, focal_abs_n = parse_docs(focal_eids,
-            refresh)
+        focal = parse_docs(focal_eids, refresh)
+        focal_refs, focal_refs_n, focal_abs, focal_abs_n = focal
     # Add selective information
     out = []
     info = {}  # to collect information on missing information
