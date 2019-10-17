@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 from sosia.utils import config, flat_set_from_df

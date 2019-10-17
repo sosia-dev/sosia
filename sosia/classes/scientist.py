@@ -7,7 +7,7 @@ from pybliometrics.scopus import AbstractRetrieval
 
 from sosia.processing import build_citation_query, find_location, get_authors,\
     query, query_author_data
-from sosia.utils import ASJC_2D, accepts, add_source_names, get_main_field,\
+from sosia.utils import accepts, add_source_names, get_main_field,\
     maybe_add_source_names, read_fields_sources_list
 
 

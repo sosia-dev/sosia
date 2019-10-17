@@ -6,8 +6,8 @@ import sqlite3
 
 from sosia.utils import config, flat_set_from_df
 
-
 cache_file = config.get('Cache', 'File path')
+
 
 def cache_connect(file=cache_file):
     """Connect to cache file.

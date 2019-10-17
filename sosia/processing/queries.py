@@ -6,11 +6,11 @@ from urllib.error import HTTPError
 
 from pybliometrics.scopus import AuthorSearch, ScopusSearch
 from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
-    Scopus500Error, Scopus404Error, Scopus429Error
+    Scopus500Error
 
 from sosia.processing.extraction import get_authors, get_auth_from_df,\
     expand_affiliation
-from sosia.utils import custom_print, print_progress
+from sosia.utils import print_progress
 from sosia.cache import authors_in_cache, cache_insert
 
 
