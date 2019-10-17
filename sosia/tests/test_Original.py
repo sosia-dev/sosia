@@ -93,46 +93,46 @@ def test_search_sources_change():
 def test_search_group():
     scientist1.define_search_group(refresh=refresh)
     group = scientist1.search_group
-    assert_true(365 <= len(group) <= 375)
     assert_true(isinstance(group, list))
+    assert_true(365 <= len(group) <= 375)
 
 
 def test_search_group_period():
     scientist2.define_search_group(ignore_first_id=True, refresh=refresh)
     group = scientist2.search_group
-    assert_true(4355 <= len(group) <= 4365)
     assert_true(isinstance(group, list))
+    assert_true(4355 <= len(group) <= 4365)
 
 
 def test_search_group_stacked():
     scientist1.define_search_group(stacked=True, refresh=refresh)
     group = scientist1.search_group
-    assert_true(600 <= len(group) <= 610)
     assert_true(isinstance(group, list))
+    assert_true(600 <= len(group) <= 610)
 
 
 def test_search_group_stacked_period():
     scientist2.define_search_group(stacked=True, ignore_first_id=True,
                                    refresh=refresh)
     group = scientist2.search_group
-    assert_true(4850 <= len(group) <= 4950)
     assert_true(isinstance(group, list))
+    assert_true(4850 <= len(group) <= 4950)
 
 
 def test_search_group_stacked_period_affiliations():
     scientist3.define_search_group(stacked=True, ignore_first_id=True,
                                    refresh=refresh)
     group = scientist3.search_group
-    assert_true(45 <= len(group) <= 54)
     assert_true(isinstance(group, list))
+    assert_true(50 <= len(group) <= 60)
 
 
 def test_search_group_stacked_affiliations():
     scientist4.define_search_group(stacked=True, ignore_first_id=True,
                                    refresh=refresh)
     group = scientist4.search_group
-    assert_true(15 <= len(group) <= 22)
     assert_true(isinstance(group, list))
+    assert_true(15 <= len(group) <= 22)
 
 
 def test_find_matches():
