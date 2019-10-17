@@ -205,14 +205,16 @@ def query_year(year, source_ids, refresh, verbose, afid=False):
     res = pd.DataFrame(res)
     if res.empty:
         return res
-    res = res[~res["author_ids"].isnull()]
+    res = res.dropna(subset=["author_ids"])
+    if res.empty:
+        return res
     grouping_cols = ["source_id", "year"]
     if afid:
         res = expand_affiliation(res)
         grouping_cols.append("afid")
     res["year"] = year
-    res = res.astype(str)
-    res = (res.groupby(grouping_cols)[["author_ids"]]
+    res = (res.astype(str)
+              .groupby(grouping_cols)[["author_ids"]]
               .apply(get_auth_from_df)
               .reset_index()
               .rename(columns={0: "auids"}))
