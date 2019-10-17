@@ -25,14 +25,6 @@ def expand_affiliation(df):
     return res
 
 
-def find_coauthors(pubs, exclude):
-    """Auxiliary function to find coauthors from list of publications,
-    excluding the focal author.
-    """
-    return set([a for p in pubs for a in p.author_ids.split(";")
-                if a not in exclude])
-
-
 def find_location(auth_ids, pubs, year, refresh):
     """Find the most common country, affiliation ID, and affiliation name
     of a scientist using her most recent publications with valid information.

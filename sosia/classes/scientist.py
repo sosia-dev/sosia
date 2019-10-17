@@ -5,8 +5,8 @@
 
 from pybliometrics.scopus import AbstractRetrieval
 
-from sosia.processing import build_citation_query, find_coauthors,\
-    find_location, query, query_author_data
+from sosia.processing import build_citation_query, find_location, get_authors,\
+    query, query_author_data
 from sosia.utils import ASJC_2D, accepts, add_source_names, get_main_field,\
     maybe_add_source_names, read_fields_sources_list
 
@@ -312,7 +312,7 @@ class Scientist(object):
         self._citations = query("docs", q, size_only=True)
 
         # Coauthors
-        self._coauthors = find_coauthors(self._publications, identifier)
+        self._coauthors = set(get_authors(self._publications)) - set(identifier)
 
         # Period counts simply set to total if period is or goes back to None
         if self.period:
@@ -330,8 +330,8 @@ class Scientist(object):
             q = build_citation_query(search_ids=eids_period, pubyear=self.year+1,
                 exclusion_key="AU-ID", exclusion_ids=identifier)
             self._citations_period = query("docs", q, size_only=True)
-            self._coauthors_period = find_coauthors(self._publications_period,
-                                                    identifier)
+            self._coauthors_period = set(get_authors(self._publications_period))
+            self._coauthors_period -= set(identifier)
         else:
             self._coauthors_period = self._coauthors
             self._publications_period = self._publications

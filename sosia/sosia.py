@@ -13,7 +13,7 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sosia.cache import author_cits_in_cache, author_year_in_cache, cache_insert
 from sosia.classes import Scientist
 from sosia.filtering import search_group_from_sources, filter_pub_counts
-from sosia.processing import get_authors, find_coauthors, inform_matches,\
+from sosia.processing import get_authors, inform_matches,\
     query, query_author_data, stacked_query
 from sosia.utils import accepts, build_dict, custom_print, margin_range,\
     maybe_add_source_names, print_progress
@@ -470,7 +470,7 @@ class Original(Scientist):
                 res = query("docs", "AU-ID({})".format(m), refresh=refresh)
                 pubs = [p for p in res if int(p.coverDate[:4]) <= self.year and
                         int(p.coverDate[:4]) >= self.year_period]
-                coauths = find_coauthors(pubs, [str(m)])
+                coauths = set(get_authors(pubs)) - {str(m)}
                 if not (min(_ncoauth) <= len(coauths) <= max(_ncoauth)):
                     matches.remove(m)
                     continue
