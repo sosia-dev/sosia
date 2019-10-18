@@ -290,7 +290,7 @@ class Scientist(object):
             q = "AU-ID({})".format(") OR AU-ID(".join(identifier))
         else:
             q = "EID({})".format(" OR ".join(eids))
-        res = query("docs", q, refresh)
+        res = query("docs", q, refresh, fields=["eid", "author_ids", "coverDate"])
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = "No publications for author {} until year {}".format(

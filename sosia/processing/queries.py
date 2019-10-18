@@ -28,7 +28,7 @@ def build_citation_query(search_ids, pubyear, exclusion_key, exclusion_ids):
     return q
 
 
-def query(q_type, q, refresh=False, size_only=False, tsleep=0):
+def query(q_type, q, refresh=False, fields=None, size_only=False, tsleep=0):
     """Wrapper function to perform a particular search query.
 
     Parameters
@@ -42,6 +42,11 @@ def query(q_type, q, refresh=False, size_only=False, tsleep=0):
 
     refresh : bool (optional, default=False)
         Whether to refresh cached files if they exist, or not.
+
+    fields : list of field names (optional, default=None)
+        Fields in the Scopus query that must always present.  To be passed
+         onto pybliometrics.scopus.ScopusSearch.  Will be ignored
+         when q_type = "author".
 
     size_only : bool (optional, default=False)
         Whether to not download results and return the number
@@ -62,28 +67,34 @@ def query(q_type, q, refresh=False, size_only=False, tsleep=0):
         If q_type is none of the allowed values.
     """
     params = {"query": q, "refresh": refresh, "download": not size_only}
+    # Download query until server is available
     try:
         if q_type == "author":
             obj = AuthorSearch(**params)
         elif q_type == "docs":
+            params["integrity_fields"] = fields
             obj = ScopusSearch(**params)
     except Scopus500Error:
         return query(q_type, **params)
     if size_only:
         return obj.get_results_size()
+    # Parse results, refresh once if integrity check fails or when server
+    # sends bad results (in this case pause querying for a while)
     try:
         if q_type == "author":
             res = obj.authors or []
         elif q_type == "docs":
             res = obj.results or []
-            if not valid_results(res):
-                raise TypeError
-    except (HTTPError, Scopus500Error, TypeError):
+    except AttributeError:
+        res = query(q_type, q, refresh=True, fields=None,
+                    size_only=size_only, tsleep=tsleep)
+    except (HTTPError, Scopus500Error):
         # Attempt to repeat the query up to four times after pausing
         sleep(tsleep)
         if tsleep <= 10:
             tsleep += 2.5
-            res = query(q_type, q, True, size_only, tsleep)
+            res = query(q_type, q, refresh=True, fields=fields,
+                        size_only=size_only, tsleep=tsleep)
         else:
             res = []
     return res
