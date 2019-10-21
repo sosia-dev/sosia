@@ -5,8 +5,8 @@
 
 from pybliometrics.scopus import AbstractRetrieval
 
-from sosia.processing import build_citation_query, find_location, get_authors,\
-    query, query_author_data
+from sosia.processing import build_citation_query, base_query, find_location,\
+    get_authors, query_author_data
 from sosia.utils import accepts, add_source_names, get_main_field,\
     maybe_add_source_names, read_fields_sources_list
 
@@ -290,7 +290,8 @@ class Scientist(object):
             q = "AU-ID({})".format(") OR AU-ID(".join(identifier))
         else:
             q = "EID({})".format(" OR ".join(eids))
-        res = query("docs", q, refresh, fields=["eid", "author_ids", "coverDate"])
+        res = base_query("docs", q, refresh,
+            fields=["eid", "author_ids", "coverDate"])
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = "No publications for author {} until year {}".format(
@@ -309,7 +310,7 @@ class Scientist(object):
         search_ids = eids or identifier
         q = build_citation_query(search_ids=search_ids, pubyear=self.year+1,
             exclusion_key="AU-ID", exclusion_ids=identifier)
-        self._citations = query("docs", q, size_only=True)
+        self._citations = base_query("docs", q, size_only=True)
 
         # Coauthors
         self._coauthors = set(get_authors(self._publications)) - set(identifier)
@@ -329,7 +330,7 @@ class Scientist(object):
             eids_period = [p.eid for p in self._publications_period]
             q = build_citation_query(search_ids=eids_period, pubyear=self.year+1,
                 exclusion_key="AU-ID", exclusion_ids=identifier)
-            self._citations_period = query("docs", q, size_only=True)
+            self._citations_period = base_query("docs", q, size_only=True)
             self._coauthors_period = set(get_authors(self._publications_period))
             self._coauthors_period -= set(identifier)
         else:

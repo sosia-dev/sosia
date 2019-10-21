@@ -13,8 +13,8 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sosia.cache import author_cits_in_cache, author_year_in_cache, cache_insert
 from sosia.classes import Scientist
 from sosia.filtering import search_group_from_sources, filter_pub_counts
-from sosia.processing import get_authors, inform_matches,\
-    query, query_author_data, stacked_query
+from sosia.processing import get_authors, base_query, inform_matches,\
+    query_author_data, stacked_query
 from sosia.utils import accepts, build_dict, custom_print, margin_range,\
     maybe_add_source_names, print_progress
 
@@ -370,7 +370,7 @@ class Original(Scientist):
             for i, au in authors_cits_search.iterrows():
                 q = "REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})".format(
                     au['auth_id'], self.year + 1, au['auth_id'])
-                n = query("docs", q, size_only=True)
+                n = base_query("docs", q, size_only=True)
                 authors_cits_search.at[i, 'n_cits'] = n
                 print_progress(i + 1, len(authors_cits_search), verbose)
             cache_insert(authors_cits_search, table="author_cits_size")
@@ -438,7 +438,7 @@ class Original(Scientist):
         else:  # Query each author individually
             for i, au in enumerate(group):
                 print_progress(i + 1, len(group), verbose)
-                res = query("docs", "AU-ID({})".format(au), refresh=refresh)
+                res = base_query("docs", "AU-ID({})".format(au), refresh=refresh)
                 res = [p for p in res if p.coverDate and
                        int(p.coverDate[:4]) <= self.year]
                 # Filter
@@ -467,7 +467,7 @@ class Original(Scientist):
             to_loop = [m for m in matches]  # temporary copy
             for m in to_loop:
                 q = "AU-ID({})".format(m)
-                res = query("docs", "AU-ID({})".format(m), refresh=refresh)
+                res = base_query("docs", "AU-ID({})".format(m), refresh=refresh)
                 pubs = [p for p in res if int(p.coverDate[:4]) <= self.year and
                         int(p.coverDate[:4]) >= self.year_period]
                 coauths = set(get_authors(pubs)) - {str(m)}
@@ -477,7 +477,7 @@ class Original(Scientist):
                 eids_period = [p.eid for p in pubs]
                 q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
                      .format(" OR ".join(eids_period), self.year + 1, m))
-                cits = query("docs", q, size_only=True)
+                cits = base_query("docs", q, size_only=True)
                 if not (min(_ncits) <= cits <= max(_ncits)):
                     matches.remove(m)
         text = "Found {:,} author(s) matching all criteria".format(len(matches))

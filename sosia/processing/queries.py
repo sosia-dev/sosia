@@ -28,7 +28,7 @@ def build_citation_query(search_ids, pubyear, exclusion_key, exclusion_ids):
     return q
 
 
-def query(q_type, q, refresh=False, fields=None, size_only=False, tsleep=0):
+def base_query(q_type, query, refresh=False, fields=None, size_only=False):
     """Wrapper function to perform a particular search query.
 
     Parameters
@@ -37,7 +37,7 @@ def query(q_type, q, refresh=False, fields=None, size_only=False, tsleep=0):
         Determines the query search that will be used.  Allowed values:
         "author", "docs".
 
-    q : str
+    query : str
         The query string.
 
     refresh : bool (optional, default=False)
@@ -66,7 +66,7 @@ def query(q_type, q, refresh=False, fields=None, size_only=False, tsleep=0):
     ValueError:
         If q_type is none of the allowed values.
     """
-    params = {"query": q, "refresh": refresh, "download": not size_only}
+    params = {"query": query, "refresh": refresh, "download": not size_only}
     # Download query until server is available
     try:
         if q_type == "author":
@@ -75,7 +75,9 @@ def query(q_type, q, refresh=False, fields=None, size_only=False, tsleep=0):
             params["integrity_fields"] = fields
             obj = ScopusSearch(**params)
     except Scopus500Error:
-        return query(q_type, **params)
+        sleep(2.0)
+        return base_query(q_type, query, refresh=True, fields=None,
+                          size_only=size_only)
     if size_only:
         return obj.get_results_size()
     # Parse results, refresh once if integrity check fails or when server
@@ -86,17 +88,8 @@ def query(q_type, q, refresh=False, fields=None, size_only=False, tsleep=0):
         elif q_type == "docs":
             res = obj.results or []
     except AttributeError:
-        res = query(q_type, q, refresh=True, fields=None,
-                    size_only=size_only, tsleep=tsleep)
-    except (HTTPError, Scopus500Error):
-        # Attempt to repeat the query up to four times after pausing
-        sleep(tsleep)
-        if tsleep <= 10:
-            tsleep += 2.5
-            res = query(q_type, q, refresh=True, fields=fields,
-                        size_only=size_only, tsleep=tsleep)
-        else:
-            res = []
+        return base_query(q_type, query, refresh=True, fields=None,
+                          size_only=size_only)
     return res
 
 
@@ -159,9 +152,9 @@ def query_journal(source_id, years, refresh):
     """
     try:  # Try complete publication list first
         q = "SOURCE-ID({})".format(source_id)
-        if query("docs", q, size_only=True) > 5000:
+        if base_query("docs", q, size_only=True) > 5000:
             raise ScopusQueryError()
-        res = query("docs", q, refresh=refresh)
+        res = base_query("docs", q, refresh=refresh)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
@@ -231,7 +224,6 @@ def query_year(year, source_ids, refresh, verbose, afid=False):
               .rename(columns={0: "auids"}))
     return res
 
-
 def stacked_query(group, res, template, joiner, q_type, refresh,
                   i=0, total=None):
     """Auxiliary function to recursively perform queries until they work.
@@ -282,10 +274,10 @@ def stacked_query(group, res, template, joiner, q_type, refresh,
     group = [str(g) for g in group]  # make robust to passing int
     q = template.substitute(fill=joiner.join(group))
     try:
-        n = query(q_type, q, size_only=True)
+        n = base_query(q_type, q, size_only=True)
         if n > 5000 and len(group) > 1:
             raise ScopusQueryError()
-        res.extend(query(q_type, q, refresh=refresh))
+        res.extend(base_query(q_type, q, refresh=refresh))
         verbose = total is not None
         i += len(group)
         print_progress(i, total, verbose)

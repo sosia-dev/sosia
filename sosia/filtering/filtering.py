@@ -4,7 +4,7 @@ from itertools import product
 from pandas import DataFrame
 
 from sosia.cache import cache_insert, author_size_in_cache, sources_in_cache
-from sosia.processing.queries import query, query_journal, query_year
+from sosia.processing.queries import base_query, query_journal, query_year
 from sosia.utils import custom_print, flat_set_from_df, margin_range,\
     print_progress
 
@@ -124,7 +124,7 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
         to_loop = [x for x in group_tocheck]  # Temporary copy
         for i, au in enumerate(to_loop):
             q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, ybefore + 1)
-            size = query("docs", q, size_only=True)
+            size = base_query("docs", q, size_only=True)
             tp = (au, ybefore, size)
             cache_insert(tp, table="author_size")
             print_progress(i+1, len(to_loop), verbose)
@@ -145,13 +145,13 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
         print_progress(0, n, verbose)
         for i, au in enumerate(group_tocheck):
             q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, yupto+1)
-            n_pubs_yupto = query("docs", q, size_only=True)
+            n_pubs_yupto = base_query("docs", q, size_only=True)
             tp = (au, yupto, n_pubs_yupto)
             cache_insert(tp, table="author_size")
             # Eventually decrease publication count
             if yfrom and n_pubs_yupto >= min(npapers):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, yfrom)
-                n_pubs_yfrom = query("docs", q, size_only=True)
+                n_pubs_yfrom = base_query("docs", q, size_only=True)
                 tp = (au, yfrom-1, n_pubs_yfrom)
                 cache_insert(tp, table="author_size")
                 n_pubs_yupto -= n_pubs_yfrom

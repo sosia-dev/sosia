@@ -6,8 +6,22 @@ from nose.tools import assert_equal, assert_true
 from string import Template
 import pandas as pd
 
-from sosia.processing import build_citation_query, query, query_author_data,\
+from sosia.processing import base_query, build_citation_query, query_author_data,\
     query_journal, query_year, stacked_query
+
+
+def test_base_query_author():
+    auth_id = 53164702100
+    query = "AU-ID({})".format(auth_id)
+    size = base_query("author", query, size_only=True)
+    assert_equal(size, 1)
+
+
+def test_base_query():
+    auth_id = 53164702100
+    q = "AU-ID({}) AND PUBYEAR BEF {}".format(auth_id, 2017)
+    size = base_query("docs", q, size_only=True)
+    assert_equal(size, 5)
 
 
 def test_build_citation_query():
@@ -17,17 +31,6 @@ def test_build_citation_query():
     q = build_citation_query(["1", "2"], 2000, "EID", ["3", "4"])
     expect = "REF(1 OR 2) AND PUBYEAR BEF 2000 AND NOT EID(3 OR 4)"
     assert_equal(q, expect)
-
-
-def test_query():
-    auth_id = 53164702100
-    # test sizes of results sets
-    q = "AU-ID({}) AND PUBYEAR BEF {}".format(auth_id, 2017)
-    size = query("docs", q, size_only=True)
-    assert_equal(size, 5)
-    q = "AU-ID({})".format(auth_id)
-    size = query("author", q, size_only=True)
-    assert_equal(size, 1)
 
 
 def test_query_author_data():
