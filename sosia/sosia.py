@@ -71,7 +71,7 @@ class Original(Scientist):
 
         Parameters
         ----------
-        scientist : str, int or list
+        scientist : str, int or list or str or int
             Scopus Author ID, or list of Scopus Author IDs, of the scientist
             you want to find control groups for.
 
@@ -132,7 +132,7 @@ class Original(Scientist):
             raise Exception("Argument coauth_margin must be float or integer.")
 
         # Variables
-        if isinstance(scientist, (int, str)):
+        if not isinstance(scientist, list):
             scientist = [scientist]
         self.identifier = [str(auth_id) for auth_id in scientist]
         self.year = int(year)

@@ -276,7 +276,7 @@ class Scientist(object):
             given year.
         """
         self.identifier = identifier
-        self.year = year
+        self.year = int(year)
         self.period = period
         self.year_period = None
 
