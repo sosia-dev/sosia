@@ -491,6 +491,8 @@ class Original(Scientist):
             matches = inform_matches(profiles, self, keywords, stop_words,
                                      verbose, refresh, **tfidf_kwds)
         if self.search_affiliations:
-            matches = [m for m in matches if int(m.affiliation_id)
-                       in self.search_affiliations]
+            matches = [m for m in matches if 
+                       len(set(m.affiliation_id.replace(" ","").split(";"))
+                       .intersection([str(a) for a in
+                                      self.search_affiliations]))]
         return matches
