@@ -14,7 +14,7 @@ def expand_affiliation(df):
     """Auxiliary function to expand the information about the affiliation
     in publications from ScopusSearch.
     """
-    res = df[["source_id", "author_ids", "afid"]]#.copy()
+    res = df[["source_id", "author_ids", "afid"]].copy()
     res['afid'] = res["afid"].str.split(';')
     res = (res["afid"].apply(pd.Series)
               .merge(res, right_index=True, left_index=True)
