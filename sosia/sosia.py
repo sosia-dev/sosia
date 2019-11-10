@@ -467,7 +467,8 @@ class Original(Scientist):
             to_loop = [m for m in matches]  # temporary copy
             for m in to_loop:
                 q = "AU-ID({})".format(m)
-                res = base_query("docs", "AU-ID({})".format(m), refresh=refresh)
+                res = base_query("docs", "AU-ID({})".format(m), refresh=refresh,
+                    fields=["eid", "author_ids", "coverDate"])
                 pubs = [p for p in res if int(p.coverDate[:4]) <= self.year and
                         int(p.coverDate[:4]) >= self.year_period]
                 coauths = set(get_authors(pubs)) - {str(m)}
