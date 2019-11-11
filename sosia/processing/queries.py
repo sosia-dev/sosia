@@ -87,7 +87,7 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
             res = obj.authors or []
         elif q_type == "docs":
             res = obj.results or []
-    except AttributeError:
+    except (AttributeError, Scopus500Error, KeyError, HTTPError):
         return base_query(q_type, query, refresh=True, fields=None,
                           size_only=size_only)
     return res
