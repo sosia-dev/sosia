@@ -20,8 +20,6 @@ def cache_connect(file=cache_file):
     file = config.get('Cache', 'File path')
     conn = sqlite3.connect(file)
     c = conn.cursor()
-    conn = sqlite3.connect(file)
-    c = conn.cursor()
     sqlite3.register_adapter(np.int64, lambda val: int(val))
     sqlite3.register_adapter(np.int32, lambda val: int(val))
     return c, conn
