@@ -74,7 +74,9 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
         elif q_type == "docs":
             params["integrity_fields"] = fields
             obj = ScopusSearch(**params)
-    except Scopus500Error:
+    except (AttributeError, Scopus500Error, KeyError, HTTPError):
+        # exception of all errors here has to be maintained due to the
+        # occurrence of not replicable errors (e.g. 'cursor', HTTPError)
         sleep(2.0)
         return base_query(q_type, query, refresh=True, fields=None,
                           size_only=size_only)
@@ -88,6 +90,8 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
         elif q_type == "docs":
             res = obj.results or []
     except (AttributeError, Scopus500Error, KeyError, HTTPError):
+        # exception of all errors here has to be maintained due to the
+        # occurrence of not replicable errors (e.g. 'cursor', HTTPError)
         return base_query(q_type, query, refresh=True, fields=None,
                           size_only=size_only)
     return res
