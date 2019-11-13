@@ -14,20 +14,6 @@ from sosia.utils import print_progress
 from sosia.cache import authors_in_cache, cache_insert
 
 
-def build_citation_query(search_ids, pubyear, exclusion_key, exclusion_ids):
-    """Auxiliary function to build query string to search for citations."""
-    search_ids = " OR ".join(search_ids)
-    joiner = " OR "
-    if exclusion_key == "AU-ID":
-        joiner = ") AND NOT AU-ID("
-    exclusion_ids = joiner.join(exclusion_ids)
-    s = Template("REF($search_ids) AND PUBYEAR BEF $pubyear AND NOT "
-                 "$exclusion_key($exclusion_ids)")
-    q = s.substitute(search_ids=search_ids, pubyear=pubyear,
-                     exclusion_key=exclusion_key, exclusion_ids=exclusion_ids)
-    return q
-
-
 def base_query(q_type, query, refresh=False, fields=None, size_only=False):
     """Wrapper function to perform a particular search query.
 
@@ -95,6 +81,28 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
         return base_query(q_type, query, refresh=True, fields=None,
                           size_only=size_only)
     return res
+
+
+def count_citations(search_ids, pubyear, exclusion_key, exclusion_ids):
+    """Auxiliary function to build query string to search for citations."""
+    q_search_ids = " OR ".join(search_ids)
+    joiner = " OR "
+    if exclusion_key == "AU-ID":
+        joiner = ") AND NOT AU-ID("
+    q_exclusion_ids = joiner.join(exclusion_ids)
+    s = Template("REF($search_ids) AND PUBYEAR BEF $pubyear AND NOT "
+                 "$exclusion_key($exclusion_ids)")
+    q = s.substitute(search_ids=q_search_ids, pubyear=pubyear,
+                     exclusion_key=exclusion_key, exclusion_ids=q_exclusion_ids)
+    # break query if too long
+    if len(q) > 3785:
+        mid = len(search_ids) // 2
+        count1 = count_citations(search_ids[:mid], pubyear, exclusion_key,
+                                 exclusion_ids)
+        count2 = count_citations(search_ids[mid:], pubyear, exclusion_key,
+                                 exclusion_ids)
+        return count1 + count2
+    return base_query("docs", q, size_only=True)
 
 
 def query_author_data(authors_list, refresh=False, verbose=False):

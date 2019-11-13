@@ -6,7 +6,7 @@ from nose.tools import assert_equal, assert_true
 from string import Template
 import pandas as pd
 
-from sosia.processing import base_query, build_citation_query, query_author_data,\
+from sosia.processing import base_query, count_citations, query_author_data,\
     query_journal, query_year, stacked_query
 
 
@@ -24,13 +24,16 @@ def test_base_query():
     assert_equal(size, 5)
 
 
-def test_build_citation_query():
-    q = build_citation_query(["1", "2"], 2000, "AU-ID", ["3", "4"])
-    expect = "REF(1 OR 2) AND PUBYEAR BEF 2000 AND NOT AU-ID(3) AND NOT AU-ID(4)"
-    assert_equal(q, expect)
-    q = build_citation_query(["1", "2"], 2000, "EID", ["3", "4"])
-    expect = "REF(1 OR 2) AND PUBYEAR BEF 2000 AND NOT EID(3 OR 4)"
-    assert_equal(q, expect)
+def test_count_citations():
+    identifier = [55208373700, 55208373700]
+    eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
+    count1 = count_citations(identifier, 2017, "AU-ID", identifier)
+    count2 = count_citations(eids, 2017, "AU-ID", identifier)
+    eids_long = eids * 200
+    count3 = count_citations(eids_long, 2017, "AU-ID", identifier)
+    assert_equal(count1, 22)
+    assert_equal(count2, 1)
+    assert_equal(count3, 4)
 
 
 def test_query_author_data():

@@ -13,8 +13,8 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sosia.cache import author_cits_in_cache, author_year_in_cache, cache_insert
 from sosia.classes import Scientist
 from sosia.filtering import search_group_from_sources, filter_pub_counts
-from sosia.processing import get_authors, base_query, inform_matches,\
-    query_author_data, stacked_query
+from sosia.processing import count_citations, get_authors, base_query,\
+    inform_matches, query_author_data, stacked_query
 from sosia.utils import accepts, build_dict, custom_print, margin_range,\
     maybe_add_source_names, print_progress
 
@@ -476,9 +476,9 @@ class Original(Scientist):
                     matches.remove(m)
                     continue
                 eids_period = [p.eid for p in pubs]
-                q = ("REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})"
-                     .format(" OR ".join(eids_period), self.year + 1, m))
-                cits = base_query("docs", q, size_only=True)
+                cits = count_citations(search_ids=eids_period,
+                        pubyear=self.year+1, exclusion_key="AU-ID",
+                        exclusion_ids=[str(m)])
                 if not (min(_ncits) <= cits <= max(_ncits)):
                     matches.remove(m)
         text = "Found {:,} author(s) matching all criteria".format(len(matches))

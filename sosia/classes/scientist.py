@@ -5,7 +5,7 @@
 
 from pybliometrics.scopus import AbstractRetrieval
 
-from sosia.processing import build_citation_query, base_query, find_location,\
+from sosia.processing import count_citations, base_query, find_location,\
     get_authors, query_author_data
 from sosia.utils import accepts, add_source_names, get_main_field,\
     maybe_add_source_names, read_fields_sources_list
@@ -308,9 +308,8 @@ class Scientist(object):
 
         # Count of citations
         search_ids = eids or identifier
-        q = build_citation_query(search_ids=search_ids, pubyear=self.year+1,
-            exclusion_key="AU-ID", exclusion_ids=identifier)
-        self._citations = base_query("docs", q, size_only=True)
+        self._citations = count_citations(search_ids=search_ids,
+            pubyear=self.year+1, exclusion_key="AU-ID", exclusion_ids=identifier)
 
         # Coauthors
         self._coauthors = set(get_authors(self._publications)) - set(identifier)
@@ -328,9 +327,9 @@ class Scientist(object):
                                              self.year_period)
                 raise Exception(text)
             eids_period = [p.eid for p in self._publications_period]
-            q = build_citation_query(search_ids=eids_period, pubyear=self.year+1,
-                exclusion_key="AU-ID", exclusion_ids=identifier)
-            self._citations_period = base_query("docs", q, size_only=True)
+            self._citations_period = count_citations(search_ids=eids_period,
+                pubyear=self.year+1, exclusion_key="AU-ID",
+                exclusion_ids=identifier)
             self._coauthors_period = set(get_authors(self._publications_period))
             self._coauthors_period -= set(identifier)
         else:
