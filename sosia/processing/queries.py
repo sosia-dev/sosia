@@ -84,7 +84,7 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
 
 
 def count_citations(search_ids, pubyear, exclusion_key, exclusion_ids):
-    """Auxiliary function to build query string to search for citations."""
+    """Auxiliary function to count non-self citations up to a year."""
     q_search_ids = " OR ".join(search_ids)
     joiner = " OR "
     if exclusion_key == "AU-ID":
