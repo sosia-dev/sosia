@@ -3,6 +3,26 @@ Change Log
 
 .. toctree::
 
+0.3
+~~~
+
+2019-11-26
+
+* Introduce internal SQLite database to store results from stacked queries.
+* Comply with pybliometrics 2.2 or higher to make use of integrity_fields.
+* In `Original()`, add parameter "num_citations" to filter on the number of citations as well.
+* In `Original()`, add paramater "period" to allow for matching on information derived from used-provided period only.
+* In `Original()`, add parameter "search_affiliations" to enable subsetting on matches from a list of specific affiliations.
+* Add "num_citations" to information of matches.
+* Introduce internal config file.
+* Attempt to download most recent sources list from scopus.com during `.create_fields_sources_list()`.
+* In `find_country()`, add "refresh" parameter and fix bugs related to wrong views and not continuing the search.
+* In `get_main_field()` return most common 2-digit ASJC code and most commont 4-digit ASJC field.
+* Attempt to extract URL for the Scopus source list via webscraping.
+* In `find_matches()`, provide only desired information.
+* In `find_matches()`, fix bug with missing references or abstracts.
+* Use decorators for methods.
+
 0.2
 ~~~
 
