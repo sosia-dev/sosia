@@ -10,13 +10,6 @@ from sosia.processing import base_query, count_citations, query_author_data,\
     query_journal, query_year, stacked_query
 
 
-def test_base_query_author():
-    auth_id = 53164702100
-    query = "AU-ID({})".format(auth_id)
-    size = base_query("author", query, size_only=True)
-    assert_equal(size, 1)
-
-
 def test_base_query():
     auth_id = 53164702100
     q = "AU-ID({}) AND PUBYEAR BEF {}".format(auth_id, 2017)
@@ -24,15 +17,22 @@ def test_base_query():
     assert_equal(size, 5)
 
 
+def test_base_query_author():
+    auth_id = 53164702100
+    query = "AU-ID({})".format(auth_id)
+    size = base_query("author", query, size_only=True)
+    assert_equal(size, 1)
+
+
 def test_count_citations():
-    identifier = [55208373700, 55208373700]
-    eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
-    count1 = count_citations(identifier, 2017, "AU-ID", identifier)
-    count2 = count_citations(eids, 2017, "AU-ID", identifier)
-    eids_long = eids * 200
-    count3 = count_citations(eids_long, 2017, "AU-ID", identifier)
+    identifier = ["55208373700", "55208373700"]
+    count1 = count_citations(identifier, 2017, "AU-ID", exclusion_ids=identifier)
     assert_equal(count1, 22)
+    eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
+    count2 = count_citations(eids, 2017, "AU-ID", exclusion_ids=identifier)
     assert_equal(count2, 1)
+    eids_long = eids * 200
+    count3 = count_citations(eids_long, 2017, "AU-ID", exclusion_ids=identifier)
     assert_equal(count3, 4)
 
 

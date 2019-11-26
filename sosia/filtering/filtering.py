@@ -115,7 +115,7 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
     text = "Left with {} authors based on size information already in "\
            "cache.\n{} to check\n".format(len(group), len(group_tocheck))
     custom_print(text, verbose)
-    # Verify the publications before minimum year are 0
+    # Verify that publications before minimum year are 0
     if group_tocheck:
         text = "Searching through characteristics of {:,} authors...".format(
             len(group_tocheck))
@@ -136,7 +136,7 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
                "minium year\n Filtering based on size query before "\
                "provided year\n".format(len(group))
         custom_print(text, verbose)
-    # Verify publications before the given year are in range
+    # Verify that publications before the given year falle in range
     group_tocheck.extend(au_skip)
     n = len(group_tocheck)
     if group_tocheck:

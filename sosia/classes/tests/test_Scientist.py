@@ -33,7 +33,7 @@ def test_affiliation_id():
     assert_equal(scientist1.affiliation_id, '60001359; 60028717')
     assert_equal(scientist2.affiliation_id, '60028186')
     assert_equal(scientist3.affiliation_id, '60028186')
-    assert_equal(scientist4.affiliation_id, '60097412, 60028186')
+    assert_equal(scientist4.affiliation_id, '60028186')
     assert_equal(scientist5.affiliation_id, '60105007')
 
 

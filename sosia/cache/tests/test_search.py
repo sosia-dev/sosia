@@ -18,7 +18,7 @@ from sosia.utils import build_dict, create_cache
 
 
 test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
-config["Cache"]["File path"] = cache_copy_file
+config["Cache"]["File path"] = test_cache
 
 def test_authors_in_cache():
     create_cache(drop=True, file=test_cache)

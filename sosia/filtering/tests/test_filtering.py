@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for queries module."""
+"""Tests for filtering module."""
 
 from nose.tools import assert_equal, assert_true
 from string import Template
