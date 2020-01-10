@@ -42,8 +42,8 @@ Functioning
 
 .. inclusion-marker-start
 
-sosia performs a series of queries in the Scopus database using the `scopus package 
-<http://scopus.readthedocs.io/>`_.  After configuring your local scopus (providing access credentials and eventually setting cache directories), you can use sosia:
+sosia performs a series of queries in the Scopus database using the `pybliometrics package 
+<http://pybliometrics.readthedocs.io/>`_.  After configuring your local pybliometrics (providing access credentials and eventually setting cache directories), you can use sosia:
 
 .. code-block:: python
 
