@@ -368,10 +368,8 @@ class Original(Scientist):
             authors_cits_search['n_cits'] = 0
             print_progress(0, len(authors_cits_search), verbose)
             for i, au in authors_cits_search.iterrows():
-                q = "REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})".format(
-                    au['auth_id'], self.year + 1, au['auth_id'])
-                n = base_query("docs", q, size_only=True)
-                authors_cits_search.at[i, 'n_cits'] = n
+                n_cits = count_citations(au['auth_id'], self.year+1, au['auth_id'])
+                authors_cits_search.at[i, 'n_cits'] = n_cits
                 print_progress(i + 1, len(authors_cits_search), verbose)
             cache_insert(authors_cits_search, table="author_cits_size")
         auth_cits_incache, _ = author_cits_in_cache(authors[["auth_id", "year"]])
@@ -476,10 +474,8 @@ class Original(Scientist):
                     matches.remove(m)
                     continue
                 eids_period = [p.eid for p in pubs]
-                cits = count_citations(search_ids=eids_period,
-                        pubyear=self.year+1, exclusion_key="AU-ID",
-                        exclusion_ids=[str(m)])
-                if not (min(_ncits) <= cits <= max(_ncits)):
+                n_cits = count_citations(eids_period, self.year+1, [str(m)])
+                if not (min(_ncits) <= n_cits <= max(_ncits)):
                     matches.remove(m)
         text = "Found {:,} author(s) matching all criteria".format(len(matches))
         custom_print(text, verbose)

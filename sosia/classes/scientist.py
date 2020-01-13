@@ -308,8 +308,8 @@ class Scientist(object):
 
         # Count of citations
         search_ids = eids or identifier
-        self._citations = count_citations(search_ids=search_ids,
-            pubyear=self.year+1, exclusion_key="AU-ID", exclusion_ids=identifier)
+        self._citations = count_citations(search_ids, self.year+1,
+            exclusion_ids=identifier)
 
         # Coauthors
         self._coauthors = set(get_authors(self._publications)) - set(identifier)
@@ -327,9 +327,8 @@ class Scientist(object):
                                              self.year_period)
                 raise Exception(text)
             eids_period = [p.eid for p in self._publications_period]
-            self._citations_period = count_citations(search_ids=eids_period,
-                pubyear=self.year+1, exclusion_key="AU-ID",
-                exclusion_ids=identifier)
+            n_cits = count_citations(eids_period, self.year+1, identifier)
+            self._citations_period = n_cits
             self._coauthors_period = set(get_authors(self._publications_period))
             self._coauthors_period -= set(identifier)
         else:
