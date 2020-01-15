@@ -135,8 +135,8 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
     print_progress(0, total, verbose)
     if doc_parse:
         focal_eids = [d.eid for d in focal.publications]
-        focal = parse_docs(focal_eids, refresh)
-        focal_refs, focal_refs_n, focal_abs, focal_abs_n = focal
+        focal_docs = parse_docs(focal_eids, refresh)
+        focal_refs, focal_refs_n, focal_abs, focal_abs_n = focal_docs
     # Add selective information
     out = []
     info = {}  # to collect information on missing information
