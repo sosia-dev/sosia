@@ -293,6 +293,10 @@ class Original(Scientist):
             If information is not bool and contains invalid keywords.
         """
         # Checks
+        if not self.search_group:
+            text = "No search group defined.  Please run "\
+                   ".define_search_group() first."
+            raise Exception(text)
         info_keys = ["first_name", "surname", "first_year", "num_coauthors",
                      "num_publications", "num_citations", "num_coauthors_period",
                      "num_publications_period", "num_citations_period",
