@@ -26,13 +26,13 @@ def test_base_query_author():
 
 def test_count_citations():
     identifier = ["55208373700", "55208373700"]
-    count1 = count_citations(identifier, 2017, "AU-ID", exclusion_ids=identifier)
+    count1 = count_citations(identifier, 2017)
     assert_equal(count1, 22)
     eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
-    count2 = count_citations(eids, 2017, "AU-ID", exclusion_ids=identifier)
+    count2 = count_citations(eids, 2017, exclusion_ids=identifier)
     assert_equal(count2, 1)
     eids_long = eids * 200
-    count3 = count_citations(eids_long, 2017, "AU-ID", exclusion_ids=identifier)
+    count3 = count_citations(eids_long, 2017, exclusion_ids=identifier)
     assert_equal(count3, 4)
 
 

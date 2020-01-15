@@ -368,7 +368,7 @@ class Original(Scientist):
             authors_cits_search['n_cits'] = 0
             print_progress(0, len(authors_cits_search), verbose)
             for i, au in authors_cits_search.iterrows():
-                n_cits = count_citations(au['auth_id'], self.year+1, au['auth_id'])
+                n_cits = count_citations([str(au['auth_id'])], self.year+1)
                 authors_cits_search.at[i, 'n_cits'] = n_cits
                 print_progress(i + 1, len(authors_cits_search), verbose)
             cache_insert(authors_cits_search, table="author_cits_size")

@@ -83,24 +83,21 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
     return res
 
 
-def count_citations(search_ids, pubyear, exclusion_ids, exclusion_key="AU-ID"):
+def count_citations(search_ids, pubyear, exclusion_ids=None):
     """Auxiliary function to count non-self citations up to a year."""
+    if not exclusion_ids:
+        exclusion_ids = search_ids
     q_search_ids = " OR ".join(search_ids)
-    joiner = " OR "
-    if exclusion_key == "AU-ID":
-        joiner = ") AND NOT AU-ID("
-    q_exclusion_ids = joiner.join(exclusion_ids)
-    s = Template("REF($search_ids) AND PUBYEAR BEF $pubyear AND NOT "
-                 "$exclusion_key($exclusion_ids)")
-    q = s.substitute(search_ids=q_search_ids, pubyear=pubyear,
-                     exclusion_key=exclusion_key, exclusion_ids=q_exclusion_ids)
-    # break query if too long
+    q_exclusion_ids = ") AND NOT AU-ID(".join(exclusion_ids)
+    q = "REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})".format(
+        q_search_ids, pubyear, q_exclusion_ids)
+    # Break query if too long
     if len(q) > 3785:
         mid = len(search_ids) // 2
         count1 = count_citations(search_ids[:mid], pubyear,
-            exclusion_ids, exclusion_key)
+            exclusion_ids)
         count2 = count_citations(search_ids[mid:], pubyear,
-            exclusion_ids, exclusion_key)
+            exclusion_ids)
         return count1 + count2
     return base_query("docs", q, size_only=True)
 
