@@ -78,7 +78,7 @@ def test_query_year_afid():
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_year(1984, source_ids, refresh=False, verbose=True, afid=True)
-    expected = range(3077-5, 3077+5)
+    expected = range(3395-5, 3395+5)
     assert_true(len(res[~res["auids"].isnull()]) in expected)
     assert_true(res.columns.tolist(), ['source_id', 'year', 'afid', 'auids'])
     assert_true(len(res["auids"][0]) > 0)

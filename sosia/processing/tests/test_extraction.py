@@ -14,7 +14,7 @@ def test_expand_affiliation():
     pubs = ScopusSearch("AU-ID({})".format(auth_id)).results
     res = pd.DataFrame(pubs)
     res = expand_affiliation(res)
-    assert_equal(len(res), 185)
+    assert_true(len(res) >= 191)
     expect_columns = ['source_id', 'author_ids', 'afid']
     assert_equal(set(res.columns.tolist()), set(expect_columns))
     assert_true(any(res.author_ids.str.contains(";")))

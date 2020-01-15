@@ -34,7 +34,7 @@ MATCHES = [
         num_citations=190,
         country='Norway',
         language='eng',
-        reference_sim=0.0212,
+        reference_sim=0.0208,
         abstract_sim=0.1702),
     Match(
         ID='55071051800',
@@ -56,14 +56,14 @@ MATCHES = [
         num_citations=52,
         country='United Kingdom',
         language='eng',
-        reference_sim=0.0079,
+        reference_sim=0.0077,
         abstract_sim=0.1274),
     Match(
         ID='55804519400',
         name='González, Domingo',
         first_year=2013,
-        num_coauthors=6,
-        num_publications=7,
+        num_coauthors=7,
+        num_publications=8,
         num_citations=1,
         country='Peru',
         language='eng; spa',
@@ -101,7 +101,7 @@ def test_search_group_period():
     scientist2.define_search_group(ignore_first_id=True, refresh=refresh)
     group = scientist2.search_group
     assert_true(isinstance(group, list))
-    assert_true(4355 <= len(group) <= 4365)
+    assert_true(4330 <= len(group) <= 4365)
 
 
 def test_search_group_stacked():
@@ -165,10 +165,11 @@ def test_find_matches_stacked():
         assert_true(0 <= e.abstract_sim <= 1)
 
 
-def test_find_matches_stacked():
+def test_find_matches_stacked_noinformation():
     recieved = scientist2.find_matches(stacked=True, refresh=refresh,
                                        information=False)
-    expected = [36998825200, 56049973600, 56896085200, 57188695848, 57188709931]
+    expected = [36998825200, 56049973600, 56896085200, 57188695848,
+                57188709931, 57189259789]
     assert_equal(sorted(recieved), expected)
 
 
