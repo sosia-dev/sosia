@@ -80,10 +80,8 @@ def create_fields_sources_list():
     # Get Information from Scopus Sources list
     sources = pd.read_excel(URL_SOURCES, sheet_name=None, header=1)
     _drop_sheets(sources, ["About CiteScore", "ASJC Codes", "Sheet1"])
-    out = pd.concat(
-        [df.rename(columns=rename)[keeps].dropna() for df in sources.values()]
-    )
-    out = out.drop_duplicates()
+    dfs = [df.rename(columns=rename)[keeps].dropna() for df in sources.values()]
+    out = pd.concat(dfs).drop_duplicates()
 
     # Add information from list of external publication titles
     external = pd.read_excel(_get_source_title_url(), sheet_name=None)
