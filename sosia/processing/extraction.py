@@ -126,6 +126,8 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
         depend on provided keywords.
     """
     from sosia.classes import Scientist
+    from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+    from string import digits, punctuation
     # Create Match object
     fields = "ID name " + " ".join(keywords)
     m = namedtuple("Match", fields)
@@ -137,6 +139,8 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
         focal_eids = [d.eid for d in focal.publications]
         focal_docs = parse_docs(focal_eids, refresh)
         focal_refs, focal_refs_n, focal_abs, focal_abs_n = focal_docs
+        stop_words = list(ENGLISH_STOP_WORDS)
+        stop_words.extend(punctuation + digits)
     # Add selective information
     out = []
     info = {}  # to collect information on missing information

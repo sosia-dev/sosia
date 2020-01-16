@@ -8,13 +8,10 @@ import warnings
 from nose.tools import assert_equal, assert_true
 from numpy import array
 from scipy.sparse import csr_matrix
-from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.processing import clean_abstract, compute_cos, tokenize_and_stem
 
 warnings.filterwarnings("ignore")
-STOPWORDS = list(ENGLISH_STOP_WORDS)
-STOPWORDS.extend(punctuation + digits)
 
 
 def test_clean_abstract():

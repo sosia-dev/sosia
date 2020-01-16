@@ -4,11 +4,9 @@
 #            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
-from string import digits, punctuation, Template
+from string import Template
 from warnings import warn
 import pandas as pd
-
-from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from sosia.cache import author_cits_in_cache, author_year_in_cache, cache_insert
 from sosia.classes import Scientist
@@ -17,9 +15,6 @@ from sosia.processing import count_citations, get_authors, base_query,\
     inform_matches, query_author_data, stacked_query
 from sosia.utils import accepts, build_dict, custom_print, margin_range,\
     maybe_add_source_names, print_progress
-
-STOPWORDS = list(ENGLISH_STOP_WORDS)
-STOPWORDS.extend(punctuation + digits)
 
 
 class Original(Scientist):
@@ -238,8 +233,8 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def find_matches(self, stacked=False, verbose=False, stop_words=STOPWORDS,
-                     information=True, refresh=False, **tfidf_kwds):
+    def find_matches(self, stacked=False, verbose=False, information=True,
+                     refresh=False, stop_words=None, **tfidf_kwds):
         """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -257,11 +252,6 @@ class Original(Scientist):
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
 
-        stop_words : list (optional, default=STOPWORDS)
-            A list of words that should be filtered in the analysis of
-            abstracts.  Default list is the list of english stopwords
-            by nltk, augmented with numbers and interpunctuation.
-
         information : bool or iterable (optional, default=True)
             Whether to return additional information on the matches that may
             help in the selection process.  If an iterable of keywords is
@@ -272,6 +262,11 @@ class Original(Scientist):
 
         refresh : bool (optional, default=False)
             Whether to refresh cached search files.
+
+        stop_words : list (optional, default=None)
+            A list of words that should be filtered in the analysis of
+            abstracts.  If None uses the list of English stopwords
+            by nltk, augmented with numbers and interpunctuation.
 
         tfidf_kwds : keywords
             Parameters to pass to TfidfVectorizer from the sklearn package
