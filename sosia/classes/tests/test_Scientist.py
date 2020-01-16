@@ -209,17 +209,17 @@ def test_publications():
         assert_true(all(c in p._fields for c in cols))
 
 
+def test_publication_languages():
+    assert_equal(scientist1.language, None)
+    scientist1.get_publication_languages()
+    assert_equal(scientist1.language, "eng")
+    scientist3.get_publication_languages()
+    assert_equal(scientist3.language, "eng")
+
+
 def test_publications_period():
     assert_equal(scientist1.publications_period, scientist1.publications)
     assert_equal(scientist2.publications_period, scientist2.publications)
     assert_equal(scientist3.publications_period, scientist3.publications)
     assert_equal(scientist4.publications_period, scientist4.publications)
     assert_equal(len(scientist5.publications_period), 4)
-
-
-def test_language():
-    assert_equal(scientist1.language, None)
-    scientist1.get_publication_languages()
-    assert_equal(scientist1.language, "eng")
-    scientist3.get_publication_languages()
-    assert_equal(scientist3.language, "eng")
