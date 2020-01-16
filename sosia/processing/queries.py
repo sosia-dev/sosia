@@ -72,15 +72,15 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
     # sends bad results (in this case pause querying for a while)
     try:
         if q_type == "author":
-            res = obj.authors or []
+            res = obj.authors
         elif q_type == "docs":
-            res = obj.results or []
+            res = obj.results
     except (AttributeError, Scopus500Error, KeyError, HTTPError):
         # exception of all errors here has to be maintained due to the
         # occurrence of not replicable errors (e.g. 'cursor', HTTPError)
         return base_query(q_type, query, refresh=True, fields=None,
                           size_only=size_only)
-    return res
+    return res or []
 
 
 def count_citations(search_ids, pubyear, exclusion_ids=None):
