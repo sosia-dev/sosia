@@ -286,12 +286,16 @@ class Scientist(object):
         self.source_names = names.set_index("source_id")["title"].to_dict()
 
         # Load list of publications
-        if not eids:
-            q = "AU-ID({})".format(") OR AU-ID(".join(identifier))
-        else:
+        if eids:
             q = "EID({})".format(" OR ".join(eids))
-        res = base_query("docs", q, refresh,
-            fields=["eid", "author_ids", "coverDate"])
+        else:
+            q = "AU-ID({})".format(") OR AU-ID(".join(identifier))
+        integrity_fields = ["eid", "author_ids", "coverDate", "source_id"]
+        res = base_query("docs", q, refresh, fields=integrity_fields)
+        try:
+            _ = [int(p.source_id) for p in res if p.source_id]
+        except TypeError:
+            res = base_query("docs", q, refresh=True, fields=integrity_fields)
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = "No publications for author {} until year {}".format(
