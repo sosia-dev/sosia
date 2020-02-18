@@ -158,21 +158,19 @@ def sources_in_cache(tosearch, refresh=False, file=cache_file, afid=False):
     """
     cols = ["source_id", "year"]
     insert_temporary_table(tosearch, merge_cols=cols, file=file)
-    c, conn = cache_connect(file=file)
     table = "sources"
     select = "a.source_id, a.year, b.auids"
     if afid:
-        table = "sources_afids"
-        select = "a.source_id, a.year, b.afid, b.auids"
+        table += "_afids"
+        select += ", b.afid"
     q = """SELECT {} FROM temp AS a
         INNER JOIN {} AS b ON a.source_id=b.source_id
         AND a.year=b.year;""".format(select, table)
+    _, conn = cache_connect(file=file)
     incache = pd.read_sql_query(q, conn)
     if not incache.empty:
         incache["auids"] = incache["auids"].str.split(",")
-        tosearch = tosearch.merge(incache, "left", on=cols, indicator=True)
-        tosearch = tosearch[tosearch["_merge"] == "left_only"].drop("_merge", axis=1)
-        tosearch = tosearch[["source_id", "year"]]
+        tosearch = tosearch.merge(incache, "inner", on=cols)[cols]
         if refresh:
             auth_incache = pd.DataFrame(flat_set_from_df(incache, "auids"),
                                         columns=["auth_id"], dtype="uint64")
