@@ -4,9 +4,8 @@ import pandas as pd
 
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
-from sklearn.feature_extraction.text import TfidfVectorizer
 
-from sosia.processing.nlp import clean_abstract, compute_cos, tokenize_and_stem
+from sosia.processing.nlp import clean_abstract, compute_similarity
 from sosia.utils import print_progress
 
 
@@ -185,11 +184,9 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
         if doc_parse:
             eids = [d.eid for d in p.publications]
             refs, refs_n, absts, absts_n = parse_docs(eids, refresh)
-            vec = TfidfVectorizer(**kwds)
-            ref_cos = compute_cos(vec.fit_transform([refs, focal_refs]))
-            vec = TfidfVectorizer(stop_words=stop_words,
-                                  tokenizer=tokenize_and_stem, **kwds)
-            abs_cos = compute_cos(vec.fit_transform([absts, focal_abs]))
+            ref_cos = compute_similarity(refs, focal_refs, **kwds)
+            kwds.update({"stop_words": stop_words})
+            abs_cos = compute_similarity(absts, focal_abs, tokenize=True, **kwds)
             # Save info for below print statement
             meta = namedtuple("Meta", "refs absts total")
             meta(refs=refs_n, absts=absts_n, total=len(eids))
@@ -242,10 +239,10 @@ def parse_docs(eids, refresh):
             continue
     refs = [ab.references for ab in docs if ab.references]
     valid_refs = len(refs)
-    refs = " ".join([ref.id for sl in refs for ref in sl])
+    refs = " ".join([ref.id for sl in refs for ref in sl]) or None
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     valid_absts = len(absts)
-    absts = " ".join(absts)
+    absts = " ".join(absts) or None
     return (refs, valid_refs, absts, valid_absts)
 
 
