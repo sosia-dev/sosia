@@ -170,7 +170,8 @@ def sources_in_cache(tosearch, refresh=False, file=cache_file, afid=False):
     incache = pd.read_sql_query(q, conn)
     if not incache.empty:
         incache["auids"] = incache["auids"].str.split(",")
-        tosearch = tosearch.merge(incache, "inner", on=cols)[cols]
+        tosearch = tosearch.merge(incache, "left", on=cols, indicator=True)
+        tosearch = tosearch[tosearch["_merge"] == "left_only"][cols]
         if refresh:
             auth_incache = pd.DataFrame(flat_set_from_df(incache, "auids"),
                                         columns=["auth_id"], dtype="uint64")
