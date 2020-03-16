@@ -239,10 +239,10 @@ def parse_docs(eids, refresh):
             continue
     refs = [ab.references for ab in docs if ab.references]
     valid_refs = len(refs)
-    refs = " ".join([ref.id for sl in refs for ref in sl]) or None
+    refs = " ".join([ref.id for sl in refs for ref in sl]).strip()
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     valid_absts = len(absts)
-    absts = " ".join(absts) or None
+    absts = " ".join(absts).strip()
     return (refs, valid_refs, absts, valid_absts)
 
 

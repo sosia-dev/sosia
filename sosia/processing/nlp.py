@@ -21,7 +21,8 @@ def compute_cosine(matrix, digits=4):
 
 def compute_similarity(left, right, tokenize=False, **kwds):
     """Compute cosine similarity from tfidf-weighted matrix consisting
-    of two vectors (left and right)."""
+    of two vectors (left and right).
+    """
     if not left and not right:
         return None
     from sklearn.feature_extraction.text import TfidfVectorizer
