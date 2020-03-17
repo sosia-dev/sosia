@@ -3,6 +3,20 @@ Change Log
 
 .. toctree::
 
+0.3.1
+~~~~~
+
+2020-03-17
+
+* Update docs w.r.t. the usage of pybliometrics.
+* Add support for Python 3.8 and Python 3.9.
+* Add missing required package lxml and require sklearn>=0.22.1.
+* Correct verbose output of `.find_matches()` w.r.t. completeness of reference lists and abstracts of matches.
+* Check for existence of the search group in `.find_machtes()`.
+* In `.find_matches()`, fix bug when attempting to compute the cosine similarity when reference lists or abstracts are completely missing.
+* In `.get_publication_language()`, fix bug resulting from bad downloads of abstracts.
+* In `Original()`, fix bug resulting from unclean source ID information in Scopus search results.
+
 0.3
 ~~~
 
