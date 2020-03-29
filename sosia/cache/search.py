@@ -185,7 +185,7 @@ def sources_in_cache(tosearch, refresh=False, file=cache_file, afid=False):
                 q = "DELETE FROM {} WHERE source_id=? AND year=?".format(table)
                 conn.executemany(q, tosearch.to_records(index=False))
                 conn.commit()
-            incache = pd.DataFrame(columns=cols)
+            incache = pd.DataFrame(columns=incache.columns)
     if tosearch.empty:
         tosearch = pd.DataFrame(columns=cols)
     return incache, tosearch
