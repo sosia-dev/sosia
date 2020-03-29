@@ -47,7 +47,7 @@ class Scientist(object):
 
     @property
     def citations_period(self):
-        """The citations of the scientist until during the given period."""
+        """The citations of the scientist during the given period."""
         return self._citations_period
 
     @citations_period.setter
@@ -57,9 +57,8 @@ class Scientist(object):
 
     @property
     def city(self):
-        """City of the scientist's most frequent affiliation
-        in the most recent year (before the given year) that
-        the scientist published.
+        """City of the scientist's most frequent affiliation in the most
+        recent year (before the given year) that the scientist published.
         """
         return self._city
 
@@ -70,9 +69,8 @@ class Scientist(object):
 
     @property
     def country(self):
-        """Country of the scientist's most frequent affiliation
-        in the most recent year (before the given year) that
-        the scientist published.
+        """Country of the scientist's most frequent affiliation in the most
+        recent year (before the given year) that the scientist published.
         """
         return self._country
 
@@ -202,8 +200,8 @@ class Scientist(object):
 
     @property
     def publications_period(self):
-        """The publications of the scientist published until
-        the given year.
+        """The publications of the scientist published during
+        the given period.
         """
         return self._publications_period
 
@@ -236,8 +234,7 @@ class Scientist(object):
 
     @property
     def subjects(self):
-        """The subject areas retrieved from Scopus AuthorSearch.
-        """
+        """The subject areas of the scientist's publications."""
         return self._subjects
 
     @subjects.setter
@@ -357,18 +354,15 @@ class Scientist(object):
         self._language = None
 
         # Author name from profile with most documents
-        au = query_author_data(self.identifier, refresh=refresh, verbose=False)
-        au = au.sort_values("documents", ascending=False).iloc[0]
+        df = query_author_data(self.identifier, refresh=refresh, verbose=False)
+        au = df.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
         self._surname = au.surname or None
-        if au.givenname:
-            self._first_name = au.givenname.replace(".", " ").split(" ")[0]
-        else:
-            self._first_name = None
-        if self._surname and au.givenname:
-            self._name = ", ".join([self._surname, au.givenname])
-        else:
-            self._name = None
+        self._first_name = au.givenname or None
+        name = ", ".join([self._surname or "", au.givenname or ""])
+        if name == ", ":
+            name = None
+        self._name = name
 
 
     def get_publication_languages(self, refresh=False):
