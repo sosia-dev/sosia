@@ -34,7 +34,7 @@ MATCHES = [
         num_citations=190,
         country='Norway',
         language='eng',
-        reference_sim=0.0208,
+        reference_sim=0.0214,
         abstract_sim=0.1702),
     Match(
         ID='55071051800',
@@ -56,7 +56,7 @@ MATCHES = [
         num_citations=52,
         country='United Kingdom',
         language='eng',
-        reference_sim=0.0077,
+        reference_sim=0.0079,
         abstract_sim=0.1274),
     Match(
         ID='55804519400',

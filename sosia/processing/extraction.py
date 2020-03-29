@@ -237,9 +237,10 @@ def parse_docs(eids, refresh):
             docs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh))
         except Scopus404Error:
             continue
-    refs = [ab.references for ab in docs if ab.references]
-    valid_refs = len(refs)
-    refs = " ".join([ref.id for sl in refs for ref in sl]).strip()
+    ref_lst = [ab.references for ab in docs if ab.references]
+    valid_refs = len(ref_lst)
+    ref_ids = [ref.id for sl in ref_lst for ref in sl]
+    refs = " ".join(filter(None, ref_ids)).strip()
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     valid_absts = len(absts)
     absts = " ".join(absts).strip()
