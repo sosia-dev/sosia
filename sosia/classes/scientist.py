@@ -253,8 +253,10 @@ class Scientist(object):
         year : str or numeric
             Year for which characteristics should be defined for.
 
-        refresh : boolean (optional, default=False)
-            Whether to refresh all cached files or not.
+        refresh : boolean or int (optional, default=False)
+            Whether to refresh cached results (if they exist) or not. If int
+            is passed, results will be refreshed if they are older than
+            that value in number of days.
 
         eids : list (optional, default=None)
             A list of scopus EIDs of the publications of the scientist.  If

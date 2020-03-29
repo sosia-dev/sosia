@@ -9,7 +9,7 @@ import pandas as pd
 
 import sosia
 
-refresh = False
+refresh = 30
 warnings.filterwarnings("ignore")
 scientist1 = sosia.Original(55208373700, 2017, cits_margin=200, refresh=refresh)
 scientist2 = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,

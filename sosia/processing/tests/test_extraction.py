@@ -24,7 +24,7 @@ def test_expand_affiliation():
 def test_find_location():
     auth_id = 6701809842
     pubs = ScopusSearch("AU-ID({})".format(auth_id)).results
-    ctry, aid, aff = find_location([str(auth_id)], pubs, 2000, refresh=False)
+    ctry, aid, aff = find_location([str(auth_id)], pubs, 2000, refresh=30)
     assert_equal(ctry, "Germany")
     assert_equal(aid, "60028717")
     assert_equal(aff, "University of Munich")
@@ -32,7 +32,7 @@ def test_find_location():
 
 def test_parse_docs():
     eids = ["2-s2.0-84866317084"]
-    received = parse_docs(eids, refresh=False)
+    received = parse_docs(eids, refresh=30)
     expected_refs = ('29144517611 57849112238 51249091642 70449099678 '
                      '84865231386 15944370019 8744256776 0004256525 '
                      '84866333650 78650692566 0002969912 0007622058 '

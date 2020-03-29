@@ -7,16 +7,17 @@ from nose.tools import assert_equal, assert_true, assert_false
 
 from sosia.classes import Scientist
 
-scientist1 = Scientist(["6701809842"], 2001, refresh=True)
-scientist2 = Scientist(["55208373700", "55208373700"], 2017, refresh=True)
+refresh = 30
+scientist1 = Scientist(["6701809842"], 2001, refresh=refresh)
+scientist2 = Scientist(["55208373700", "55208373700"], 2017, refresh=refresh)
 eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
-scientist3 = Scientist(["55208373700"], 2017, eids=eids, refresh=True)
-scientist4 = Scientist(["55208373700"], 2015, refresh=True)
-scientist5 = Scientist(["55208373700"], 2018, period=2, refresh=True)
+scientist3 = Scientist(["55208373700"], 2017, eids=eids, refresh=refresh)
+scientist4 = Scientist(["55208373700"], 2015, refresh=refresh)
+scientist5 = Scientist(["55208373700"], 2018, period=2, refresh=refresh)
 
 
 def test_affiliation():
-    org = 'University of Essex; Universität München'
+    org = 'University of Munich'
     assert_equal(scientist1.organization, org)
     org = 'École Polytechnique Fédérale de Lausanne (EPFL)'
     assert_equal(scientist2.organization, org)
@@ -30,7 +31,7 @@ def test_affiliation():
 
 
 def test_affiliation_id():
-    assert_equal(scientist1.affiliation_id, '60001359; 60028717')
+    assert_equal(scientist1.affiliation_id, '60028717')
     assert_equal(scientist2.affiliation_id, '60028186')
     assert_equal(scientist3.affiliation_id, '60028186')
     assert_equal(scientist4.affiliation_id, '60028186')
@@ -46,7 +47,7 @@ def test_active_year():
 
 
 def test_country():
-    assert_equal(scientist1.country, "United Kingdom")
+    assert_equal(scientist1.country, "Germany")
     assert_equal(scientist2.country, "Switzerland")
     assert_equal(scientist3.country, "Switzerland")
     assert_equal(scientist4.country, "Switzerland")
@@ -66,7 +67,7 @@ def test_citations_period():
     assert_equal(scientist2.citations_period, scientist2.citations)
     assert_equal(scientist3.citations_period, scientist3.citations)
     assert_equal(scientist4.citations_period, scientist4.citations)
-    assert_equal(scientist5.citations_period, 2)
+    assert_equal(scientist5.citations_period, 3)
 
 
 def test_coauthors():
@@ -190,7 +191,7 @@ def test_publications():
     # scientist1
     received = scientist1.publications
     assert_true(len(received) >= 11)
-    assert_equal(received[2].eid, '2-s2.0-0001093103')
+    assert_equal(received[1].eid, '2-s2.0-0001093103')
     for p in received:
         assert_true(all(c in p._fields for c in cols))
     # scientist2

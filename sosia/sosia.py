@@ -105,7 +105,9 @@ class Original(Scientist):
             all publications are considered.
 
         refresh : boolean (optional, default=False)
-            Whether to refresh all cached files or not.
+            Whether to refresh cached results (if they exist) or not. If int
+            is passed, results will be refreshed if they are older than
+            that value in number of days.
 
         eids : list (optional, default=None)
             A list of scopus EIDs of the publications of the scientist you
@@ -162,7 +164,9 @@ class Original(Scientist):
             Whether to report on the progress of the process.
 
         refresh : bool (optional, default=False)
-            Whether to refresh cached search files.
+            Whether to refresh cached results (if they exist) or not. If int
+            is passed and stacked=False, results will be refreshed if they are
+            older than that value in number of days.
 
         ignore_first_id: boolean (optional, default=False)
             If True, the authors in the first year of publication of the
@@ -180,6 +184,10 @@ class Original(Scientist):
             warn("ignore_first_id set back to False: period is None or "
                  "the first year of the period is before the first year "
                  "of publication of the scientist.")
+        if not isinstance(refresh, bool) and stacked:
+            refresh = False
+            warn("refresh parameter must be boolean when stacked=True.  "
+                 "Continuing with refresh=False.")
 
         # Query journals
         params = {"self": self, "stacked": stacked,
@@ -261,7 +269,9 @@ class Original(Scientist):
             "reference_sim", "abstract_sim".
 
         refresh : bool (optional, default=False)
-            Whether to refresh cached search files.
+            Whether to refresh cached results (if they exist) or not. If int
+            is passed, results will be refreshed if they are older than
+            that value in number of days.
 
         stop_words : list (optional, default=None)
             A list of words that should be filtered in the analysis of
