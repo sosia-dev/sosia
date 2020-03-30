@@ -99,7 +99,7 @@ def test_author_size_in_cache():
     pubs1 = 0
     pubs2 = 6
     cols = ["auth_id", "year"]
-    df = pd.DataFrame(list(product([expected_auth], expected_years)),
+    df = pd.DataFrame(product([expected_auth], expected_years),
                       columns=cols, dtype="int64")
     # Test empty cache
     size = author_size_in_cache(df, file=test_cache)
@@ -119,7 +119,7 @@ def test_author_size_in_cache():
 
 def test_sources_in_cache_empty():
     create_cache(drop=True, file=test_cache)
-    df = pd.DataFrame(list(product([22900], [2010, 2005])),
+    df = pd.DataFrame(product([22900], [2010, 2005]),
                       columns=["source_id", "year"], dtype="int64")
     sources_ys_incache, sources_ys_search = sources_in_cache(df, file=test_cache)
     assert_frame_equal(sources_ys_search, df)
@@ -131,7 +131,7 @@ def test_sources_in_cache_partial():
     # Variables
     expected_sources = [22900]
     expected_years = [2010, 2005]
-    df = pd.DataFrame(list(product(expected_sources, expected_years)),
+    df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
     res = query_year(expected_years[0], expected_sources, False, False)
@@ -151,7 +151,7 @@ def test_sources_in_cache_full():
     expected_sources = [22900]
     expected_years = [2010, 2005]
     cols = ["source_id", "year"]
-    df = pd.DataFrame(list(product(expected_sources, expected_years)),
+    df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=cols, dtype="int64")
     # Populate cache
     res = query_year(expected_years[0], expected_sources, False, False)
@@ -169,7 +169,7 @@ def test_sources_in_cache_full():
 
 def test_sources_afids_in_cache_empty():
     create_cache(drop=True, file=test_cache)
-    df = pd.DataFrame(list(product([22900], [2010, 2005])),
+    df = pd.DataFrame(product([22900], [2010, 2005]),
                       columns=["source_id", "year"], dtype="int64")
     sa_incache, sa_search = sources_in_cache(df, file=test_cache, afid=True)
     assert_frame_equal(sa_search, df)
@@ -181,7 +181,7 @@ def test_sources_afids_in_cache_partial():
     # Variables
     expected_sources = [22900]
     expected_years = [2010, 2005]
-    df = pd.DataFrame(list(product(expected_sources, expected_years)),
+    df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     sa_incache, sa_search = sources_in_cache(df, file=test_cache, afid=True)
     # Populate cache
@@ -205,7 +205,7 @@ def test_sources_afids_in_cache_full():
     expected_sources = [22900]
     expected_years = [2010, 2005]
     cols = ["source_id", "year"]
-    df = pd.DataFrame(list(product(expected_sources, expected_years)),
+    df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=cols, dtype="int64")
     # Populate cache
     res = query_year(expected_years[0], expected_sources, False, False, afid=True)
@@ -229,7 +229,7 @@ def test_sources_afids_in_sources_cache():
     # Variables
     expected_sources = [22900]
     expected_years = [2010, 2005]
-    df = pd.DataFrame(list(product(expected_sources, expected_years)),
+    df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
     res = query_year(expected_years[0], expected_sources, False, False, afid=True)

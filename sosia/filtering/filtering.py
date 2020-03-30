@@ -53,7 +53,7 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
     years_check = [ybefore, yupto]
     if yfrom:
         years_check.extend([yfrom - 1])
-    authors = DataFrame(list(product(group, years_check)),
+    authors = DataFrame(product(group, years_check),
                         columns=["auth_id", "year"], dtype="int64")
     authors_size = author_size_in_cache(authors)
     au_skip = []
@@ -209,7 +209,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
     if stacked:  # Make use of SQL cache
         # Year provided (select also based on location)
         # Get already cached sources from cache
-        sources_ay = DataFrame(list(product(search_sources, [self.active_year])),
+        sources_ay = DataFrame(product(search_sources, [self.active_year]),
                                columns=["source_id", "year"])
         _, _search = sources_in_cache(sources_ay, refresh=refresh, afid=True)
         res = query_year(self.active_year, _search.source_id.tolist(), refresh,
@@ -220,10 +220,10 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         mask = None
         if self.search_affiliations:
             mask = sources_ay.afid.isin(self.search_affiliations)
-        today = flat_set_from_df(sources_ay, "auids", mask)
+        today = flat_set_from_df(sources_ay, "auids", condition=mask)
         # Years before active year
         # Get already cached sources from cache
-        sources_ys = DataFrame(list(product(search_sources, search_years)),
+        sources_ys = DataFrame(product(search_sources, search_years),
                                columns=["source_id", "year"])
         _, sources_ys_search = sources_in_cache(sources_ys, refresh=refresh)
         missing_years = set(sources_ys_search.year.tolist())
@@ -238,10 +238,10 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         # Authors publishing in year(s) of first publication
         if not self._ignore_first_id:
             mask = sources_ys.year.between(min_year, max_year, inclusive=True)
-            then = flat_set_from_df(sources_ys, "auids", mask)
+            then = flat_set_from_df(sources_ys, "auids", condition=mask)
         # Authors with publications before
         mask = sources_ys.year < min_year
-        negative = flat_set_from_df(sources_ys, "auids", mask)
+        negative = flat_set_from_df(sources_ys, "auids", condition=mask)
     else:
         auth_count = []
         print_progress(0, n, verbose)
