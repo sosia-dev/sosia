@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for filtering module."""
+from os.path import expanduser
 
 from nose.tools import assert_equal, assert_true
-from string import Template
-import pandas as pd
 
+from sosia.utils import config
 from sosia.filtering import filter_pub_counts
+
+test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
+config["Cache"]["File path"] = test_cache
 
 
 def test_filter_pub_counts():
@@ -15,7 +18,7 @@ def test_filter_pub_counts():
     npapers = range(2, 60)
     g, pubs, older = filter_pub_counts(group, 1993, 2005, npapers)
     assert_equal(sorted(g), [6602070937, 6701809842, 35097480000])
-    assert_equal(sorted(pubs), [3, 15, 18])
+    assert_equal(sorted(pubs), [3, 15, 17])
     assert_equal(sorted(older), [20434039300, 54984906100, 56148489300])
 
 
