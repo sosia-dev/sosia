@@ -8,13 +8,15 @@ import pandas as pd
 
 from sosia.processing import expand_affiliation, find_location, parse_docs
 
+refresh = 30
+
 
 def test_expand_affiliation():
     auth_id = 6701809842
-    pubs = ScopusSearch("AU-ID({})".format(auth_id)).results
+    pubs = ScopusSearch("AU-ID({})".format(auth_id), refresh=refresh).results
     res = pd.DataFrame(pubs)
     res = expand_affiliation(res)
-    assert_true(len(res) >= 191)
+    assert_true(len(res) >= 180)
     expect_columns = ['source_id', 'author_ids', 'afid']
     assert_equal(set(res.columns.tolist()), set(expect_columns))
     assert_true(any(res.author_ids.str.contains(";")))
@@ -23,7 +25,7 @@ def test_expand_affiliation():
 
 def test_find_location():
     auth_id = 6701809842
-    pubs = ScopusSearch("AU-ID({})".format(auth_id)).results
+    pubs = ScopusSearch("AU-ID({})".format(auth_id), refresh=refresh).results
     ctry, aid, aff = find_location([str(auth_id)], pubs, 2000, refresh=30)
     assert_equal(ctry, "Germany")
     assert_equal(aid, "60028717")
@@ -32,7 +34,7 @@ def test_find_location():
 
 def test_parse_docs():
     eids = ["2-s2.0-84866317084"]
-    received = parse_docs(eids, refresh=30)
+    received = parse_docs(eids, refresh=refresh)
     expected_refs = ('29144517611 57849112238 51249091642 70449099678 '
                      '84865231386 15944370019 8744256776 0004256525 '
                      '84866333650 78650692566 0002969912 0007622058 '
