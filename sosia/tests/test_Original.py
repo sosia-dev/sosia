@@ -104,7 +104,7 @@ def test_search_group_period():
 
 
 def test_search_group_stacked():
-    scientist1.define_search_group(stacked=True, refresh=refresh)
+    scientist1.define_search_group(stacked=True, refresh=False)
     group = scientist1.search_group
     assert_true(isinstance(group, list))
     assert_true(600 <= len(group) <= 610)
@@ -112,7 +112,7 @@ def test_search_group_stacked():
 
 def test_search_group_stacked_affiliations():
     scientist4.define_search_group(stacked=True, ignore_first_id=True,
-                                   refresh=refresh)
+                                   refresh=False)
     group = scientist4.search_group
     assert_true(isinstance(group, list))
     assert_true(15 <= len(group) <= 22)
@@ -120,7 +120,7 @@ def test_search_group_stacked_affiliations():
 
 def test_search_group_stacked_period():
     scientist2.define_search_group(stacked=True, ignore_first_id=True,
-                                   refresh=refresh)
+                                   refresh=False)
     group = scientist2.search_group
     assert_true(isinstance(group, list))
     assert_true(4850 <= len(group) <= 4950)
@@ -128,7 +128,7 @@ def test_search_group_stacked_period():
 
 def test_search_group_stacked_period_affiliations():
     scientist3.define_search_group(stacked=True, ignore_first_id=True,
-                                   refresh=refresh)
+                                   refresh=False)
     group = scientist3.search_group
     assert_true(isinstance(group, list))
     assert_true(50 <= len(group) <= 60)
@@ -156,7 +156,7 @@ def test_find_matches_noinfo():
 
 
 def test_find_matches_stacked():
-    recieved = scientist1.find_matches(stacked=True, refresh=refresh)
+    recieved = scientist1.find_matches(stacked=True, refresh=False)
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
@@ -170,7 +170,7 @@ def test_find_matches_stacked():
 
 
 def test_find_matches_stacked_noinformation():
-    recieved = scientist2.find_matches(stacked=True, refresh=refresh,
+    recieved = scientist2.find_matches(stacked=True, refresh=False,
                                        information=False)
     expected = [36998825200, 56049973600, 56896085200, 57188695848,
                 57188709931, 57189259789]
@@ -178,7 +178,7 @@ def test_find_matches_stacked_noinformation():
 
 
 def test_find_matches_stacked_affiliations():
-    recieved = scientist4.find_matches(stacked=True, refresh=refresh)
+    recieved = scientist4.find_matches(stacked=True, refresh=False)
     recieved = pd.DataFrame(recieved)
     expect_m = [m for m in MATCHES if m.ID != '55804519400']
     expect_ids = [m.ID for m in expect_m]
@@ -192,7 +192,7 @@ def test_find_matches_stacked_period_affiliations():
               "num_publications", "num_citations", "num_coauthors_period",
               "num_publications_period", "num_citations_period", "subjects",
               "country", "affiliation_id", "affiliation"]
-    recieved = scientist3.find_matches(stacked=True, refresh=refresh,
+    recieved = scientist3.find_matches(stacked=True, refresh=False,
                                        information=fields)
     recieved = pd.DataFrame(recieved)
     expected_ids = ['56049973600', '56896085200', '57188695848', '57188709931']

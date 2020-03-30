@@ -270,8 +270,8 @@ class Original(Scientist):
 
         refresh : bool (optional, default=False)
             Whether to refresh cached results (if they exist) or not. If int
-            is passed, results will be refreshed if they are older than
-            that value in number of days.
+            is passed and stacked=False, results will be refreshed if they are
+            older than that value in number of days.
 
         stop_words : list (optional, default=None)
             A list of words that should be filtered in the analysis of
@@ -324,6 +324,11 @@ class Original(Scientist):
                 raise ValueError(text)
             if self.search_affiliations and "affiliation_id" not in keywords:
                 keywords.append("affiliation_id")
+        if not isinstance(refresh, bool) and stacked:
+            refresh = False
+            warn("refresh parameter must be boolean when stacked=True.  "
+                 "Continuing with refresh=False.")
+
         # Variables
         _years = range(self.first_year-self.year_margin,
                        self.first_year+self.year_margin+1)
