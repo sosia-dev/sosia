@@ -9,16 +9,15 @@ from os.path import expanduser
 import pandas as pd
 from pybliometrics.scopus import ScopusSearch, AuthorSearch
 from pandas.testing import assert_frame_equal
-from sosia.utils import config
 
 from sosia.cache import authors_in_cache, author_size_in_cache,\
     author_year_in_cache, cache_insert, sources_in_cache
 from sosia.processing import query_year
-from sosia.utils import build_dict, create_cache
-
+from sosia.utils import build_dict, config, create_cache
 
 test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
 config["Cache"]["File path"] = test_cache
+
 
 def test_authors_in_cache():
     create_cache(drop=True, file=test_cache)

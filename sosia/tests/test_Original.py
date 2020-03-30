@@ -1,15 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for class `Original`."""
-from collections import namedtuple
-from nose.tools import assert_equal, assert_true
 import warnings
+from collections import namedtuple
+from os.path import expanduser
+
 import pandas as pd
+from nose.tools import assert_equal, assert_true
 
 import sosia
 
-refresh = 30
 warnings.filterwarnings("ignore")
+test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
+sosia.config["Cache"]["File path"] = test_cache
+
+refresh = 30
+
+# Test objects
 scientist1 = sosia.Original(55208373700, 2017, cits_margin=200, refresh=refresh)
 scientist2 = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                             coauth_margin=1, period=3, refresh=refresh)
@@ -20,6 +27,8 @@ scientist3 = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
 affs = [60010348, 60022109, 60017317]
 scientist4 = sosia.Original(55208373700, 2017, cits_margin=200,
                             refresh=refresh, search_affiliations=affs)
+
+# Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\
          "country language reference_sim abstract_sim"
 Match = namedtuple("Match", fields)
@@ -107,7 +116,8 @@ def test_search_group_stacked():
     scientist1.define_search_group(stacked=True, refresh=False)
     group = scientist1.search_group
     assert_true(isinstance(group, list))
-    assert_true(600 <= len(group) <= 610)
+    print(len(group))
+    assert_true(590 <= len(group) <= 610)
 
 
 def test_search_group_stacked_affiliations():
@@ -150,7 +160,7 @@ def test_find_matches():
         assert_true(0 <= e.abstract_sim <= 1)
 
 
-def test_find_matches_noinfo():
+def test_find_matches_noinformation():
     recieved = scientist1.find_matches(information=False, refresh=refresh)
     assert_equal(sorted(recieved), [int(m.ID) for m in MATCHES])
 
