@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for class `Original`."""
-
 from collections import namedtuple
 from nose.tools import assert_equal, assert_true
 import warnings
@@ -111,6 +110,14 @@ def test_search_group_stacked():
     assert_true(600 <= len(group) <= 610)
 
 
+def test_search_group_stacked_affiliations():
+    scientist4.define_search_group(stacked=True, ignore_first_id=True,
+                                   refresh=refresh)
+    group = scientist4.search_group
+    assert_true(isinstance(group, list))
+    assert_true(15 <= len(group) <= 22)
+
+
 def test_search_group_stacked_period():
     scientist2.define_search_group(stacked=True, ignore_first_id=True,
                                    refresh=refresh)
@@ -127,14 +134,6 @@ def test_search_group_stacked_period_affiliations():
     assert_true(50 <= len(group) <= 60)
 
 
-def test_search_group_stacked_affiliations():
-    scientist4.define_search_group(stacked=True, ignore_first_id=True,
-                                   refresh=refresh)
-    group = scientist4.search_group
-    assert_true(isinstance(group, list))
-    assert_true(15 <= len(group) <= 22)
-
-
 def test_find_matches():
     recieved = sorted(scientist1.find_matches(refresh=refresh))
     assert_equal(len(recieved), len(MATCHES))
@@ -149,6 +148,11 @@ def test_find_matches():
     for e in recieved:
         assert_true(isinstance(e.abstract_sim, float))
         assert_true(0 <= e.abstract_sim <= 1)
+
+
+def test_find_matches_noinfo():
+    recieved = scientist1.find_matches(information=False, refresh=refresh)
+    assert_equal(sorted(recieved), [int(m.ID) for m in MATCHES])
 
 
 def test_find_matches_stacked():
@@ -173,20 +177,6 @@ def test_find_matches_stacked_noinformation():
     assert_equal(sorted(recieved), expected)
 
 
-def test_find_matches_stacked_period_affiliations():
-    info = ["first_name", "surname", "first_year", "num_coauthors",
-            "num_publications", "num_citations", "num_coauthors_period",
-            "num_publications_period", "num_citations_period", "subjects",
-            "country", "affiliation_id", "affiliation"]
-    recieved = scientist3.find_matches(stacked=True, refresh=refresh,
-                                       information=info)
-    recieved = pd.DataFrame(recieved)
-    expect_ids = ['56049973600', '56896085200', '57188695848', '57188709931']
-    expect_afids = ['60000765', '60000765', '60002612', '60032111']
-    assert_equal(sorted(recieved.ID.tolist()), expect_ids)
-    assert_equal(sorted(recieved.affiliation_id.tolist()), expect_afids)
-    
-
 def test_find_matches_stacked_affiliations():
     recieved = scientist4.find_matches(stacked=True, refresh=refresh)
     recieved = pd.DataFrame(recieved)
@@ -197,6 +187,15 @@ def test_find_matches_stacked_affiliations():
     assert_equal(sorted(recieved.affiliation_id.tolist()), expect_afids)
 
 
-def test_find_matches_noinfo():
-    recieved = scientist1.find_matches(information=False, refresh=refresh)
-    assert_equal(sorted(recieved), [int(m.ID) for m in MATCHES])
+def test_find_matches_stacked_period_affiliations():
+    fields = ["first_name", "surname", "first_year", "num_coauthors",
+              "num_publications", "num_citations", "num_coauthors_period",
+              "num_publications_period", "num_citations_period", "subjects",
+              "country", "affiliation_id", "affiliation"]
+    recieved = scientist3.find_matches(stacked=True, refresh=refresh,
+                                       information=fields)
+    recieved = pd.DataFrame(recieved)
+    expected_ids = ['56049973600', '56896085200', '57188695848', '57188709931']
+    expected_afids = ['60000765', '60000765', '60002612', '60032111']
+    assert_equal(sorted(recieved.ID.tolist()), expected_ids)
+    assert_equal(sorted(recieved.affiliation_id.tolist()), expected_afids)

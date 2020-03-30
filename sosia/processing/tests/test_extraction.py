@@ -1,14 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for extraction module."""
+from os.path import expanduser
 
 from nose.tools import assert_equal, assert_true, assert_false
 from pybliometrics.scopus import ScopusSearch
 import pandas as pd
 
 from sosia.processing import expand_affiliation, find_location, parse_docs
+from sosia.utils import config
 
 refresh = 30
+
+test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
+config["Cache"]["File path"] = test_cache
 
 
 def test_expand_affiliation():
