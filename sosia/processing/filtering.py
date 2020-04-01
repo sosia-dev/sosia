@@ -1,12 +1,12 @@
-from collections import Counter
 from itertools import product
 
 from pandas import DataFrame
 
-from sosia.cache import cache_insert, author_size_in_cache, sources_in_cache
-from sosia.processing.queries import base_query, query_journal, query_year
-from sosia.utils import custom_print, flat_set_from_df, margin_range,\
-    print_progress
+from sosia.processing.caching import cache_insert, retrieve_author_pubs,\
+    retrieve_sources
+from sosia.processing.querying import base_query, query_journal, query_year
+from sosia.processing.utils import flat_set_from_df, margin_range
+from sosia.utils import custom_print, print_progress
 
 
 def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
@@ -55,7 +55,7 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
         years_check.extend([yfrom - 1])
     authors = DataFrame(product(group, years_check), dtype="int64",
                         columns=["auth_id", "year"])
-    authors_size = author_size_in_cache(authors)
+    authors_size = retrieve_author_pubs(authors)
     au_skip = []
     group_tocheck = set(group)
     older_authors = []
@@ -179,6 +179,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         treatment, during years to match on, and during years before the
         first publication.
     """
+    from collections import Counter
     # Filtering variables
     min_year = self.first_year - self.year_margin
     max_year = self.first_year + self.year_margin
@@ -206,11 +207,11 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         # Get already cached sources from cache
         sources_ay = DataFrame(product(search_sources, [self.active_year]),
                                columns=["source_id", "year"])
-        _, _search = sources_in_cache(sources_ay, refresh=refresh, afid=True)
+        _, _search = retrieve_sources(sources_ay, refresh=refresh, afid=True)
         res = query_year(self.active_year, _search.source_id.tolist(), refresh,
                          verbose, afid=True)
         cache_insert(res, table="sources_afids")
-        sources_ay, _ = sources_in_cache(sources_ay, refresh=refresh, afid=True)
+        sources_ay, _ = retrieve_sources(sources_ay, refresh=refresh, afid=True)
         # Authors publishing in provided year and locations
         mask = None
         if self.search_affiliations:
@@ -220,7 +221,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         # Get already cached sources from cache
         sources_ys = DataFrame(product(search_sources, search_years),
                                columns=["source_id", "year"])
-        _, sources_ys_search = sources_in_cache(sources_ys, refresh=refresh)
+        _, sources_ys_search = retrieve_sources(sources_ys, refresh=refresh)
         missing_years = set(sources_ys_search.year.tolist())
         # Eventually add information for missing years to cache
         for y in missing_years:
@@ -229,7 +230,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
             res = query_year(y, _sources_search, refresh, verbose)
             cache_insert(res, table="sources")
         # Get full cache
-        sources_ys, _ = sources_in_cache(sources_ys, refresh=False)
+        sources_ys, _ = retrieve_sources(sources_ys, refresh=False)
         # Authors publishing in year(s) of first publication
         if not self._ignore_first_id:
             mask = sources_ys.year.between(min_year, max_year, inclusive=True)

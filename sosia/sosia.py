@@ -8,13 +8,13 @@ from string import Template
 from warnings import warn
 import pandas as pd
 
-from sosia.cache import author_cits_in_cache, author_year_in_cache, cache_insert
 from sosia.classes import Scientist
-from sosia.filtering import search_group_from_sources, filter_pub_counts
-from sosia.processing import count_citations, get_authors, base_query,\
-    inform_matches, query_author_data, stacked_query
-from sosia.utils import accepts, build_dict, custom_print, margin_range,\
-    maybe_add_source_names, print_progress
+from sosia.processing import base_query, build_dict, cache_insert,\
+    count_citations, filter_pub_counts, get_authors, inform_matches,\
+    margin_range, maybe_add_source_names, query_author_data,\
+    retrieve_author_cits, retrieve_authors_year, search_group_from_sources,\
+    stacked_query
+from sosia.utils import accepts, custom_print, print_progress
 
 
 class Original(Scientist):
@@ -374,7 +374,7 @@ class Original(Scientist):
 
         # Third round of filtering: citations (in the FULL period).
         authors = pd.DataFrame({"auth_id": group, "year": self.year})
-        _, authors_cits_search = author_cits_in_cache(authors)
+        _, authors_cits_search = retrieve_author_cits(authors)
         text = "Search and filter based on count of citations\n{} to search "\
                "out of {}\n".format(len(authors_cits_search), len(group))
         custom_print(text, verbose)
@@ -386,7 +386,7 @@ class Original(Scientist):
                 authors_cits_search.at[i, 'n_cits'] = n_cits
                 print_progress(i + 1, len(authors_cits_search), verbose)
             cache_insert(authors_cits_search, table="author_cits_size")
-        auth_cits_incache, _ = author_cits_in_cache(authors[["auth_id", "year"]])
+        auth_cits_incache, _ = retrieve_author_cits(authors[["auth_id", "year"]])
         # keep if citations are in range
         mask = ((auth_cits_incache.n_cits <= max(_ncits)) &
                 (auth_cits_incache.n_cits >= min(_ncits)))
@@ -403,7 +403,7 @@ class Original(Scientist):
         custom_print(text, verbose)
         authors = pd.DataFrame({"auth_id": group, "year": self.year},
                                dtype="uint64")
-        _, author_year_search = author_year_in_cache(authors)
+        _, author_year_search = retrieve_authors_year(authors)
         matches = []
         if stacked:  # Combine searches
             if not author_year_search.empty:
@@ -425,7 +425,7 @@ class Original(Scientist):
                     res.index.name = "auth_id"
                     res = res.reset_index()
                     cache_insert(res, table="author_year")
-            author_year_cache, _ = author_year_in_cache(authors)
+            author_year_cache, _ = retrieve_authors_year(authors)
             if self._ignore_first_id:
                 # only number of coauthors should be big enough
                 enough = (author_year_cache.n_coauth >= min(_ncoauth))

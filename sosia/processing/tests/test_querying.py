@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for queries module."""
+"""Tests for processing.querying module."""
 
+import pandas as pd
 from nose.tools import assert_equal, assert_true
 from string import Template
-import pandas as pd
 
 from sosia.processing import base_query, count_citations, query_author_data,\
     query_journal, query_year, stacked_query
@@ -27,7 +27,7 @@ def test_base_query_author():
 def test_count_citations():
     identifier = ["55208373700", "55208373700"]
     count1 = count_citations(identifier, 2017)
-    assert_equal(count1, 22)
+    assert_equal(count1, 23)
     eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
     count2 = count_citations(eids, 2017, exclusion_ids=identifier)
     assert_equal(count2, 1)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for class `Original`."""
+
 import warnings
 from collections import namedtuple
 from os.path import expanduser
@@ -14,7 +15,7 @@ warnings.filterwarnings("ignore")
 test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
 sosia.config["Cache"]["File path"] = test_cache
 
-refresh = 30
+refresh = False
 
 # Test objects
 scientist1 = sosia.Original(55208373700, 2017, cits_margin=200, refresh=refresh)
@@ -161,7 +162,7 @@ def test_find_matches():
 
 
 def test_find_matches_noinformation():
-    recieved = scientist1.find_matches(information=False, refresh=refresh)
+    recieved = scientist1.find_matches(information=False, refresh=False)
     assert_equal(sorted(recieved), [int(m.ID) for m in MATCHES])
 
 

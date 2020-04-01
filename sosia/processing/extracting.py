@@ -1,27 +1,10 @@
 from collections import namedtuple
-from operator import attrgetter
-import pandas as pd
 
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 
 from sosia.processing.nlp import clean_abstract, compute_similarity
 from sosia.utils import print_progress
-
-
-def expand_affiliation(df):
-    """Auxiliary function to expand the information about the affiliation
-    in publications from ScopusSearch.
-    """
-    res = df[["source_id", "author_ids", "afid"]].copy()
-    res['afid'] = res["afid"].str.split(';')
-    res = (res["afid"].apply(pd.Series)
-              .merge(res, right_index=True, left_index=True)
-              .drop(["afid"], axis=1)
-              .melt(id_vars=['source_id', 'author_ids'], value_name="afid")
-              .drop("variable", axis=1)
-              .dropna())
-    return res
 
 
 def find_location(auth_ids, pubs, year, refresh):
@@ -52,6 +35,7 @@ def find_location(auth_ids, pubs, year, refresh):
         publications list valid information for each output. Equals None when
         no valid publications are found.
     """
+    from operator import attrgetter
     # Available papers of most recent year with publications
     papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
     papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
@@ -87,6 +71,57 @@ def get_auth_from_df(pubs):
     """
     l = [x.split(";") for x in pubs.author_ids if isinstance(x, str)]
     return [au for sl in l for au in sl]
+
+
+def get_main_field(fields):
+    """Get main 4-digit ASJC field (code) and main 2-digit ASJC field (name).
+
+
+    Parameters
+    ----------
+    fields : iterable of int
+        Lists of fields the researcher is active in.
+
+    Returns
+    -------
+    t : tuple
+        A 2-element tuple where the first element is the most common 4-digit
+        ASJC field and the second element the short name of the most common
+        2-digit ASJC field.
+
+    Note
+    ----
+    We exclude multidisciplinary and give preference to non-general fields.
+    """
+    from collections import Counter
+
+    from sosia.processing.constants import ASJC_2D
+
+    # 4 digit field
+    c = Counter(fields)
+    try:
+        c.pop(1000)  # Exclude Multidisciplinary
+    except KeyError:
+        pass
+    top_fields = [f for f, val in c.items() if val == max(c.values())]
+    if len(top_fields) == 1:
+        main_4 = top_fields[0]
+    else:
+        non_general_fields = [f for f in top_fields if f % 1000 != 0]
+        if non_general_fields:
+            main_4 = non_general_fields[0]
+        else:
+            main_4 = top_fields[0]
+
+    # 2 digit field
+    c = Counter([str(f)[:2] for f in fields])
+    try:
+        c.pop(10)  # Exclude Multidisciplinary
+    except KeyError:
+        pass
+    main_2 = int(c.most_common(1)[0][0])
+
+    return (main_4, ASJC_2D[main_2])
 
 
 def inform_matches(profiles, focal, keywords, stop_words, verbose,

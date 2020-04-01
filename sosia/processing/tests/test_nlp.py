@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for nlp module."""
+"""Tests for processing.nlp module."""
 
-from string import digits, punctuation
 import warnings
 
 from nose.tools import assert_equal, assert_true

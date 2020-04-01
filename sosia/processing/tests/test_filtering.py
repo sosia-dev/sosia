@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for filtering module."""
+"""Tests for processing.filtering module."""
+
 from os.path import expanduser
 
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal
 
-from sosia.utils import config
-from sosia.filtering import filter_pub_counts
+from sosia.establishing import config
+from sosia.processing.filtering import filter_pub_counts
 
 test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
 config["Cache"]["File path"] = test_cache

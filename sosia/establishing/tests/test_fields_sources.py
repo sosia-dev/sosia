@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for startup module."""
-
+"""Tests for establishing.fields_sources module."""
 
 from os import remove
-from os.path import expanduser, isfile
 
 import pandas as pd
 from nose.tools import assert_equal, assert_true
 
-from sosia.utils.constants import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST
-from sosia.utils.startup import create_fields_sources_list, create_cache
+from sosia.establishing.constants import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST
+from sosia.establishing.fields_sources import create_fields_sources_list
 
 try:
     remove(FIELDS_SOURCES_LIST)
@@ -21,15 +19,6 @@ try:
 except FileNotFoundError:
     pass
 create_fields_sources_list()
-
-
-def test_create_cache():
-    cache_file = expanduser("~/.sosia/") + "cache_sqlite.sqlite"
-    cache_file_test = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
-    create_cache()
-    assert_true(isfile(cache_file))
-    create_cache(file=cache_file_test)
-    assert_true(isfile(cache_file_test))
 
 
 def test_fields_sources_list():

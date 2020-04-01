@@ -5,10 +5,10 @@
 
 from pybliometrics.scopus import AbstractRetrieval
 
-from sosia.processing import count_citations, base_query, find_location,\
-    get_authors, query_author_data
-from sosia.utils import accepts, add_source_names, get_main_field,\
-    maybe_add_source_names, read_fields_sources_list
+from sosia.processing import add_source_names, base_query, count_citations,\
+    find_location, get_authors, get_main_field, maybe_add_source_names,\
+    read_fields_sources_list, query_author_data
+from sosia.utils import accepts
 
 
 class Scientist(object):

@@ -5,4 +5,4 @@ __version__ = _v.release_string()
 version_info = _v.version_tuple()
 
 from sosia.sosia import Original
-from sosia.utils import *
+from sosia.establishing import *

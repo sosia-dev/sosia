@@ -1,13 +1,15 @@
 import pandas as pd
 
-from sosia.utils import config, flat_set_from_df
-from sosia.cache import cache_connect, insert_temporary_table
+from sosia.processing.utils import flat_set_from_df
+from sosia.processing.caching.inserting import insert_temporary_table
+from sosia.processing.caching.utils import connect_sqlite, temporary_merge
+from sosia.establishing import config
 
 
 cache_file = config.get('Cache', 'File path')
 
 
-def author_cits_in_cache(df, file=cache_file):
+def retrieve_author_cits(df, file=cache_file):
     """Search authors citations in cache.
 
     Parameters
@@ -41,7 +43,7 @@ def author_cits_in_cache(df, file=cache_file):
     return incache, tosearch
 
 
-def authors_in_cache(df, file=cache_file):
+def retrieve_authors(df, file=cache_file):
     """Search authors in cache.
 
     Parameters
@@ -70,7 +72,7 @@ def authors_in_cache(df, file=cache_file):
     return incache, tosearch
 
 
-def author_year_in_cache(df, file=cache_file):
+def retrieve_authors_year(df, file=cache_file):
     """Search authors publication information up to year of event in cache.
 
     Parameters
@@ -107,8 +109,8 @@ def author_year_in_cache(df, file=cache_file):
     return incache, tosearch
 
 
-def author_size_in_cache(df, file=cache_file):
-    """Search authors publication information up to year of event in cache.
+def retrieve_author_pubs(df, file=cache_file):
+    """Search author's publication information up to year of event in cache.
 
     Parameters
     ----------
@@ -131,7 +133,7 @@ def author_size_in_cache(df, file=cache_file):
     return incache
 
 
-def sources_in_cache(tosearch, refresh=False, file=cache_file, afid=False):
+def retrieve_sources(tosearch, refresh=False, file=cache_file, afid=False):
     """Search sources by year in cache.
 
     Parameters
@@ -166,7 +168,7 @@ def sources_in_cache(tosearch, refresh=False, file=cache_file, afid=False):
     q = """SELECT {} FROM temp AS a
         INNER JOIN {} AS b ON a.source_id=b.source_id
         AND a.year=b.year;""".format(select, table)
-    _, conn = cache_connect(file=file)
+    _, conn = connect_sqlite(file=file)
     incache = pd.read_sql_query(q, conn)
     if not incache.empty:
         incache["auids"] = incache["auids"].str.split(",")
@@ -189,12 +191,3 @@ def sources_in_cache(tosearch, refresh=False, file=cache_file, afid=False):
     if tosearch.empty:
         tosearch = pd.DataFrame(columns=cols)
     return incache, tosearch
-
-
-def temporary_merge(df, table, merge_cols, file):
-    """Perform merge with temp table and `table` and retrieve all columns."""
-    c, conn = cache_connect(file=file)
-    conditions = " and ".join(["a.{0}=b.{0}".format(c) for c in merge_cols])
-    q = "SELECT b.* FROM temp AS a INNER JOIN {} AS b ON {};".format(
-        table, conditions)
-    return pd.read_sql_query(q, conn)

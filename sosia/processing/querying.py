@@ -1,17 +1,13 @@
 import pandas as pd
-from collections import defaultdict
 from string import Template
-from time import sleep
-from urllib.error import HTTPError
 
-from pybliometrics.scopus import AuthorSearch, ScopusSearch
 from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error
 
-from sosia.processing.extraction import get_authors, get_auth_from_df,\
-    expand_affiliation
+from sosia.processing.caching import cache_insert, retrieve_authors
+from sosia.processing.extracting import get_authors, get_auth_from_df
+from sosia.processing.utils import expand_affiliation
 from sosia.utils import print_progress
-from sosia.cache import authors_in_cache, cache_insert
 
 
 def base_query(q_type, query, refresh=False, fields=None, size_only=False):
@@ -52,6 +48,11 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
     ValueError:
         If q_type is none of the allowed values.
     """
+    from time import sleep
+    from urllib.error import HTTPError
+
+    from pybliometrics.scopus import AuthorSearch, ScopusSearch
+    
     params = {"query": query, "refresh": refresh, "download": not size_only}
     # Download query until server is available
     try:
@@ -124,7 +125,7 @@ def query_author_data(authors_list, refresh=False, verbose=False):
     """
     authors = pd.DataFrame(authors_list, columns=["auth_id"], dtype="int64")
     # merge existing data in cache and separate missing records
-    auth_done, auth_missing = authors_in_cache(authors)
+    auth_done, auth_missing = retrieve_authors(authors)
     if auth_missing:
         params = {"group": auth_missing, "res": [],
                   "refresh": refresh, "joiner": ") OR AU-ID(",
@@ -135,7 +136,7 @@ def query_author_data(authors_list, refresh=False, verbose=False):
         res, _ = stacked_query(**params)
         res = pd.DataFrame(res)
         cache_insert(res, table="authors")
-        auth_done, _ = authors_in_cache(authors)
+        auth_done, _ = retrieve_authors(authors)
     return auth_done
 
 
@@ -159,6 +160,7 @@ def query_journal(source_id, years, refresh):
         Dictionary keyed by year listing all authors who published in
         that year.
     """
+    from collections import defaultdict
     try:  # Try complete publication list first
         q = "SOURCE-ID({})".format(source_id)
         if base_query("docs", q, size_only=True) > 5000:

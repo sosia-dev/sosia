@@ -1,28 +1,12 @@
-from copy import deepcopy
-
 import numpy as np
 import pandas as pd
 import sqlite3
 
-from sosia.utils import config, flat_set_from_df
+from sosia.processing.utils import flat_set_from_df
+from sosia.processing.caching.utils import connect_sqlite
+from sosia.establishing import config
 
 cache_file = config.get('Cache', 'File path')
-
-
-def cache_connect(file=cache_file):
-    """Connect to cache file.
-
-    Parameters
-    ----------
-    file : file (optional, default=cache_file)
-        The cache file to connect to.
-    """
-    file = config.get('Cache', 'File path')
-    conn = sqlite3.connect(file)
-    c = conn.cursor()
-    sqlite3.register_adapter(np.int64, lambda val: int(val))
-    sqlite3.register_adapter(np.int32, lambda val: int(val))
-    return c, conn
 
 
 def cache_insert(data, table, file=cache_file):
@@ -67,11 +51,11 @@ def cache_insert(data, table, file=cache_file):
         q = """INSERT OR IGNORE INTO author_cits_size (auth_id, year, n_cits)
             values (?,?,?)"""
     elif table == 'author_year':
-        q = """INSERT OR IGNORE INTO author_year (auth_id, year, first_year, n_pubs,
-            n_coauth) values (?,?,?,?,?) """
+        q = """INSERT OR IGNORE INTO author_year (auth_id, year, first_year,
+            n_pubs, n_coauth) values (?,?,?,?,?)"""
     elif table == 'author_size':
         q = """INSERT OR IGNORE INTO author_size (auth_id, year, n_pubs)
-            values ({},{},{}) """.format(data[0], data[1], data[2])
+            values ({},{},{})""".format(data[0], data[1], data[2])
     elif table == "sources":
         if data.empty:
             return None
@@ -83,21 +67,21 @@ def cache_insert(data, table, file=cache_file):
         data["auids"] = data.apply(join_flat_auids, axis=1)
         data = data[["source_id", "year", "auids"]]
         q = """INSERT OR IGNORE INTO sources (source_id, year, auids)
-            VALUES (?,?,?) """
+            VALUES (?,?,?)"""
     elif table == "sources_afids":
         if data.empty:
             return None
         data["auids"] = data.apply(join_flat_auids, axis=1)
         data = data[["source_id", "year", "afid", "auids"]]
         q = """INSERT OR IGNORE INTO sources_afids (source_id, year, afid, auids)
-            VALUES (?,?,?,?) """
+            VALUES (?,?,?,?)"""
     else:
         allowed_tables = ('authors', 'author_cits_size', 'author_year',
                           'author_size', 'sources', 'sources_afids')
         msg = 'table parameter must be one of ' + ', '.join(allowed_tables)
         raise ValueError(msg)
     # Perform caching
-    _, conn = cache_connect(file=file)
+    _, conn = connect_sqlite(file=file)
     if table in ("authors", "author_cits_size", "author_year", "sources",
                  "sources_afids"):
         conn.executemany(q, data.to_records(index=False))
@@ -123,7 +107,7 @@ def insert_temporary_table(df, merge_cols, file=cache_file):
         The cache file to connect to.
     """
     df = df.astype({c: "int64" for c in merge_cols})
-    c, conn = cache_connect(file=file)
+    c, conn = connect_sqlite(file=file)
     # Drop table
     c.execute("DROP TABLE IF EXISTS temp")
     # Create table
@@ -135,25 +119,3 @@ def insert_temporary_table(df, merge_cols, file=cache_file):
     q = "INSERT OR IGNORE INTO temp ({}) values ({})".format(names, wildcards)
     conn.executemany(q, df.to_records(index=False))
     conn.commit()
-
-
-def d_to_df_for_cache(d, source_id):
-    """Function to create a DataFrame of sources, years and list of authors
-    from a dictionary where keys are the years and values are the list of
-    authors.
-
-    Parameters
-    ----------
-    d : dict
-        Dictionary of year-list of author pairs.
-
-    source_id: int
-        Scopus identifier of the source.
-    """
-    d2 = deepcopy(d)
-    for y in d2:
-        d2[y] = [d2[y]]
-    df = pd.DataFrame.from_dict(d2, orient="index").reset_index()
-    df.columns = ["year", "auids"]
-    df["source_id"] = str(source_id)
-    return df

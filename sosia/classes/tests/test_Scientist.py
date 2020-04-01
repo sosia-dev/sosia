@@ -67,7 +67,7 @@ def test_citations_period():
     assert_equal(scientist2.citations_period, scientist2.citations)
     assert_equal(scientist3.citations_period, scientist3.citations)
     assert_equal(scientist4.citations_period, scientist4.citations)
-    assert_equal(scientist5.citations_period, 3)
+    assert_equal(scientist5.citations_period, 4)
 
 
 def test_coauthors():
