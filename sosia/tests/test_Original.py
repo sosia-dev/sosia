@@ -162,7 +162,8 @@ def test_find_matches():
 
 def test_find_matches_noinformation():
     recieved = scientist1.find_matches(information=False, refresh=False)
-    assert_equal(sorted(recieved), [int(m.ID) for m in MATCHES])
+    expected = [int(m.ID) for m in MATCHES]
+    assert_equal(sorted(recieved), expected)
 
 
 def test_find_matches_stacked():
@@ -180,10 +181,9 @@ def test_find_matches_stacked():
 
 
 def test_find_matches_stacked_noinformation():
-    recieved = scientist2.find_matches(stacked=True, refresh=False,
+    recieved = scientist1.find_matches(stacked=True, refresh=False,
                                        information=False)
-    expected = [36998825200, 56049973600, 56896085200, 57188695848,
-                57188709931, 57189259789]
+    expected = [int(m.ID) for m in MATCHES]
     assert_equal(sorted(recieved), expected)
 
 
