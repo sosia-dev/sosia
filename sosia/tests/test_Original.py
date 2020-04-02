@@ -12,21 +12,21 @@ import sosia
 
 warnings.filterwarnings("ignore")
 test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
-sosia.config["Cache"]["File path"] = test_cache
 
 refresh = False
 
 # Test objects
-scientist1 = sosia.Original(55208373700, 2017, cits_margin=200, refresh=refresh)
+test_params = {"refresh": refresh, "sql_fname": test_cache}
+scientist1 = sosia.Original(55208373700, 2017, cits_margin=200, **test_params)
 scientist2 = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                            coauth_margin=1, period=3, refresh=refresh)
+                            coauth_margin=1, period=3, **test_params)
 affs = [60002612, 60032111, 60000765]
 scientist3 = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                            coauth_margin=1, period=3, refresh=refresh,
-                            search_affiliations=affs)
+                            coauth_margin=1, period=3, search_affiliations=affs,
+                            **test_params)
 affs = [60010348, 60022109, 60017317]
 scientist4 = sosia.Original(55208373700, 2017, cits_margin=200,
-                            refresh=refresh, search_affiliations=affs)
+                            search_affiliations=affs, **test_params)
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\

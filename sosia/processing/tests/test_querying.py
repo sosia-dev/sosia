@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 """Tests for processing.querying module."""
 
+from os.path import expanduser
+
 import pandas as pd
 from nose.tools import assert_equal, assert_true
 from string import Template
 
-from sosia.processing import base_query, count_citations, query_author_data,\
-    query_journal, query_year, stacked_query
+from sosia.processing import base_query, connect_sqlite, count_citations,\
+    query_author_data, query_journal, query_year, stacked_query
+
+test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
+test_conn = connect_sqlite(test_cache)
 
 
 def test_base_query():
@@ -37,7 +42,7 @@ def test_count_citations():
 
 def test_query_author_data():
     auth_list = [6701809842, 55208373700]
-    auth_data = query_author_data(auth_list, refresh=30, verbose=False)
+    auth_data = query_author_data(auth_list, test_conn, refresh=30, verbose=False)
     assert_true(isinstance(auth_data,  pd.DataFrame))
     expected_cols = ["auth_id", "eid", "surname", "initials", "givenname",
                      "affiliation", "documents", "affiliation_id", "city",

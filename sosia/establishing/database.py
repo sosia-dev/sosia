@@ -23,28 +23,25 @@ else:
     config.read(CONFIG_FILE)
 
 
-def create_cache(drop=False, file=None):
+def create_cache(fname, drop=False):
     """Create or recreate tables in cache file.
 
     Parameters
     ----------
+    fname : str
+        The path of the SQLite database to connect to.
+
     drop : boolean (optional, default=False)
         If True, deletes and recreates all tables in cache (irreversible).
-
-    file : file (optional, default=CACHE_SQLITE)
-        The name of the cache file to be used. By default is named
-        cache_sqlite.sqlite and located in "~/.sosia/".
     """
-    if not file:
-        file = config.get("Cache", "File path")
-    conn = sqlite3.connect(file)
-    c = conn.cursor()
+    conn = sqlite3.connect(fname)
+    cursor = conn.cursor()
     for table, variables in CACHE_TABLES.items():
         if drop:
             q = "DROP TABLE IF EXISTS {}".format(table)
-            c.execute(q)
+            cursor.execute(q)
         columns = ", ".join(" ".join(v) for v in variables["columns"])
         prim_keys = ", ".join(variables["primary"])
         q = "CREATE TABLE IF NOT EXISTS {} ({}, PRIMARY KEY({}))".format(
             table, columns, prim_keys)
-        c.execute(q)
+        cursor.execute(q)

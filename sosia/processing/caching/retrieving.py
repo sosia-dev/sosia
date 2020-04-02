@@ -2,14 +2,10 @@ import pandas as pd
 
 from sosia.processing.utils import flat_set_from_df
 from sosia.processing.caching.inserting import insert_temporary_table
-from sosia.processing.caching.utils import connect_sqlite, temporary_merge
-from sosia.establishing import config
+from sosia.processing.caching.utils import temporary_merge
 
 
-cache_file = config.get('Cache', 'File path')
-
-
-def retrieve_author_cits(df, file=cache_file):
+def retrieve_author_cits(df, conn):
     """Search authors citations in cache.
 
     Parameters
@@ -17,8 +13,8 @@ def retrieve_author_cits(df, file=cache_file):
     df : DataFrame
         DataFrame of authors to search in a year.
 
-    file : file (optional, default=cache_file)
-        The cache file to connect to.
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
 
     Returns
     -------
@@ -29,9 +25,8 @@ def retrieve_author_cits(df, file=cache_file):
         List of authors not in cache.
     """
     cols = ["auth_id", "year"]
-    insert_temporary_table(df, merge_cols=cols, file=file)
-    incache = temporary_merge(df, "author_cits_size", merge_cols=cols,
-                              file=file)
+    insert_temporary_table(df, conn, merge_cols=cols)
+    incache = temporary_merge(df, conn, "author_cits_size", merge_cols=cols)
     if not incache.empty:
         df = df.set_index(cols)
         incache = incache.set_index(cols)
@@ -43,7 +38,7 @@ def retrieve_author_cits(df, file=cache_file):
     return incache, tosearch
 
 
-def retrieve_authors(df, file=cache_file):
+def retrieve_authors(df, conn):
     """Search authors in cache.
 
     Parameters
@@ -51,8 +46,8 @@ def retrieve_authors(df, file=cache_file):
     df : DataFrame
         DataFrame of authors to search.
 
-    file : file (optional, default=cache_file)
-        The cache file to connect to.
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
 
     Returns
     -------
@@ -63,8 +58,8 @@ def retrieve_authors(df, file=cache_file):
         List of authors not in cache.
     """
     cols = ["auth_id"]
-    insert_temporary_table(df, merge_cols=cols, file=file)
-    incache = temporary_merge(df, "authors", merge_cols=cols, file=file)
+    insert_temporary_table(df, merge_cols=cols, conn=conn)
+    incache = temporary_merge(df, conn, "authors", merge_cols=cols)
     tosearch = df.auth_id.tolist()
     if not incache.empty:
         incache_list = incache.auth_id.tolist()
@@ -72,7 +67,7 @@ def retrieve_authors(df, file=cache_file):
     return incache, tosearch
 
 
-def retrieve_authors_year(df, file=cache_file):
+def retrieve_authors_year(df, conn):
     """Search authors publication information up to year of event in cache.
 
     Parameters
@@ -80,8 +75,8 @@ def retrieve_authors_year(df, file=cache_file):
     df : DataFrame
         DataFrame of authors to search with year of the event as second column.
 
-    file : file (optional, default=cache_file)
-        The cache file to connect to.
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
 
     Returns
     -------
@@ -93,8 +88,8 @@ def retrieve_authors_year(df, file=cache_file):
         column.
     """
     cols = ["auth_id", "year"]
-    insert_temporary_table(df, merge_cols=cols, file=file)
-    incache = temporary_merge(df, "author_year", merge_cols=cols, file=file)
+    insert_temporary_table(df, conn, merge_cols=cols)
+    incache = temporary_merge(df, conn, "author_year", merge_cols=cols)
     if not incache.empty:
         df = df.set_index(cols)
         incache = incache.set_index(cols)
@@ -109,7 +104,7 @@ def retrieve_authors_year(df, file=cache_file):
     return incache, tosearch
 
 
-def retrieve_author_pubs(df, file=cache_file):
+def retrieve_author_pubs(df, conn):
     """Search author's publication information up to year of event in cache.
 
     Parameters
@@ -117,8 +112,8 @@ def retrieve_author_pubs(df, file=cache_file):
     df : DataFrame
         DataFrame of authors to search with year of the event as second column.
 
-    file : file (optional, default=cache_file)
-        The cache file to connect to.
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
 
     Returns
     -------
@@ -126,26 +121,26 @@ def retrieve_author_pubs(df, file=cache_file):
         DataFrame of results found in cache.
     """
     cols = ["auth_id", "year"]
-    insert_temporary_table(df, merge_cols=cols, file=file)
-    incache = temporary_merge(df, "author_size", merge_cols=cols, file=file)
+    insert_temporary_table(df, conn, merge_cols=cols)
+    incache = temporary_merge(df, conn, "author_size", merge_cols=cols)
     if incache.empty:
         incache = pd.DataFrame()
     return incache
 
 
-def retrieve_sources(tosearch, refresh=False, file=cache_file, afid=False):
-    """Search sources by year in cache.
+def retrieve_sources(tosearch, conn, refresh=False, afid=False):
+    """Search sources by year in SQL database.
 
     Parameters
     ----------
     tosearch : DataFrame
         DataFrame of sources and years combinations to search.
 
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
+
     refresh : bool (optional, default=False)
         Whether to refresh cached search files.
-
-    file : file (optional, default=cache_file)
-        The cache file to connect to.
 
     afid : bool (optional, default=False)
         If True, search in sources_afids table.
@@ -153,13 +148,14 @@ def retrieve_sources(tosearch, refresh=False, file=cache_file, afid=False):
     Returns
     -------
     incache : DataFrame
-        DataFrame of results found in cache.
+        DataFrame of results found in database.
 
     tosearch: DataFrame
-        DataFrame of sources and years combinations not in cache.
+        DataFrame of sources and years combinations not in database.
     """
+    cursor = conn.cursor()
     cols = ["source_id", "year"]
-    insert_temporary_table(tosearch, merge_cols=cols, file=file)
+    insert_temporary_table(tosearch, conn, merge_cols=cols)
     table = "sources"
     select = "a.source_id, a.year, b.auids"
     if afid:
@@ -168,7 +164,6 @@ def retrieve_sources(tosearch, refresh=False, file=cache_file, afid=False):
     q = """SELECT {} FROM temp AS a
         INNER JOIN {} AS b ON a.source_id=b.source_id
         AND a.year=b.year;""".format(select, table)
-    _, conn = connect_sqlite(file=file)
     incache = pd.read_sql_query(q, conn)
     if not incache.empty:
         incache["auids"] = incache["auids"].str.split(",")
@@ -180,12 +175,12 @@ def retrieve_sources(tosearch, refresh=False, file=cache_file, afid=False):
             tables = ("authors", "author_size", "author_cits_size", "author_year")
             for table in tables:
                 q = "DELETE FROM {} WHERE auth_id=?".format(table)
-                conn.executemany(q, auth_incache.to_records(index=False))
+                cursor.executemany(q, auth_incache.to_records(index=False))
                 conn.commit()
             tables = ("sources", "sources_afids")
             for table in tables:
                 q = "DELETE FROM {} WHERE source_id=? AND year=?".format(table)
-                conn.executemany(q, tosearch.to_records(index=False))
+                cursor.executemany(q, tosearch.to_records(index=False))
                 conn.commit()
             incache = pd.DataFrame(columns=incache.columns)
     if tosearch.empty:

@@ -103,7 +103,7 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
     return base_query("docs", q, size_only=True)
 
 
-def query_author_data(authors_list, refresh=False, verbose=False):
+def query_author_data(authors_list, conn, refresh=False, verbose=False):
     """Wrapper function to search author data for a list of authors, searching
     first in cache and then via stacked search.
 
@@ -111,6 +111,9 @@ def query_author_data(authors_list, refresh=False, verbose=False):
     ----------
     authors_list : list
        List of Scopus Author IDs to search.
+
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
 
     refresh : bool (optional, default=False)
         Whether to refresh scopus cached files if they exist, or not.
@@ -125,7 +128,7 @@ def query_author_data(authors_list, refresh=False, verbose=False):
     """
     authors = pd.DataFrame(authors_list, columns=["auth_id"], dtype="int64")
     # merge existing data in cache and separate missing records
-    auth_done, auth_missing = retrieve_authors(authors)
+    auth_done, auth_missing = retrieve_authors(authors, conn)
     if auth_missing:
         params = {"group": auth_missing, "res": [],
                   "refresh": refresh, "joiner": ") OR AU-ID(",
@@ -135,8 +138,8 @@ def query_author_data(authors_list, refresh=False, verbose=False):
             params.update({"total": len(auth_missing)})
         res, _ = stacked_query(**params)
         res = pd.DataFrame(res)
-        cache_insert(res, table="authors")
-        auth_done, _ = retrieve_authors(authors)
+        cache_insert(res, conn, table="authors")
+        auth_done, _ = retrieve_authors(authors, conn)
     return auth_done
 
 

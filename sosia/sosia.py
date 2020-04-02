@@ -60,7 +60,7 @@ class Original(Scientist):
 
     def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
                  cits_margin=0.1, coauth_margin=0.1, period=None, refresh=False,
-                 eids=None, search_affiliations=None):
+                 eids=None, search_affiliations=None, sql_fname=None):
         """Class to represent a scientist for which we want to find a control
         group.
 
@@ -119,6 +119,10 @@ class Original(Scientist):
         affiliations : list (optional, default=None)
             A list of scopus affiliation IDs. If provided, sosia searches
             for matches within this affiliation in the year provided.
+
+        sql_fname : str (optional, default=None)
+            The path of the SQLite database to connect to.  If None, will use
+            the path specified in config.ini.
         """
         # Internal checks
         if not isinstance(year_margin, (int, float)):
@@ -147,7 +151,8 @@ class Original(Scientist):
         self.refresh = refresh
 
         # Instantiate superclass to load private variables
-        Scientist.__init__(self, self.identifier, year, refresh, period)
+        Scientist.__init__(self, self.identifier, year, refresh=refresh,
+                           period=period, sql_fname=sql_fname)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False,
                             ignore_first_id=False):
@@ -349,7 +354,7 @@ class Original(Scientist):
 
         # First round of filtering: minimum publications and main field
         # create df of authors
-        authors = query_author_data(self.search_group, verbose=verbose)
+        authors = query_author_data(self.search_group, self.sql_conn, verbose=verbose)
         same_field = (authors.areas.str.startswith(self.main_field[1]))
         enough_pubs = (authors.documents.astype(int) >= int(min(_npapers)))
         group = authors[same_field & enough_pubs]["auth_id"].tolist()
@@ -364,7 +369,8 @@ class Original(Scientist):
         # number of publications in the relevant period.
         params = {"group": group, "ybefore": min(_years)-1,
                   "yupto": self.year, "npapers": _npapers,
-                  "yfrom": self.year_period, "verbose": verbose}
+                  "yfrom": self.year_period, "verbose": verbose,
+                  "conn": self.sql_conn}
         group, _, _ = filter_pub_counts(**params)
         # Also screen out ids with too many publications over the full period
         if self.period:
@@ -374,7 +380,7 @@ class Original(Scientist):
 
         # Third round of filtering: citations (in the FULL period).
         authors = pd.DataFrame({"auth_id": group, "year": self.year})
-        _, authors_cits_search = retrieve_author_cits(authors)
+        _, authors_cits_search = retrieve_author_cits(authors, self.sql_conn)
         text = "Search and filter based on count of citations\n{} to search "\
                "out of {}\n".format(len(authors_cits_search), len(group))
         custom_print(text, verbose)
@@ -385,8 +391,10 @@ class Original(Scientist):
                 n_cits = count_citations([str(au['auth_id'])], self.year+1)
                 authors_cits_search.at[i, 'n_cits'] = n_cits
                 print_progress(i + 1, len(authors_cits_search), verbose)
-            cache_insert(authors_cits_search, table="author_cits_size")
-        auth_cits_incache, _ = retrieve_author_cits(authors[["auth_id", "year"]])
+            cache_insert(authors_cits_search, self.sql_conn,
+                         table="author_cits_size")
+        auth_cits_incache, _ = retrieve_author_cits(authors[["auth_id", "year"]],
+                                                    self.sql_conn)
         # keep if citations are in range
         mask = ((auth_cits_incache.n_cits <= max(_ncits)) &
                 (auth_cits_incache.n_cits >= min(_ncits)))
@@ -403,7 +411,7 @@ class Original(Scientist):
         custom_print(text, verbose)
         authors = pd.DataFrame({"auth_id": group, "year": self.year},
                                dtype="uint64")
-        _, author_year_search = retrieve_authors_year(authors)
+        _, author_year_search = retrieve_authors_year(authors, self.sql_conn)
         matches = []
         if stacked:  # Combine searches
             if not author_year_search.empty:
@@ -424,8 +432,8 @@ class Original(Scientist):
                     res = res[["year", "first_year", "n_pubs", "n_coauth"]]
                     res.index.name = "auth_id"
                     res = res.reset_index()
-                    cache_insert(res, table="author_year")
-            author_year_cache, _ = retrieve_authors_year(authors)
+                    cache_insert(res, self.sql_conn, table="author_year")
+            author_year_cache, _ = retrieve_authors_year(authors, self.sql_conn)
             if self._ignore_first_id:
                 # only number of coauthors should be big enough
                 enough = (author_year_cache.n_coauth >= min(_ncoauth))

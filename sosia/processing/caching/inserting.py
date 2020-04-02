@@ -3,14 +3,10 @@ import pandas as pd
 import sqlite3
 
 from sosia.processing.utils import flat_set_from_df
-from sosia.processing.caching.utils import connect_sqlite
-from sosia.establishing import config
-
-cache_file = config.get('Cache', 'File path')
 
 
-def cache_insert(data, table, file=cache_file):
-    """Insert new authors information in cache.
+def cache_insert(data, conn, table):
+    """Insert new authors information in SQL database.
 
     Parameters
     ----------
@@ -18,14 +14,14 @@ def cache_insert(data, table, file=cache_file):
         Dataframe with authors information or (when table="source") a
         3-element tuple.
 
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
+
     table : string
         The database table to insert into.  The query will be adjusted
         accordingly.
         Allowed values: "authors", "author_cits_size", "author_year",
         "author_size", "sources".
-
-    file : file (optional, default=cache_file)
-        The cache file to connect to.
 
     Raises
     ------
@@ -80,17 +76,18 @@ def cache_insert(data, table, file=cache_file):
                           'author_size', 'sources', 'sources_afids')
         msg = 'table parameter must be one of ' + ', '.join(allowed_tables)
         raise ValueError(msg)
+
     # Perform caching
-    _, conn = connect_sqlite(file=file)
+    cursor = conn.cursor()
     if table in ("authors", "author_cits_size", "author_year", "sources",
                  "sources_afids"):
-        conn.executemany(q, data.to_records(index=False))
+        cursor.executemany(q, data.to_records(index=False))
     else:
-        conn.execute(q)
+        cursor.execute(q)
     conn.commit()
 
 
-def insert_temporary_table(df, merge_cols, file=cache_file):
+def insert_temporary_table(df, conn, merge_cols):
     """Temporarily create a table in SQL cache in order to prepare a
     merge with `table`.
 
@@ -99,23 +96,23 @@ def insert_temporary_table(df, merge_cols, file=cache_file):
     data : DataFrame
         Dataframe with authors information that should be entered.
 
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
+
     merge_cols : list of str
         The columns that should be created and filled.  Must correspond in
         length to the number of columns of `df`.
-
-    file : file (optional, default=cache_file)
-        The cache file to connect to.
     """
     df = df.astype({c: "int64" for c in merge_cols})
-    c, conn = connect_sqlite(file=file)
     # Drop table
-    c.execute("DROP TABLE IF EXISTS temp")
+    cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS temp")
     # Create table
     names = ", ".join(merge_cols)
     q = "CREATE TABLE temp ({0}, PRIMARY KEY({0}))".format(names)
-    c.execute(q)
+    cursor.execute(q)
     # Insert values
     wildcards = ", ".join(["?"] * len(merge_cols))
     q = "INSERT OR IGNORE INTO temp ({}) values ({})".format(names, wildcards)
-    conn.executemany(q, df.to_records(index=False))
+    cursor.executemany(q, df.to_records(index=False))
     conn.commit()

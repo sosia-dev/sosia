@@ -5,9 +5,10 @@
 
 from pybliometrics.scopus import AbstractRetrieval
 
+from sosia.establishing import config
 from sosia.processing import add_source_names, base_query, count_citations,\
-    find_location, get_authors, get_main_field, maybe_add_source_names,\
-    read_fields_sources_list, query_author_data
+    connect_sqlite, find_location, get_authors, get_main_field,\
+    maybe_add_source_names, read_fields_sources_list, query_author_data
 from sosia.utils import accepts
 
 
@@ -242,7 +243,8 @@ class Scientist(object):
     def subjects(self, val):
         self._subjects = val
 
-    def __init__(self, identifier, year, refresh=False, period=None, eids=None):
+    def __init__(self, identifier, year, refresh=False, period=None, eids=None,
+                 sql_fname=None):
         """Class to represent a scientist.
 
         Parameters
@@ -268,6 +270,10 @@ class Scientist(object):
             The period in which to consider publications. If not provided,
             all publications are considered.
 
+        sql_fname : str (optional, default=None)
+            The path of the SQLite database to connect to.  If None, will use
+            the path specified in config.ini.
+
         Raises
         ------
         Exeption
@@ -278,6 +284,9 @@ class Scientist(object):
         self.year = int(year)
         self.period = period
         self.year_period = None
+        if not sql_fname:
+            sql_fname  = config.get('Cache', 'File path')
+        self.sql_conn = connect_sqlite(sql_fname)
 
         # Read mapping of fields to sources
         df, names = read_fields_sources_list()
@@ -356,7 +365,8 @@ class Scientist(object):
         self._language = None
 
         # Author name from profile with most documents
-        df = query_author_data(self.identifier, refresh=refresh, verbose=False)
+        df = query_author_data(self.identifier, self.sql_conn,
+                               refresh=refresh, verbose=False)
         au = df.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
         self._surname = au.surname or None

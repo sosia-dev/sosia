@@ -9,13 +9,16 @@ from sosia.processing.utils import flat_set_from_df, margin_range
 from sosia.utils import custom_print, print_progress
 
 
-def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
+def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
                       verbose=False):
     """Filter authors based on restrictions in the number of
     publications in different periods, searched by query_size.
 
     Parameters
     ----------
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
+
     group : list of str
         Scopus IDs of authors to be filtered.
 
@@ -55,7 +58,7 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
         years_check.extend([yfrom - 1])
     authors = DataFrame(product(group, years_check), dtype="int64",
                         columns=["auth_id", "year"])
-    authors_size = retrieve_author_pubs(authors)
+    authors_size = retrieve_author_pubs(authors, conn)
     au_skip = []
     group_tocheck = set(group)
     older_authors = []
@@ -121,7 +124,7 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
             q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, ybefore + 1)
             size = base_query("docs", q, size_only=True)
             tp = (au, ybefore, size)
-            cache_insert(tp, table="author_size")
+            cache_insert(tp, conn, table="author_size")
             if size > 0:
                 group.remove(au)
                 group_tocheck.remove(au)
@@ -142,13 +145,13 @@ def filter_pub_counts(group, ybefore, yupto, npapers, yfrom=None,
             q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, yupto+1)
             n_pubs_yupto = base_query("docs", q, size_only=True)
             tp = (au, yupto, n_pubs_yupto)
-            cache_insert(tp, table="author_size")
+            cache_insert(tp, conn, table="author_size")
             # Eventually decrease publication count
             if yfrom and n_pubs_yupto >= min(npapers):
                 q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, yfrom)
                 n_pubs_yfrom = base_query("docs", q, size_only=True)
                 tp = (au, yfrom-1, n_pubs_yfrom)
-                cache_insert(tp, table="author_size")
+                cache_insert(tp, conn, table="author_size")
                 n_pubs_yupto -= n_pubs_yfrom
             if n_pubs_yupto < min(npapers) or n_pubs_yupto > max(npapers):
                 group.remove(au)
@@ -207,11 +210,13 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         # Get already cached sources from cache
         sources_ay = DataFrame(product(search_sources, [self.active_year]),
                                columns=["source_id", "year"])
-        _, _search = retrieve_sources(sources_ay, refresh=refresh, afid=True)
+        _, _search = retrieve_sources(sources_ay, self.sql_conn,
+                                      refresh=refresh, afid=True)
         res = query_year(self.active_year, _search.source_id.tolist(), refresh,
                          verbose, afid=True)
-        cache_insert(res, table="sources_afids")
-        sources_ay, _ = retrieve_sources(sources_ay, refresh=refresh, afid=True)
+        cache_insert(res, self.sql_conn, table="sources_afids")
+        sources_ay, _ = retrieve_sources(sources_ay, self.sql_conn,
+                                         refresh=refresh, afid=True)
         # Authors publishing in provided year and locations
         mask = None
         if self.search_affiliations:
@@ -221,16 +226,18 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         # Get already cached sources from cache
         sources_ys = DataFrame(product(search_sources, search_years),
                                columns=["source_id", "year"])
-        _, sources_ys_search = retrieve_sources(sources_ys, refresh=refresh)
+        _, sources_ys_search = retrieve_sources(sources_ys, self.sql_conn,
+                                                refresh=refresh)
         missing_years = set(sources_ys_search.year.tolist())
         # Eventually add information for missing years to cache
         for y in missing_years:
             mask = sources_ys_search.year == y
             _sources_search = sources_ys_search[mask].source_id.tolist()
             res = query_year(y, _sources_search, refresh, verbose)
-            cache_insert(res, table="sources")
+            cache_insert(res, self.sql_conn, table="sources")
         # Get full cache
-        sources_ys, _ = retrieve_sources(sources_ys, refresh=False)
+        sources_ys, _ = retrieve_sources(sources_ys, self.sql_conn,
+                                         refresh=False)
         # Authors publishing in year(s) of first publication
         if not self._ignore_first_id:
             mask = sources_ys.year.between(min_year, max_year, inclusive=True)

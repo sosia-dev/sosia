@@ -1,26 +1,19 @@
 import pandas as pd
-import sqlite3
-
-from sosia.establishing import config
-
-cache_file = config.get('Cache', 'File path')
 
 
-def connect_sqlite(file=cache_file):
+def connect_sqlite(fname):
     """Connect to cache file.
 
     Parameters
     ----------
-    file : file (optional, default=cache_file)
-        The SQLite database to connect to.
+    fname : str
+        The path of the SQLite database to connect to.
     """
+    import sqlite3
     from numpy import int32, int64
-    file = config.get('Cache', 'File path')
-    conn = sqlite3.connect(file)
-    c = conn.cursor()
     sqlite3.register_adapter(int64, lambda val: int(val))
     sqlite3.register_adapter(int32, lambda val: int(val))
-    return c, conn
+    return sqlite3.connect(fname)
 
 
 def d_to_df_for_cache(d, source_id):
@@ -46,9 +39,8 @@ def d_to_df_for_cache(d, source_id):
     return df
 
 
-def temporary_merge(df, table, merge_cols, file):
+def temporary_merge(df, conn, table, merge_cols):
     """Perform merge with temp table and `table` and retrieve all columns."""
-    c, conn = connect_sqlite(file=file)
     conditions = " and ".join(["a.{0}=b.{0}".format(c) for c in merge_cols])
     q = "SELECT b.* FROM temp AS a INNER JOIN {} AS b ON {};".format(
         table, conditions)
