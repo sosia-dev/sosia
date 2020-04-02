@@ -5,11 +5,11 @@ from os.path import expanduser
 
 from nose.tools import assert_equal
 
-from sosia.processing.caching.utils import connect_sqlite
+from sosia.establishing import connect_database
 from sosia.processing.filtering import filter_pub_counts
 
 test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
-test_conn = connect_sqlite(test_cache)
+test_conn = connect_database(test_cache)
 
 
 def test_filter_pub_counts():

@@ -9,8 +9,7 @@ import pandas as pd
 from pybliometrics.scopus import ScopusSearch, AuthorSearch
 from pandas.testing import assert_frame_equal
 
-from sosia.establishing import create_cache
-from sosia.processing.caching.utils import connect_sqlite
+from sosia.establishing import create_cache, connect_database
 from sosia.processing import build_dict, cache_insert, retrieve_authors,\
     retrieve_author_pubs, retrieve_authors_year, retrieve_sources, query_year
 
@@ -19,7 +18,7 @@ test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
 
 def test_retrieve_authors():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     # Variables
     expected_auth = ["53164702100", "57197093438"]
     search_auth = ["55317901900"]
@@ -52,7 +51,7 @@ def test_retrieve_authors():
 
 def test_retrieve_authors_year():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     # Variables
     expected_auth = ["53164702100", "57197093438"]
     search_auth = ["55317901900"]
@@ -91,7 +90,7 @@ def test_retrieve_authors_year():
 
 def test_retrieve_author_pubs():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     # Variables
     expected_auth = 53164702100
     expected_years = [2010, 2017]
@@ -118,7 +117,7 @@ def test_retrieve_author_pubs():
 
 def test_retrieve_sources_empty():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     df = pd.DataFrame(product([22900], [2010, 2005]),
                       columns=["source_id", "year"], dtype="int64")
     sources_ys_incache, sources_ys_search = retrieve_sources(df, conn)
@@ -128,7 +127,7 @@ def test_retrieve_sources_empty():
 
 def test_retrieve_sources_partial():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
     expected_years = [2010, 2005]
@@ -148,7 +147,7 @@ def test_retrieve_sources_partial():
 
 def test_retrieve_sources_full():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
     expected_years = [2010, 2005]
@@ -170,7 +169,7 @@ def test_retrieve_sources_full():
 
 def test_sources_afids_in_cache_empty():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     df = pd.DataFrame(product([22900], [2010, 2005]),
                       columns=["source_id", "year"], dtype="int64")
     sa_incache, sa_search = retrieve_sources(df, conn, afid=True)
@@ -180,7 +179,7 @@ def test_sources_afids_in_cache_empty():
 
 def test_sources_afids_in_cache_partial():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
     expected_years = [2010, 2005]
@@ -204,7 +203,7 @@ def test_sources_afids_in_cache_partial():
 
 def test_sources_afids_in_cache_full():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
     expected_years = [2010, 2005]
@@ -229,7 +228,7 @@ def test_sources_afids_in_cache_full():
 
 def test_sources_afids_in_sources_cache():
     create_cache(test_cache, drop=True)
-    conn = connect_sqlite(test_cache)
+    conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
     expected_years = [2010, 2005]

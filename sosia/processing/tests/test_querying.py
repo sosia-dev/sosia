@@ -7,11 +7,12 @@ import pandas as pd
 from nose.tools import assert_equal, assert_true
 from string import Template
 
-from sosia.processing import base_query, connect_sqlite, count_citations,\
-    query_author_data, query_journal, query_year, stacked_query
+from sosia.establishing import connect_database
+from sosia.processing import base_query, count_citations, query_author_data,\
+    query_journal, query_year, stacked_query
 
 test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
-test_conn = connect_sqlite(test_cache)
+test_conn = connect_database(test_cache)
 
 
 def test_base_query():

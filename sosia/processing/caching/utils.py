@@ -1,21 +1,6 @@
 import pandas as pd
 
 
-def connect_sqlite(fname):
-    """Connect to cache file.
-
-    Parameters
-    ----------
-    fname : str
-        The path of the SQLite database to connect to.
-    """
-    import sqlite3
-    from numpy import int32, int64
-    sqlite3.register_adapter(int64, lambda val: int(val))
-    sqlite3.register_adapter(int32, lambda val: int(val))
-    return sqlite3.connect(fname)
-
-
 def d_to_df_for_cache(d, source_id):
     """Function to create a DataFrame of sources, years and list of authors
     from a dictionary where keys are the years and values are the list of

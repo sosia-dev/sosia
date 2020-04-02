@@ -5,10 +5,10 @@
 
 from pybliometrics.scopus import AbstractRetrieval
 
-from sosia.establishing import config
+from sosia.establishing import config, connect_database
 from sosia.processing import add_source_names, base_query, count_citations,\
-    connect_sqlite, find_location, get_authors, get_main_field,\
-    maybe_add_source_names, read_fields_sources_list, query_author_data
+    find_location, get_authors, get_main_field, maybe_add_source_names,\
+    read_fields_sources_list, query_author_data
 from sosia.utils import accepts
 
 
@@ -286,7 +286,7 @@ class Scientist(object):
         self.year_period = None
         if not sql_fname:
             sql_fname  = config.get('Cache', 'File path')
-        self.sql_conn = connect_sqlite(sql_fname)
+        self.sql_conn = connect_database(sql_fname)
 
         # Read mapping of fields to sources
         df, names = read_fields_sources_list()
