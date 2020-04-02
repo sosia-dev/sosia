@@ -10,7 +10,7 @@ import pandas as pd
 from sosia.processing import expand_affiliation, find_location, parse_docs
 
 refresh = 30
-test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
+test_cache = expanduser("~/.sosia/") + "test.sqlite"
 
 
 def test_expand_affiliation():

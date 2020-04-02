@@ -11,8 +11,8 @@ from nose.tools import assert_equal, assert_true
 import sosia
 
 warnings.filterwarnings("ignore")
-test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
 
+test_cache = expanduser("~/.sosia/") + "test.sqlite"
 refresh = False
 
 # Test objects

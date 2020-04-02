@@ -11,7 +11,7 @@ from sosia.establishing import connect_database
 from sosia.processing import base_query, count_citations, query_author_data,\
     query_journal, query_year, stacked_query
 
-test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
+test_cache = expanduser("~/.sosia/") + "test.sqlite"
 test_conn = connect_database(test_cache)
 
 
