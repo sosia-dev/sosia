@@ -8,7 +8,7 @@ from os.path import expanduser
 import pandas as pd
 from nose.tools import assert_equal, assert_true
 
-import sosia
+from sosia.classes import Original
 
 warnings.filterwarnings("ignore")
 
@@ -17,16 +17,16 @@ refresh = False
 
 # Test objects
 test_params = {"refresh": refresh, "sql_fname": test_cache}
-scientist1 = sosia.Original(55208373700, 2017, cits_margin=200, **test_params)
-scientist2 = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                            coauth_margin=1, period=3, **test_params)
+scientist1 = Original(55208373700, 2017, cits_margin=200, **test_params)
+scientist2 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
+                      coauth_margin=1, period=3, **test_params)
 affs = [60002612, 60032111, 60000765]
-scientist3 = sosia.Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                            coauth_margin=1, period=3, search_affiliations=affs,
-                            **test_params)
+scientist3 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
+                      coauth_margin=1, period=3, search_affiliations=affs,
+                      **test_params)
 affs = [60010348, 60022109, 60017317]
-scientist4 = sosia.Original(55208373700, 2017, cits_margin=200,
-                            search_affiliations=affs, **test_params)
+scientist4 = Original(55208373700, 2017, cits_margin=200,
+                      search_affiliations=affs, **test_params)
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\

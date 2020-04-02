@@ -1,4 +1,4 @@
-These testfiles are designed to test features of the various classes.  To run these tests, you need the [nosetesting package](http://nose.readthedocs.io/en/latest/).
+To run tests please use, you need the [nosetesting package](http://nose.readthedocs.io/en/latest/).
 
 The simplest way to invoke the tests is to execute
 
