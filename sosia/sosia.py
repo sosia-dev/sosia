@@ -149,10 +149,11 @@ class Original(Scientist):
             search_affiliations = [int(a) for a in search_affiliations]
         self.search_affiliations = search_affiliations
         self.refresh = refresh
+        self.sql_fname = sql_fname
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, year, refresh=refresh,
-                           period=period, sql_fname=sql_fname)
+                           period=period, sql_fname=self.sql_fname)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False,
                             ignore_first_id=False):
@@ -506,7 +507,8 @@ class Original(Scientist):
         if keywords and len(matches) > 0:
             custom_print("Providing additional information...", verbose)
             profiles = [Scientist([str(a)], self.year, period=self.period,
-                                  refresh=refresh) for a in matches]
+                                   refresh=refresh, sql_fname=self.sql_fname)
+                                  for a in matches]
             matches = inform_matches(profiles, self, keywords, stop_words,
                                      verbose, refresh, **tfidf_kwds)
         if self.search_affiliations:
