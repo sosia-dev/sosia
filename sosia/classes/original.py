@@ -207,7 +207,7 @@ class Original(Scientist):
         negative.update({str(i) for i in self.identifier})
         negative.update({str(i) for i in self.coauthors})
         self._search_group = sorted(list(group - negative))
-        text = "Found {:,} authors for search_group".format(len(self._search_group))
+        text = f"Found {len(self._search_group):,} authors for search_group"
         custom_print(text, verbose)
         return self
 
@@ -241,9 +241,8 @@ class Original(Scientist):
         sources.update(self.sources)
         # Finalize
         self._search_sources = sorted(list(sources))
-        types = "; ".join(list(main_types))
-        text = "Found {} sources matching main field {} and type(s) {}".format(
-            len(self._search_sources), self.main_field[0], types)
+        text = f"Found {len(sources):,} sources matching main field "\
+               f"{self.main_field[0]} and source type(s) {'; '.join(main_types)}"
         custom_print(text, verbose)
         return self
 
@@ -325,8 +324,8 @@ class Original(Scientist):
             keywords = information
             invalid = [x for x in keywords if x not in info_keys]
             if invalid:
-                text = ("Parameter information contains invalid keywords: ",
-                        ", ".join(invalid))
+                text = "Parameter information contains invalid keywords: " +\
+                       ", ".join(invalid)
                 raise ValueError(text)
             if self.search_affiliations and "affiliation_id" not in keywords:
                 keywords.append("affiliation_id")
@@ -349,8 +348,8 @@ class Original(Scientist):
             _npapers = margin_range(len(self.publications), self.pub_margin)
             _ncits = margin_range(self.citations, self.cits_margin)
             _ncoauth = margin_range(len(self.coauthors), self.coauth_margin)
-        n = len(self.search_group)
-        text = "Searching through characteristics of {:,} authors".format(n)
+        text = "Searching through characteristics of "\
+               f"{len(self.search_group):,} authors..."
         custom_print(text, verbose)
 
         # First round of filtering: minimum publications and main field
@@ -360,9 +359,8 @@ class Original(Scientist):
         enough_pubs = (authors.documents.astype(int) >= int(min(_npapers)))
         group = authors[same_field & enough_pubs]["auth_id"].tolist()
         group.sort()
-        n = len(group)
-        text = "Left with {} authors\nFiltering based on provided "\
-               "conditions...".format(n)
+        text = f"Left with {len(group):,} authors with sufficient "\
+               "number of publications and same main field"
         custom_print(text, verbose)
 
         # Second round of filtering:
@@ -378,14 +376,14 @@ class Original(Scientist):
             params.update({"npapers": [1, max(_npapers_full)], "yfrom": None,
                            "group": group})
             group, _, _ = filter_pub_counts(**params)
+        text = f"Left with {len(group):,} researchers"
 
         # Third round of filtering: citations (in the FULL period).
         authors = pd.DataFrame({"auth_id": group, "year": self.year})
         _, authors_cits_search = retrieve_author_cits(authors, self.sql_conn)
-        text = "Search and filter based on count of citations\n{} to search "\
-               "out of {}\n".format(len(authors_cits_search), len(group))
-        custom_print(text, verbose)
         if not authors_cits_search.empty:
+            text = f"Counting citations of {len(authors_cits_search):,}..."
+            custom_print(text, verbose)
             authors_cits_search['n_cits'] = 0
             print_progress(0, len(authors_cits_search), verbose)
             for i, au in authors_cits_search.iterrows():
@@ -397,6 +395,7 @@ class Original(Scientist):
         auth_cits_incache, _ = retrieve_author_cits(authors[["auth_id", "year"]],
                                                     self.sql_conn)
         # keep if citations are in range
+        custom_print("Filtering based on count of citations...", verbose)
         mask = ((auth_cits_incache.n_cits <= max(_ncits)) &
                 (auth_cits_incache.n_cits >= min(_ncits)))
         if self.period:
@@ -406,9 +405,8 @@ class Original(Scientist):
 
         # Fourth round of filtering: Download publications, verify coauthors
         # (in the FULL period) and first year.
-        n = len(group)
-        text = "Left with {} authors\nFiltering based on coauthors "\
-               "number...".format(n)
+        text = f"Left with {len(group):,} authors\nFiltering based on "\
+               "coauthors number..."
         custom_print(text, verbose)
         authors = pd.DataFrame({"auth_id": group, "year": self.year},
                                dtype="uint64")
@@ -416,8 +414,7 @@ class Original(Scientist):
         matches = []
         if stacked:  # Combine searches
             if not author_year_search.empty:
-                q = Template("AU-ID($fill) AND PUBYEAR BEF {}".format(
-                    self.year + 1))
+                q = Template(f"AU-ID($fill) AND PUBYEAR BEF {self.year + 1}")
                 auth_year_group = author_year_search.auth_id.tolist()
                 params = {"group": auth_year_group, "res": [],
                           "template": q, "refresh": refresh,
@@ -459,7 +456,7 @@ class Original(Scientist):
         else:  # Query each author individually
             for i, au in enumerate(group):
                 print_progress(i + 1, len(group), verbose)
-                res = base_query("docs", "AU-ID({})".format(au), refresh=refresh)
+                res = base_query("docs", f"AU-ID({au})", refresh=refresh)
                 res = [p for p in res if p.coverDate and
                        int(p.coverDate[:4]) <= self.year]
                 # Filter
@@ -481,15 +478,14 @@ class Original(Scientist):
                 matches.append(au)
 
         if self.period:
-            text = "Left with {} authors\nFiltering based on exact period "\
-                   "citations and coauthors...".format(len(matches))
+            text = f"Left with {len(matches)} authors\nFiltering based on "\
+                   "exact period citations and coauthors..."
             custom_print(text, verbose)
             # Further screen matches based on period cits and coauths
             to_loop = [m for m in matches]  # temporary copy
             for m in to_loop:
-                q = "AU-ID({})".format(m)
-                res = base_query("docs", "AU-ID({})".format(m), refresh=refresh,
-                    fields=["eid", "author_ids", "coverDate"])
+                res = base_query("docs", f"AU-ID({m})", refresh=refresh,
+                                 fields=["eid", "author_ids", "coverDate"])
                 pubs = [p for p in res if int(p.coverDate[:4]) <= self.year and
                         int(p.coverDate[:4]) >= self.year_period]
                 coauths = set(get_authors(pubs)) - {str(m)}
@@ -500,7 +496,7 @@ class Original(Scientist):
                 n_cits = count_citations(eids_period, self.year+1, [str(m)])
                 if not (min(_ncits) <= n_cits <= max(_ncits)):
                     matches.remove(m)
-        text = "Found {:,} author(s) matching all criteria".format(len(matches))
+        text = f"Found {len(matches):,} author(s) matching all criteria"
         custom_print(text, verbose)
 
         # Possibly add information to matches

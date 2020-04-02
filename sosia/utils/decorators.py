@@ -6,13 +6,11 @@ def accepts(*classinfo_args):
                 arg = args[i]
                 if not isinstance(arg, classinfo):
                     if isinstance(classinfo, tuple):
-                        obj_name = "', '".join([x.__name__ for x in classinfo])
+                        obj_type = "' or '".join([x.__name__ for x in classinfo])
                     else:
-                        obj_name = " '" + classinfo.__name__
-                    msg = "Attribute {} must be of type{}' but "\
-                          "argument of type '{}' was given".format(
-                            old_fn.__name__, "s '" + obj_name,
-                            type(arg).__name__)
+                        obj_type = classinfo.__name__
+                    msg = f"Attribute {old_fn.__name__} must be of type "\
+                          f"'{obj_type}' but '{type(arg).__name__}' was passed"
                     raise TypeError(msg)
             return old_fn(self, *args, **kwargs)
         return new_fn

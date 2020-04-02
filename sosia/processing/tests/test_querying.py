@@ -13,18 +13,18 @@ from sosia.processing import base_query, count_citations, query_author_data,\
 
 test_cache = expanduser("~/.sosia/") + "test.sqlite"
 test_conn = connect_database(test_cache)
+test_id = 53164702100
+year = 2017
 
 
 def test_base_query():
-    auth_id = 53164702100
-    q = "AU-ID({}) AND PUBYEAR BEF {}".format(auth_id, 2017)
+    q = f"AU-ID({test_id}) AND PUBYEAR BEF {year}"
     size = base_query("docs", q, size_only=True)
     assert_equal(size, 5)
 
 
 def test_base_query_author():
-    auth_id = 53164702100
-    query = "AU-ID({})".format(auth_id)
+    query = f"AU-ID({test_id})"
     size = base_query("author", query, size_only=True)
     assert_equal(size, 1)
 
@@ -45,11 +45,11 @@ def test_query_author_data():
     auth_list = [6701809842, 55208373700]
     auth_data = query_author_data(auth_list, test_conn, refresh=30, verbose=False)
     assert_true(isinstance(auth_data,  pd.DataFrame))
-    expected_cols = ["auth_id", "eid", "surname", "initials", "givenname",
+    expected_cols = ["test_id", "eid", "surname", "initials", "givenname",
                      "affiliation", "documents", "affiliation_id", "city",
                      "country", "areas"]
     assert_equal(auth_data.columns.tolist(), expected_cols)
-    assert_equal(auth_data.auth_id.tolist(), auth_list)
+    assert_equal(auth_data.test_id.tolist(), auth_list)
     assert_equal(auth_data.surname.tolist(), ["Harhoff", "Baruffaldi"])
 
 
@@ -97,7 +97,7 @@ def test_stacked_query():
              21100246535, 21100246537, 21100285035, 21100313905, 21100329904,
              21100370441, 21100370876, 21100416121, 21100775937, 21100871308,
              25674]
-    template = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(1998))
+    template = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year+1}")
     res = []
     stacked_query(group, res, template, joiner=" OR ", q_type="docs", refresh=30)
     assert_equal(len(res), 6441)

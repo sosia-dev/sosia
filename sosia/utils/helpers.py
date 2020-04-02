@@ -8,10 +8,10 @@ def print_progress(iteration, total, verbose=True, length=50):
     """Print terminal progress bar."""
     if not verbose:
         return None
-    percent = 100 * (iteration / float(total))
+    share = iteration / float(total)
     filled_len = int(length * iteration // total)
     bar = "█" * filled_len + "-" * (length - filled_len)
-    print("\rProgress: |{}| {:.2f}% Complete".format(bar, percent), end="\r")
+    print(f"\rProgress: |{bar}| {share:.2%} complete", end="\r")
     if iteration == total:
         print()
 

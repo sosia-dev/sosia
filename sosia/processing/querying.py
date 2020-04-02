@@ -88,10 +88,8 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
     """Auxiliary function to count non-self citations up to a year."""
     if not exclusion_ids:
         exclusion_ids = search_ids
-    q_search_ids = " OR ".join(search_ids)
-    q_exclusion_ids = ") AND NOT AU-ID(".join(exclusion_ids)
-    q = "REF({}) AND PUBYEAR BEF {} AND NOT AU-ID({})".format(
-        q_search_ids, pubyear, q_exclusion_ids)
+    q = f"REF({' OR '.join(search_ids)}) AND PUBYEAR BEF "\
+        f"{pubyear} AND NOT AU-ID({') AND NOT AU-ID('.join(exclusion_ids)})"
     # Break query if too long
     if len(q) > 3785:
         mid = len(search_ids) // 2
@@ -165,14 +163,14 @@ def query_journal(source_id, years, refresh):
     """
     from collections import defaultdict
     try:  # Try complete publication list first
-        q = "SOURCE-ID({})".format(source_id)
+        q = f"SOURCE-ID({source_id})"
         if base_query("docs", q, size_only=True) > 5000:
             raise ScopusQueryError()
         res = base_query("docs", q, refresh=refresh)
     except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
         res = []
         for year in years:
-            q = Template("SOURCE-ID({}) AND PUBYEAR IS $fill".format(source_id))
+            q = Template(f"SOURCE-ID({source_id}) AND PUBYEAR IS $fill")
             params = {"group": [year], "res": [], "template": q,
                       "joiner": "", "q_type": "docs", "refresh": refresh}
             ext, _ = stacked_query(**params)
@@ -215,9 +213,8 @@ def query_year(year, source_ids, refresh, verbose, afid=False):
               "joiner": " OR ", "refresh": refresh, "q_type": "docs"}
     if verbose:
         params.update({"total": len(source_ids)})
-        print("Searching authors in {} sources in {}...".format(
-            len(source_ids), year))
-    q = Template("SOURCE-ID($fill) AND PUBYEAR IS {}".format(year))
+        print(f"Searching authors in {len(source_ids):,} sources in {year}...")
+    q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
     params.update({"template": q, "res": []})
     res, _ = stacked_query(**params)
     res = pd.DataFrame(res)
@@ -237,6 +234,7 @@ def query_year(year, source_ids, refresh, verbose, afid=False):
               .reset_index()
               .rename(columns={0: "auids"}))
     return res
+
 
 def stacked_query(group, res, template, joiner, q_type, refresh,
                   i=0, total=None):

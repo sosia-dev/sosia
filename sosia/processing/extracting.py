@@ -237,10 +237,10 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
     # Print information on missing information
     if verbose and doc_parse:
         for auth_id, info in info.items():
-            _print_missing_docs(auth_id, info.absts, info.refs, info.total)
-        label = ";".join(focal.identifier) + " (focal)"
+            _print_missing_docs([auth_id], info.absts, info.refs, info.total)
         focal_pubs_n = len(focal.publications)
-        _print_missing_docs(label, focal_abs_n, focal_refs_n, focal_pubs_n)
+        _print_missing_docs(focal.identifier, focal_abs_n, focal_refs_n,
+                            focal_pubs_n, res_type="Original")
     return out
 
 
@@ -282,11 +282,10 @@ def parse_docs(eids, refresh):
     return (refs, valid_refs, absts, valid_absts)
 
 
-def _print_missing_docs(auth_id, valid_abs, valid_refs, total):
+def _print_missing_docs(auth_id, valid_abs, valid_refs, total, res_type="Match"):
     """Auxiliary function to print information on missing abstracts and
     reference lists stored in a dictionary d.
     """
-    miss_abs = total-valid_abs
-    miss_refs = total-valid_refs
-    print("Researcher {}: {} abstract(s) and {} reference list(s) out of "
-          "{} documents missing".format(auth_id, miss_abs, miss_refs, total))
+    text = f"{res_type} {';'.join(auth_id)}: {total-valid_abs} abstract(s) "\
+           f"and {total-valid_refs} reference list(s) out of {total} documents missing"
+    print(text)

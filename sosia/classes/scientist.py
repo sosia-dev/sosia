@@ -295,9 +295,9 @@ class Scientist(object):
 
         # Load list of publications
         if eids:
-            q = "EID({})".format(" OR ".join(eids))
+            q = f"EID({' OR '.join(eids)})"
         else:
-            q = "AU-ID({})".format(") OR AU-ID(".join(identifier))
+            q = f"AU-ID({') OR AU-ID('.join(identifier)})"
         integrity_fields = ["eid", "author_ids", "coverDate", "source_id"]
         res = base_query("docs", q, refresh, fields=integrity_fields)
         try:
@@ -306,8 +306,8 @@ class Scientist(object):
             res = base_query("docs", q, refresh=True, fields=integrity_fields)
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
-            text = "No publications for author {} until year {}".format(
-                "-".join(identifier), year)
+            text = f"No publications found for author {'-'.join(identifier)} "\
+                   f"until {year}"
             raise Exception(text)
         self._eids = eids or [p.eid for p in self._publications]
 
@@ -334,9 +334,8 @@ class Scientist(object):
                     int(p.coverDate[:4]) >= self.year_period]
             self._publications_period = pubs
             if not len(self._publications_period):
-                text = "No publications for author {} until year {} in a {}-"\
-                       "years period".format("-".join(identifier), year,
-                                             self.year_period)
+                text = f"No publications found for author {'-'.join(identifier)}"\
+                       f" until {year} in a {self.year_period}-years period"
                 raise Exception(text)
             eids_period = [p.eid for p in self._publications_period]
             n_cits = count_citations(eids_period, self.year+1, identifier)

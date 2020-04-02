@@ -109,10 +109,10 @@ def insert_temporary_table(df, conn, merge_cols):
     cursor.execute("DROP TABLE IF EXISTS temp")
     # Create table
     names = ", ".join(merge_cols)
-    q = "CREATE TABLE temp ({0}, PRIMARY KEY({0}))".format(names)
+    q = f"CREATE TABLE temp ({names}, PRIMARY KEY({names}))"
     cursor.execute(q)
     # Insert values
     wildcards = ", ".join(["?"] * len(merge_cols))
-    q = "INSERT OR IGNORE INTO temp ({}) values ({})".format(names, wildcards)
+    q = f"INSERT OR IGNORE INTO temp ({names}) values ({wildcards})"
     cursor.executemany(q, df.to_records(index=False))
     conn.commit()

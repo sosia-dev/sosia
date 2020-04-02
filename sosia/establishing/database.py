@@ -35,10 +35,8 @@ def create_cache(fname, drop=False):
     cursor = conn.cursor()
     for table, variables in CACHE_TABLES.items():
         if drop:
-            q = "DROP TABLE IF EXISTS {}".format(table)
-            cursor.execute(q)
+            cursor.execute(f"DROP TABLE IF EXISTS {table}")
         columns = ", ".join(" ".join(v) for v in variables["columns"])
-        prim_keys = ", ".join(variables["primary"])
-        q = "CREATE TABLE IF NOT EXISTS {} ({}, PRIMARY KEY({}))".format(
-            table, columns, prim_keys)
+        q = f"CREATE TABLE IF NOT EXISTS {table} "\
+            f"({columns}, PRIMARY KEY({', '.join(variables['primary'])}))"
         cursor.execute(q)

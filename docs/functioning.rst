@@ -126,7 +126,7 @@ The next step is to define a first search group that adhere to conditions 1 to 4
 
     >>> stefano.define_search_group(verbose=True)
     Searching authors for search_group in 65 sources...
-    Progress: |██████████████████████████████████████████████████| 100.0% Complete
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
     Found 367 authors for search_group
 
 You can inspect the search group using `stefano.search_group`, which you can also override, pre-define or edit.
@@ -137,17 +137,19 @@ An alternative search process will try to minimize the number of queries.  The d
 
     >>> stefano.define_search_group(verbose=True, stacked=True)
     Searching authors for search_group in 65 sources...
+    Searching authors for search_group in 65 sources...
     Searching authors in 31 sources in 2017...
-    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
     Searching authors in 32 sources in 2010...
-    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
     Searching authors in 32 sources in 2011...
-    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
     Searching authors in 32 sources in 2012...
-    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
     Searching authors in 31 sources in 2013...
-    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
     Found 605 authors for search_group
+
 
 The number differs because less information is available.
 
@@ -156,26 +158,20 @@ The final step is to search within this search group for authors that fulfill cr
 .. code-block:: python
 
     >>> matches = stefano.find_matches(verbose=True)
-    Searching through characteristics of 605 authors
-    Left with 361 authors
-    Filtering based on provided conditions...
-    Left with 13 authors based on size information already in cache.
-    0 to check
-
-    Search and filter based on count of citations
-    0 to search out of 13
-
+    Searching through characteristics of 605 authors...
+    Left with 361 authors with sufficient number of publications and same main field
+    Filtering based on count of citations...
     Left with 12 authors
     Filtering based on coauthors number...
-    Progress: |██████████████████████████████████████████████████| 100.00% Complete
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
     Found 4 author(s) matching all criteria
     Providing additional information...
-    Progress: |██████████████████████████████████████████████████| 100.00% Complete
-    Researcher 53164702100: 0 abstract(s) and 1 reference list(s) out of 6 documents missing
-    Researcher 55071051800: 2 abstract(s) and 0 reference list(s) out of 8 documents missing
-    Researcher 55317901900: 0 abstract(s) and 0 reference list(s) out of 7 documents missing
-    Researcher 55804519400: 0 abstract(s) and 0 reference list(s) out of 8 documents missing
-    Researcher 55208373700 (focal): 0 abstract(s) and 1 reference list(s) out of 7 documents missing
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Match 53164702100: 0 abstract(s) and 1 reference list(s) out of 6 documents missing
+    Match 55071051800: 2 abstract(s) and 0 reference list(s) out of 8 documents missing
+    Match 55317901900: 0 abstract(s) and 0 reference list(s) out of 7 documents missing
+    Match 55804519400: 0 abstract(s) and 0 reference list(s) out of 8 documents missing
+    Original 55208373700: 0 abstract(s) and 1 reference list(s) out of 7 documents missing
     >>> print(matches[0])
     Match(ID='53164702100', name='Sapprasert, Koson', first_name='Koson', surname='Sapprasert',
     first_year=2011, num_coauthors=7, num_publications=6, num_citations=193, num_coauthors_period=7,

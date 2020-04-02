@@ -33,7 +33,7 @@ def test_retrieve_authors():
     assert_equal(len(incache), 0)
     assert_equal(incache.columns.tolist(), expected_cols)
     # Test partial retrieval
-    q = "AU-ID({})".format(') OR AU-ID('.join([str(a) for a in expected_auth]))
+    q = f"AU-ID({') OR AU-ID('.join([str(a) for a in expected_auth])})"
     res = pd.DataFrame(AuthorSearch(q).authors, dtype="int64")
     res["auth_id"] = res["eid"].str.split("-").str[-1]
     res = res[expected_cols]
@@ -64,7 +64,7 @@ def test_retrieve_authors_year():
     assert_equal(len(auth_y_incache), 0)
     # Test partial retrieval
     fill = ') OR AU-ID('.join([str(a) for a in expected_auth])
-    q = "(AU-ID({})) AND PUBYEAR BEF {}".format(fill, year+1)
+    q = f"(AU-ID({fill})) AND PUBYEAR BEF {year+1}"
     res = build_dict(ScopusSearch(q).results, expected_auth)
     res = pd.DataFrame.from_dict(res, orient="index", dtype="int64")
     res["year"] = year

@@ -110,18 +110,16 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         au_skip = set([x for x in au_ok_miny if x not in au_remove | au_ok])
         group = [x for x in group if x not in au_remove]
         group_tocheck = set([x for x in group if x not in au_skip | au_ok])
-    text = "Left with {:,} authors based on size information already in "\
-           "cache.\n{:,} to check\n".format(len(group), len(group_tocheck))
-    custom_print(text, verbose)
+
     # Verify that publications before minimum year are 0
     if group_tocheck:
-        n = len(group_tocheck)
-        text = "Searching through characteristics of {:,} authors...".format(n)
+        text = f"Obtaining information for {len(group_tocheck):,} authors "\
+               "without sufficient information in cache..."
         custom_print(text, verbose)
         print_progress(0, n, verbose)
         to_loop = [x for x in group_tocheck]  # Temporary copy
         for i, au in enumerate(to_loop):
-            q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, ybefore + 1)
+            q = f"AU-ID({au}) AND PUBYEAR BEF {ybefore+1}"
             size = base_query("docs", q, size_only=True)
             tp = (au, ybefore, size)
             cache_insert(tp, conn, table="author_size")
@@ -130,25 +128,25 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
                 group_tocheck.remove(au)
                 older_authors.append(au)
             print_progress(i+1, len(to_loop), verbose)
-        text = "Left with {:,} authors based on size information before "\
-               "minium year\n Filtering based on size query before "\
-               "provided year\n".format(len(group))
+        text = f"Left with {len(group):,} authors based on publication "\
+               f"information before {ybefore}"
         custom_print(text, verbose)
+
     # Verify that publications before the given year fall in range
     group_tocheck.update(au_skip)
     if group_tocheck:
         n = len(group_tocheck)
-        text = "Searching through characteristics of {:,} authors".format(n)
+        text = f"Counting publications of {n:,} authors before {yupto+1}..."
         custom_print(text, verbose)
         print_progress(0, n, verbose)
         for i, au in enumerate(group_tocheck):
-            q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, yupto+1)
+            q = f"AU-ID({au}) AND PUBYEAR BEF {yupto+1}"
             n_pubs_yupto = base_query("docs", q, size_only=True)
             tp = (au, yupto, n_pubs_yupto)
             cache_insert(tp, conn, table="author_size")
             # Eventually decrease publication count
             if yfrom and n_pubs_yupto >= min(npapers):
-                q = "AU-ID({}) AND PUBYEAR BEF {}".format(au, yfrom)
+                q = f"AU-ID({au}) AND PUBYEAR BEF {yfrom}"
                 n_pubs_yfrom = base_query("docs", q, size_only=True)
                 tp = (au, yfrom-1, n_pubs_yfrom)
                 cache_insert(tp, conn, table="author_size")
@@ -199,7 +197,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
 
     # Verbose variables
     n = len(search_sources)
-    text = "Searching authors for search_group in {} sources...".format(n)
+    text = f"Searching authors for search_group in {n:,} sources..."
     custom_print(text, verbose)
     today = set()
     then = set()

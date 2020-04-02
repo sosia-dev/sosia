@@ -14,7 +14,7 @@ refresh = 30
 
 def test_expand_affiliation():
     auth_id = 6701809842
-    pubs = ScopusSearch("AU-ID({})".format(auth_id), refresh=refresh).results
+    pubs = ScopusSearch(f"AU-ID({auth_id})", refresh=refresh).results
     res = pd.DataFrame(pubs)
     res = expand_affiliation(res)
     assert_true(len(res) >= 180)

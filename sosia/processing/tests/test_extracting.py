@@ -11,11 +11,11 @@ from sosia.processing import expand_affiliation, find_location, parse_docs
 
 refresh = 30
 test_cache = expanduser("~/.sosia/") + "test.sqlite"
+test_id = 6701809842
 
 
 def test_expand_affiliation():
-    auth_id = 6701809842
-    pubs = ScopusSearch("AU-ID({})".format(auth_id), refresh=refresh).results
+    pubs = ScopusSearch(f"AU-ID({test_id})", refresh=refresh).results
     res = pd.DataFrame(pubs)
     res = expand_affiliation(res)
     assert_true(len(res) >= 180)
@@ -26,9 +26,8 @@ def test_expand_affiliation():
 
 
 def test_find_location():
-    auth_id = 6701809842
-    pubs = ScopusSearch("AU-ID({})".format(auth_id), refresh=refresh).results
-    ctry, aid, aff = find_location([str(auth_id)], pubs, 2000, refresh=30)
+    pubs = ScopusSearch(f"AU-ID({test_id})", refresh=refresh).results
+    ctry, aid, aff = find_location([str(test_id)], pubs, 2000, refresh=30)
     assert_equal(ctry, "Germany")
     assert_equal(aid, "60028717")
     assert_equal(aff, "University of Munich")

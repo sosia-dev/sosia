@@ -161,9 +161,8 @@ def retrieve_sources(tosearch, conn, refresh=False, afid=False):
     if afid:
         table += "_afids"
         select += ", b.afid"
-    q = """SELECT {} FROM temp AS a
-        INNER JOIN {} AS b ON a.source_id=b.source_id
-        AND a.year=b.year;""".format(select, table)
+    q = f"SELECT {select} FROM temp AS a INNER JOIN {table} AS b "\
+        "ON a.source_id=b.source_id AND a.year=b.year;"
     incache = pd.read_sql_query(q, conn)
     if not incache.empty:
         incache["auids"] = incache["auids"].str.split(",")
@@ -174,12 +173,12 @@ def retrieve_sources(tosearch, conn, refresh=False, afid=False):
                                         columns=["auth_id"], dtype="uint64")
             tables = ("authors", "author_size", "author_cits_size", "author_year")
             for table in tables:
-                q = "DELETE FROM {} WHERE auth_id=?".format(table)
+                q = f"DELETE FROM {table} WHERE auth_id=?"
                 cursor.executemany(q, auth_incache.to_records(index=False))
                 conn.commit()
             tables = ("sources", "sources_afids")
             for table in tables:
-                q = "DELETE FROM {} WHERE source_id=? AND year=?".format(table)
+                q = f"DELETE FROM {table} WHERE source_id=? AND year=?"
                 cursor.executemany(q, tosearch.to_records(index=False))
                 conn.commit()
             incache = pd.DataFrame(columns=incache.columns)
