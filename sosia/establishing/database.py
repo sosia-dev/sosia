@@ -1,26 +1,8 @@
 import sqlite3
-from os.path import exists, expanduser
-import configparser
 
 import pandas as pd
 
-from sosia.establishing.constants import CACHE_TABLES, CONFIG_FILE
-
-# Configuration setup
-file_exists = exists(CONFIG_FILE)
-config = configparser.ConfigParser()
-config.optionxform = str
-if not file_exists:
-    config.add_section('Cache')
-    _cache_default = expanduser("~/.sosia/") + "cache_sqlite.sqlite"
-    config.set('Cache', 'File path', _cache_default)
-    try:
-        with open(CONFIG_FILE, 'w') as f:
-            config.write(f)
-    except FileNotFoundError:  # Fix for sphinx build
-        pass
-else:
-    config.read(CONFIG_FILE)
+from sosia.establishing.constants import CACHE_TABLES
 
 
 def connect_database(fname):

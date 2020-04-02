@@ -285,7 +285,7 @@ class Scientist(object):
         self.period = period
         self.year_period = None
         if not sql_fname:
-            sql_fname  = config.get('Cache', 'File path')
+            sql_fname  = config.get('Filepaths', 'Database')
         self.sql_conn = connect_database(sql_fname)
 
         # Read mapping of fields to sources
