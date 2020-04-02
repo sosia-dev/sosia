@@ -64,13 +64,13 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
 Change log
 ==========
 
-Please see `CHANGES.rst <CHANGES.rst>`_.
+Please see `CHANGES.rst <./meta/CHANGES.rst>`_.
 
 Contributing
 ============
 
-Please see `CONTRIBUTING.rst <CONTRIBUTING.rst>`_. For a list of contributors see
-`AUTHORS.rst <AUTHORS.rst>`_.
+Please see `CONTRIBUTING.rst <CONTRIBUTING.rst>`_.  For the list of contributors see
+`AUTHORS.rst <./meta/AUTHORS.rst>`_.
 
 License
 =======
