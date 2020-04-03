@@ -214,33 +214,43 @@ class Original(Scientist):
     def define_search_sources(self, verbose=False):
         """Define .search_sources.
 
+        Within the list of search sources sosia will search for matching
+        scientists.  A search source is of the same main field as
+        the original scientist, the same types (journal, conference
+        proceeding, etc.), and must not be related to fields alien to the
+        original scientist.
+
         Parameters
         ----------
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
         """
-        # Get list of source IDs of scientist's own sources
-        own_source_ids, _ = zip(*self.sources)
-        # Select sources in scientist's main field
         df = self.field_source
+        # Sources in scientist's main field
         same_field = df["asjc"] == self.main_field[0]
-        # Select sources of same type as those in scientist's main field
-        same_sources = same_field & df["source_id"].isin(own_source_ids)
-        main_types = set(df[same_sources]["type"])
-        same_type = same_field & df["type"].isin(main_types)
-        source_ids = df[same_type]["source_id"].unique()
-        selected = df[df["source_id"].isin(source_ids)].copy()
+        # Types of Scientist's sources
+        own_source_ids, _ = zip(*self.sources)
+        same_sources = df["source_id"].isin(own_source_ids)
+        main_types = df[same_sources]["type"].unique()
+        same_type = df["type"].isin(main_types)
+        # Select source IDs
+        selected_ids = df[same_field & same_type]["source_id"].unique()
+        selected = df[df["source_id"].isin(selected_ids)].copy()
         selected["asjc"] = selected["asjc"].astype(str) + " "
-        grouped = selected.groupby("source_id").sum()["asjc"].to_frame()
+        grouped = (selected.groupby("source_id")
+                           .sum()["asjc"]
+                           .to_frame())
         # Deselect sources with alien fields
-        mask = grouped["asjc"].apply(
-            lambda s: any(x for x in s.split() if int(x) not in self.fields))
-        grouped = grouped[~mask]
+        grouped["asjc"] = grouped["asjc"].str.split().apply(set)
+        fields = set(str(f) for f in self.fields)
+        no_alien_field = grouped["asjc"].apply(lambda s: len(s - fields) == 0)
+        grouped = grouped[no_alien_field]
+        # Add source names
         sources = set((s, self.source_names.get(s)) for s in grouped.index)
         # Add own sources
         sources.update(self.sources)
         # Finalize
-        self._search_sources = sorted(list(sources))
+        self._search_sources = sorted(sources)
         text = f"Found {len(sources):,} sources matching main field "\
                f"{self.main_field[0]} and source type(s) {'; '.join(main_types)}"
         custom_print(text, verbose)
