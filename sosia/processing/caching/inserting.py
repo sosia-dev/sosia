@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 import sqlite3
 
+from sosia.establishing import CACHE_TABLES
 from sosia.processing.utils import flat_set_from_df
 
 
-def cache_insert(data, conn, table):
-    """Insert new authors information in SQL database.
+def insert_data(data, conn, table):
+    """Insert new information in SQL database.
 
     Parameters
     ----------
@@ -31,56 +32,42 @@ def cache_insert(data, conn, table):
     def join_flat_auids(s):
         return ",".join([str(a) for a in s["auids"]])
 
-    # Build query
-    if table == 'authors':
-        q = """INSERT OR IGNORE INTO authors (auth_id, eid, surname, initials,
-            givenname, affiliation, documents, affiliation_id, city, country,
-            areas) values (?,?,?,?,?,?,?,?,?,?,?)"""
-        if data.empty:
-            return None
-        data["auth_id"] = data.apply(lambda x: x.eid.split("-")[-1], axis=1)
-        cols = ["auth_id", "eid", "surname", "initials", "givenname",
-                "affiliation", "documents", "affiliation_id", "city",
-                "country", "areas"]
-        data = data[cols]
-    elif table == 'author_cits_size':
-        q = """INSERT OR IGNORE INTO author_cits_size (auth_id, year, n_cits)
-            values (?,?,?)"""
-    elif table == 'author_year':
-        q = """INSERT OR IGNORE INTO author_year (auth_id, year, first_year,
-            n_pubs, n_coauth) values (?,?,?,?,?)"""
-    elif table == 'author_size':
-        q = """INSERT OR IGNORE INTO author_size (auth_id, year, n_pubs)
-            values ({},{},{})""".format(data[0], data[1], data[2])
-    elif table == "sources":
-        if data.empty:
-            return None
-        if "afid" in data.columns.tolist():
-            data = (data.groupby(["source_id", "year"])[["auids"]]
-                    .apply(lambda x: list(flat_set_from_df(x, "auids")))
-                    .rename("auids")
-                    .reset_index())
-        data["auids"] = data.apply(join_flat_auids, axis=1)
-        data = data[["source_id", "year", "auids"]]
-        q = """INSERT OR IGNORE INTO sources (source_id, year, auids)
-            VALUES (?,?,?)"""
-    elif table == "sources_afids":
-        if data.empty:
-            return None
-        data["auids"] = data.apply(join_flat_auids, axis=1)
-        data = data[["source_id", "year", "afid", "auids"]]
-        q = """INSERT OR IGNORE INTO sources_afids (source_id, year, afid, auids)
-            VALUES (?,?,?,?)"""
-    else:
-        allowed_tables = ('authors', 'author_cits_size', 'author_year',
-                          'author_size', 'sources', 'sources_afids')
-        msg = 'table parameter must be one of ' + ', '.join(allowed_tables)
+    # Checks
+    if table not in CACHE_TABLES.keys():
+        msg = f"table parameter must be one of {', '.join(CACHE_TABLES.keys())}"
         raise ValueError(msg)
 
-    # Perform caching
+    # Build query
+    cols, _ = zip(*CACHE_TABLES[table]["columns"])
+    wildcard_tables = {"author_cits_size", "author_year", "authors",
+                       "sources", "sources_afids"}
+    if table in wildcard_tables:
+        values = ["?"]*len(cols)
+    else:
+        values = (str(d) for d in data)
+    q = f"INSERT OR IGNORE INTO {table} ({','.join(cols)}) "\
+        f"VALUES ({','.join(values)})"
+
+    # Eventually tweak data
+    if table in ('authors', 'sources', 'sources_afids'):
+        if data.empty:
+            return None
+        if table == 'authors':
+            data["auth_id"] = data.apply(lambda x: x.eid.split("-")[-1], axis=1)
+        elif table == 'sources':
+            if "afid" in data.columns:
+                data = (data.groupby(["source_id", "year"])[["auids"]]
+                            .apply(lambda x: list(flat_set_from_df(x, "auids")))
+                            .rename("auids")
+                            .reset_index())
+            data["auids"] = data.apply(join_flat_auids, axis=1)
+        elif table == 'sources_afids':
+            data["auids"] = data.apply(join_flat_auids, axis=1)
+        data = data[list(cols)]
+
+    # Execute queries
     cursor = conn.cursor()
-    if table in ("authors", "author_cits_size", "author_year", "sources",
-                 "sources_afids"):
+    if table in wildcard_tables:
         cursor.executemany(q, data.to_records(index=False))
     else:
         cursor.execute(q)

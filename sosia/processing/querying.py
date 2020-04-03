@@ -4,7 +4,7 @@ from string import Template
 from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error
 
-from sosia.processing.caching import cache_insert, retrieve_authors
+from sosia.processing.caching import insert_data, retrieve_authors
 from sosia.processing.extracting import get_authors, get_auth_from_df
 from sosia.processing.utils import expand_affiliation
 from sosia.utils import print_progress
@@ -136,7 +136,7 @@ def query_author_data(authors_list, conn, refresh=False, verbose=False):
             params.update({"total": len(auth_missing)})
         res, _ = stacked_query(**params)
         res = pd.DataFrame(res)
-        cache_insert(res, conn, table="authors")
+        insert_data(res, conn, table="authors")
         auth_done, _ = retrieve_authors(authors, conn)
     return auth_done
 

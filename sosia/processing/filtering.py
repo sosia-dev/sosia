@@ -2,7 +2,7 @@ from itertools import product
 
 from pandas import DataFrame
 
-from sosia.processing.caching import cache_insert, retrieve_author_pubs,\
+from sosia.processing.caching import insert_data, retrieve_author_pubs,\
     retrieve_sources
 from sosia.processing.querying import base_query, query_journal, query_year
 from sosia.processing.utils import flat_set_from_df, margin_range
@@ -122,7 +122,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
             q = f"AU-ID({au}) AND PUBYEAR BEF {ybefore+1}"
             size = base_query("docs", q, size_only=True)
             tp = (au, ybefore, size)
-            cache_insert(tp, conn, table="author_size")
+            insert_data(tp, conn, table="author_size")
             if size > 0:
                 group.remove(au)
                 group_tocheck.remove(au)
@@ -143,13 +143,13 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
             q = f"AU-ID({au}) AND PUBYEAR BEF {yupto+1}"
             n_pubs_yupto = base_query("docs", q, size_only=True)
             tp = (au, yupto, n_pubs_yupto)
-            cache_insert(tp, conn, table="author_size")
+            insert_data(tp, conn, table="author_size")
             # Eventually decrease publication count
             if yfrom and n_pubs_yupto >= min(npapers):
                 q = f"AU-ID({au}) AND PUBYEAR BEF {yfrom}"
                 n_pubs_yfrom = base_query("docs", q, size_only=True)
                 tp = (au, yfrom-1, n_pubs_yfrom)
-                cache_insert(tp, conn, table="author_size")
+                insert_data(tp, conn, table="author_size")
                 n_pubs_yupto -= n_pubs_yfrom
             if n_pubs_yupto < min(npapers) or n_pubs_yupto > max(npapers):
                 group.remove(au)
@@ -212,7 +212,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
                                       refresh=refresh, afid=True)
         res = query_year(self.active_year, _search.source_id.tolist(), refresh,
                          verbose, afid=True)
-        cache_insert(res, self.sql_conn, table="sources_afids")
+        insert_data(res, self.sql_conn, table="sources_afids")
         sources_ay, _ = retrieve_sources(sources_ay, self.sql_conn,
                                          refresh=refresh, afid=True)
         # Authors publishing in provided year and locations
@@ -232,7 +232,7 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
             mask = sources_ys_search.year == y
             _sources_search = sources_ys_search[mask].source_id.tolist()
             res = query_year(y, _sources_search, refresh, verbose)
-            cache_insert(res, self.sql_conn, table="sources")
+            insert_data(res, self.sql_conn, table="sources")
         # Get full cache
         sources_ys, _ = retrieve_sources(sources_ys, self.sql_conn,
                                          refresh=False)

@@ -9,8 +9,8 @@ from warnings import warn
 import pandas as pd
 
 from sosia.classes import Scientist
-from sosia.processing import base_query, build_dict, cache_insert,\
-    count_citations, filter_pub_counts, get_authors, inform_matches,\
+from sosia.processing import base_query, build_dict, count_citations,\
+    filter_pub_counts, get_authors, inform_matches, insert_data,\
     margin_range, maybe_add_source_names, query_author_data,\
     retrieve_author_cits, retrieve_authors_year, search_group_from_sources,\
     stacked_query
@@ -400,7 +400,7 @@ class Original(Scientist):
                 n_cits = count_citations([str(au['auth_id'])], self.year+1)
                 authors_cits_search.at[i, 'n_cits'] = n_cits
                 print_progress(i + 1, len(authors_cits_search), verbose)
-            cache_insert(authors_cits_search, self.sql_conn,
+            insert_data(authors_cits_search, self.sql_conn,
                          table="author_cits_size")
         auth_cits_incache, _ = retrieve_author_cits(authors[["auth_id", "year"]],
                                                     self.sql_conn)
@@ -440,7 +440,7 @@ class Original(Scientist):
                     res = res[["year", "first_year", "n_pubs", "n_coauth"]]
                     res.index.name = "auth_id"
                     res = res.reset_index()
-                    cache_insert(res, self.sql_conn, table="author_year")
+                    insert_data(res, self.sql_conn, table="author_year")
             author_year_cache, _ = retrieve_authors_year(authors, self.sql_conn)
             if self._ignore_first_id:
                 # only number of coauthors should be big enough
