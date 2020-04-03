@@ -11,10 +11,11 @@ from sosia.establishing import connect_database
 from sosia.processing import base_query, count_citations, query_author_data,\
     query_journal, query_year, stacked_query
 
-test_cache = expanduser("~/.sosia/") + "test.sqlite"
+test_cache = expanduser("~/.sosia/test.sqlite")
 test_conn = connect_database(test_cache)
 test_id = 53164702100
 year = 2017
+refresh = 30
 
 
 def test_base_query():
@@ -43,36 +44,36 @@ def test_count_citations():
 
 def test_query_author_data():
     auth_list = [6701809842, 55208373700]
-    auth_data = query_author_data(auth_list, test_conn, refresh=30, verbose=False)
+    auth_data = query_author_data(auth_list, test_conn, refresh=refresh)
     assert_true(isinstance(auth_data,  pd.DataFrame))
-    expected_cols = ["test_id", "eid", "surname", "initials", "givenname",
+    expected_cols = ["auth_id", "eid", "surname", "initials", "givenname",
                      "affiliation", "documents", "affiliation_id", "city",
                      "country", "areas"]
     assert_equal(auth_data.columns.tolist(), expected_cols)
-    assert_equal(auth_data.test_id.tolist(), auth_list)
-    assert_equal(auth_data.surname.tolist(), ["Harhoff", "Baruffaldi"])
+    assert_equal(auth_data["auth_id"].tolist(), auth_list)
+    assert_equal(auth_data["surname"].tolist(), ["Harhoff", "Baruffaldi"])
 
 
 def test_query_journal():
     # test a journal with more than 5k publications in one year
-    res = query_journal("11000153773", [2006], refresh=30)
+    res = query_journal("11000153773", [2006], refresh=refresh)
     assert_true(24100 < len(res.get("2006")) < 25000)
 
 
 def test_query_year():
     # test a journal and year
-    res = query_year(2010, [22900], refresh=30, verbose=False)
+    res = query_year(2010, [22900], refresh=refresh, verbose=False)
     assert_equal(res["source_id"].tolist(), ['22900'])
     assert_equal(res["year"].tolist(), ['2010'])
     assert_true(isinstance(res["auids"][0], list))
     assert_true(len(res["auids"][0]) > 0)
-    # test a journal and year that are not in scopus
-    res = query_year(1969, [22900], refresh=30, verbose=False)
+    # test a journal and year that are not in Scopus
+    res = query_year(1969, [22900], refresh=refresh, verbose=False)
     assert_true(res.empty)
     # test a large query (>5000 scopus results)
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
-    res = query_year(1984, source_ids, refresh=30, verbose=True)
+    res = query_year(1984, source_ids, refresh=refresh, verbose=False)
     assert_true(len(res[~res["auids"].isnull()]) == 17)
     assert_true(isinstance(res["auids"][0], list))
     assert_true(len(res["auids"][0]) > 0)
@@ -82,7 +83,7 @@ def test_query_year_afid():
     # test keeping affiliation id column
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
-    res = query_year(1984, source_ids, refresh=False, verbose=True, afid=True)
+    res = query_year(1984, source_ids, refresh=refresh, verbose=True, afid=True)
     expected = range(3395-5, 3395+5)
     assert_true(len(res[~res["auids"].isnull()]) in expected)
     assert_true(res.columns.tolist(), ['source_id', 'year', 'afid', 'auids'])
@@ -99,5 +100,6 @@ def test_stacked_query():
              25674]
     template = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year+1}")
     res = []
-    stacked_query(group, res, template, joiner=" OR ", q_type="docs", refresh=30)
+    stacked_query(group, res, template, joiner=" OR ", q_type="docs",
+                  refresh=refresh)
     assert_equal(len(res), 6441)
