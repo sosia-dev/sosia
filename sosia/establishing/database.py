@@ -20,8 +20,8 @@ def connect_database(fname):
     return sqlite3.connect(fname)
 
 
-def create_cache(fname, drop=False):
-    """Create or recreate tables in cache file.
+def make_database(fname, drop=False):
+    """Make SQLite database with predefined tables and keys.
 
     Parameters
     ----------
