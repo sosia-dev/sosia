@@ -21,15 +21,14 @@ def test_retrieve_authors():
     create_cache(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
-    expected_auth = ["53164702100", "57197093438"]
-    search_auth = ["55317901900"]
+    expected_auth = [53164702100, 57197093438]
+    search_auth = [55317901900]
     # Test empty cache
     df1 = pd.DataFrame(expected_auth, columns=["auth_id"], dtype="int64")
     incache, tosearch = retrieve_authors(df1, conn)
     expected_cols = ['auth_id', 'eid', 'surname', 'initials', 'givenname',
                      'affiliation', 'documents', 'affiliation_id', 'city',
                      'country', 'areas']
-    expected_auth = [int(au) for au in expected_auth]
     assert_equal(tosearch, expected_auth)
     assert_equal(len(incache), 0)
     assert_equal(incache.columns.tolist(), expected_cols)
@@ -81,8 +80,8 @@ def test_retrieve_authors_year():
     create_cache(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
-    expected_auth = ["53164702100", "57197093438"]
-    search_auth = ["55317901900"]
+    expected_auth = [53164702100, 57197093438]
+    search_auth = [55317901900]
     year = 2016
     # Test empty cache
     df1 = pd.DataFrame(expected_auth, columns=["auth_id"], dtype="int64")
@@ -103,8 +102,6 @@ def test_retrieve_authors_year():
                        columns=["auth_id"], dtype="int64")
     df2["year"] = year
     auth_y_incache, auth_y_search = retrieve_authors_year(df2, conn)
-    expected_auth = [int(au) for au in expected_auth]
-    search_auth = [int(au) for au in search_auth]
     assert_equal(sorted(auth_y_incache.auth_id.tolist()), expected_auth)
     assert_equal(auth_y_incache.year.tolist(), [year, year])
     assert_equal(auth_y_search.auth_id.tolist(), search_auth)
