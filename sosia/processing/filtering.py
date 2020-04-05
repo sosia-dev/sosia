@@ -113,8 +113,9 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
 
     # Verify that publications before minimum year are 0
     if group_tocheck:
-        text = f"Obtaining information for {len(group_tocheck):,} authors "\
-               "without sufficient information in cache..."
+        n = len(group_tocheck)
+        text = f"Obtaining information for {n:,} authors without sufficient "\
+               "information in cache..."
         custom_print(text, verbose)
         print_progress(0, n, verbose)
         to_loop = [x for x in group_tocheck]  # Temporary copy
