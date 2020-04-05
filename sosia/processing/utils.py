@@ -51,6 +51,11 @@ def flat_set_from_df(df, col, condition=None):
     return set([item for l in lists for item in l])
 
 
+def robust_join(s, sep=','):
+    """Join an iterable converting each element to str first."""
+    return sep.join([str(e) for e in s])
+
+
 def margin_range(base, val):
     """Create a range of margins around a base value.
 

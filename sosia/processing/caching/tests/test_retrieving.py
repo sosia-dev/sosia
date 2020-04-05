@@ -11,9 +11,10 @@ from pandas.testing import assert_frame_equal
 
 from sosia.establishing import create_cache, connect_database
 from sosia.processing import build_dict, insert_data, retrieve_authors,\
-    retrieve_author_pubs, retrieve_authors_year, retrieve_sources, query_year
+    retrieve_author_pubs, retrieve_authors_year, retrieve_sources,\
+    robust_join, query_year
 
-test_cache = expanduser("~/.sosia/") + "cache_sqlite_test.sqlite"
+test_cache = expanduser("~/.sosia/cache_sqlite_test.sqlite")
 
 
 def test_retrieve_authors():
@@ -33,7 +34,7 @@ def test_retrieve_authors():
     assert_equal(len(incache), 0)
     assert_equal(incache.columns.tolist(), expected_cols)
     # Test partial retrieval
-    q = f"AU-ID({') OR AU-ID('.join([str(a) for a in expected_auth])})"
+    q = f"AU-ID({robust_join(expected_auth, sep=') OR AU-ID(')})"
     res = pd.DataFrame(AuthorSearch(q).authors, dtype="int64")
     res["auth_id"] = res["eid"].str.split("-").str[-1]
     res = res[expected_cols]
@@ -90,7 +91,7 @@ def test_retrieve_authors_year():
     assert_frame_equal(auth_y_search, df1)
     assert_equal(len(auth_y_incache), 0)
     # Test partial retrieval
-    fill = ') OR AU-ID('.join([str(a) for a in expected_auth])
+    fill = robust_join(expected_auth, sep=') OR AU-ID(')
     q = f"(AU-ID({fill})) AND PUBYEAR BEF {year+1}"
     res = build_dict(ScopusSearch(q).results, expected_auth)
     res = pd.DataFrame.from_dict(res, orient="index", dtype="int64")

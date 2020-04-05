@@ -3,7 +3,7 @@ import pandas as pd
 import sqlite3
 
 from sosia.establishing import CACHE_TABLES
-from sosia.processing.utils import flat_set_from_df
+from sosia.processing.utils import flat_set_from_df, robust_join
 
 
 def insert_data(data, conn, table):
@@ -29,9 +29,6 @@ def insert_data(data, conn, table):
     ValueError
         If parameter table is not one of the allowed values.
     """
-    def join_flat_auids(s):
-        return ",".join([str(a) for a in s["auids"]])
-
     # Checks
     if table not in CACHE_TABLES.keys():
         msg = f"table parameter must be one of {', '.join(CACHE_TABLES.keys())}"
@@ -54,15 +51,13 @@ def insert_data(data, conn, table):
             return None
         if table == 'authors':
             data["auth_id"] = data.apply(lambda x: x.eid.split("-")[-1], axis=1)
-        elif table == 'sources':
-            if "afid" in data.columns:
+        elif table in ('sources', 'sources_afids'):
+            if table == 'sources' and "afid" in data.columns:
                 data = (data.groupby(["source_id", "year"])[["auids"]]
                             .apply(lambda x: list(flat_set_from_df(x, "auids")))
                             .rename("auids")
                             .reset_index())
-            data["auids"] = data.apply(join_flat_auids, axis=1)
-        elif table == 'sources_afids':
-            data["auids"] = data.apply(join_flat_auids, axis=1)
+            data["auids"] = data["auids"].apply(robust_join)
         data = data[list(cols)]
 
     # Execute queries
