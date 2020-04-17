@@ -102,4 +102,4 @@ def test_stacked_query():
     res = []
     stacked_query(group, res, template, joiner=" OR ", q_type="docs",
                   refresh=refresh)
-    assert_equal(len(res), 6441)
+    assert_equal(len(res), 25909)
