@@ -7,11 +7,11 @@ FIELDS_SOURCES_LIST = expanduser("~/.sosia/") + "field_sources_list.csv"
 SOURCES_NAMES_LIST = expanduser("~/.sosia/") + "sources_names.csv"
 CONFIG_FILE = expanduser("~/.sosia/config.ini")
 
-CACHE_TABLES = {
-    "author_cits_size":
+DB_TABLES = {
+    "author_ncits":
         {"columns": (("auth_id", "int"), ("year", "int"), ("n_cits", "int")),
          "primary": ("auth_id", "year")},
-    "author_size":
+    "author_pubs":
         {"columns": (("auth_id", "int"), ("year", "int"), ("n_pubs", "int")),
          "primary": ("auth_id", "year")},
     "author_year":

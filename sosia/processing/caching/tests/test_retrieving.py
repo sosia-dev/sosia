@@ -66,9 +66,9 @@ def test_retrieve_author_pubs():
     assert_true(isinstance(size, pd.DataFrame))
     # Test adding to and retrieving from cache
     tp1 = (expected_auth, expected_years[0], pubs1)
-    insert_data(tp1, conn, table="author_size")
+    insert_data(tp1, conn, table="author_pubs")
     tp2 = (expected_auth, expected_years[1], pubs2)
-    insert_data(tp2, conn, table="author_size")
+    insert_data(tp2, conn, table="author_pubs")
     size = retrieve_author_pubs(df, conn)
     assert_equal(len(size), 2)
     assert_frame_equal(size[cols], df)

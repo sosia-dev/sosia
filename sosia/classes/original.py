@@ -401,7 +401,7 @@ class Original(Scientist):
                 authors_cits_search.at[i, 'n_cits'] = n_cits
                 print_progress(i + 1, len(authors_cits_search), verbose)
             insert_data(authors_cits_search, self.sql_conn,
-                         table="author_cits_size")
+                         table="author_ncits")
         auth_cits_incache, _ = retrieve_author_cits(authors[["auth_id", "year"]],
                                                     self.sql_conn)
         # keep if citations are in range

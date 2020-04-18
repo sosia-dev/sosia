@@ -26,7 +26,7 @@ def retrieve_author_cits(df, conn):
     """
     cols = ["auth_id", "year"]
     insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(df, conn, "author_cits_size", merge_cols=cols)
+    incache = temporary_merge(df, conn, "author_ncits", merge_cols=cols)
     if not incache.empty:
         df = df.set_index(cols)
         incache = incache.set_index(cols)
@@ -122,7 +122,7 @@ def retrieve_author_pubs(df, conn):
     """
     cols = ["auth_id", "year"]
     insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(df, conn, "author_size", merge_cols=cols)
+    incache = temporary_merge(df, conn, "author_pubs", merge_cols=cols)
     if incache.empty:
         incache = pd.DataFrame()
     return incache
@@ -171,7 +171,7 @@ def retrieve_sources(tosearch, conn, refresh=False, afid=False):
         if refresh:
             auth_incache = pd.DataFrame(flat_set_from_df(incache, "auids"),
                                         columns=["auth_id"], dtype="uint64")
-            tables = ("authors", "author_size", "author_cits_size", "author_year")
+            tables = ("authors", "author_pubs", "author_ncits", "author_year")
             for table in tables:
                 q = f"DELETE FROM {table} WHERE auth_id=?"
                 cursor.executemany(q, auth_incache.to_records(index=False))

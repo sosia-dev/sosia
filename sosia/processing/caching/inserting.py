@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import sqlite3
 
-from sosia.establishing import CACHE_TABLES
+from sosia.establishing import DB_TABLES
 from sosia.processing.utils import flat_set_from_df, robust_join
 
 
@@ -21,8 +21,8 @@ def insert_data(data, conn, table):
     table : string
         The database table to insert into.  The query will be adjusted
         accordingly.
-        Allowed values: "authors", "author_cits_size", "author_year",
-        "author_size", "sources".
+        Allowed values: "authors", "author_ncits", "author_pubs",
+        "author_year", "sources", "sources_afids".
 
     Raises
     ------
@@ -30,14 +30,14 @@ def insert_data(data, conn, table):
         If parameter table is not one of the allowed values.
     """
     # Checks
-    if table not in CACHE_TABLES.keys():
-        msg = f"table parameter must be one of {', '.join(CACHE_TABLES.keys())}"
+    if table not in DB_TABLES.keys():
+        msg = f"table parameter must be one of {', '.join(DB_TABLES.keys())}"
         raise ValueError(msg)
 
     # Build query
-    cols, _ = zip(*CACHE_TABLES[table]["columns"])
-    wildcard_tables = {"author_cits_size", "author_year", "authors",
-                       "sources", "sources_afids"}
+    cols, _ = zip(*DB_TABLES[table]["columns"])
+    wildcard_tables = {"authors", "author_ncits", "author_year", "sources",
+                       "sources_afids"}
     if table in wildcard_tables:
         values = ["?"]*len(cols)
     else:
@@ -70,8 +70,8 @@ def insert_data(data, conn, table):
 
 
 def insert_temporary_table(df, conn, merge_cols):
-    """Temporarily create a table in SQL cache in order to prepare a
-    merge with `table`.
+    """Temporarily create a table in SQL database in order to prepare a
+    merge with `merge_cols`.
 
     Parameters
     ----------

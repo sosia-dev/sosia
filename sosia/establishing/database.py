@@ -1,9 +1,5 @@
 import sqlite3
 
-import pandas as pd
-
-from sosia.establishing.constants import CACHE_TABLES
-
 
 def connect_database(fname):
     """Connect to local SQLite3 database to be used as cache.
@@ -13,7 +9,6 @@ def connect_database(fname):
     fname : str
         The path of the SQLite3 database to connect to.
     """
-    import sqlite3
     from numpy import int32, int64
     for val in (int32, int64):
         sqlite3.register_adapter(val, int)
@@ -31,9 +26,11 @@ def make_database(fname, drop=False):
     drop : boolean (optional, default=False)
         If True, deletes and recreates all tables in cache (irreversible).
     """
+    from sosia.establishing.constants import DB_TABLES
+
     conn = sqlite3.connect(fname)
     cursor = conn.cursor()
-    for table, variables in CACHE_TABLES.items():
+    for table, variables in DB_TABLES.items():
         if drop:
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
         columns = ", ".join(" ".join(v) for v in variables["columns"])

@@ -123,7 +123,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
             q = f"AU-ID({au}) AND PUBYEAR BEF {ybefore+1}"
             size = base_query("docs", q, size_only=True)
             tp = (au, ybefore, size)
-            insert_data(tp, conn, table="author_size")
+            insert_data(tp, conn, table="author_pubs")
             if size > 0:
                 group.remove(au)
                 group_tocheck.remove(au)
@@ -144,13 +144,13 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
             q = f"AU-ID({au}) AND PUBYEAR BEF {yupto+1}"
             n_pubs_yupto = base_query("docs", q, size_only=True)
             tp = (au, yupto, n_pubs_yupto)
-            insert_data(tp, conn, table="author_size")
+            insert_data(tp, conn, table="author_pubs")
             # Eventually decrease publication count
             if yfrom and n_pubs_yupto >= min(npapers):
                 q = f"AU-ID({au}) AND PUBYEAR BEF {yfrom}"
                 n_pubs_yfrom = base_query("docs", q, size_only=True)
                 tp = (au, yfrom-1, n_pubs_yfrom)
-                insert_data(tp, conn, table="author_size")
+                insert_data(tp, conn, table="author_pubs")
                 n_pubs_yupto -= n_pubs_yfrom
             if n_pubs_yupto < min(npapers) or n_pubs_yupto > max(npapers):
                 group.remove(au)
