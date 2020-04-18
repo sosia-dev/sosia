@@ -116,8 +116,8 @@ class Original(Scientist):
             publications, instead of the list of publications obtained from
             the Scopus Author ID.
 
-        affiliations : list (optional, default=None)
-            A list of scopus affiliation IDs. If provided, sosia searches
+        search_affiliations : list (optional, default=None)
+            A list of Scopus affiliation IDs. If provided, sosia searches
             for matches within this affiliation in the year provided.
 
         sql_fname : str (optional, default=None)
@@ -146,7 +146,7 @@ class Original(Scientist):
         if isinstance(search_affiliations, (int, str)):
             search_affiliations = [search_affiliations]
         if search_affiliations:
-            search_affiliations = [int(a) for a in search_affiliations]
+            search_affiliations = [str(a) for a in search_affiliations]
         self.search_affiliations = search_affiliations
         self.refresh = refresh
         self.sql_fname = sql_fname
@@ -256,8 +256,7 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def find_matches(self, stacked=False, verbose=False, information=True,
-                     refresh=False, stop_words=None, **tfidf_kwds):
+    def find_matches(self, stacked=False, verbose=False, refresh=False):
         """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the year of treatment
@@ -275,70 +274,20 @@ class Original(Scientist):
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
 
-        information : bool or iterable (optional, default=True)
-            Whether to return additional information on the matches that may
-            help in the selection process.  If an iterable of keywords is
-            provied, only return information for these keywords.  Allowed
-            values are "first_year", "num_coauthors", "num_publications",
-            "num_citations", "country", "language",
-            "reference_sim", "abstract_sim".
-
         refresh : bool (optional, default=False)
             Whether to refresh cached results (if they exist) or not. If int
             is passed and stacked=False, results will be refreshed if they are
             older than that value in number of days.
 
-        stop_words : list (optional, default=None)
-            A list of words that should be filtered in the analysis of
-            abstracts.  If None uses the list of English stopwords
-            by nltk, augmented with numbers and interpunctuation.
-
-        tfidf_kwds : keywords
-            Parameters to pass to TfidfVectorizer from the sklearn package
-            for abstract vectorization.  Not used when `information=False` or
-            or when "abstract_sim" is not in `information`.  See
-            https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
-            for possible values.
-
-        Returns
-        -------
-        matches : list
-            A list of Scopus IDs of scientists matching all the criteria (if
-            information is False) or a list of namedtuples with the Scopus ID
-            and additional information (if information is True).
-
-        Raises
-        ------
-        ValueError
-            If information is not bool and contains invalid keywords.
+        Notes
+        -----
+        Matches are available through property `.matches`.
         """
         # Checks
         if not self.search_group:
             text = "No search group defined.  Please run "\
                    ".define_search_group() first."
             raise Exception(text)
-        info_keys = ["first_name", "surname", "first_year", "num_coauthors",
-                     "num_publications", "num_citations", "num_coauthors_period",
-                     "num_publications_period", "num_citations_period",
-                     "subjects", "country", "affiliation_id", "affiliation",
-                     "language", "reference_sim", "abstract_sim"]
-        if isinstance(information, bool):
-            if information:
-                keywords = info_keys
-            elif self.search_affiliations:
-                information = True
-                keywords = ["affiliation_id"]
-            else:
-                keywords = None
-        else:
-            keywords = information
-            invalid = [x for x in keywords if x not in info_keys]
-            if invalid:
-                text = "Parameter information contains invalid keywords: " +\
-                       ", ".join(invalid)
-                raise ValueError(text)
-            if self.search_affiliations and "affiliation_id" not in keywords:
-                keywords.append("affiliation_id")
         if not isinstance(refresh, bool) and stacked:
             refresh = False
             warn("refresh parameter must be boolean when stacked=True.  "
@@ -404,7 +353,7 @@ class Original(Scientist):
                          table="author_ncits")
         auth_cits_incache, _ = retrieve_author_cits(authors[["auth_id", "year"]],
                                                     self.sql_conn)
-        # keep if citations are in range
+        # Keep if citations are in range
         custom_print("Filtering based on count of citations...", verbose)
         mask = ((auth_cits_incache.n_cits <= max(_ncits)) &
                 (auth_cits_incache.n_cits >= min(_ncits)))
@@ -506,20 +455,90 @@ class Original(Scientist):
                 n_cits = count_citations(eids_period, self.year+1, [str(m)])
                 if not (min(_ncits) <= n_cits <= max(_ncits)):
                     matches.remove(m)
+
+        # Eventually filter on affiliations
+        matches_copy = matches.copy()
+        if self.search_affiliations:
+            text = f"Left with {len(matches)} authors\nFiltering based on "\
+                   "affiliations..."
+            custom_print(text, verbose)
+            for auth_id in matches_copy:
+                m = Scientist([str(auth_id)], self.year, period=self.period,
+                              refresh=refresh, sql_fname=self.sql_fname)
+                aff_ids = set(m.affiliation_id.replace(" ", "").split(";"))
+                if not aff_ids.intersection(self.search_affiliations):
+                    matches.remove(auth_id)
+
+        # Finalize
         text = f"Found {len(matches):,} author(s) matching all criteria"
         custom_print(text, verbose)
+        self.matches = sorted([str(auth_id) for auth_id in matches])
+
+    def inform_matches(self, fields=None, verbose=False, refresh=False,
+                       stop_words=None, **tfidf_kwds):
+        """Add information to matches to aid in selection process.
+
+        Parameters
+        ----------
+        fields : iterable (optional, default=None)
+            Which information to provide. Allowed values are "first_year",
+            "num_coauthors", "num_publications", "num_citations", "country",
+            "language", "reference_sim", "abstract_sim".  If None, will
+            use all available fields.
+
+        verbose : bool (optional, default=False)
+            Whether to report on the progress of the process.
+
+        refresh : bool (optional, default=False)
+            Whether to refresh cached results (if they exist) or not. If int
+            is passed and stacked=False, results will be refreshed if they are
+            older than that value in number of days.
+
+        stop_words : list (optional, default=None)
+            A list of words that should be filtered in the analysis of
+            abstracts.  If None uses the list of English stopwords
+            by nltk, augmented with numbers and interpunctuation.
+
+        tfidf_kwds : keywords
+            Parameters to pass to TfidfVectorizer from the sklearn package
+            for abstract vectorization.  Not used when `information=False` or
+            or when "abstract_sim" is not in `information`.  See
+            https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
+            for possible values.
+
+        Notes
+        -----
+        Matches including corresponding information are available through
+        property `.matches`.
+
+        Raises
+        ------
+        fields
+            If fields contains invalid keywords.
+        """
+        # Checks
+        if not self.matches:
+            text = "No matches defined.  Please run .find_matches() first."
+            raise Exception(text)
+        allowed_fields = ["first_name", "surname", "first_year",
+                          "num_coauthors", "num_publications", "num_citations",
+                          "num_coauthors_period", "num_publications_period",
+                          "num_citations_period", "subjects", "country",
+                          "affiliation_id", "affiliation", "language",
+                          "reference_sim", "abstract_sim"]
+        if fields:
+            invalid = [x for x in fields if x not in allowed_fields]
+            if invalid:
+                text = "Parameter fields contains invalid keywords: " +\
+                       ", ".join(invalid)
+                raise ValueError(text)
+        else:
+            fields = allowed_fields
 
         # Possibly add information to matches
-        if keywords and len(matches) > 0:
-            custom_print("Providing additional information...", verbose)
-            profiles = [Scientist([str(a)], self.year, period=self.period,
-                                   refresh=refresh, sql_fname=self.sql_fname)
-                                  for a in matches]
-            matches = inform_matches(profiles, self, keywords, stop_words,
-                                     verbose, refresh, **tfidf_kwds)
-        if self.search_affiliations:
-            matches = [m for m in matches if 
-                       len(set(m.affiliation_id.replace(" ","").split(";"))
-                       .intersection([str(a) for a in
-                                      self.search_affiliations]))]
-        return matches
+        custom_print("Providing additional information...", verbose)
+        profiles = [Scientist([a], self.year, period=self.period,
+                              refresh=refresh, sql_fname=self.sql_fname)
+                    for a in self.matches]
+        self.matches = inform_matches(profiles, self, fields, stop_words,
+                                      verbose, refresh, **tfidf_kwds)

@@ -153,11 +153,11 @@ An alternative search process will try to minimize the number of queries.  The d
 
 The number differs because less information is available.
 
-The final step is to search within this search group for authors that fulfill criteria 5 through 6.  The returned results are a list of `namedtuples <https://docs.python.org/2/library/collections.html#collections.namedtuple>`_ with additional information.  These may help you assess the fit with the researcher.
+The final step is to search within this search group for authors that fulfill criteria 5 through 6.  Matches are accessible through property `.matches`:
 
 .. code-block:: python
 
-    >>> matches = stefano.find_matches(verbose=True)
+    >>> stefano.find_matches(verbose=True)
     Searching through characteristics of 605 authors...
     Left with 361 authors with sufficient number of publications and same main field
     Filtering based on count of citations...
@@ -165,6 +165,15 @@ The final step is to search within this search group for authors that fulfill cr
     Filtering based on coauthors number...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     Found 4 author(s) matching all criteria
+    >>> print(stefano.matches)
+    ['53164702100', '55071051800', '55317901900', '55804519400']
+
+
+The researcher might need additional information to both assess match quality and select matches.  Using `.inform_matches()` one can source certain specified information.  It returns list of `namedtuples <https://docs.python.org/2/library/collections.html#collections.namedtuple>`_:
+
+.. code-block:: python
+
+    >>> stefano.inform_matches(verbose=True)
     Providing additional information...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     Match 53164702100: 0 abstract(s) and 1 reference list(s) out of 6 documents missing
@@ -172,7 +181,7 @@ The final step is to search within this search group for authors that fulfill cr
     Match 55317901900: 0 abstract(s) and 0 reference list(s) out of 7 documents missing
     Match 55804519400: 0 abstract(s) and 0 reference list(s) out of 8 documents missing
     Original 55208373700: 0 abstract(s) and 1 reference list(s) out of 7 documents missing
-    >>> print(matches[0])
+    >>> print(self.matches[0])
     Match(ID='53164702100', name='Sapprasert, Koson', first_name='Koson', surname='Sapprasert',
     first_year=2011, num_coauthors=7, num_publications=6, num_citations=193, num_coauthors_period=7,
     num_publications_period=6, num_citations_period=193, subjects=['BUSI', 'ECON', 'DECI'],
