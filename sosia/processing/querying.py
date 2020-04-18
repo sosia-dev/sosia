@@ -189,7 +189,7 @@ def query_journal(source_id, years, refresh):
     return d
 
 
-def query_year(year, source_ids, refresh, verbose, afid=False):
+def query_year(year, source_ids, refresh=False, verbose=False, afid=False):
     """Get authors lists for each source in a list and in a particular year.
 
     Parameters
@@ -200,13 +200,13 @@ def query_year(year, source_ids, refresh, verbose, afid=False):
     source_ids : list
         List of Scopus IDs of sources to search.
 
-    refresh : bool (optional)
+    refresh : bool (optional, default=False)
         Whether to refresh cached files if they exist, or not.
 
-    verbose : bool (optional)
+    verbose : bool (optional, default=False)
         Whether to print information on the search progress.
 
-    afid : bool (optional)
+    afid : bool (optional, default=False)
         If True, mantains information on the Scopus affiliation ID in res.
     """
     params = {"group": [str(x) for x in sorted(source_ids)],
