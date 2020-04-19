@@ -17,16 +17,20 @@ refresh = False
 
 # Test objects
 test_params = {"refresh": refresh, "sql_fname": test_cache}
+# Normal values
 scientist1 = Original(55208373700, 2017, cits_margin=200, **test_params)
+# Using period
 scientist2 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                       coauth_margin=1, period=3, **test_params)
+# Using affiliations
+affs = ["60010348", "60022109", "60017317"]
+scientist3 = Original(55208373700, 2017, cits_margin=200,
+                      search_affiliations=affs, **test_params)
+# Using ignore_first_id
 affs = ["60002612", "60032111", "60000765"]
-scientist3 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
+scientist4 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                       coauth_margin=1, period=3, search_affiliations=affs,
                       **test_params)
-affs = ["60010348", "60022109", "60017317"]
-scientist4 = Original(55208373700, 2017, cits_margin=200,
-                      search_affiliations=affs, **test_params)
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\
@@ -128,17 +132,16 @@ def test_search_group_ignore_stacked():
 
 
 def test_search_group_affiliations_stacked():
-    scientist4.define_search_group(stacked=True, ignore_first_id=True,
-                                   refresh=refresh)
-    recieved = scientist4.search_group
+    scientist3.define_search_group(stacked=True, refresh=refresh)
+    recieved = scientist3.search_group
     assert_true(isinstance(recieved, list))
     assert_true(15 <= len(recieved) <= 22)
 
 
-def test_search_group_period_affiliations_stacked():
-    scientist3.define_search_group(stacked=True, ignore_first_id=True,
+def test_search_group_period_affiliations_ignore_stacked():
+    scientist4.define_search_group(stacked=True, ignore_first_id=True,
                                    refresh=refresh)
-    recieved = scientist3.search_group
+    recieved = scientist4.search_group
     assert_true(isinstance(recieved, list))
     assert_true(50 <= len(recieved) <= 60)
 
@@ -156,16 +159,16 @@ def test_find_matches_stacked():
 
 
 def test_find_matches_stacked_affiliations():
-    scientist4.find_matches(stacked=True, refresh=refresh)
+    scientist3.find_matches(stacked=True, refresh=refresh)
     expect_m = [m for m in MATCHES if m.ID != '55804519400']
     expect_ids = [m.ID for m in expect_m]
-    assert_equal(scientist4.matches, expect_ids)
+    assert_equal(scientist3.matches, expect_ids)
 
 
 def test_find_matches_stacked_period_affiliations():
-    scientist3.find_matches(stacked=True, refresh=refresh)
+    scientist4.find_matches(stacked=True, refresh=refresh)
     expected_ids = ['57188695848', '57188709931']
-    assert_equal(scientist3.matches, expected_ids)
+    assert_equal(scientist4.matches, expected_ids)
 
 
 def test_inform_matches():
