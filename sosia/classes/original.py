@@ -195,16 +195,15 @@ class Original(Scientist):
         # Query journals
         params = {"self": self, "stacked": stacked,
                   "refresh": refresh, "verbose": verbose}
-        today, then, negative = search_group_from_sources(**params)
+        search_group = search_group_from_sources(**params)
 
-        # Finalize and select
-        group = today
-        if not self._ignore_first_id:
-            group = today.intersection(then)
-        negative.update({str(i) for i in self.identifier})
-        negative.update({str(i) for i in self.coauthors})
-        self._search_group = sorted(group - negative)
-        text = f"Found {len(self._search_group):,} authors for search_group"
+        # Remove own IDs and coauthors
+        search_group -= set(self.identifier)
+        search_group -= {str(i) for i in self.coauthors}
+
+        # Finalize
+        self._search_group = sorted(search_group)
+        text = f"Found {len(search_group):,} authors for search_group"
         custom_print(text, verbose)
         return self
 

@@ -160,13 +160,17 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
     return group, pubs_counts, older_authors
 
 
-def search_group_from_sources(self, stacked, verbose, refresh=False):
+def search_group_from_sources(self, stacked=False, verbose=False, refresh=False):
     """Define groups of authors based on publications from a set of sources.
 
     Parameters
     ----------
     self : sosia.Original
         The object of the Scientist to search information for.
+
+    stacked : bool (optional, default=False)
+        Whether to use fewer queries that are not reusable, or to use modular
+        queries of the form "SOURCE-ID(<SID>) AND PUBYEAR IS <YYYY>".
 
     verbose : bool (optional, default=False)
         Whether to report on the progress of the process.
@@ -176,17 +180,11 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
 
     Returns
     -------
-    today, then, negative : set
-        Set of authors publishing in three periods: During the year of
-        treatment, during years to match on, and during years before the
-        first publication.
+    group : set
+        Set of authors publishing in year of treatment, in years around
+        first publication, and not before the latter period.
     """
     # Define variables
-    min_year = self.first_year - self.year_margin
-    max_year = self.first_year + self.year_margin
-    search_years = [min_year-1]
-    if not self._ignore_first_id:
-        search_years.extend(range(min_year, max_year+1))
     search_sources, _ = zip(*self.search_sources)
     params = {"refresh": refresh, "verbose": verbose, "stacked": stacked}
 
@@ -211,7 +209,12 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
     today = flat_set_from_df(auth_today, "auids", condition=mask)
 
     # Authors active around year of first publication
-    sources_then = DataFrame(product(search_sources, search_years),
+    min_year = self.first_year - self.year_margin
+    max_year = self.first_year + self.year_margin
+    then_years = [min_year-1]
+    if not self._ignore_first_id:
+        then_years.extend(range(min_year, max_year+1))
+    sources_then = DataFrame(product(search_sources, then_years),
                              columns=["source_id", "year"])
     auth_then, missing = retrieve_sources(sources_then, self.sql_conn,
                                           refresh=refresh)
@@ -220,14 +223,16 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         res = query_sources_by_year(missing_sources, y, **params)
         insert_data(res, self.sql_conn, table="sources")
     auth_then = auth_then.append(res)
-    if self._ignore_first_id:
-        then = set()
-    else:
-        mask = auth_then["year"].between(min_year, max_year, inclusive=True)
-        then = flat_set_from_df(auth_then, "auids", condition=mask)
+    mask = auth_then["year"].between(min_year, max_year, inclusive=True)
+    then = flat_set_from_df(auth_then, "auids", condition=mask)
 
-    # Authors with publications before
+    # Remove authors active before
     mask = auth_then["year"] < min_year
-    negative = flat_set_from_df(auth_then, "auids", condition=mask)
+    before = flat_set_from_df(auth_then, "auids", condition=mask)
+    today -= before
 
-    return today, then, negative
+    # Compile group
+    group = today
+    if not self._ignore_first_id:
+        group = today.intersection(then)
+    return group
