@@ -12,7 +12,7 @@ from sosia.classes import Original
 
 warnings.filterwarnings("ignore")
 
-test_cache = expanduser("~/.sosia/") + "test.sqlite"
+test_cache = expanduser("~/.sosia/test.sqlite")
 refresh = False
 
 # Test objects
@@ -100,24 +100,31 @@ def test_search_sources_change():
 
 def test_search_group():
     scientist1.define_search_group(refresh=refresh)
-    group = scientist1.search_group
-    assert_true(isinstance(group, list))
-    assert_true(365 <= len(group) <= 375)
+    recieved = scientist1.search_group
+    assert_true(isinstance(recieved, list))
+    assert_true(590 <= len(recieved) <= 610)
+
+
+def test_search_group_stacked():
+    scientist1.define_search_group(stacked=True, refresh=refresh)
+    recieved = scientist1.search_group
+    assert_true(isinstance(recieved, list))
+    assert_true(590 <= len(recieved) <= 610)
 
 
 def test_search_group_period():
     scientist2.define_search_group(ignore_first_id=True, refresh=refresh)
-    group = scientist2.search_group
-    assert_true(isinstance(group, list))
-    assert_true(4330 <= len(group) <= 4365)
+    recieved = scientist2.search_group
+    assert_true(isinstance(recieved, list))
+    assert_true(4800 <= len(recieved) <= 4900)
 
 
-def test_search_group_stacked():
-    scientist1.define_search_group(stacked=True, refresh=False)
-    group = scientist1.search_group
-    assert_true(isinstance(group, list))
-    print(len(group))
-    assert_true(590 <= len(group) <= 610)
+def test_search_group_period_stacked():
+    scientist2.define_search_group(stacked=True, ignore_first_id=True,
+                                   refresh=refresh)
+    recieved = scientist2.search_group
+    assert_true(isinstance(recieved, list))
+    assert_true(4800 <= len(recieved) <= 4900)
 
 
 def test_search_group_stacked_affiliations():
@@ -126,14 +133,6 @@ def test_search_group_stacked_affiliations():
     group = scientist4.search_group
     assert_true(isinstance(group, list))
     assert_true(15 <= len(group) <= 22)
-
-
-def test_search_group_stacked_period():
-    scientist2.define_search_group(stacked=True, ignore_first_id=True,
-                                   refresh=False)
-    group = scientist2.search_group
-    assert_true(isinstance(group, list))
-    assert_true(4850 <= len(group) <= 4950)
 
 
 def test_search_group_stacked_period_affiliations():

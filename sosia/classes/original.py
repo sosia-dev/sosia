@@ -170,9 +170,7 @@ class Original(Scientist):
             Whether to report on the progress of the process.
 
         refresh : bool (optional, default=False)
-            Whether to refresh cached results (if they exist) or not. If int
-            is passed and stacked=False, results will be refreshed if they are
-            older than that value in number of days.
+            Whether to refresh cached results (if they exist) or not.
 
         ignore_first_id: boolean (optional, default=False)
             If True, the authors in the first year of publication of the
@@ -190,10 +188,9 @@ class Original(Scientist):
             warn("ignore_first_id set back to False: period is None or "
                  "the first year of the period is before the first year "
                  "of publication of the scientist.")
-        if not isinstance(refresh, bool) and stacked:
+        if isinstance(refresh, bool):
             refresh = False
-            warn("refresh parameter must be boolean when stacked=True.  "
-                 "Continuing with refresh=False.")
+            warn("refresh must be boolean.  Continuing with refresh=False.")
 
         # Query journals
         params = {"self": self, "stacked": stacked,
@@ -206,7 +203,7 @@ class Original(Scientist):
             group = today.intersection(then)
         negative.update({str(i) for i in self.identifier})
         negative.update({str(i) for i in self.coauthors})
-        self._search_group = sorted(list(group - negative))
+        self._search_group = sorted(group - negative)
         text = f"Found {len(self._search_group):,} authors for search_group"
         custom_print(text, verbose)
         return self

@@ -7,7 +7,7 @@ from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
 from sosia.processing.caching import insert_data, retrieve_authors
 from sosia.processing.extracting import get_authors, get_auth_from_df
 from sosia.processing.utils import expand_affiliation
-from sosia.utils import print_progress
+from sosia.utils import custom_print, print_progress
 
 
 def base_query(q_type, query, refresh=False, fields=None, size_only=False):
@@ -141,60 +141,13 @@ def query_author_data(authors_list, conn, refresh=False, verbose=False):
     return auth_done
 
 
-def query_journal(source_id, years, refresh):
-    """Get authors by year for a particular source.
+def query_sources_by_year(year, source_ids, stacked=False, refresh=False,
+                          verbose=False, afid=False):
+    """Get authors lists for each source in a particular year.
 
     Parameters
     ----------
-    source_id : str or int
-        The Scopus ID of the source.
-
-    years : container of int or container of str
-        The relevant pulication years to search for.
-
-    refresh : bool (optional)
-        Whether to refresh cached files if they exist, or not.
-
-    Returns
-    -------
-    d : dict
-        Dictionary keyed by year listing all authors who published in
-        that year.
-    """
-    from collections import defaultdict
-    try:  # Try complete publication list first
-        q = f"SOURCE-ID({source_id})"
-        if base_query("docs", q, size_only=True) > 5000:
-            raise ScopusQueryError()
-        res = base_query("docs", q, refresh=refresh)
-    except (ScopusQueryError, Scopus500Error):  # Fall back to year-wise queries
-        res = []
-        for year in years:
-            q = Template(f"SOURCE-ID({source_id}) AND PUBYEAR IS $fill")
-            params = {"group": [year], "res": [], "template": q,
-                      "joiner": "", "q_type": "docs", "refresh": refresh}
-            ext, _ = stacked_query(**params)
-            if not valid_results(ext):  # Reload queries with missing years
-                params.update({"refresh": True})
-                ext, _ = stacked_query(**params)
-            res.extend(ext)
-    # Sort authors by year
-    d = defaultdict(list)
-    for pub in res:
-        try:
-            year = pub.coverDate[:4]
-        except TypeError:  # missing year
-            continue
-        d[year].extend(get_authors([pub]))  # Populate dict
-    return d
-
-
-def query_year(year, source_ids, refresh=False, verbose=False, afid=False):
-    """Get authors lists for each source in a list and in a particular year.
-
-    Parameters
-    ----------
-    year : int
+    year : str or int
         The year of the search.
 
     source_ids : list
@@ -209,14 +162,23 @@ def query_year(year, source_ids, refresh=False, verbose=False, afid=False):
     afid : bool (optional, default=False)
         If True, mantains information on the Scopus affiliation ID in res.
     """
-    params = {"group": [str(x) for x in sorted(source_ids)],
-              "joiner": " OR ", "refresh": refresh, "q_type": "docs"}
-    if verbose:
-        params.update({"total": len(source_ids)})
-        print(f"Searching authors in {len(source_ids):,} sources in {year}...")
-    q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
-    params.update({"template": q, "res": []})
-    res, _ = stacked_query(**params)
+    n = len(source_ids)
+    custom_print(f"Searching authors in {n:,} sources in {year}...", verbose)
+    if stacked:
+        q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
+        params = {"group": [str(x) for x in sorted(source_ids)],
+                  "joiner": " OR ", "refresh": refresh, "q_type": "docs",
+                  "template": q, "res": []}
+        if verbose:
+            params.update({"total": n})
+        res, _ = stacked_query(**params)
+    else:
+        res = []
+        print_progress(0, n, verbose)
+        for idx, source_id in enumerate(source_ids):
+            q = f"SOURCE-ID({source_id}) AND PUBYEAR IS {year}"
+            res.extend(base_query("docs", q, refresh=refresh, fields=["eid"]))
+            print_progress(idx+1, n, verbose)
     res = pd.DataFrame(res)
     if res.empty:
         return res

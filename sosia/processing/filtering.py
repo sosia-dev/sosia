@@ -4,7 +4,7 @@ from pandas import DataFrame
 
 from sosia.processing.caching import insert_data, retrieve_author_pubs,\
     retrieve_sources
-from sosia.processing.querying import base_query, query_journal, query_year
+from sosia.processing.querying import base_query, query_sources_by_year
 from sosia.processing.utils import flat_set_from_df, margin_range
 from sosia.utils import custom_print, print_progress
 
@@ -182,84 +182,56 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         first publication.
     """
     from collections import Counter
-    # Filtering variables
+
+    # Define variables
     min_year = self.first_year - self.year_margin
     max_year = self.first_year + self.year_margin
-    if self.period:
-        _margin_setter = self.publications_period
-    else:
-        _margin_setter = self.publications
-    max_pubs = max(margin_range(len(_margin_setter), self.pub_margin))
-    years = list(range(min_year, max_year+1))
     search_years = [min_year-1]
     if not self._ignore_first_id:
         search_years.extend(range(min_year, max_year+1))
     search_sources, _ = zip(*self.search_sources)
+    params = {"refresh": refresh, "verbose": verbose, "stacked": stacked}
 
     # Verbose variables
-    n = len(search_sources)
-    text = f"Searching authors for search_group in {n:,} sources..."
+    text = f"Searching authors for search_group in {len(search_sources):,} sources..."
     custom_print(text, verbose)
-    today = set()
-    then = set()
-    negative = set()
 
-    if stacked:  # Make use of SQL cache
-        # Year provided (select also based on location)
-        # Get already cached sources from cache
-        sources_ay = DataFrame(product(search_sources, [self.active_year]),
-                               columns=["source_id", "year"])
-        _, _search = retrieve_sources(sources_ay, self.sql_conn,
-                                      refresh=refresh, afid=True)
-        res = query_year(self.active_year, _search.source_id.tolist(), refresh,
-                         verbose, afid=True)
-        insert_data(res, self.sql_conn, table="sources_afids")
-        sources_ay, _ = retrieve_sources(sources_ay, self.sql_conn,
-                                         refresh=refresh, afid=True)
-        # Authors publishing in provided year and locations
-        mask = None
-        if self.search_affiliations:
-            mask = sources_ay.afid.isin(self.search_affiliations)
-        today = flat_set_from_df(sources_ay, "auids", condition=mask)
-        # Years before active year
-        # Get already cached sources from cache
-        sources_ys = DataFrame(product(search_sources, search_years),
-                               columns=["source_id", "year"])
-        _, sources_ys_search = retrieve_sources(sources_ys, self.sql_conn,
-                                                refresh=refresh)
-        missing_years = set(sources_ys_search.year.tolist())
-        # Eventually add information for missing years to cache
-        for y in missing_years:
-            mask = sources_ys_search.year == y
-            _sources_search = sources_ys_search[mask].source_id.tolist()
-            res = query_year(y, _sources_search, refresh, verbose)
-            insert_data(res, self.sql_conn, table="sources")
-        # Get full cache
-        sources_ys, _ = retrieve_sources(sources_ys, self.sql_conn,
-                                         refresh=False)
-        # Authors publishing in year(s) of first publication
-        if not self._ignore_first_id:
-            mask = sources_ys.year.between(min_year, max_year, inclusive=True)
-            then = flat_set_from_df(sources_ys, "auids", condition=mask)
-        # Authors with publications before
-        mask = sources_ys.year < min_year
-        negative = flat_set_from_df(sources_ys, "auids", condition=mask)
+    # Get already cached sources from DB
+    sources_ay = DataFrame(product(search_sources, [self.active_year]),
+                           columns=["source_id", "year"])
+    _, to_search = retrieve_sources(sources_ay, self.sql_conn,
+                                    refresh=refresh, afid=True)
+    res = query_sources_by_year(self.active_year, to_search["source_id"].unique(),
+                                afid=True, **params)
+    insert_data(res, self.sql_conn, table="sources_afids")
+    sources_ay, _ = retrieve_sources(sources_ay, self.sql_conn, refresh=refresh,
+                                     afid=True)
+
+    # Authors active in year of treatment( and provided location)
+    mask = None
+    if self.search_affiliations:
+        mask = sources_ay["afid"].isin(self.search_affiliations)
+    today = flat_set_from_df(sources_ay, "auids", condition=mask)
+
+    # Authors active around year of first publication
+    sources_ys = DataFrame(product(search_sources, search_years),
+                           columns=["source_id", "year"])
+    _, sources_ys_search = retrieve_sources(sources_ys, self.sql_conn,
+                                            refresh=refresh)
+    for y in sources_ys_search["year"].unique():
+        mask = sources_ys_search["year"] == y
+        search_sources = sources_ys_search[mask]["source_id"].unique()
+        res = query_sources_by_year(y, search_sources, **params)
+        insert_data(res, self.sql_conn, table="sources")
+    sources_ys, _ = retrieve_sources(sources_ys, self.sql_conn, refresh=refresh)
+    if not self._ignore_first_id:
+        mask = sources_ys["year"].between(min_year, max_year, inclusive=True)
+        then = flat_set_from_df(sources_ys, "auids", condition=mask)
     else:
-        auth_count = []
-        print_progress(0, n, verbose)
-        for i, source_id in enumerate(search_sources):
-            info = query_journal(source_id, [self.active_year] + years, refresh)
-            today.update(info[str(self.active_year)])
-            if not self._ignore_first_id:
-                for y in years:
-                    then.update(info[str(y)])
-            for y in range(int(min(info.keys())), min_year):
-                negative.update(info[str(y)])
-            for y in info:
-                if int(y) <= self.active_year:
-                    auth_count.extend(info[str(y)])
-            print_progress(i+1, n, verbose)
-        c = Counter(auth_count)
-        negative.update({a for a, npub in c.items() if npub > max_pubs})
+        then = set()
+
+    # Authors with publications before
+    mask = sources_ys.year < min_year
+    negative = flat_set_from_df(sources_ys, "auids", condition=mask)
 
     return today, then, negative

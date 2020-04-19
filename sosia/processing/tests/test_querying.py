@@ -9,7 +9,7 @@ from string import Template
 
 from sosia.establishing import connect_database
 from sosia.processing import base_query, count_citations, query_author_data,\
-    query_journal, query_year, stacked_query
+    query_sources_by_year, stacked_query
 
 test_cache = expanduser("~/.sosia/test.sqlite")
 test_conn = connect_database(test_cache)
@@ -54,39 +54,52 @@ def test_query_author_data():
     assert_equal(auth_data["surname"].tolist(), ["Harhoff", "Baruffaldi"])
 
 
-def test_query_journal():
-    res = query_journal("11000153773", [2006], refresh=refresh)
-    assert_true(24100 < len(res.get("2006")) < 25000)
-
-
-def test_query_year():
+def test_query_sources_by_year():
     # Test a journal and year
-    res = query_year(2010, [22900], refresh=refresh)
+    res = query_sources_by_year(2010, [22900], refresh=refresh)
     assert_equal(res["source_id"].tolist(), ['22900'])
     assert_equal(res["year"].tolist(), ['2010'])
     assert_true(isinstance(res["auids"][0], list))
     assert_true(len(res["auids"][0]) > 0)
     # Test a journal and year that are not in Scopus
-    res = query_year(1969, [22900], refresh=refresh)
+    res = query_sources_by_year(1969, [22900], refresh=refresh)
     assert_true(res.empty)
     # Test a large query (>5000 results)
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
-    res = query_year(1984, source_ids, refresh=refresh)
+    res = query_sources_by_year(1984, source_ids, refresh=refresh)
     assert_true(len(res[~res["auids"].isnull()]) == 17)
     assert_true(isinstance(res["auids"][0], list))
     assert_true(len(res["auids"][0]) > 0)
 
 
-def test_query_year_afid():
+def test_query_sources_by_year_stacked():
+    # Test a journal and year
+    res = query_sources_by_year(2010, [22900], refresh=refresh, stacked=True)
+    assert_equal(res["source_id"].tolist(), ['22900'])
+    assert_equal(res["year"].tolist(), ['2010'])
+    assert_true(isinstance(res["auids"][0], list))
+    assert_true(len(res["auids"][0]) > 0)
+    # Test a journal and year that are not in Scopus
+    res = query_sources_by_year(1969, [22900], refresh=refresh, stacked=True)
+    assert_true(res.empty)
+    # Test a large query (>5000 results)
+    source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
+                  14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
+    res = query_sources_by_year(1984, source_ids, refresh=refresh, stacked=True)
+    assert_true(len(res[~res["auids"].isnull()]) == 17)
+    assert_true(isinstance(res["auids"][0], list))
+    assert_true(len(res["auids"][0]) > 0)
+
+
+def test_query_sources_by_year_afid():
     # test keeping affiliation id column
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
-    res = query_year(1984, source_ids, refresh=refresh, verbose=True, afid=True)
-    expected = range(3395-5, 3395+5)
-    assert_true(len(res[~res["auids"].isnull()]) in expected)
-    assert_true(res.columns.tolist(), ['source_id', 'year', 'afid', 'auids'])
-    assert_true(len(res["auids"][0]) > 0)
+    received = query_sources_by_year(1984, source_ids, refresh=refresh, afid=True)
+    assert_true(3380 < received.dropna(subset=["auids"]).shape[0] < 3390)
+    assert_true(received.columns.tolist(), ['source_id', 'year', 'afid', 'auids'])
+    assert_true(len(received["auids"][0]) > 0)
 
 
 def test_stacked_query():
