@@ -56,18 +56,18 @@ def test_query_author_data():
 
 def test_query_sources_by_year():
     # Test a journal and year
-    res = query_sources_by_year(2010, [22900], refresh=refresh)
+    res = query_sources_by_year([22900], 2010, refresh=refresh)
     assert_equal(res["source_id"].tolist(), ['22900'])
-    assert_equal(res["year"].tolist(), ['2010'])
+    assert_equal(res["year"].tolist(), [2010])
     assert_true(isinstance(res["auids"][0], list))
     assert_true(len(res["auids"][0]) > 0)
     # Test a journal and year that are not in Scopus
-    res = query_sources_by_year(1969, [22900], refresh=refresh)
+    res = query_sources_by_year([22900], 1969, refresh=refresh)
     assert_true(res.empty)
     # Test a large query (>5000 results)
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
-    res = query_sources_by_year(1984, source_ids, refresh=refresh)
+    res = query_sources_by_year(source_ids, 1984, refresh=refresh)
     assert_true(len(res[~res["auids"].isnull()]) == 17)
     assert_true(isinstance(res["auids"][0], list))
     assert_true(len(res["auids"][0]) > 0)
@@ -75,18 +75,18 @@ def test_query_sources_by_year():
 
 def test_query_sources_by_year_stacked():
     # Test a journal and year
-    res = query_sources_by_year(2010, [22900], refresh=refresh, stacked=True)
+    res = query_sources_by_year([22900], 2010, refresh=refresh, stacked=True)
     assert_equal(res["source_id"].tolist(), ['22900'])
-    assert_equal(res["year"].tolist(), ['2010'])
+    assert_equal(res["year"].tolist(), [2010])
     assert_true(isinstance(res["auids"][0], list))
     assert_true(len(res["auids"][0]) > 0)
     # Test a journal and year that are not in Scopus
-    res = query_sources_by_year(1969, [22900], refresh=refresh, stacked=True)
+    res = query_sources_by_year([22900], 1969, refresh=refresh, stacked=True)
     assert_true(res.empty)
     # Test a large query (>5000 results)
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
-    res = query_sources_by_year(1984, source_ids, refresh=refresh, stacked=True)
+    res = query_sources_by_year(source_ids, 1984, refresh=refresh, stacked=True)
     assert_true(len(res[~res["auids"].isnull()]) == 17)
     assert_true(isinstance(res["auids"][0], list))
     assert_true(len(res["auids"][0]) > 0)
@@ -96,7 +96,7 @@ def test_query_sources_by_year_afid():
     # test keeping affiliation id column
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
-    received = query_sources_by_year(1984, source_ids, refresh=refresh, afid=True)
+    received = query_sources_by_year(source_ids, 1984, refresh=refresh, afid=True)
     assert_true(3380 < received.dropna(subset=["auids"]).shape[0] < 3390)
     assert_true(received.columns.tolist(), ['source_id', 'year', 'afid', 'auids'])
     assert_true(len(received["auids"][0]) > 0)

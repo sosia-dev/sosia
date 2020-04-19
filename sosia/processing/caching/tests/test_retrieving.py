@@ -132,7 +132,7 @@ def test_retrieve_sources_partial():
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
-    res = query_sources_by_year(expected_years[0], expected_sources)
+    res = query_sources_by_year(expected_sources, expected_years[0])
     insert_data(res, conn, table="sources")
     # Retrieve from cache
     sources_ys_incache, sources_ys_search = retrieve_sources(df, conn)
@@ -153,7 +153,7 @@ def test_retrieve_sources_full():
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=cols, dtype="int64")
     # Populate cache
-    res = query_sources_by_year(expected_years[0], expected_sources)
+    res = query_sources_by_year(expected_sources, expected_years[0])
     insert_data(res, conn, table="sources")
     sources_ys_incache, sources_ys_search = retrieve_sources(df, conn)
     # Retrieve from cache
@@ -185,7 +185,7 @@ def test_sources_afids_in_cache_partial():
                       columns=["source_id", "year"], dtype="int64")
     sa_incache, sa_search = retrieve_sources(df, conn, afid=True)
     # Populate cache
-    res = query_sources_by_year(expected_years[0], expected_sources, afid=True)
+    res = query_sources_by_year(expected_sources, expected_years[0], afid=True)
     insert_data(res, conn, table="sources_afids")
     # Retrieve from cache
     sa_incache, sa_search = retrieve_sources(df, conn, afid=True)
@@ -209,7 +209,7 @@ def test_sources_afids_in_cache_full():
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=cols, dtype="int64")
     # Populate cache
-    res = query_sources_by_year(expected_years[0], expected_sources, afid=True)
+    res = query_sources_by_year(expected_sources, expected_years[0], afid=True)
     insert_data(res, conn, table="sources_afids")
     # Retrieve from cache
     sa_incache, sa_search = retrieve_sources(df, conn, afid=True)
@@ -233,7 +233,7 @@ def test_sources_afids_in_sources_cache():
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
-    res = query_sources_by_year(expected_years[0], expected_sources, afid=True)
+    res = query_sources_by_year(expected_sources, expected_years[0], afid=True)
     insert_data(res, conn, table="sources")
     # Retrieve from cache
     sources_ys_incache, sources_ys_search = retrieve_sources(df, conn)

@@ -188,7 +188,7 @@ class Original(Scientist):
             warn("ignore_first_id set back to False: period is None or "
                  "the first year of the period is before the first year "
                  "of publication of the scientist.")
-        if isinstance(refresh, bool):
+        if not isinstance(refresh, bool):
             refresh = False
             warn("refresh must be boolean.  Continuing with refresh=False.")
 

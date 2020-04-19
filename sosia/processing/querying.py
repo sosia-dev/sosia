@@ -5,7 +5,7 @@ from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error
 
 from sosia.processing.caching import insert_data, retrieve_authors
-from sosia.processing.extracting import get_authors, get_auth_from_df
+from sosia.processing.extracting import get_auth_from_df
 from sosia.processing.utils import expand_affiliation
 from sosia.utils import custom_print, print_progress
 
@@ -141,17 +141,17 @@ def query_author_data(authors_list, conn, refresh=False, verbose=False):
     return auth_done
 
 
-def query_sources_by_year(year, source_ids, stacked=False, refresh=False,
+def query_sources_by_year(source_ids, year, stacked=False, refresh=False,
                           verbose=False, afid=False):
     """Get authors lists for each source in a particular year.
 
     Parameters
     ----------
-    year : str or int
-        The year of the search.
-
     source_ids : list
         List of Scopus IDs of sources to search.
+
+    year : str or int
+        The year of the search.
 
     refresh : bool (optional, default=False)
         Whether to refresh cached files if they exist, or not.
@@ -162,6 +162,13 @@ def query_sources_by_year(year, source_ids, stacked=False, refresh=False,
     afid : bool (optional, default=False)
         If True, mantains information on the Scopus affiliation ID in res.
     """
+    # Dummy return value
+    columns = ["source_id", "year", "auids"]
+    if afid:
+        columns.append("afid")
+    dummy = pd.DataFrame(columns=columns)
+
+    # Search authors
     n = len(source_ids)
     custom_print(f"Searching authors in {n:,} sources in {year}...", verbose)
     if stacked:
@@ -179,12 +186,17 @@ def query_sources_by_year(year, source_ids, stacked=False, refresh=False,
             q = f"SOURCE-ID({source_id}) AND PUBYEAR IS {year}"
             res.extend(base_query("docs", q, refresh=refresh, fields=["eid"]))
             print_progress(idx+1, n, verbose)
-    res = pd.DataFrame(res)
-    if res.empty:
-        return res
-    res = res.dropna(subset=["author_ids"])
-    if res.empty:
-        return res
+
+    # Verify data is not empty
+    if res:
+        res = pd.DataFrame(res)
+        res = res.dropna(subset=["author_ids"])
+        if res.empty:
+            return dummy
+    else:
+        return dummy
+
+    # Group data
     grouping_cols = ["source_id", "year"]
     if afid:
         res = expand_affiliation(res)

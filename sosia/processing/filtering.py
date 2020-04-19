@@ -181,8 +181,6 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
         treatment, during years to match on, and during years before the
         first publication.
     """
-    from collections import Counter
-
     # Define variables
     min_year = self.first_year - self.year_margin
     max_year = self.first_year + self.year_margin
@@ -196,42 +194,40 @@ def search_group_from_sources(self, stacked, verbose, refresh=False):
     text = f"Searching authors for search_group in {len(search_sources):,} sources..."
     custom_print(text, verbose)
 
-    # Get already cached sources from DB
-    sources_ay = DataFrame(product(search_sources, [self.active_year]),
-                           columns=["source_id", "year"])
-    _, to_search = retrieve_sources(sources_ay, self.sql_conn,
-                                    refresh=refresh, afid=True)
-    res = query_sources_by_year(self.active_year, to_search["source_id"].unique(),
+    # Retrieve author-year-affiliation information
+    sources_today = DataFrame(product(search_sources, [self.active_year]),
+                              columns=["source_id", "year"])
+    auth_today, missing = retrieve_sources(sources_today, self.sql_conn,
+                                           refresh=refresh, afid=True)
+    res = query_sources_by_year(missing["source_id"].unique(), self.active_year,
                                 afid=True, **params)
     insert_data(res, self.sql_conn, table="sources_afids")
-    sources_ay, _ = retrieve_sources(sources_ay, self.sql_conn, refresh=refresh,
-                                     afid=True)
+    auth_today = auth_today.append(res)
 
     # Authors active in year of treatment( and provided location)
     mask = None
     if self.search_affiliations:
-        mask = sources_ay["afid"].isin(self.search_affiliations)
-    today = flat_set_from_df(sources_ay, "auids", condition=mask)
+        mask = auth_today["afid"].isin(self.search_affiliations)
+    today = flat_set_from_df(auth_today, "auids", condition=mask)
 
     # Authors active around year of first publication
-    sources_ys = DataFrame(product(search_sources, search_years),
-                           columns=["source_id", "year"])
-    _, sources_ys_search = retrieve_sources(sources_ys, self.sql_conn,
-                                            refresh=refresh)
-    for y in sources_ys_search["year"].unique():
-        mask = sources_ys_search["year"] == y
-        search_sources = sources_ys_search[mask]["source_id"].unique()
-        res = query_sources_by_year(y, search_sources, **params)
+    sources_then = DataFrame(product(search_sources, search_years),
+                             columns=["source_id", "year"])
+    auth_then, missing = retrieve_sources(sources_then, self.sql_conn,
+                                          refresh=refresh)
+    for y in missing["year"].unique():
+        missing_sources = missing[missing["year"] == y]["source_id"].unique()
+        res = query_sources_by_year(missing_sources, y, **params)
         insert_data(res, self.sql_conn, table="sources")
-    sources_ys, _ = retrieve_sources(sources_ys, self.sql_conn, refresh=refresh)
-    if not self._ignore_first_id:
-        mask = sources_ys["year"].between(min_year, max_year, inclusive=True)
-        then = flat_set_from_df(sources_ys, "auids", condition=mask)
-    else:
+    auth_then = auth_then.append(res)
+    if self._ignore_first_id:
         then = set()
+    else:
+        mask = auth_then["year"].between(min_year, max_year, inclusive=True)
+        then = flat_set_from_df(auth_then, "auids", condition=mask)
 
     # Authors with publications before
-    mask = sources_ys.year < min_year
-    negative = flat_set_from_df(sources_ys, "auids", condition=mask)
+    mask = auth_then["year"] < min_year
+    negative = flat_set_from_df(auth_then, "auids", condition=mask)
 
     return today, then, negative
