@@ -15,19 +15,23 @@ def connect_database(fname):
     return sqlite3.connect(fname)
 
 
-def make_database(fname, drop=False):
+def make_database(fname=None, drop=False):
     """Make SQLite database with predefined tables and keys.
 
     Parameters
     ----------
-    fname : str
-        The path of the SQLite database to connect to.
+    fname : str (optiona, default=None)
+        The path of the SQLite database to connect to.  If None will use
+        the path provided in `~/.sosia/config.ini`.
 
     drop : boolean (optional, default=False)
         If True, deletes and recreates all tables in cache (irreversible).
     """
     from sosia.establishing.constants import DB_TABLES
+    from sosia.establishing.config import config
 
+    if not fname:
+        fname = config.get('Filepaths', 'Database')
     conn = sqlite3.connect(fname)
     cursor = conn.cursor()
     for table, variables in DB_TABLES.items():
