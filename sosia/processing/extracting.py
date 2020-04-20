@@ -173,17 +173,13 @@ def inform_match(profile, keywords):
     return match_info
 
 
-def inform_matches(profiles, focal, keywords, stop_words, verbose,
-                   refresh, **kwds):
+def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
     """Add match-specific information to all matches.
 
     Parameters
     ----------
-    profiles : list of sosia.Scientist()
-        A list of Scientist objects representing matches.
-
-    focal : Scientist
-        Object of class Scientist representing the focal scientist.
+    self : sosia.Original()
+        Object whose matches should received additional information
 
     keywords : iterable of strings
         Which information to add to matches.
@@ -211,6 +207,8 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
     from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
     from string import digits, punctuation
 
+    from sosia.classes import Scientist
+
     # Create Match object
     fields = "ID name " + " ".join(keywords)
     m = namedtuple("Match", fields)
@@ -218,30 +216,34 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
     # Preparation
     doc_parse = "reference_sim" in keywords or "abstract_sim" in keywords
     if doc_parse:
-        focal_docs = parse_docs([d.eid for d in focal.publications], refresh)
+        focal_docs = parse_docs([d.eid for d in self.publications], refresh)
         focal_refs, focal_refs_n, focal_abs, focal_abs_n = focal_docs
-        stop_words = list(ENGLISH_STOP_WORDS) + list(punctuation + digits)
+        if not stop_words:
+            stop_words = list(ENGLISH_STOP_WORDS) + list(punctuation + digits)
 
     # Add selected information match-by-match
     out = []
     completeness = {}
-    total = len(profiles)
+    total = len(self.matches)
     print_progress(0, total, verbose)
     meta = namedtuple("Meta", "refs absts total")
-    for idx, p in enumerate(profiles):
+    for idx, auth_id in enumerate(self.matches):
+        p = Scientist([auth_id], self.year, period=self.period,
+                      refresh=refresh, sql_fname=self.sql_fname)
         match_info = inform_match(p, keywords)
         # Abstract and reference similiarity is performed jointly
         if doc_parse:
             eids = [d.eid for d in p.publications]
             refs, refs_n, absts, absts_n = parse_docs(eids, refresh)
-            key = "; ".join(p.identifier)
-            completeness[key] = meta(refs=refs_n, absts=absts_n, total=len(eids))
+            completeness[auth_id] = meta(refs=refs_n, absts=absts_n,
+                                         total=len(eids))
             if "reference_sim" in keywords:
                 ref_cos = compute_similarity(refs, focal_refs, **kwds)
                 match_info["reference_sim"] = ref_cos
             if "abstract_sim" in keywords:
                 kwds.update({"stop_words": stop_words})
-                abs_cos = compute_similarity(absts, focal_abs, tokenize=True, **kwds)
+                abs_cos = compute_similarity(absts, focal_abs, tokenize=True,
+                                             **kwds)
                 match_info["abstract_sim"] = abs_cos
         out.append(m(**match_info))
         print_progress(idx+1, total, verbose)
@@ -251,8 +253,8 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
         for auth_id, completeness in completeness.items():
             _print_missing_docs([auth_id], completeness.absts,
                                 completeness.refs, completeness.total)
-        focal_pubs_n = len(focal.publications)
-        _print_missing_docs(focal.identifier, focal_abs_n, focal_refs_n,
+        focal_pubs_n = len(self.publications)
+        _print_missing_docs(self.identifier, focal_abs_n, focal_refs_n,
                             focal_pubs_n, res_type="Original")
     return out
 

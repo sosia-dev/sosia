@@ -545,10 +545,7 @@ class Original(Scientist):
         else:
             fields = allowed_fields
 
-        # Possibly add information to matches
         custom_print("Providing additional information...", verbose)
-        profiles = [Scientist([a], self.year, period=self.period,
-                              refresh=refresh, sql_fname=self.sql_fname)
-                    for a in self.matches]
-        self._matches = inform_matches(profiles, self, fields, stop_words,
-                                       verbose, refresh, **tfidf_kwds)
+        matches = inform_matches(self, fields, stop_words, verbose, refresh,
+                                 **tfidf_kwds)
+        self._matches = matches
