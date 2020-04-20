@@ -19,21 +19,23 @@ def compute_cosine(matrix, digits=4):
     return (matrix * matrix.T).toarray().round(digits)[-1][0]
 
 
-def compute_similarity(left, right, tokenize=False, **kwds):
+def compute_similarity(left, right, tokenize=False, stop_words=None, **kwds):
     """Compute cosine similarity from tfidf-weighted matrix consisting
     of two vectors (left and right).
     """
+    from sklearn.feature_extraction.text import TfidfVectorizer
+
+    def tokenize_and_stem(text):
+        """Auxiliary function to return stemmed tokens of document."""
+        from nltk import snowball, word_tokenize
+        return [snowball.SnowballStemmer("english").stem(t) for
+                t in word_tokenize(text.lower()) if t not in stop_words]
+
     if not left and not right:
         return None
-    from sklearn.feature_extraction.text import TfidfVectorizer
     if tokenize:
         kwds.update({"tokenizer": tokenize_and_stem})
+    if not stop_words:
+        stop_words = []
     vec = TfidfVectorizer(**kwds)
     return compute_cosine(vec.fit_transform([left, right]))
-
-
-def tokenize_and_stem(text):
-    """Auxiliary function to return stemmed tokens of document."""
-    from nltk import snowball, word_tokenize
-    return [snowball.SnowballStemmer("english").stem(t) for
-            t in word_tokenize(text.lower())]
