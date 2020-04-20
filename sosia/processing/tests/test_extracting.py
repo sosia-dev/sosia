@@ -33,6 +33,13 @@ def test_find_location():
     assert_equal(aff, "University of Munich")
 
 
+def get_main_field():
+    fields = [1000, 1000, 2000, 2000, 2020, 2020]
+    received = get_main_field(fields)
+    expected = (2020, "ECON")
+    assert_equal(received, expected)
+
+
 def test_parse_docs():
     eids = ["2-s2.0-84866317084"]
     received = parse_docs(eids, refresh=refresh)

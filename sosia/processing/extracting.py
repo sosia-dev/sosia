@@ -69,7 +69,6 @@ def get_authors(pubs):
 def get_main_field(fields):
     """Get main 4-digit ASJC field (code) and main 2-digit ASJC field (name).
 
-
     Parameters
     ----------
     fields : iterable of int
@@ -77,10 +76,11 @@ def get_main_field(fields):
 
     Returns
     -------
-    t : tuple
-        A 2-element tuple where the first element is the most common 4-digit
-        ASJC field and the second element the short name of the most common
-        2-digit ASJC field.
+    main : int
+        The most common 4-digit ASJC field.
+
+    name : str
+        The name of the most common 2-digit ASJC field.
 
     Note
     ----
@@ -114,7 +114,7 @@ def get_main_field(fields):
         pass
     main_2 = int(c.most_common(1)[0][0])
 
-    return (main_4, ASJC_2D[main_2])
+    return main_4, ASJC_2D[main_2]
 
 
 def inform_matches(profiles, focal, keywords, stop_words, verbose,
