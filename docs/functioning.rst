@@ -28,18 +28,24 @@ Depending on the number of search sources and the first search group, one query 
 Initial set-up
 --------------
 
-`sosia` infers the scientist's (main )field of research from the field-associations of the sources she publishes in.  To this end, a sources-field list has to be created once.  It will be stored in `~/.sosia/` (that is, in your home drive - on Unix systems this will be a hidden folder).  Create the list like so:
+`sosia` infers the scientist's (main )field of research from the field-associations of the sources she publishes in.  To this end, two lists with source information are necessary.  A list linking source titles to fields, and a list linking source titles to source IDs.  Both will be stored in `~/.sosia/` (that is, in your home drive - on Unix systems this will be a hidden folder).  Create the lists like so:
 
 .. code-block:: python
    
     >>> import sosia
     >>> sosia.create_fields_sources_list()
-    >>> sosia.create_cache()
 
-There will also be a list linking source titles and source IDs.
 
-Step-by-Step
-------------
+To speed up the process, sosia makes use of a SQLite Database.  Specify the path in `~/.sosia/config.ini` and initiate the database like so:
+
+.. code-block:: python
+   
+    >>> import sosia
+    >>> sosia.make_database()
+
+
+The Process Step-by-Step
+------------------------
 
 The main class is :doc:`Original <../reference/sosia.Original>`.  You initiate it with the Scopus Author ID, or a list of Scopus Author IDs, of the researcher you are looking for, and the year of treatment:
 
@@ -188,24 +194,7 @@ The researcher might need additional information to both assess match quality an
     country='Norway', affiliation_id='60010348', affiliation='TIK University of Oslo', language='eng',
     reference_sim=0.0214, abstract_sim=0.1659)
 
-Additional search options are available to the user. First, the user can restrict the search of potential matches to authors affiliated to given institutions. This is achieved by providing a list of Scopus Affiliation IDs as value of the optional parameter `search_affiliations` in the class `Original`. For instance:
-
-.. code-block:: python
-
-    >>> affiliations = [60002612, 60032111, 60000765]
-    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1,
-            pub_margin=1, coauth_margin=1, period=3,search_affiliations=affiliations)
-
-A second option allows to change the window of time within which the similarity between scientist and potential matches is considered. With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to change this behavior in order to focus on a shorter period of time before the year of treatment. This is done by initiating the class :doc:`Original <../reference/sosia.Original>` and setting the option `period` equal to the desired number of years,
-
-.. code-block:: python
-
-    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1,
-            pub_margin=1, coauth_margin=1, period=3)
-
-and then proceeding normally with the other steps. `sosia` will return authors starting publishing within 1 year before or after the first year of publication, with maximum 1 publication more or less, 1 citation more or less and 1 coauthor more or less the scientists, between 2017 and 2015 included. More precisely, for citations and coauthors, `sosia` counts: only citations (excluding self-citations) up to 2017 to papers published within the period; the number of unique coauthors in publications within the period. It is left to the user to further restrict the sample of matches based on similarity over the full period (the necessary variables can be obtained as output).
-
-By default, `sosia` provides the following information (which you switch off using `information=False` to simply return a list of Scopus IDs):
+By default, `sosia` provides the following information:
 
 * `first_year`: The year of the first recorded publication
 * `num_coauthors`: The number of coauthors (Scopus Author profiles) up to the year of treatment
@@ -274,6 +263,29 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     55071051800       eng         0.0000        0.1032  
     55317901900       eng         0.0079        0.1224  
     55804519400  eng; spa         0.0000        0.1156
+
+
+Refinements of the search process
+---------------------------------
+
+Additional search options are available to the user. First, the user can restrict the search of potential matches to authors affiliated to given institutions. This is achieved by providing a list of Scopus Affiliation IDs as value of the optional parameter `search_affiliations` in the class `Original`. For instance:
+
+.. code-block:: python
+
+    >>> affiliations = [60002612, 60032111, 60000765]
+    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1,
+            pub_margin=1, coauth_margin=1, period=3,search_affiliations=affiliations)
+
+
+A second option allows to change the window of time within which the similarity between scientist and potential matches is considered. With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to change this behavior in order to focus on a shorter period of time before the year of treatment. This is done by initiating the class :doc:`Original <../reference/sosia.Original>` and setting the option `period` equal to the desired number of years,
+
+.. code-block:: python
+
+    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1,
+            pub_margin=1, coauth_margin=1, period=3)
+
+
+and then proceeding normally with the other steps. `sosia` will return authors starting publishing within 1 year before or after the first year of publication, with maximum 1 publication more or less, 1 citation more or less and 1 coauthor more or less the scientists, between 2017 and 2015 included. More precisely, for citations and coauthors, `sosia` counts: only citations (excluding self-citations) up to 2017 to papers published within the period; the number of unique coauthors in publications within the period. It is left to the user to further restrict the sample of matches based on similarity over the full period (the necessary variables can be obtained as output).
 
 Finally, for demanding users, there exists an option to attenuate the issue of disambiguation of names in Scopus. Scopus Author IDs are curated and fairly correct, on average. However, in some cases they are incorrect. In most of these cases, more than one Author ID is associated to one same author. In `sosia` it is left to the user to verify whether the Author IDs obtained in the list of matches are precise. At the same time, with default settings, there may be a "hypothetical author" that is in theory a good match, but that is not found because she does not have a unique Author ID. This is the type of error that can be attenuated. First, use the option `period` to base the search on a shorter period. This increases the likelihood of finding one Author ID of the "hypothetical author" which is valid within the period. Second, set the option `ignore_first_id` equal to `True` in the function `define_search_group`.
 
