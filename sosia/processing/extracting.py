@@ -66,13 +66,6 @@ def get_authors(pubs):
     return [au for sl in l for au in sl]
 
 
-def get_auth_from_df(pubs):
-    """Get list of author IDs from a dataframe of publications.
-    """
-    l = [x.split(";") for x in pubs.author_ids if isinstance(x, str)]
-    return [au for sl in l for au in sl]
-
-
 def get_main_field(fields):
     """Get main 4-digit ASJC field (code) and main 2-digit ASJC field (name).
 

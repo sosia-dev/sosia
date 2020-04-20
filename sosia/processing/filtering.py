@@ -205,7 +205,7 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
     # Authors active in year of treatment( and provided location)
     mask = None
     if self.search_affiliations:
-        mask = auth_today["afid"].isin(self.search_affiliations)
+        mask = auth_today["afid"].astype(str).isin(self.search_affiliations)
     today = flat_set_from_df(auth_today, "auids", condition=mask)
 
     # Authors active around year of first publication

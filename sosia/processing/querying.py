@@ -5,7 +5,6 @@ from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error
 
 from sosia.processing.caching import insert_data, retrieve_authors
-from sosia.processing.extracting import get_auth_from_df
 from sosia.processing.utils import expand_affiliation
 from sosia.utils import custom_print, print_progress
 
@@ -201,12 +200,14 @@ def query_sources_by_year(source_ids, year, stacked=False, refresh=False,
     if afid:
         res = expand_affiliation(res)
         grouping_cols.append("afid")
+        if res.empty:
+            return dummy
     res["year"] = year
-    res = (res.astype(str)
-              .groupby(grouping_cols)[["author_ids"]]
-              .apply(get_auth_from_df)
+    res["author_ids"] = res["author_ids"] + ";"
+    res = (res.groupby(grouping_cols)[["author_ids"]].apply(sum)
               .reset_index()
-              .rename(columns={0: "auids"}))
+              .rename(columns={"author_ids": "auids"}))
+    res["auids"] = res["auids"].str.strip(";").str.split(";")
     return res
 
 
