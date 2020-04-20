@@ -19,6 +19,20 @@ from sosia.utils import accepts, custom_print, print_progress
 
 class Original(Scientist):
     @property
+    def matches(self):
+        """List of Scopus IDs or list of namedtuples representing matches
+        of the original scientist in the year of treatment.
+
+        Notes
+        -----
+        Property is initiated via .find_matches().
+        """
+        try:
+            return self._matches
+        except AttributeError:
+            return None
+
+    @property
     def search_group(self):
         """The set of authors that might be matches to the scientist.  The
         set contains the intersection of all authors publishing in the given
@@ -468,7 +482,7 @@ class Original(Scientist):
         # Finalize
         text = f"Found {len(matches):,} author(s) matching all criteria"
         custom_print(text, verbose)
-        self.matches = sorted([str(auth_id) for auth_id in matches])
+        self._matches = sorted([str(auth_id) for auth_id in matches])
 
     def inform_matches(self, fields=None, verbose=False, refresh=False,
                        stop_words=None, **tfidf_kwds):
@@ -513,7 +527,7 @@ class Original(Scientist):
             If fields contains invalid keywords.
         """
         # Checks
-        if not self.matches:
+        if not self._matches:
             text = "No matches defined.  Please run .find_matches() first."
             raise Exception(text)
         allowed_fields = ["first_name", "surname", "first_year",
@@ -536,5 +550,5 @@ class Original(Scientist):
         profiles = [Scientist([a], self.year, period=self.period,
                               refresh=refresh, sql_fname=self.sql_fname)
                     for a in self.matches]
-        self.matches = inform_matches(profiles, self, fields, stop_words,
-                                      verbose, refresh, **tfidf_kwds)
+        self._matches = inform_matches(profiles, self, fields, stop_words,
+                                       verbose, refresh, **tfidf_kwds)
