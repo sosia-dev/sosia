@@ -117,13 +117,69 @@ def get_main_field(fields):
     return main_4, ASJC_2D[main_2]
 
 
-def inform_matches(profiles, focal, keywords, stop_words, verbose,
-                   refresh, **kwds):
+def inform_match(profile, keywords):
     """Create namedtuple adding information to matches.
 
     Parameters
     ----------
-    profiles : list of Scientist()
+    profile : sosia.Scientist()
+        A Scientist() object representing a match.
+
+    keywords : iterable of strings
+        Which information to add to the match.
+
+    Returns
+    -------
+    match_info : dict
+        Information corresponding to provided keywords.
+    """
+    from sosia.classes import Scientist
+
+    match_info = {"ID": profile.identifier[0], "name": profile.name}
+    if "language" in keywords:
+        try:
+            match_info["language"] = profile.get_publication_languages().language
+        except Scopus404Error:  # Refresh profile
+            profile = Scientist(profile.identifier, profile.year, refresh=True)
+            match_info["language"] = profile.get_publication_languages().language
+    if "first_name" in keywords:
+        match_info["first_name"] = profile.first_name
+    if "surname" in keywords:
+        match_info["surname"] = profile.surname
+    if "first_year" in keywords:
+        match_info["first_year"] = profile.first_year
+    if "num_coauthors" in keywords:
+        match_info["num_coauthors"] = len(profile.coauthors)
+    if "num_publications" in keywords:
+        match_info["num_publications"] = len(profile.publications)
+    if "num_citations" in keywords:
+        match_info["num_citations"] = profile.citations
+    if "num_coauthors_period" in keywords:
+        match_info["num_coauthors_period"] = len(profile.coauthors_period)
+    if "num_publications_period" in keywords:
+        match_info["num_publications_period"] = len(profile.publications_period)
+    if "num_citations_period" in keywords:
+        match_info["num_citations_period"] = profile.citations_period
+    if "subjects" in keywords:
+        match_info["subjects"] = profile.subjects
+    if "country" in keywords:
+        match_info["country"] = profile.country
+    if "city" in keywords:
+        match_info["city"] = profile.city
+    if "affiliation_id" in keywords:
+        match_info["affiliation_id"] = profile.affiliation_id
+    if "affiliation" in keywords:
+        match_info["affiliation"] = profile.organization
+    return match_info
+
+
+def inform_matches(profiles, focal, keywords, stop_words, verbose,
+                   refresh, **kwds):
+    """Add match-specific information to all matches.
+
+    Parameters
+    ----------
+    profiles : list of sosia.Scientist()
         A list of Scientist objects representing matches.
 
     focal : Scientist
@@ -148,89 +204,53 @@ def inform_matches(profiles, focal, keywords, stop_words, verbose,
 
     Returns
     -------
-    m : list of namedtuples
+    out : list of namedtuples
         A list of namedtuples representing matches.  Provided information
         depend on provided keywords.
     """
-    from sosia.classes import Scientist
     from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
     from string import digits, punctuation
+
     # Create Match object
     fields = "ID name " + " ".join(keywords)
     m = namedtuple("Match", fields)
+
     # Preparation
     doc_parse = "reference_sim" in keywords or "abstract_sim" in keywords
+    if doc_parse:
+        focal_docs = parse_docs([d.eid for d in focal.publications], refresh)
+        focal_refs, focal_refs_n, focal_abs, focal_abs_n = focal_docs
+        stop_words = list(ENGLISH_STOP_WORDS) + list(punctuation + digits)
+
+    # Add selected information match-by-match
+    out = []
+    completeness = {}
     total = len(profiles)
     print_progress(0, total, verbose)
-    if doc_parse:
-        focal_eids = [d.eid for d in focal.publications]
-        focal_docs = parse_docs(focal_eids, refresh)
-        focal_refs, focal_refs_n, focal_abs, focal_abs_n = focal_docs
-        stop_words = list(ENGLISH_STOP_WORDS)
-        stop_words.extend(punctuation + digits)
-    # Add selective information
-    out = []
-    info = {}  # to collect information on missing information
+    meta = namedtuple("Meta", "refs absts total")
     for idx, p in enumerate(profiles):
-        # Add characteristics
-        match_info = {"ID": p.identifier[0], "name": p.name}
-        if "language" in keywords:
-            try:
-                match_info["language"] = p.get_publication_languages().language
-            except Scopus404Error:  # Refresh profile
-                p = Scientist(p.identifier, p.year, refresh=True)
-                match_info["language"] = p.get_publication_languages().language
-        if "first_name" in keywords:
-            match_info["first_name"] = p.first_name
-        if "surname" in keywords:
-            match_info["surname"] = p.surname
-        if "first_year" in keywords:
-            match_info["first_year"] = p.first_year
-        if "num_coauthors" in keywords:
-            match_info["num_coauthors"] = len(p.coauthors)
-        if "num_publications" in keywords:
-            match_info["num_publications"] = len(p.publications)
-        if "num_citations" in keywords:
-            match_info["num_citations"] = p.citations
-        if "num_coauthors_period" in keywords:
-            match_info["num_coauthors_period"] = len(p.coauthors_period)
-        if "num_publications_period" in keywords:
-            match_info["num_publications_period"] = len(p.publications_period)
-        if "num_citations_period" in keywords:
-            match_info["num_citations_period"] = p.citations_period
-        if "subjects" in keywords:
-            match_info["subjects"] = p.subjects
-        if "country" in keywords:
-            match_info["country"] = p.country
-        if "city" in keywords:
-            match_info["city"] = p.city
-        if "affiliation_id" in keywords:
-            match_info["affiliation_id"] = p.affiliation_id
-        if "affiliation" in keywords:
-            match_info["affiliation"] = p.organization
+        match_info = inform_match(p, keywords)
         # Abstract and reference similiarity is performed jointly
         if doc_parse:
             eids = [d.eid for d in p.publications]
             refs, refs_n, absts, absts_n = parse_docs(eids, refresh)
-            ref_cos = compute_similarity(refs, focal_refs, **kwds)
-            kwds.update({"stop_words": stop_words})
-            abs_cos = compute_similarity(absts, focal_abs, tokenize=True, **kwds)
-            # Save info for below print statement
-            meta = namedtuple("Meta", "refs absts total")
-            meta(refs=refs_n, absts=absts_n, total=len(eids))
             key = "; ".join(p.identifier)
-            info[key] = meta(refs=refs_n, absts=absts_n, total=len(eids))
-        if "reference_sim" in keywords:
-            match_info["reference_sim"] = ref_cos
-        if "abstract_sim" in keywords:
-            match_info["abstract_sim"] = abs_cos
-        # Finalize
+            completeness[key] = meta(refs=refs_n, absts=absts_n, total=len(eids))
+            if "reference_sim" in keywords:
+                ref_cos = compute_similarity(refs, focal_refs, **kwds)
+                match_info["reference_sim"] = ref_cos
+            if "abstract_sim" in keywords:
+                kwds.update({"stop_words": stop_words})
+                abs_cos = compute_similarity(absts, focal_abs, tokenize=True, **kwds)
+                match_info["abstract_sim"] = abs_cos
         out.append(m(**match_info))
         print_progress(idx+1, total, verbose)
-    # Print information on missing information
+
+    # Eventually print information on missing information
     if verbose and doc_parse:
-        for auth_id, info in info.items():
-            _print_missing_docs([auth_id], info.absts, info.refs, info.total)
+        for auth_id, completeness in completeness.items():
+            _print_missing_docs([auth_id], completeness.absts,
+                                completeness.refs, completeness.total)
         focal_pubs_n = len(focal.publications)
         _print_missing_docs(focal.identifier, focal_abs_n, focal_refs_n,
                             focal_pubs_n, res_type="Original")
