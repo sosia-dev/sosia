@@ -90,12 +90,16 @@ def get_main_field(fields):
 
     from sosia.processing.constants import ASJC_2D
 
+    # Exclude Multidisciplinary
+    while 1000 in fields:
+        fields.remove(1000)
+
+    # Verify at least some information is present
+    if not fields:
+        return (None, None)
+
     # 4 digit field
     c = Counter(fields)
-    try:
-        c.pop(1000)  # Exclude Multidisciplinary
-    except KeyError:
-        pass
     top_fields = [f for f, val in c.items() if val == max(c.values())]
     if len(top_fields) == 1:
         main_4 = top_fields[0]
@@ -108,13 +112,10 @@ def get_main_field(fields):
 
     # 2 digit field
     c = Counter([str(f)[:2] for f in fields])
-    try:
-        c.pop(10)  # Exclude Multidisciplinary
-    except KeyError:
-        pass
     main_2 = int(c.most_common(1)[0][0])
+    name = ASJC_2D[main_2]
 
-    return main_4, ASJC_2D[main_2]
+    return main_4, name
 
 
 def inform_match(profile, keywords):

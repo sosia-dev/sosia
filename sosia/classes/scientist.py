@@ -3,6 +3,8 @@
 # Author:   Michael E. Rose <michael.ernst.rose@gmail.com>
 """Super class to represent a scientist."""
 
+from warnings import warn
+
 from pybliometrics.scopus import AbstractRetrieval
 
 from sosia.establishing import config, connect_database
@@ -354,6 +356,10 @@ class Scientist(object):
         self._active_year = int(max(pub_years))
         self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
         self._main_field = get_main_field(self._fields)
+        if not self._main_field[0]:
+            text = "Not possible to determine research field(s) of " +\
+                   "researcher.  Functionality is reduced."
+            warn(text, UserWarning)
 
         # Most recent geolocation
         ctry, afid, org = find_location(identifier, self._publications,
