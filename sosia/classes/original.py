@@ -251,7 +251,7 @@ class Original(Scientist):
                            .sum()["asjc"]
                            .to_frame())
         # Deselect sources with alien fields
-        grouped["asjc"] = grouped["asjc"].str.split().apply(set)
+        grouped["asjc"] = grouped["asjc"].astype(str).str.split().apply(set)
         fields = set(str(f) for f in self.fields)
         no_alien_field = grouped["asjc"].apply(lambda s: len(s - fields) == 0)
         grouped = grouped[no_alien_field]
