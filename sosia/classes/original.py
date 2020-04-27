@@ -72,8 +72,8 @@ class Original(Scientist):
     def search_sources(self, val):
         self._search_sources = maybe_add_source_names(val, self.source_names)
 
-    def __init__(self, scientist, year, year_margin=1, pub_margin=0.1,
-                 cits_margin=0.1, coauth_margin=0.1, period=None, refresh=False,
+    def __init__(self, scientist, year, year_margin=2, pub_margin=0.2,
+                 cits_margin=0.2, coauth_margin=0.2, period=None, refresh=False,
                  eids=None, search_affiliations=None, sql_fname=None):
         """Class to represent a scientist for which we want to find a control
         group.
@@ -88,26 +88,26 @@ class Original(Scientist):
             Year of the event.  Control groups will be matched on trends and
             characteristics of the scientist up to this year.
 
-        year_margin : numeric (optional, default=1)
+        year_margin : numeric (optional, default=2)
             Number of years by which the search for authors publishing around
             the year of the focal scientist's year of first publication should
             be extend in both directions.
 
-        pub_margin : numeric (optional, default=0.1)
+        pub_margin : numeric (optional, default=0.2)
             The left and right margin for the number of publications to match
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientists number of
             publications and the resulting value is rounded up.  If the value
             is an integer it is interpreted as fixed number of publications.
 
-        cits_margin : numeric (optional, default=0.1)
+        cits_margin : numeric (optional, default=0.2)
             The left and right margin for the number of citations to match
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientists number of
             publications and the resulting value is rounded up.  If the value
             is an integer it is interpreted as fixed number of citations.
 
-        coauth_margin : numeric (optional, default=0.1)
+        coauth_margin : numeric (optional, default=0.2)
             The left and right margin for the number of coauthors to match
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientists number of
