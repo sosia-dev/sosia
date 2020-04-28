@@ -136,41 +136,30 @@ def inform_match(profile, keywords):
     """
     from sosia.classes import Scientist
 
-    match_info = {"ID": profile.identifier[0], "name": profile.name}
+    info = {
+        "ID": profile.identifier[0],
+        "name": profile.name,
+        "first_name": profile.first_name,
+        "surname": profile.surname,
+        "first_year": profile.first_year,
+        "num_coauthors": len(profile.coauthors),
+        "num_publications": len(profile.publications),
+        "num_citations": profile.citations,
+        "num_coauthors_period": len(profile.coauthors_period),
+        "num_publications_period": len(profile.publications_period),
+        "num_citations_period": profile.citations_period,
+        "subjects": profile.subjects,
+        "country": profile.country,
+        "affiliation_id": profile.affiliation_id,
+        "affiliation": profile.organization
+    }
+    match_info = {k: v for k, v in info.items() if k in keywords + ["ID", "name"]}
     if "language" in keywords:
         try:
             match_info["language"] = profile.get_publication_languages().language
         except Scopus404Error:  # Refresh profile
             profile = Scientist(profile.identifier, profile.year, refresh=True)
             match_info["language"] = profile.get_publication_languages().language
-    if "first_name" in keywords:
-        match_info["first_name"] = profile.first_name
-    if "surname" in keywords:
-        match_info["surname"] = profile.surname
-    if "first_year" in keywords:
-        match_info["first_year"] = profile.first_year
-    if "num_coauthors" in keywords:
-        match_info["num_coauthors"] = len(profile.coauthors)
-    if "num_publications" in keywords:
-        match_info["num_publications"] = len(profile.publications)
-    if "num_citations" in keywords:
-        match_info["num_citations"] = profile.citations
-    if "num_coauthors_period" in keywords:
-        match_info["num_coauthors_period"] = len(profile.coauthors_period)
-    if "num_publications_period" in keywords:
-        match_info["num_publications_period"] = len(profile.publications_period)
-    if "num_citations_period" in keywords:
-        match_info["num_citations_period"] = profile.citations_period
-    if "subjects" in keywords:
-        match_info["subjects"] = profile.subjects
-    if "country" in keywords:
-        match_info["country"] = profile.country
-    if "city" in keywords:
-        match_info["city"] = profile.city
-    if "affiliation_id" in keywords:
-        match_info["affiliation_id"] = profile.affiliation_id
-    if "affiliation" in keywords:
-        match_info["affiliation"] = profile.organization
     return match_info
 
 
