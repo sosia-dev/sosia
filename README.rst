@@ -40,11 +40,10 @@ or development version from GitHub repository:
 Functioning
 ===========
 
-.. inclusion-marker-start
-
 sosia performs a series of queries in the Scopus database using the `pybliometrics package 
 <http://pybliometrics.readthedocs.io/>`_.  After configuring your local pybliometrics (providing access credentials and eventually setting cache directories), you can use sosia:
 
+.. inclusion-marker-start
 .. code-block:: python
 
     >>> import sosia

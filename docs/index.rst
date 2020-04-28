@@ -1,14 +1,21 @@
 sosia: Automatic author matching in Scopus on-line
 ==================================================
 
-sosia is a Python library match authors in the Scopus database, using the `pybliometrics package <https://pybliometrics.readthedocs.io/en/latest/index.html>`_.
+sosia (Italian for *doppelgänger*) creates control groups for authors, by searching the Scopus database using `pybliometrics <https://pybliometrics.readthedocs.io/en/latest/index.html>`_.  After configuring your local pybliometrics (providing access credentials and eventually setting cache directories), you can use sosia
 
-.. include:: installation.rst
-
+It is written in Python 3, by econometric scientists for econometric scientists.
 
 =======
 Example
 =======
+
+Install sosia from PyPI using the console or command line interpreter:
+
+.. code-block:: console
+
+    $ pip install sosia
+
+In Python, set up sosia (and eventually pybliometrics) and search for similar scientists using their Scoups Author Profile IDs.
 
 .. include:: ../README.rst
   :start-after: inclusion-marker-start
@@ -39,6 +46,7 @@ Indices and tables
    :hidden:
 
    functioning
+   tutorial
    reference
    changelog
    authors
