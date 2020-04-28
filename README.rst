@@ -48,16 +48,26 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
 .. code-block:: python
 
     >>> import sosia
+    >>> 
     >>> sosia.create_fields_sources_list()  # Necessary only once
-    >>> sosia.create_cache()  # Necessary only once
-    >>> stefano = sosia.Original(55208373700, 2017)  # Scopus ID and year
+    >>> sosia.make_database()  # Necessary only once
+    >>> 
+    >>> stefano = sosia.Original(55208373700, 2019)  # Scopus ID and year
     >>> stefano.define_search_sources()  # Sources similiar to scientist
     >>> stefano.define_search_group()  # Authors publishing in similar sources
-    >>> matches = stefano.find_matches()  # List of namedtuples
-    >>> matches[0]
-    Match(ID='53164702100', name='Sapprasert, Koson', first_year=2011,
-    num_coauthors=7, num_publications=6, country='Norway', language='eng',
-    reference_sim=0.0212, abstract_sim=0.1695)
+    >>> stefano.find_matches()  # Find matches satisfying all criteria
+    >>> print(stefano.matches)
+    >>> ['56113324000']
+    >>> stefano.inform_matches()  # Optional step to provide additional information
+    >>> print(stefano.matches)
+    [Match(ID='56113324000', name="D'Ippolito, Beatrice",
+     first_name='Beatrice', surname="D'Ippolito", first_year=2014,
+     num_coauthors=10, num_publications=7, num_citations=62,
+     num_coauthors_period=10, num_publications_period=7 num_citations_period=62,
+     subjects=['BUSI', 'DECI', 'ENGI'], country='United Kingdom',
+     affiliation_id='60016418', affiliation='The York Management School, University of York',
+     language='eng', reference_sim=0.0065, abstract_sim=0.1352)]
+
 
 .. inclusion-marker-end
 
