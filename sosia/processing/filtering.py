@@ -46,10 +46,6 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
 
     older_authors : list of str
         Scopus IDs filtered out because have publications before ybefore.
-
-    Notes
-    -----
-    It uses cached values first, and searches for more data if needed.
     """
     group = [int(x) for x in group]
     years_check = [ybefore, yupto]
@@ -57,51 +53,50 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         years_check.extend([yfrom - 1])
     authors = DataFrame(product(group, years_check), dtype="int64",
                         columns=["auth_id", "year"])
-    authors_size = retrieve_author_pubs(authors, conn)
+    auth_npubs = retrieve_author_pubs(authors, conn)
     au_skip = []
     group_tocheck = set(group)
     older_authors = []
     pubs_counts = []
-    # Use information in cache
-    if not authors_size.empty:
+    # Use information in database
+    if not auth_npubs.empty:
         # Remove authors based on age
-        mask = ((authors_size.year <= ybefore) & (authors_size.n_pubs > 0))
-        remove = (authors_size[mask]["auth_id"].drop_duplicates().tolist())
-        older_authors.extend(remove)
-        au_remove = set(remove)
+        mask = ((auth_npubs["year"] <= ybefore) & (auth_npubs["n_pubs"] > 0))
+        au_remove = set(auth_npubs[mask]["auth_id"].unique())
+        older_authors.extend(au_remove)
         # Remove if number of pubs in year is in any case too small
-        mask = ((authors_size.year >= yupto) &
-                (authors_size.n_pubs < min(npapers)))
-        au_remove.update(authors_size[mask]["auth_id"])
+        mask = ((auth_npubs["year"] >= yupto) &
+                (auth_npubs["n_pubs"] < min(npapers)))
+        au_remove.update(auth_npubs[mask]["auth_id"])
         # Authors with no pubs before min year
-        mask = (((authors_size.year == ybefore) & (authors_size.n_pubs == 0)))
-        au_ok_miny = set(authors_size[mask]["auth_id"].unique())
+        mask = (((auth_npubs["year"] == ybefore) & (auth_npubs["n_pubs"] == 0)))
+        au_ok_miny = set(auth_npubs[mask]["auth_id"].unique())
         # Check publications in range
         if yfrom:
-            # Adjust count by substracting the count before period; keep
-            # only authors for which this is possible
-            mask = (authors_size.year == yfrom-1)
+            # Keep authors where subtracting publications from before period
+            # from publication count is possible
+            mask = auth_npubs["year"] == yfrom-1
             rename = {"n_pubs": "n_pubs_bef"}
-            authors_size_bef = authors_size[mask].copy().rename(columns=rename)
-            authors_size_bef["year"] = yupto
-            authors_size = (authors_size.merge(authors_size_bef, "inner",
-                                               on=["auth_id", "year"])
-                                        .fillna(0))
-            authors_size["n_pubs"] -= authors_size["n_pubs_bef"]
+            auth_npubs_bef = auth_npubs[mask].copy().rename(columns=rename)
+            auth_npubs_bef["year"] = yupto
+            auth_npubs = (auth_npubs.merge(auth_npubs_bef, "inner",
+                                           on=["auth_id", "year"])
+                                    .fillna(0))
+            auth_npubs["n_pubs"] -= auth_npubs["n_pubs_bef"]
         # Remove authors because of their publication count
-        mask = (((authors_size.year >= yupto) &
-                 (authors_size.n_pubs < min(npapers))) |
-                ((authors_size.year <= yupto) &
-                 (authors_size.n_pubs > max(npapers))))
-        remove = authors_size[mask]["auth_id"]
+        mask = (((auth_npubs["year"] >= yupto) &
+                 (auth_npubs["n_pubs"] < min(npapers))) |
+                ((auth_npubs["year"] <= yupto) &
+                 (auth_npubs["n_pubs"] > max(npapers))))
+        remove = auth_npubs[mask]["auth_id"]
         au_remove.update(remove)
         # Authors with pubs count within the range before the given year
-        mask = (((authors_size.year == yupto) &
-                 (authors_size.n_pubs >= min(npapers))) &
-                (authors_size.n_pubs <= max(npapers)))
-        au_ok_year = authors_size[mask][["auth_id", "n_pubs"]].drop_duplicates()
+        mask = (((auth_npubs["year"] == yupto) &
+                 (auth_npubs["n_pubs"] >= min(npapers))) &
+                (auth_npubs["n_pubs"] <= max(npapers)))
+        au_ok_year = auth_npubs[mask][["auth_id", "n_pubs"]].drop_duplicates()
         # Keep authors that match both conditions
-        au_ok = au_ok_miny.intersection(au_ok_year["auth_id"])
+        au_ok = au_ok_miny.intersection(au_ok_year["auth_id"].unique())
         mask = au_ok_year["auth_id"].isin(au_ok)
         pubs_counts = au_ok_year[mask]["n_pubs"].tolist()
         # Skip citation check for authors that match only the first condition,
@@ -114,7 +109,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
     if group_tocheck:
         n = len(group_tocheck)
         text = f"Obtaining information for {n:,} authors without sufficient "\
-               "information in cache..."
+               "information in database..."
         custom_print(text, verbose)
         print_progress(0, n, verbose)
         to_loop = [x for x in group_tocheck]  # Temporary copy
@@ -123,7 +118,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
             size = base_query("docs", q, size_only=True)
             tp = (au, ybefore, size)
             insert_data(tp, conn, table="author_pubs")
-            if size > 0:
+            if size:
                 group.remove(au)
                 group_tocheck.remove(au)
                 older_authors.append(au)
