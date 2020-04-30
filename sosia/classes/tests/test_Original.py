@@ -18,19 +18,20 @@ refresh = False
 # Test objects
 test_params = {"refresh": refresh, "sql_fname": test_cache}
 # Normal values
-scientist1 = Original(55208373700, 2017, cits_margin=200, **test_params)
+scientist1 = Original(55208373700, 2017, cits_margin=200, year_margin=1,
+                      pub_margin=0.1, coauth_margin=0.1, **test_params)
 # Using period
 scientist2 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                      coauth_margin=1, period=3, **test_params)
+                      coauth_margin=1, year_margin=1, period=3, **test_params)
 # Using affiliations
 affs = ["60010348", "60022109", "60017317"]
-scientist3 = Original(55208373700, 2017, cits_margin=200,
-                      search_affiliations=affs, **test_params)
+scientist3 = Original(55208373700, 2017, cits_margin=200, year_margin=1,
+                      pub_margin=0.1, search_affiliations=affs, **test_params)
 # Using ignore_first_id
 affs = ["60002612", "60032111", "60000765"]
 scientist4 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                      coauth_margin=1, period=3, search_affiliations=affs,
-                      **test_params)
+                      coauth_margin=1, year_margin=1, period=3,
+                      search_affiliations=affs, **test_params)
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\
@@ -167,7 +168,7 @@ def test_find_matches_stacked_affiliations():
 
 def test_find_matches_stacked_period_affiliations():
     scientist4.find_matches(stacked=True, refresh=refresh)
-    expected_ids = ['57188695848', '57188709931']
+    expected_ids = ['56049973600', '56896085200', '57188695848', '57188709931']
     assert_equal(scientist4.matches, expected_ids)
 
 
