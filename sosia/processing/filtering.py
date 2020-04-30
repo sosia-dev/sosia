@@ -2,9 +2,8 @@ from itertools import product
 
 from pandas import DataFrame
 
-from sosia.processing.caching import insert_data, retrieve_author_pubs,\
-    retrieve_authors_year
-from sosia.processing.querying import base_query
+from sosia.processing.caching import auth_npubs_retrieve_insert,\
+    retrieve_author_pubs
 from sosia.utils import custom_print, print_progress
 
 
@@ -113,16 +112,13 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         custom_print(text, verbose)
         print_progress(0, n, verbose)
         to_loop = [x for x in group_tocheck]  # Temporary copy
-        for i, au in enumerate(to_loop):
-            q = f"AU-ID({au}) AND PUBYEAR BEF {ybefore+1}"
-            size = base_query("docs", q, size_only=True)
-            tp = (au, ybefore, size)
-            insert_data(tp, conn, table="author_pubs")
-            if size:
-                group.remove(au)
-                group_tocheck.remove(au)
-                older_authors.append(au)
-            print_progress(i+1, len(to_loop), verbose)
+        for i, auth_id in enumerate(to_loop):
+            npubs_ybefore = auth_npubs_retrieve_insert(auth_id, ybefore, conn)
+            if npubs_ybefore:
+                group.remove(auth_id)
+                group_tocheck.remove(auth_id)
+                older_authors.append(auth_id)
+            print_progress(i+1, n, verbose)
         text = f"Left with {len(group):,} authors based on publication "\
                f"information before {ybefore}"
         custom_print(text, verbose)
@@ -135,16 +131,10 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         custom_print(text, verbose)
         print_progress(0, n, verbose)
         for i, au in enumerate(group_tocheck):
-            q = f"AU-ID({au}) AND PUBYEAR BEF {yupto+1}"
-            n_pubs_yupto = base_query("docs", q, size_only=True)
-            tp = (au, yupto, n_pubs_yupto)
-            insert_data(tp, conn, table="author_pubs")
+            n_pubs_yupto = auth_npubs_retrieve_insert(au, yupto, conn)
             # Eventually decrease publication count
             if yfrom and n_pubs_yupto >= min(npapers):
-                q = f"AU-ID({au}) AND PUBYEAR BEF {yfrom}"
-                n_pubs_yfrom = base_query("docs", q, size_only=True)
-                tp = (au, yfrom-1, n_pubs_yfrom)
-                insert_data(tp, conn, table="author_pubs")
+                n_pubs_yfrom = auth_npubs_retrieve_insert(au, yfrom-1, conn)
                 n_pubs_yupto -= n_pubs_yfrom
             if n_pubs_yupto < min(npapers) or n_pubs_yupto > max(npapers):
                 group.remove(au)
