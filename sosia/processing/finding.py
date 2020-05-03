@@ -76,31 +76,31 @@ def find_matches(self, stacked, verbose, refresh):
                        "group": group})
         group, _, _ = filter_pub_counts(**params)
     text = f"Left with {len(group):,} researchers"
+    custom_print(text, verbose)
 
-    # Third round of filtering: citations (in the FULL period).
+    # Third round of filtering: citations (in the FULL period)
     authors = DataFrame({"auth_id": group, "year": self.year})
-    _, authors_cits_search = retrieve_author_cits(authors, self.sql_conn)
-    if not authors_cits_search.empty:
-        text = f"Counting citations of {len(authors_cits_search):,}..."
+    auth_cits, missing = retrieve_author_cits(authors, self.sql_conn)
+    if not missing.empty:
+        total = missing.shape[0]
+        text = f"Counting citations of {total:,} authors..."
         custom_print(text, verbose)
-        authors_cits_search['n_cits'] = 0
-        print_progress(0, len(authors_cits_search), verbose)
-        for i, au in authors_cits_search.iterrows():
+        missing['n_cits'] = 0
+        print_progress(0, total, verbose)
+        for i, au in missing.iterrows():
             n_cits = count_citations([str(au['auth_id'])], self.year+1)
-            authors_cits_search.at[i, 'n_cits'] = n_cits
-            print_progress(i + 1, len(authors_cits_search), verbose)
-        insert_data(authors_cits_search, self.sql_conn,
-                     table="author_ncits")
-    auth_cits_incache, _ = retrieve_author_cits(authors[["auth_id", "year"]],
-                                                self.sql_conn)
+            missing.at[i, 'n_cits'] = n_cits
+            print_progress(i + 1, total, verbose)
+        insert_data(missing, self.sql_conn, table="author_ncits")
+    auth_cits = auth_cits.append(missing)
+    auth_cits['auth_id'] = auth_cits['auth_id'].astype("uint64")
     # Keep if citations are in range
     custom_print("Filtering based on count of citations...", verbose)
-    mask = ((auth_cits_incache.n_cits <= max(_ncits)) &
-            (auth_cits_incache.n_cits >= min(_ncits)))
+    max_cits = max(_ncits)
     if self.period:
-        mask = ((auth_cits_incache.n_cits >= min(_ncits)) &
-                (auth_cits_incache.n_cits <= max(_ncits_full)))
-    group = (auth_cits_incache[mask]['auth_id'].tolist())
+        max_cits = max(_ncits_full)
+    mask = auth_cits["n_cits"].between(min(_ncits), max_cits)
+    group = auth_cits[mask]['auth_id'].tolist()
 
     # Fourth round of filtering: Download publications, verify coauthors
     # (in the FULL period) and first year.
@@ -113,7 +113,7 @@ def find_matches(self, stacked, verbose, refresh):
     if stacked:  # Combine searches
         if not author_year_search.empty:
             q = Template(f"AU-ID($fill) AND PUBYEAR BEF {self.year + 1}")
-            auth_year_group = author_year_search.auth_id.tolist()
+            auth_year_group = author_year_search["auth_id"].tolist()
             params = {"group": auth_year_group, "res": [],
                       "template": q, "refresh": refresh,
                       "joiner": ") OR AU-ID(", "q_type": "docs"}
@@ -129,32 +129,23 @@ def find_matches(self, stacked, verbose, refresh):
                 res.index.name = "auth_id"
                 res = res.reset_index()
                 insert_data(res, self.sql_conn, table="author_year")
-        author_year_cache, _ = retrieve_authors_year(authors, self.sql_conn)
-        if self._ignore_first_id:
-            # only number of coauthors should be big enough
-            enough = (author_year_cache.n_coauth >= min(_ncoauth))
-            notoomany = (author_year_cache.n_coauth <= max(_ncoauth_full))
-            mask = enough & notoomany
-        elif self.period:
-            # Number of coauthors should be "big enough" and first year within
-            # window
-            same_start = (author_year_cache.first_year.between(min(_years),
-                          max(_years)))
-            enough = (author_year_cache.n_coauth >= min(_ncoauth))
-            notoomany = (author_year_cache.n_coauth <= max(_ncoauth_full))
-            mask = same_start & enough & notoomany
+        authors_year, _ = retrieve_authors_year(authors, self.sql_conn)
+        # Check for number of coauthors within margin
+        if self._ignore_first_id or self.period:
+            coauth_max = max(_ncoauth_full)
         else:
-            # All restrictions apply
-            same_start = (author_year_cache.first_year.between(min(_years),
-                          max(_years)))
-            same_coauths = (author_year_cache.n_coauth.between(min(_ncoauth),
-                            max(_ncoauth)))
-            mask = same_start & same_coauths
-        matches = author_year_cache[mask]["auth_id"].tolist()
+            coauth_max = max(_ncoauth)
+        mask = authors_year["n_coauth"].between(min(_ncoauth), coauth_max)
+        # Check for year of first publication within range
+        if not self._ignore_first_id:
+            same_start = authors_year["first_year"].between(min(_years), max(_years))
+            mask = mask & same_start
+        # Filter
+        matches = authors_year[mask]["auth_id"].tolist()
     else:  # Query each author individually
-        for i, au in enumerate(group):
+        for i, auth_id in enumerate(group):
             print_progress(i + 1, len(group), verbose)
-            res = base_query("docs", f"AU-ID({au})", refresh=refresh)
+            res = base_query("docs", f"AU-ID({auth_id})", refresh=refresh)
             res = [p for p in res if p.coverDate and
                    int(p.coverDate[:4]) <= self.year]
             # Filter
@@ -173,7 +164,7 @@ def find_matches(self, stacked, verbose, refresh):
             elif ((len(res) not in _npapers) or (min_year not in _years) or
                     (n_coauth not in _ncoauth)):
                 continue
-            matches.append(au)
+            matches.append(auth_id)
 
     if self.period:
         text = f"Left with {len(matches)} authors\nFiltering based on "\
