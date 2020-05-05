@@ -8,7 +8,7 @@ from nose.tools import assert_equal
 from sosia.establishing import connect_database
 from sosia.processing.filtering import filter_pub_counts
 
-test_cache = expanduser("~/.sosia/") + "test.sqlite"
+test_cache = expanduser("~/.sosia/test.sqlite")
 test_conn = connect_database(test_cache)
 
 
