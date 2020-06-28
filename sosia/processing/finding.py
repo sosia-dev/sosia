@@ -87,11 +87,14 @@ def find_matches(self, stacked, verbose, refresh):
         custom_print(text, verbose)
         missing['n_cits'] = 0
         print_progress(0, total, verbose)
+        start = 0
         for i, au in missing.iterrows():
             n_cits = count_citations([str(au['auth_id'])], self.year+1)
             missing.at[i, 'n_cits'] = n_cits
             print_progress(i + 1, total, verbose)
-        insert_data(missing, self.sql_conn, table="author_ncits")
+            if i % 100 == 0 or i >= len(missing):
+                insert_data(missing.iloc[start:i], self.sql_conn, table="author_ncits")
+                start = i
     auth_cits = auth_cits.append(missing)
     auth_cits['auth_id'] = auth_cits['auth_id'].astype("uint64")
     # Keep if citations are in range
