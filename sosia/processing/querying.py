@@ -100,7 +100,7 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
     return base_query("docs", q, size_only=True)
 
 
-def query_author_data(authors_list, conn, refresh=False, verbose=False):
+def query_authors(authors_list, conn, refresh=False, verbose=False):
     """Wrapper function to search author data for a list of authors, searching
     first in cache and then via stacked search.
 
@@ -140,8 +140,8 @@ def query_author_data(authors_list, conn, refresh=False, verbose=False):
     return auth_done
 
 
-def query_sources_by_year(source_ids, year, stacked=False, refresh=False,
-                          verbose=False, afid=False):
+def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
+                             verbose=False, afid=False):
     """Get authors lists for each source in a particular year.
 
     Parameters

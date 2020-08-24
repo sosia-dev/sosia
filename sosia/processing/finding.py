@@ -8,7 +8,7 @@ from sosia.processing.caching import insert_data, retrieve_author_cits,\
 from sosia.processing.extracting import get_authors
 from sosia.processing.filtering import filter_pub_counts
 from sosia.processing.querying import base_query, count_citations,\
-    query_author_data, query_sources_by_year, stacked_query
+    query_authors, query_pubs_by_sourceyear, stacked_query
 from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
 from sosia.utils import custom_print, print_progress
 
@@ -53,7 +53,7 @@ def find_matches(self, stacked, verbose, refresh):
 
     # First round of filtering: minimum publications and main field
     # create df of authors
-    authors = query_author_data(self.search_group, self.sql_conn, verbose=verbose)
+    authors = query_authors(self.search_group, self.sql_conn, verbose=verbose)
     same_field = (authors.areas.str.startswith(self.main_field[1]))
     enough_pubs = (authors.documents.astype(int) >= int(min(_npapers)))
     group = authors[same_field & enough_pubs]["auth_id"].tolist()
@@ -241,8 +241,8 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
                               columns=["source_id", "year"])
     auth_today, missing = retrieve_sources(sources_today, self.sql_conn,
                                            refresh=refresh, afid=True)
-    res = query_sources_by_year(missing["source_id"].unique(), self.active_year,
-                                afid=True, **params)
+    res = query_pubs_by_sourceyear(missing["source_id"].unique(), self.active_year,
+                                   afid=True, **params)
     insert_data(res, self.sql_conn, table="sources_afids")
     auth_today = auth_today.append(res)
 
@@ -264,7 +264,7 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
                                           refresh=refresh)
     for y in missing["year"].unique():
         missing_sources = missing[missing["year"] == y]["source_id"].unique()
-        res = query_sources_by_year(missing_sources, y, **params)
+        res = query_pubs_by_sourceyear(missing_sources, y, **params)
         insert_data(res, self.sql_conn, table="sources")
     auth_then = auth_then.append(res)
     mask = auth_then["year"].between(min_year, max_year, inclusive=True)

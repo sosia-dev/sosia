@@ -10,7 +10,7 @@ from pybliometrics.scopus import AbstractRetrieval
 from sosia.establishing import config, connect_database
 from sosia.processing import add_source_names, base_query, count_citations,\
     find_location, get_authors, get_main_field, maybe_add_source_names,\
-    read_fields_sources_list, query_author_data
+    read_fields_sources_list, query_authors
 from sosia.utils import accepts
 
 
@@ -370,8 +370,8 @@ class Scientist(object):
         self._language = None
 
         # Author name from profile with most documents
-        df = query_author_data(self.identifier, self.sql_conn,
-                               refresh=refresh, verbose=False)
+        df = query_authors(self.identifier, self.sql_conn,
+                           refresh=refresh, verbose=False)
         au = df.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
         self._surname = au.surname or None
