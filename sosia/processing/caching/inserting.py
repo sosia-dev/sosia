@@ -1,7 +1,3 @@
-import numpy as np
-import pandas as pd
-import sqlite3
-
 from sosia.establishing import DB_TABLES
 from sosia.processing.utils import flat_set_from_df, robust_join
 

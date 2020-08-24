@@ -53,9 +53,9 @@ def find_location(auth_ids, pubs, year, refresh):
         orgs = "; ".join(sorted(set([a.organization for a in authgroup])))
         if not countries and not aff_ids and not orgs:
             continue
-        return (countries, aff_ids, orgs)
+        return countries, aff_ids, orgs
     # Return None-triple if all else fails
-    return (countries, aff_ids, orgs)
+    return countries, aff_ids, orgs
 
 
 def get_authors(pubs):
@@ -96,7 +96,7 @@ def get_main_field(fields):
 
     # Verify at least some information is present
     if not fields:
-        return (None, None)
+        return None, None
 
     # 4 digit field
     c = Counter(fields)
@@ -284,7 +284,7 @@ def parse_docs(eids, refresh):
     absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
     valid_absts = len(absts)
     absts = " ".join(absts).strip()
-    return (refs, valid_refs, absts, valid_absts)
+    return refs, valid_refs, absts, valid_absts
 
 
 def _print_missing_docs(auth_id, valid_abs, valid_refs, total, res_type="Match"):

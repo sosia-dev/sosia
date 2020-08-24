@@ -9,7 +9,7 @@ from warnings import warn
 from sosia.classes import Scientist
 from sosia.processing import find_matches, inform_matches,\
     maybe_add_source_names, search_group_from_sources
-from sosia.utils import accepts, custom_print, print_progress
+from sosia.utils import accepts, custom_print
 
 
 class Original(Scientist):

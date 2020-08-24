@@ -89,10 +89,8 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
     # Break query if too long
     if len(q) > 3785:
         mid = len(search_ids) // 2
-        count1 = count_citations(search_ids[:mid], pubyear,
-            exclusion_ids)
-        count2 = count_citations(search_ids[mid:], pubyear,
-            exclusion_ids)
+        count1 = count_citations(search_ids[:mid], pubyear, exclusion_ids)
+        count2 = count_citations(search_ids[mid:], pubyear, exclusion_ids)
         return count1 + count2
     return base_query("docs", q, size_only=True)
 

@@ -71,7 +71,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
                 (auth_npubs["n_pubs"] < min(npapers)))
         au_remove.update(auth_npubs[mask]["auth_id"])
         # Authors with no pubs before min year
-        mask = (((auth_npubs["year"] == ybefore) & (auth_npubs["n_pubs"] == 0)))
+        mask = ((auth_npubs["year"] == ybefore) & (auth_npubs["n_pubs"] == 0))
         au_ok_miny = set(auth_npubs[mask]["auth_id"].unique())
         # Check publications in range
         if yfrom:

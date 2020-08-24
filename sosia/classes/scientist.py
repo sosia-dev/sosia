@@ -287,7 +287,7 @@ class Scientist(object):
         self.period = period
         self.year_period = None
         if not sql_fname:
-            sql_fname  = config.get('Filepaths', 'Database')
+            sql_fname = config.get('Filepaths', 'Database')
         self.sql_conn = connect_database(sql_fname)
 
         # Read mapping of fields to sources
@@ -323,7 +323,7 @@ class Scientist(object):
         # Count of citations
         search_ids = eids or identifier
         self._citations = count_citations(search_ids, self.year+1,
-            exclusion_ids=identifier)
+                                          exclusion_ids=identifier)
 
         # Coauthors
         self._coauthors = set(get_authors(self._publications)) - set(identifier)
@@ -332,8 +332,7 @@ class Scientist(object):
         if self.period:
             self.year_period = year-period+1
             pubs = [p for p in self._publications if
-                    int(p.coverDate[:4]) <= year and
-                    int(p.coverDate[:4]) >= self.year_period]
+                    year >= int(p.coverDate[:4]) >= self.year_period]
             self._publications_period = pubs
             if not len(self._publications_period):
                 text = f"No publications found for author {'-'.join(identifier)}"\
@@ -380,7 +379,6 @@ class Scientist(object):
         if name == ", ":
             name = None
         self._name = name
-
 
     def get_publication_languages(self, refresh=False):
         """Parse languages of published documents."""

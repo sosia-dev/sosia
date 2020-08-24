@@ -177,8 +177,8 @@ def find_matches(self, stacked, verbose, refresh):
         for m in to_loop:
             res = base_query("docs", f"AU-ID({m})", refresh=refresh,
                              fields=["eid", "author_ids", "coverDate"])
-            pubs = [p for p in res if int(p.coverDate[:4]) <= self.year and
-                    int(p.coverDate[:4]) >= self.year_period]
+            pubs = [p for p in res if
+                    self.year >= int(p.coverDate[:4]) >= self.year_period]
             coauths = set(get_authors(pubs)) - {str(m)}
             if not (min(_ncoauth) <= len(coauths) <= max(_ncoauth)):
                 matches.remove(m)

@@ -48,7 +48,7 @@ def flat_set_from_df(df, col, condition=None):
     if condition is not None:
         df = df[condition]
     lists = df[col].tolist()
-    return set([item for l in lists for item in l])
+    return set([item for sublist in lists for item in sublist])
 
 
 def robust_join(s, sep=','):
