@@ -33,9 +33,6 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
         Whether to not download results and return the number
         of results instead.
 
-    tsleep: float
-        Seconds to wait in case of failure due to errors.
-
     Returns
     -------
     res : list of namedtuples (if size_only is False) or int
@@ -152,6 +149,10 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     year : str or int
         The year of the search.
 
+    stacked : bool (optional, default=False)
+        Whether to use fewer queries that are not reusable, or to use modular
+        queries of the form "SOURCE-ID(<SID>) AND PUBYEAR IS <YYYY>".
+
     refresh : bool (optional, default=False)
         Whether to refresh cached files if they exist, or not.
 
@@ -159,7 +160,7 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
         Whether to print information on the search progress.
 
     afid : bool (optional, default=False)
-        If True, mantains information on the Scopus affiliation ID in res.
+        If True, maintains information on the Scopus affiliation ID in res.
     """
     # Dummy return value
     columns = ["source_id", "year", "auids"]
@@ -226,11 +227,11 @@ def stacked_query(group, res, template, joiner, q_type, refresh,
         appended.
 
     template : Template()
-        A string template with one paramter named `fill` which will be used
+        A string template with one parameter named `fill` which will be used
         as search query.
 
     joiner : str
-        On wich the group elements should be joined to fill the query.
+        On which the group elements should be joined to fill the query.
 
     q_type : str
         Determines the query search that will be used.  Allowed values:

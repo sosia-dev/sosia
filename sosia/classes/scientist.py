@@ -278,7 +278,7 @@ class Scientist(object):
 
         Raises
         ------
-        Exeption
+        Exception
             When there are no publications for the author until the
             given year.
         """

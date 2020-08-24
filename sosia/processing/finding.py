@@ -20,7 +20,7 @@ def find_matches(self, stacked, verbose, refresh):
     ----------
     stacked : bool (optional, default=False)
         Whether to combine searches in few queries or not.  Cached
-        files will most likely not be resuable.  Set to True if you
+        files will most likely not be reusable.  Set to True if you
         query in distinct fields or you want to minimize API key usage.
 
     verbose : bool (optional, default=False)

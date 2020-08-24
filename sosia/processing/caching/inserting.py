@@ -86,7 +86,7 @@ def insert_temporary_table(df, conn, merge_cols):
 
     Parameters
     ----------
-    data : DataFrame
+    df : DataFrame
         Dataframe with authors information that should be entered.
 
     conn : sqlite3 connection

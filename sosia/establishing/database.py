@@ -20,7 +20,7 @@ def make_database(fname=None, drop=False):
 
     Parameters
     ----------
-    fname : str (optiona, default=None)
+    fname : str (optional, default=None)
         The path of the SQLite database to connect to.  If None will use
         the path provided in `~/.sosia/config.ini`.
 

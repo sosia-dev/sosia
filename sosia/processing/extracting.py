@@ -221,7 +221,7 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
         p = Scientist([auth_id], self.year, period=self.period,
                       refresh=refresh, sql_fname=self.sql_fname)
         match_info = inform_match(p, keywords)
-        # Abstract and reference similiarity is performed jointly
+        # Abstract and reference similarity is performed jointly
         if doc_parse:
             eids = [d.eid for d in p.publications]
             refs, refs_n, absts, absts_n = parse_docs(eids, refresh)

@@ -34,6 +34,9 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         If provided, publications are counted only after this year.
         Publications are still set to 0 before ybefore.
 
+    verbose : bool (optional, default=False)
+        Whether to print information on the search progress.
+
     Returns
     -------
     group : list of str
