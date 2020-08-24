@@ -54,10 +54,9 @@ def find_matches(self, stacked, verbose, refresh):
     # First round of filtering: minimum publications and main field
     # create df of authors
     authors = query_authors(self.search_group, self.sql_conn, verbose=verbose)
-    same_field = (authors.areas.str.startswith(self.main_field[1]))
-    enough_pubs = (authors.documents.astype(int) >= int(min(_npapers)))
-    group = authors[same_field & enough_pubs]["auth_id"].tolist()
-    group.sort()
+    same_field = authors['areas'].str.startswith(self.main_field[1])
+    enough_pubs = authors['documents'].astype(int) >= int(min(_npapers))
+    group = sorted(authors[same_field & enough_pubs]["auth_id"].tolist())
     text = f"Left with {len(group):,} authors with sufficient "\
            "number of publications and same main field"
     custom_print(text, verbose)
@@ -144,7 +143,7 @@ def find_matches(self, stacked, verbose, refresh):
             same_start = authors_year["first_year"].between(min(_years), max(_years))
             mask = mask & same_start
         # Filter
-        matches = authors_year[mask]["auth_id"].tolist()
+        matches = sorted(authors_year[mask]["auth_id"].tolist())
     else:  # Query each author individually
         for i, auth_id in enumerate(group):
             print_progress(i + 1, len(group), verbose)
