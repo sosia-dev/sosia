@@ -26,7 +26,7 @@ def retrieve_author_cits(df, conn):
     """
     cols = ["auth_id", "year"]
     insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(df, conn, "author_ncits", merge_cols=cols)
+    incache = temporary_merge(conn, "author_ncits", merge_cols=cols)
     if not incache.empty:
         df = df.set_index(cols)
         incache = incache.set_index(cols)
@@ -59,7 +59,7 @@ def retrieve_authors(df, conn):
     """
     cols = ["auth_id"]
     insert_temporary_table(df, merge_cols=cols, conn=conn)
-    incache = temporary_merge(df, conn, "authors", merge_cols=cols)
+    incache = temporary_merge(conn, "authors", merge_cols=cols)
     tosearch = df.auth_id.tolist()
     if not incache.empty:
         incache_list = incache.auth_id.tolist()
@@ -89,7 +89,7 @@ def retrieve_authors_year(df, conn):
     """
     cols = ["auth_id", "year"]
     insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(df, conn, "author_year", merge_cols=cols)
+    incache = temporary_merge(conn, "author_year", merge_cols=cols)
     if not incache.empty:
         df = df.set_index(cols)
         incache = incache.set_index(cols)
@@ -122,7 +122,7 @@ def retrieve_author_pubs(df, conn):
     """
     cols = ["auth_id", "year"]
     insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(df, conn, "author_pubs", merge_cols=cols)
+    incache = temporary_merge(conn, "author_pubs", merge_cols=cols)
     if incache.empty:
         incache = pd.DataFrame()
     return incache
