@@ -33,7 +33,7 @@ def test_base_query_author():
 def test_count_citations():
     identifier = ["55208373700", "55208373700"]
     count1 = count_citations(identifier, 2017)
-    assert_equal(count1, 22)
+    assert_equal(count1, 23)
     eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
     count2 = count_citations(eids, 2017, exclusion_ids=identifier)
     assert_equal(count2, 1)
@@ -97,7 +97,7 @@ def test_query_sources_by_year_afid():
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     received = query_pubs_by_sourceyear(source_ids, 1984, refresh=refresh, afid=True)
-    assert_true(3380 < received.dropna(subset=["auids"]).shape[0] < 3390)
+    assert_true(3380 < received.dropna(subset=["auids"]).shape[0] < 3400)
     assert_true(received.columns.tolist(), ['source_id', 'year', 'afid', 'auids'])
     assert_true(len(received["auids"][0]) > 0)
 
@@ -114,4 +114,4 @@ def test_stacked_query():
     res = []
     stacked_query(group, res, template, joiner=" OR ", q_type="docs",
                   refresh=refresh)
-    assert_equal(len(res), 25947)
+    assert_equal(len(res), 25948)
