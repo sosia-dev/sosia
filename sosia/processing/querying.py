@@ -95,13 +95,13 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
     return base_query("docs", q, size_only=True)
 
 
-def query_authors(authors_list, conn, refresh=False, verbose=False):
+def query_authors(authors, conn, refresh=False, verbose=False):
     """Wrapper function to search author data for a list of authors, searching
     first in cache and then via stacked search.
 
     Parameters
     ----------
-    authors_list : list
+    authors : list
        List of Scopus Author IDs to search.
 
     conn : sqlite3 connection
@@ -116,11 +116,12 @@ def query_authors(authors_list, conn, refresh=False, verbose=False):
     Returns
     -------
     authors_data : DataFrame
-        A dataframe with authors data from AuthorSearch for the list provided.
+        Data on the provided authors.
     """
-    authors = pd.DataFrame(authors_list, columns=["auth_id"], dtype="int64")
-    # merge existing data in cache and separate missing records
+    authors = pd.DataFrame(authors, columns=["auth_id"], dtype="int64")
+    # Retrieve existing data in cache
     auth_done, auth_missing = retrieve_authors(authors, conn)
+    # Query missing records
     if auth_missing:
         params = {"group": auth_missing, "res": [],
                   "refresh": refresh, "joiner": ") OR AU-ID(",
