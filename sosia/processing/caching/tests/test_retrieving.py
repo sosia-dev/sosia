@@ -11,7 +11,7 @@ from pandas.testing import assert_frame_equal
 
 from sosia.establishing import connect_database, make_database
 from sosia.processing import build_dict, insert_data, retrieve_authors,\
-    retrieve_author_pubs, retrieve_authors_year, retrieve_sources,\
+    retrieve_author_pubs, retrieve_authors_year, retrieve_authors_from_sourceyear,\
     robust_join, query_pubs_by_sourceyear
 
 test_cache = expanduser("~/.sosia/test.sqlite")
@@ -118,7 +118,7 @@ def test_retrieve_sources_empty():
     conn = connect_database(test_cache)
     df = pd.DataFrame(product([22900], [2010, 2005]),
                       columns=["source_id", "year"], dtype="int64")
-    sources_ys_incache, sources_ys_search = retrieve_sources(df, conn)
+    sources_ys_incache, sources_ys_search = retrieve_authors_from_sourceyear(df, conn)
     assert_frame_equal(sources_ys_search, df)
     assert_true(sources_ys_incache.empty)
 
@@ -135,7 +135,7 @@ def test_retrieve_sources_partial():
     res = query_pubs_by_sourceyear(expected_sources, expected_years[0])
     insert_data(res, conn, table="sources")
     # Retrieve from cache
-    sources_ys_incache, sources_ys_search = retrieve_sources(df, conn)
+    sources_ys_incache, sources_ys_search = retrieve_authors_from_sourceyear(df, conn)
     expected_sources = [int(s) for s in expected_sources]
     assert_equal(sources_ys_incache.source_id.tolist(), expected_sources)
     assert_equal(sources_ys_incache.year.tolist(), [expected_years[0]])
@@ -155,10 +155,10 @@ def test_retrieve_sources_full():
     # Populate cache
     res = query_pubs_by_sourceyear(expected_sources, expected_years[0])
     insert_data(res, conn, table="sources")
-    sources_ys_incache, sources_ys_search = retrieve_sources(df, conn)
+    sources_ys_incache, sources_ys_search = retrieve_authors_from_sourceyear(df, conn)
     # Retrieve from cache
     sources_ys = sources_ys_incache[cols]
-    sources_ys_incache, sources_ys_search = retrieve_sources(sources_ys, conn)
+    sources_ys_incache, sources_ys_search = retrieve_authors_from_sourceyear(sources_ys, conn)
     expected_sources = [int(s) for s in expected_sources]
     assert_equal(sources_ys_incache.source_id.tolist(), expected_sources)
     assert_equal(sources_ys_incache.year.tolist(), [expected_years[0]])
@@ -170,7 +170,7 @@ def test_sources_afids_in_cache_empty():
     conn = connect_database(test_cache)
     df = pd.DataFrame(product([22900], [2010, 2005]),
                       columns=["source_id", "year"], dtype="int64")
-    sa_incache, sa_search = retrieve_sources(df, conn, afid=True)
+    sa_incache, sa_search = retrieve_authors_from_sourceyear(df, conn, afid=True)
     assert_frame_equal(sa_search, df)
     assert_true(sa_incache.empty)
 
@@ -183,12 +183,12 @@ def test_sources_afids_in_cache_partial():
     expected_years = [2010, 2005]
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
-    sa_incache, sa_search = retrieve_sources(df, conn, afid=True)
+    sa_incache, sa_search = retrieve_authors_from_sourceyear(df, conn, afid=True)
     # Populate cache
     res = query_pubs_by_sourceyear(expected_sources, expected_years[0], afid=True)
     insert_data(res, conn, table="sources_afids")
     # Retrieve from cache
-    sa_incache, sa_search = retrieve_sources(df, conn, afid=True)
+    sa_incache, sa_search = retrieve_authors_from_sourceyear(df, conn, afid=True)
     expected_sources = set([int(s) for s in expected_sources])
     assert_equal(set(sa_incache.source_id.tolist()), set(expected_sources))
     assert_equal(set(sa_incache.year.tolist()), set([expected_years[0]]))
@@ -212,9 +212,9 @@ def test_sources_afids_in_cache_full():
     res = query_pubs_by_sourceyear(expected_sources, expected_years[0], afid=True)
     insert_data(res, conn, table="sources_afids")
     # Retrieve from cache
-    sa_incache, sa_search = retrieve_sources(df, conn, afid=True)
+    sa_incache, sa_search = retrieve_authors_from_sourceyear(df, conn, afid=True)
     sources_ys = sa_incache[cols].drop_duplicates()
-    sa_incache, sa_search = retrieve_sources(sources_ys, conn, afid=True)
+    sa_incache, sa_search = retrieve_authors_from_sourceyear(sources_ys, conn, afid=True)
     expected_sources = set([int(s) for s in expected_sources])
     assert_equal(set(sa_incache.source_id.tolist()), set(expected_sources))
     assert_equal(set(sa_incache.year.tolist()), set([expected_years[0]]))
@@ -236,7 +236,7 @@ def test_sources_afids_in_sources_cache():
     res = query_pubs_by_sourceyear(expected_sources, expected_years[0], afid=True)
     insert_data(res, conn, table="sources")
     # Retrieve from cache
-    sources_ys_incache, sources_ys_search = retrieve_sources(df, conn)
+    sources_ys_incache, sources_ys_search = retrieve_authors_from_sourceyear(df, conn)
     expected_sources = [int(s) for s in expected_sources]
     assert_equal(sources_ys_incache.source_id.tolist(), expected_sources)
     assert_equal(sources_ys_incache.year.tolist(), [expected_years[0]])

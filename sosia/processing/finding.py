@@ -4,7 +4,7 @@ from string import Template
 from pandas import DataFrame
 
 from sosia.processing.caching import insert_data, retrieve_author_cits,\
-    retrieve_authors_year, retrieve_sources
+    retrieve_authors_year, retrieve_authors_from_sourceyear
 from sosia.processing.extracting import get_authors
 from sosia.processing.filtering import filter_pub_counts
 from sosia.processing.querying import base_query, count_citations,\
@@ -235,17 +235,17 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
     text = f"Searching authors for search_group in {len(search_sources):,} sources..."
     custom_print(text, verbose)
 
-    # Retrieve author-year-affiliation information
+    # Retrieve author data for today
     sources_today = DataFrame(product(search_sources, [self.active_year]),
                               columns=["source_id", "year"])
-    auth_today, missing = retrieve_sources(sources_today, self.sql_conn,
-                                           refresh=refresh, afid=True)
+    auth_today, missing = retrieve_authors_from_sourceyear(sources_today, self.sql_conn,
+                                                           refresh=refresh, afid=True)
     res = query_pubs_by_sourceyear(missing["source_id"].unique(), self.active_year,
                                    afid=True, **params)
     insert_data(res, self.sql_conn, table="sources_afids")
     auth_today = auth_today.append(res)
 
-    # Authors active in year of treatment( and provided location)
+    # Retrieve author data for then
     mask = None
     if self.search_affiliations:
         mask = auth_today["afid"].astype(str).isin(self.search_affiliations)
@@ -259,8 +259,8 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
         then_years.extend(range(min_year, max_year+1))
     sources_then = DataFrame(product(search_sources, then_years),
                              columns=["source_id", "year"])
-    auth_then, missing = retrieve_sources(sources_then, self.sql_conn,
-                                          refresh=refresh)
+    auth_then, missing = retrieve_authors_from_sourceyear(sources_then, self.sql_conn,
+                                                          refresh=refresh)
     for y in missing["year"].unique():
         missing_sources = missing[missing["year"] == y]["source_id"].unique()
         res = query_pubs_by_sourceyear(missing_sources, y, **params)

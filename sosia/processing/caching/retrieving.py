@@ -128,13 +128,13 @@ def retrieve_author_pubs(df, conn):
     return incache
 
 
-def retrieve_sources(tosearch, conn, refresh=False, afid=False):
+def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, afid=False):
     """Search sources by year in SQL database.
 
     Parameters
     ----------
     tosearch : DataFrame
-        DataFrame of sources and years combinations to search.
+        DataFrame of source-year-combinations to be searched for.
 
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
