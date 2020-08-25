@@ -1,6 +1,5 @@
 import pandas as pd
 
-from sosia.processing.utils import flat_set_from_df
 from sosia.processing.caching.inserting import insert_temporary_table
 from sosia.processing.caching.utils import temporary_merge
 
@@ -128,8 +127,9 @@ def retrieve_author_pubs(df, conn):
     return incache
 
 
-def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, afid=False):
-    """Search sources by year in SQL database.
+def retrieve_authors_from_sourceyear(tosearch, conn, afid=False, refresh=False,
+                                     stacked=False):
+    """Search through sources by year for authors in SQL database.
 
     Parameters
     ----------
@@ -139,49 +139,50 @@ def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, afid=False):
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh cached search files.
-
     afid : bool (optional, default=False)
         If True, search in sources_afids table.
 
+    refresh : bool (optional, default=False)
+        Whether to refresh cached search files.
+
+    stacked : bool (optional, default=False)
+        Whether to use fewer queries that are not reusable, or to use modular
+        queries of the form "SOURCE-ID(<SID>) AND PUBYEAR IS <YYYY>".
+
     Returns
     -------
-    incache : DataFrame
-        DataFrame of results found in database.
+    data : DataFrame
+        DataFrame in format ("source_id", "year", "auids") (if afid=True,
+        "afid" is a column as well), where entries correspond to an
+        individual paper.
 
-    tosearch: DataFrame
-        DataFrame of sources and years combinations not in database.
+    missing: DataFrame
+        DataFrame of source-year-combinations not in SQL database.
     """
+    # Preparation
     cursor = conn.cursor()
+    if refresh:
+        tables = ("sources", "sources_afids")
+        for table in tables:
+            q = f"DELETE FROM {table} WHERE source_id=? AND year=?"
+            cursor.executemany(q, tosearch.to_records(index=False))
+            conn.commit()
+
+    # Query selected data using left join
     cols = ["source_id", "year"]
-    insert_temporary_table(tosearch, conn, merge_cols=cols)
+    insert_temporary_table(tosearch.copy(), conn, merge_cols=cols)
     table = "sources"
     select = "a.source_id, a.year, b.auids"
     if afid:
         table += "_afids"
         select += ", b.afid"
-    q = f"SELECT {select} FROM temp AS a INNER JOIN {table} AS b "\
+    q = f"SELECT {select} FROM temp AS a LEFT JOIN {table} AS b "\
         "ON a.source_id=b.source_id AND a.year=b.year;"
-    incache = pd.read_sql_query(q, conn)
-    if not incache.empty:
-        incache["auids"] = incache["auids"].str.split(",")
-        tosearch = tosearch.merge(incache, "left", on=cols, indicator=True)
-        tosearch = tosearch[tosearch["_merge"] == "left_only"][cols]
-        if refresh:
-            auth_incache = pd.DataFrame(flat_set_from_df(incache, "auids"),
-                                        columns=["auth_id"], dtype="uint64")
-            tables = ("authors", "author_pubs", "author_ncits", "author_year")
-            for table in tables:
-                q = f"DELETE FROM {table} WHERE auth_id=?"
-                cursor.executemany(q, auth_incache.to_records(index=False))
-                conn.commit()
-            tables = ("sources", "sources_afids")
-            for table in tables:
-                q = f"DELETE FROM {table} WHERE source_id=? AND year=?"
-                cursor.executemany(q, tosearch.to_records(index=False))
-                conn.commit()
-            incache = pd.DataFrame(columns=incache.columns)
-    if tosearch.empty:
-        tosearch = pd.DataFrame(columns=cols)
-    return incache, tosearch
+    data = pd.read_sql_query(q, conn)
+    data = data.sort_values(["source_id", "year"]).reset_index(drop=True)
+
+    # Finalize
+    mask_missing = data["auids"].isna()
+    incache = data[~mask_missing]
+    missing = data.loc[mask_missing, cols].drop_duplicates()
+    return incache, missing

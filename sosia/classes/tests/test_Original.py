@@ -107,14 +107,14 @@ def test_search_group():
     scientist1.define_search_group(refresh=refresh)
     recieved = scientist1.search_group
     assert_true(isinstance(recieved, list))
-    assert_true(590 <= len(recieved) <= 610)
+    assert_true(590 <= len(recieved) <= 620)
 
 
 def test_search_group_stacked():
     scientist1.define_search_group(stacked=True, refresh=refresh)
     recieved = scientist1.search_group
     assert_true(isinstance(recieved, list))
-    assert_true(590 <= len(recieved) <= 610)
+    assert_true(590 <= len(recieved) <= 620)
 
 
 def test_search_group_ignore():

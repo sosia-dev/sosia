@@ -59,7 +59,7 @@ def test_query_sources_by_year():
     res = query_pubs_by_sourceyear([22900], 2010, refresh=refresh)
     assert_equal(res["source_id"].tolist(), ['22900'])
     assert_equal(res["year"].tolist(), [2010])
-    assert_true(isinstance(res["auids"][0], list))
+    assert_true(isinstance(res["auids"][0], str))
     assert_true(len(res["auids"][0]) > 0)
     # Test a journal and year that are not in Scopus
     res = query_pubs_by_sourceyear([22900], 1969, refresh=refresh)
@@ -69,7 +69,7 @@ def test_query_sources_by_year():
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_pubs_by_sourceyear(source_ids, 1984, refresh=refresh)
     assert_true(len(res[~res["auids"].isnull()]) == 17)
-    assert_true(isinstance(res["auids"][0], list))
+    assert_true(isinstance(res["auids"][0], str))
     assert_true(len(res["auids"][0]) > 0)
 
 
@@ -78,7 +78,7 @@ def test_query_sources_by_year_stacked():
     res = query_pubs_by_sourceyear([22900], 2010, refresh=refresh, stacked=True)
     assert_equal(res["source_id"].tolist(), ['22900'])
     assert_equal(res["year"].tolist(), [2010])
-    assert_true(isinstance(res["auids"][0], list))
+    assert_true(isinstance(res["auids"][0], str))
     assert_true(len(res["auids"][0]) > 0)
     # Test a journal and year that are not in Scopus
     res = query_pubs_by_sourceyear([22900], 1969, refresh=refresh, stacked=True)
@@ -88,7 +88,7 @@ def test_query_sources_by_year_stacked():
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_pubs_by_sourceyear(source_ids, 1984, refresh=refresh, stacked=True)
     assert_true(len(res[~res["auids"].isnull()]) == 17)
-    assert_true(isinstance(res["auids"][0], list))
+    assert_true(isinstance(res["auids"][0], str))
     assert_true(len(res["auids"][0]) > 0)
 
 

@@ -97,7 +97,7 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
 
 def query_authors(authors, conn, refresh=False, verbose=False):
     """Wrapper function to search author data for a list of authors, searching
-    first in cache and then via stacked search.
+    first in the SQL database and then via stacked search.
 
     Parameters
     ----------
@@ -169,7 +169,8 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
 
     # Search authors
     n = len(source_ids)
-    custom_print(f"Searching authors in {n:,} sources in {year}...", verbose)
+    msg = f"Parsing Scopus information for {year}..."
+    custom_print(msg, verbose)
     if stacked:
         q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
         params = {"group": [str(x) for x in sorted(source_ids)],
@@ -207,7 +208,7 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     res = (res.groupby(grouping_cols)[["author_ids"]].apply(sum)
               .reset_index()
               .rename(columns={"author_ids": "auids"}))
-    res["auids"] = res["auids"].str.strip(";").str.split(";")
+    res["auids"] = res["auids"].str.strip(";")
     return res
 
 

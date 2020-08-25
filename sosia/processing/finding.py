@@ -4,11 +4,12 @@ from string import Template
 from pandas import DataFrame
 
 from sosia.processing.caching import insert_data, retrieve_author_cits,\
-    retrieve_authors_year, retrieve_authors_from_sourceyear
+    retrieve_authors_year
 from sosia.processing.extracting import get_authors
 from sosia.processing.filtering import filter_pub_counts
+from sosia.processing.getting import get_authors_from_sourceyear
 from sosia.processing.querying import base_query, count_citations,\
-    query_authors, query_pubs_by_sourceyear, stacked_query
+    query_authors, stacked_query
 from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
 from sosia.utils import custom_print, print_progress
 
@@ -69,7 +70,7 @@ def find_matches(self, stacked, verbose, refresh):
               "yfrom": self.year_period, "verbose": verbose,
               "conn": self.sql_conn}
     group, _, _ = filter_pub_counts(**params)
-    # Also screen out ids with too many publications over the full period
+    # Screen out profiles with too many publications over the full period
     if self.period:
         params.update({"npapers": [1, max(_npapers_full)], "yfrom": None,
                        "group": group})
@@ -230,22 +231,14 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
     # Define variables
     search_sources, _ = zip(*self.search_sources)
     params = {"refresh": refresh, "verbose": verbose, "stacked": stacked}
-
-    # Verbose variables
-    text = f"Searching authors for search_group in {len(search_sources):,} sources..."
+    text = f"Defining 'search_group' using up to {len(search_sources):,} sources..."
     custom_print(text, verbose)
 
-    # Retrieve author data for today
+    # Retrieve author list for today
     sources_today = DataFrame(product(search_sources, [self.active_year]),
                               columns=["source_id", "year"])
-    auth_today, missing = retrieve_authors_from_sourceyear(sources_today, self.sql_conn,
-                                                           refresh=refresh, afid=True)
-    res = query_pubs_by_sourceyear(missing["source_id"].unique(), self.active_year,
-                                   afid=True, **params)
-    insert_data(res, self.sql_conn, table="sources_afids")
-    auth_today = auth_today.append(res)
-
-    # Retrieve author data for then
+    auth_today = get_authors_from_sourceyear(sources_today, self.sql_conn,
+        refresh=refresh, afid=True, stacked=stacked, verbose=verbose)
     mask = None
     if self.search_affiliations:
         mask = auth_today["afid"].astype(str).isin(self.search_affiliations)
@@ -259,13 +252,8 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
         then_years.extend(range(min_year, max_year+1))
     sources_then = DataFrame(product(search_sources, then_years),
                              columns=["source_id", "year"])
-    auth_then, missing = retrieve_authors_from_sourceyear(sources_then, self.sql_conn,
-                                                          refresh=refresh)
-    for y in missing["year"].unique():
-        missing_sources = missing[missing["year"] == y]["source_id"].unique()
-        res = query_pubs_by_sourceyear(missing_sources, y, **params)
-        insert_data(res, self.sql_conn, table="sources")
-    auth_then = auth_then.append(res)
+    auth_then = get_authors_from_sourceyear(sources_then, self.sql_conn,
+        refresh=refresh, afid=True, stacked=stacked, verbose=verbose)
     mask = auth_then["year"].between(min_year, max_year, inclusive=True)
     then = flat_set_from_df(auth_then, "auids", condition=mask)
 

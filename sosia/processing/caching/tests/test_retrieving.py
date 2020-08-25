@@ -116,7 +116,7 @@ def test_retrieve_authors_year():
 def test_retrieve_sources_empty():
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
-    df = pd.DataFrame(product([22900], [2010, 2005]),
+    df = pd.DataFrame(product([22900], [2005, 2010]),
                       columns=["source_id", "year"], dtype="int64")
     sources_ys_incache, sources_ys_search = retrieve_authors_from_sourceyear(df, conn)
     assert_frame_equal(sources_ys_search, df)
@@ -127,20 +127,19 @@ def test_retrieve_sources_partial():
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
-    expected_sources = [22900]
-    expected_years = [2010, 2005]
-    df = pd.DataFrame(product(expected_sources, expected_years),
-                      columns=["source_id", "year"], dtype="int64")
+    expected_sources = [22900, 22900]
+    expected_years = [2005, 2010]
+    df = pd.DataFrame({"source_id": expected_sources, "year": expected_years},
+                      dtype="int64")
     # Populate cache
     res = query_pubs_by_sourceyear(expected_sources, expected_years[0])
-    insert_data(res, conn, table="sources")
+    res["auids"] = res["auids"].str.split(";")
+    insert_data(res.copy(), conn, table="sources")
     # Retrieve from cache
     sources_ys_incache, sources_ys_search = retrieve_authors_from_sourceyear(df, conn)
-    expected_sources = [int(s) for s in expected_sources]
-    assert_equal(sources_ys_incache.source_id.tolist(), expected_sources)
-    assert_equal(sources_ys_incache.year.tolist(), [expected_years[0]])
-    assert_equal(sources_ys_search.source_id.tolist(), expected_sources)
-    assert_equal(sources_ys_search.year.tolist(), [expected_years[1]])
+    cols = ["source_id", "year"]
+    assert_frame_equal(sources_ys_incache[cols], df.head(1))
+    assert_frame_equal(sources_ys_search[cols], df.tail(1))
 
 
 def test_retrieve_sources_full():
@@ -148,7 +147,7 @@ def test_retrieve_sources_full():
     conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
-    expected_years = [2010, 2005]
+    expected_years = [2005, 2010]
     cols = ["source_id", "year"]
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=cols, dtype="int64")
@@ -168,7 +167,7 @@ def test_retrieve_sources_full():
 def test_sources_afids_in_cache_empty():
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
-    df = pd.DataFrame(product([22900], [2010, 2005]),
+    df = pd.DataFrame(product([22900], [2005, 2010]),
                       columns=["source_id", "year"], dtype="int64")
     sa_incache, sa_search = retrieve_authors_from_sourceyear(df, conn, afid=True)
     assert_frame_equal(sa_search, df)
@@ -180,7 +179,7 @@ def test_sources_afids_in_cache_partial():
     conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
-    expected_years = [2010, 2005]
+    expected_years = [2005, 2010]
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     sa_incache, sa_search = retrieve_authors_from_sourceyear(df, conn, afid=True)
@@ -194,7 +193,8 @@ def test_sources_afids_in_cache_partial():
     assert_equal(set(sa_incache.year.tolist()), set([expected_years[0]]))
     assert_equal(set(sa_search.source_id.tolist()), set(expected_sources))
     assert_equal(set(sa_search.year.tolist()), set([expected_years[1]]))
-    expected = range(182-5, 182+5)
+    expected = range(125-5, 125+5)
+    print(len(sa_incache))
     assert_true(len(sa_incache) in expected)
     assert_true(len(sa_incache.afid.drop_duplicates()) in expected)
 
@@ -204,7 +204,7 @@ def test_sources_afids_in_cache_full():
     conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
-    expected_years = [2010, 2005]
+    expected_years = [2005, 2010]
     cols = ["source_id", "year"]
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=cols, dtype="int64")
@@ -218,7 +218,7 @@ def test_sources_afids_in_cache_full():
     expected_sources = set([int(s) for s in expected_sources])
     assert_equal(set(sa_incache.source_id.tolist()), set(expected_sources))
     assert_equal(set(sa_incache.year.tolist()), set([expected_years[0]]))
-    expected = range(182-5, 182+5)
+    expected = range(125-5, 125+5)
     assert_true(len(sa_incache) in expected)
     assert_true(len(sa_incache.afid.drop_duplicates()) in expected)
     assert_true(sa_search.empty)
@@ -229,7 +229,7 @@ def test_sources_afids_in_sources_cache():
     conn = connect_database(test_cache)
     # Variables
     expected_sources = [22900]
-    expected_years = [2010, 2005]
+    expected_years = [2005, 2010]
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
