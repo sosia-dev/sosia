@@ -127,8 +127,7 @@ def retrieve_author_pubs(df, conn):
     return incache
 
 
-def retrieve_authors_from_sourceyear(tosearch, conn, afid=False, refresh=False,
-                                     stacked=False):
+def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, stacked=False):
     """Search through sources by year for authors in SQL database.
 
     Parameters
@@ -138,9 +137,6 @@ def retrieve_authors_from_sourceyear(tosearch, conn, afid=False, refresh=False,
 
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
-
-    afid : bool (optional, default=False)
-        If True, search in sources_afids table.
 
     refresh : bool (optional, default=False)
         Whether to refresh cached search files.
@@ -152,9 +148,8 @@ def retrieve_authors_from_sourceyear(tosearch, conn, afid=False, refresh=False,
     Returns
     -------
     data : DataFrame
-        DataFrame in format ("source_id", "year", "auids") (if afid=True,
-        "afid" is a column as well), where entries correspond to an
-        individual paper.
+        DataFrame in format ("source_id", "year", "auids", "afid"), where
+        entries correspond to an individual paper.
 
     missing: DataFrame
         DataFrame of source-year-combinations not in SQL database.
@@ -171,12 +166,8 @@ def retrieve_authors_from_sourceyear(tosearch, conn, afid=False, refresh=False,
     # Query selected data using left join
     cols = ["source_id", "year"]
     insert_temporary_table(tosearch.copy(), conn, merge_cols=cols)
-    table = "sources"
-    select = "a.source_id, a.year, b.auids"
-    if afid:
-        table += "_afids"
-        select += ", b.afid"
-    q = f"SELECT {select} FROM temp AS a LEFT JOIN {table} AS b "\
+    q = "SELECT a.source_id, a.year, b.auids, b.afid FROM temp AS a "\
+        "LEFT JOIN sources_afids AS b "\
         "ON a.source_id=b.source_id AND a.year=b.year;"
     data = pd.read_sql_query(q, conn)
     data = data.sort_values(["source_id", "year"]).reset_index(drop=True)

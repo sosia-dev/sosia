@@ -118,25 +118,7 @@ def test_retrieve_authors_year_insert():
     assert_equal(missing['year'].tolist(), [year])
 
 
-def test_retrieve_authors_from_sourceyear_sources():
-    make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
-    # Variables
-    expected_sources = [22900]
-    expected_years = [2005, 2010]
-    cols = ["source_id", "year"]
-    df = pd.DataFrame(product(expected_sources, expected_years),
-                      columns=cols, dtype="int64")
-    # Populate cache
-    res = query_pubs_by_sourceyear(expected_sources, expected_years[0], afid=True)
-    insert_data(res, conn, table="sources")
-    # Retrieve from cache
-    incache, missing = retrieve_authors_from_sourceyear(df, conn)
-    assert_frame_equal(incache[cols], df.head(1))
-    assert_frame_equal(missing[cols], df.tail(1))
-
-
-def test_retrieve_authors_from_sourceyear_sources_afids():
+def test_retrieve_authors_from_sourceyear():
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
@@ -146,10 +128,10 @@ def test_retrieve_authors_from_sourceyear_sources_afids():
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
-    res = query_pubs_by_sourceyear(expected_sources, expected_years[0], afid=True)
+    res = query_pubs_by_sourceyear(expected_sources, expected_years[0])
     insert_data(res, conn, table="sources_afids")
     # Retrieve from cache
-    incache, missing = retrieve_authors_from_sourceyear(df, conn, afid=True)
+    incache, missing = retrieve_authors_from_sourceyear(df, conn)
     assert_equal(incache['source_id'].unique(), expected_sources)
     assert_equal(incache['year'].unique(), [expected_years[0]])
     assert_true(incache.shape[0] in expected_range)

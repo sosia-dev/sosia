@@ -137,7 +137,7 @@ def query_authors(authors, conn, refresh=False, verbose=False):
 
 
 def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
-                             verbose=False, afid=False):
+                             verbose=False):
     """Get authors lists for each source in a particular year.
 
     Parameters
@@ -157,14 +157,9 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
 
     verbose : bool (optional, default=False)
         Whether to print information on the search progress.
-
-    afid : bool (optional, default=False)
-        If True, maintains information on the Scopus affiliation ID in res.
     """
     # Dummy return value
-    columns = ["source_id", "year", "auids"]
-    if afid:
-        columns.append("afid")
+    columns = ["source_id", "year", "auids", "afid"]
     dummy = pd.DataFrame(columns=columns)
 
     # Search authors
@@ -197,14 +192,12 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
         return dummy
 
     # Group data
-    grouping_cols = ["source_id", "year"]
-    if afid:
-        res = expand_affiliation(res)
-        grouping_cols.append("afid")
-        if res.empty:
-            return dummy
+    res = expand_affiliation(res)
+    if res.empty:
+        return dummy
     res["year"] = year
     res["author_ids"] = res["author_ids"] + ";"
+    grouping_cols = ["source_id", "year", "afid"]
     res = (res.groupby(grouping_cols)[["author_ids"]].apply(sum)
               .reset_index()
               .rename(columns={"author_ids": "auids"}))

@@ -238,7 +238,7 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
     sources_today = DataFrame(product(search_sources, [self.active_year]),
                               columns=["source_id", "year"])
     auth_today = get_authors_from_sourceyear(sources_today, self.sql_conn,
-        refresh=refresh, afid=True, stacked=stacked, verbose=verbose)
+        refresh=refresh, stacked=stacked, verbose=verbose)
     mask = None
     if self.search_affiliations:
         mask = auth_today["afid"].astype(str).isin(self.search_affiliations)
@@ -253,7 +253,7 @@ def search_group_from_sources(self, stacked=False, verbose=False, refresh=False)
     sources_then = DataFrame(product(search_sources, then_years),
                              columns=["source_id", "year"])
     auth_then = get_authors_from_sourceyear(sources_then, self.sql_conn,
-        refresh=refresh, afid=True, stacked=stacked, verbose=verbose)
+        refresh=refresh, stacked=stacked, verbose=verbose)
     mask = auth_then["year"].between(min_year, max_year, inclusive=True)
     then = flat_set_from_df(auth_then, "auids", condition=mask)
 
