@@ -136,5 +136,4 @@ def test_retrieve_authors_from_sourceyear():
     assert_equal(incache['year'].unique(), [expected_years[0]])
     assert_true(incache.shape[0] in expected_range)
     assert_true(incache['afid'].nunique() in expected_range)
-    assert_equal(missing['source_id'].unique(), expected_sources)
-    assert_equal(missing['year'].unique(), [expected_years[1]])
+    assert_frame_equal(missing, df.tail(1).reset_index(drop=True))

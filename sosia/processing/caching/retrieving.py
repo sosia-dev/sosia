@@ -174,6 +174,6 @@ def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, stacked=Fals
 
     # Finalize
     mask_missing = data["auids"].isna()
-    incache = data[~mask_missing]
-    missing = data.loc[mask_missing, cols].drop_duplicates()
+    incache = data[~mask_missing].reset_index(drop=True)
+    missing = data.loc[mask_missing, cols].drop_duplicates().reset_index(drop=True)
     return incache, missing
