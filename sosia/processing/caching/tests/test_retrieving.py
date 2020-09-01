@@ -124,16 +124,18 @@ def test_retrieve_authors_from_sourceyear():
     # Variables
     expected_sources = [22900]
     expected_years = [2005, 2010]
-    expected_range = range(125-5, 125+5)
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
-    res = query_pubs_by_sourceyear(expected_sources, expected_years[0])
-    insert_data(res, conn, table="sources_afids")
+    expected = query_pubs_by_sourceyear(expected_sources, expected_years[0])
+    expected = expected.sort_values(["auids", "afid"]).reset_index(drop=True)
+    expected = expected[['source_id', 'year', 'auids', 'afid']]
+    expected["source_id"] = expected["source_id"].astype(int)
+    expected["auids"] = expected["auids"].str.split(";")
+    insert_data(expected, conn, table="sources_afids")
     # Retrieve from cache
     incache, missing = retrieve_authors_from_sourceyear(df, conn)
-    assert_equal(incache['source_id'].unique(), expected_sources)
-    assert_equal(incache['year'].unique(), [expected_years[0]])
-    assert_true(incache.shape[0] in expected_range)
-    assert_true(incache['afid'].nunique() in expected_range)
+    incache["afid"] = incache["afid"].astype(int).astype(str)
+    incache = incache.sort_values(["auids", "afid"]).reset_index(drop=True)
+    assert_frame_equal(incache, expected)
     assert_frame_equal(missing, df.tail(1).reset_index(drop=True))
