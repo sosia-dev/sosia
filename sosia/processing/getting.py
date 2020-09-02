@@ -13,7 +13,7 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
 
     Parameters
     ----------
-    tosearch : DataFrame
+    df : DataFrame
         DataFrame of source-year-combinations to be searched for.
 
     conn : sqlite3 connection
@@ -32,9 +32,8 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
     Returns
     -------
     data : DataFrame
-        DataFrame in format ("source_id", "year", "auids") (if afid=True,
-        "afid" is a column as well), where entries correspond to an
-        individual paper.
+        DataFrame in format ("source_id", "year", "auids", "afid"), where
+        entries correspond to an individual paper.
     """
     # Retrieve information in cache
     data, missing = retrieve_authors_from_sourceyear(df, conn, refresh=refresh)

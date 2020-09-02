@@ -199,7 +199,7 @@ class Original(Scientist):
                  "of publication of the scientist.")
 
         # Query journals
-        params = {"self": self, "stacked": stacked,
+        params = {"original": self, "stacked": stacked,
                   "refresh": refresh, "verbose": verbose}
         search_group = search_group_from_sources(**params)
 
