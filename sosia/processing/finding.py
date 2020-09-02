@@ -5,11 +5,10 @@ from pandas import DataFrame
 
 from sosia.processing.caching import insert_data, retrieve_author_cits,\
     retrieve_authors_year
-from sosia.processing.extracting import get_authors
+from sosia.processing.extracting import extract_authors
 from sosia.processing.filtering import filter_pub_counts
-from sosia.processing.getting import get_authors_from_sourceyear
-from sosia.processing.querying import base_query, count_citations,\
-    query_authors, stacked_query
+from sosia.processing.getting import get_authors_from_sourceyear, get_authors
+from sosia.processing.querying import base_query, count_citations, stacked_query
 from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
 from sosia.utils import custom_print, print_progress
 
@@ -58,7 +57,7 @@ def find_matches(original, stacked, verbose, refresh):
 
     # First round of filtering: minimum publications and main field
     # create df of authors
-    authors = query_authors(original.search_group, original.sql_conn, verbose=verbose)
+    authors = get_authors(original.search_group, original.sql_conn, verbose=verbose)
     same_field = authors['areas'].str.startswith(original.main_field[1])
     enough_pubs = authors['documents'].astype(int) >= int(min(_npapers))
     group = sorted(authors[same_field & enough_pubs]["auth_id"].tolist())
@@ -184,7 +183,7 @@ def find_matches(original, stacked, verbose, refresh):
                              fields=["eid", "author_ids", "coverDate"])
             pubs = [p for p in res if
                     original.year >= int(p.coverDate[:4]) >= original.year_period]
-            coauths = set(get_authors(pubs)) - {str(m)}
+            coauths = set(extract_authors(pubs)) - {str(m)}
             if not (min(_ncoauth) <= len(coauths) <= max(_ncoauth)):
                 matches.remove(m)
                 continue

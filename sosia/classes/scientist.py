@@ -9,8 +9,8 @@ from pybliometrics.scopus import AbstractRetrieval
 
 from sosia.establishing import config, connect_database
 from sosia.processing import add_source_names, base_query, count_citations,\
-    find_location, get_authors, get_main_field, maybe_add_source_names,\
-    read_fields_sources_list, query_authors
+    extract_authors, find_location, get_authors, get_main_field,\
+    maybe_add_source_names, read_fields_sources_list
 from sosia.utils import accepts
 
 
@@ -326,7 +326,7 @@ class Scientist(object):
                                           exclusion_ids=identifier)
 
         # Coauthors
-        self._coauthors = set(get_authors(self._publications)) - set(identifier)
+        self._coauthors = set(extract_authors(self._publications)) - set(identifier)
 
         # Period counts simply set to total if period is or goes back to None
         if self.period:
@@ -341,7 +341,7 @@ class Scientist(object):
             eids_period = [p.eid for p in self._publications_period]
             n_cits = count_citations(eids_period, self.year+1, identifier)
             self._citations_period = n_cits
-            self._coauthors_period = set(get_authors(self._publications_period))
+            self._coauthors_period = set(extract_authors(self._publications_period))
             self._coauthors_period -= set(identifier)
         else:
             self._coauthors_period = self._coauthors
@@ -369,8 +369,8 @@ class Scientist(object):
         self._language = None
 
         # Author name from profile with most documents
-        df = query_authors(self.identifier, self.sql_conn,
-                           refresh=refresh, verbose=False)
+        df = get_authors(self.identifier, self.sql_conn,
+                         refresh=refresh, verbose=False)
         au = df.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
         self._surname = au.surname or None

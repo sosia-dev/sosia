@@ -4,7 +4,6 @@ from string import Template
 from pybliometrics.scopus.exception import Scopus400Error, ScopusQueryError,\
     Scopus500Error
 
-from sosia.processing.caching import insert_data, retrieve_authors
 from sosia.processing.utils import expand_affiliation
 from sosia.utils import custom_print, print_progress
 
@@ -93,47 +92,6 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
         count2 = count_citations(search_ids[mid:], pubyear, exclusion_ids)
         return count1 + count2
     return base_query("docs", q, size_only=True)
-
-
-def query_authors(authors, conn, refresh=False, verbose=False):
-    """Wrapper function to search author data for a list of authors, searching
-    first in the SQL database and then via stacked search.
-
-    Parameters
-    ----------
-    authors : list
-       List of Scopus Author IDs to search.
-
-    conn : sqlite3 connection
-        Standing connection to a SQLite3 database.
-
-    refresh : bool (optional, default=False)
-        Whether to refresh scopus cached files if they exist, or not.
-
-    verbose : bool (optional)
-        Whether to print information on the search progress.
-
-    Returns
-    -------
-    authors_data : DataFrame
-        Data on the provided authors.
-    """
-    authors = pd.DataFrame(authors, columns=["auth_id"], dtype="int64")
-    # Retrieve existing data in cache
-    auth_done, auth_missing = retrieve_authors(authors, conn)
-    # Query missing records
-    if auth_missing:
-        params = {"group": auth_missing, "res": [],
-                  "refresh": refresh, "joiner": ") OR AU-ID(",
-                  "q_type": "author", "template": Template("AU-ID($fill)")}
-        if verbose:
-            print("Pre-filtering...")
-            params.update({"total": len(auth_missing)})
-        res, _ = stacked_query(**params)
-        res = pd.DataFrame(res)
-        insert_data(res, conn, table="authors")
-        auth_done, _ = retrieve_authors(authors, conn)
-    return auth_done
 
 
 def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,

@@ -1,7 +1,51 @@
+from string import Template
+
 import pandas as pd
 
-from sosia.processing.caching import insert_data, retrieve_authors_from_sourceyear
-from sosia.processing.querying import query_pubs_by_sourceyear
+from sosia.processing.caching import insert_data, retrieve_authors,\
+    retrieve_authors_from_sourceyear
+from sosia.processing.querying import query_pubs_by_sourceyear, stacked_query
+
+
+def get_authors(authors, conn, refresh=False, verbose=False):
+    """Wrapper function to search author data for a list of authors, searching
+    first in the SQL database and then via stacked search.
+
+    Parameters
+    ----------
+    authors : list
+       List of Scopus Author IDs to search.
+
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
+
+    refresh : bool (optional, default=False)
+        Whether to refresh scopus cached files if they exist, or not.
+
+    verbose : bool (optional)
+        Whether to print information on the search progress.
+
+    Returns
+    -------
+    authors_data : DataFrame
+        Data on the provided authors.
+    """
+    authors = pd.DataFrame(authors, columns=["auth_id"], dtype="int64")
+    # Retrieve existing data in cache
+    auth_done, missing = retrieve_authors(authors, conn)
+    # Query missing records
+    if missing:
+        params = {"group": missing, "res": [],
+                  "refresh": refresh, "joiner": ") OR AU-ID(",
+                  "q_type": "author", "template": Template("AU-ID($fill)")}
+        if verbose:
+            print("Pre-filtering...")
+            params.update({"total": len(missing)})
+        res, _ = stacked_query(**params)
+        res = pd.DataFrame(res)
+        insert_data(res, conn, table="authors")
+        auth_done, _ = retrieve_authors(authors, conn)
+    return auth_done
 
 
 def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,

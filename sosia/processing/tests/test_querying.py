@@ -3,12 +3,11 @@
 
 from os.path import expanduser
 
-import pandas as pd
 from nose.tools import assert_equal, assert_true
 from string import Template
 
 from sosia.establishing import connect_database
-from sosia.processing import base_query, count_citations, query_authors,\
+from sosia.processing import base_query, count_citations,\
     query_pubs_by_sourceyear, stacked_query
 
 test_cache = expanduser("~/.sosia/test.sqlite")
@@ -40,18 +39,6 @@ def test_count_citations():
     eids_long = eids * 200
     count3 = count_citations(eids_long, 2017, exclusion_ids=identifier)
     assert_equal(count3, 4)
-
-
-def test_query_authors():
-    auth_list = [6701809842, 55208373700]
-    auth_data = query_authors(auth_list, test_conn, refresh=refresh)
-    assert_true(isinstance(auth_data,  pd.DataFrame))
-    expected_cols = ["auth_id", "eid", "surname", "initials", "givenname",
-                     "affiliation", "documents", "affiliation_id", "city",
-                     "country", "areas"]
-    assert_equal(auth_data.columns.tolist(), expected_cols)
-    assert_equal(auth_data["auth_id"].tolist(), auth_list)
-    assert_equal(auth_data["surname"].tolist(), ["Harhoff", "Baruffaldi"])
 
 
 def test_query_sources_by_year():

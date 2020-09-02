@@ -7,6 +7,14 @@ from sosia.processing.nlp import clean_abstract, compute_similarity
 from sosia.utils import print_progress
 
 
+def extract_authors(pubs):
+    """Get list of author IDs from a list of namedtuples representing
+    publications.
+    """
+    l = [x.author_ids.split(";") for x in pubs if isinstance(x.author_ids, str)]
+    return [au for sl in l for au in sl]
+
+
 def find_location(auth_ids, pubs, year, refresh):
     """Find the most common country, affiliation ID, and affiliation name
     of a scientist using her most recent publications with valid information.
@@ -56,14 +64,6 @@ def find_location(auth_ids, pubs, year, refresh):
         return countries, aff_ids, orgs
     # Return None-triple if all else fails
     return countries, aff_ids, orgs
-
-
-def get_authors(pubs):
-    """Get list of author IDs from a list of namedtuples representing
-    publications.
-    """
-    l = [x.author_ids.split(";") for x in pubs if isinstance(x.author_ids, str)]
-    return [au for sl in l for au in sl]
 
 
 def get_main_field(fields):
