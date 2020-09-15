@@ -1,10 +1,13 @@
+import io
 from os import makedirs
 from os.path import exists, expanduser
+from urllib.request import urlopen
+import zipfile
 
 import pandas as pd
 
 from sosia.establishing.constants import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST,\
-    URL_CONTENT, URL_SOURCES
+    URL_CONTENT, URL_SOURCES, URL_SOURCES_FILE
 
 
 def create_fields_sources_list():
@@ -20,18 +23,25 @@ def create_fields_sources_list():
         "Scopus ASJC Code (Sub-subject Area)": "asjc",
         "ASJC code": "asjc",
         "Source Type": "type",
+        "ASJC Code": "asjc",
         "Type": "type",
         "Sourcerecord id": "source_id",
+        "Sourcerecord ID": "source_id",
         "Scopus Source ID": "source_id",
         "Scopus SourceID": "source_id",
+        "Scopus Source ID": "source_id",
         "Title": "title",
         "Source title": "title",
+        "Source Title (Medline-sourced journals are indicated in Green)": "title",
+        "Conference Title": "title"
     }
     keeps = list(set(rename.values()))
 
     # Get Information from Scopus Sources list
-    sources = pd.read_excel(URL_SOURCES, sheet_name=None, header=1)
-    _drop_sheets(sources, ["About CiteScore", "ASJC Codes", "Sheet1"])
+    zf = zipfile.ZipFile(io.BytesIO(urlopen(URL_SOURCES).read()))
+    sources = pd.read_excel(zf.open(URL_SOURCES_FILE), sheet_name=None,
+                            header=0, engine='pyxlsb')
+    _drop_sheets(sources, ["About CiteScore", "ASJC codes", "Sheet1"])
     dfs = [df.rename(columns=rename)[keeps].dropna() for df in sources.values()]
     out = pd.concat(dfs).drop_duplicates()
 
