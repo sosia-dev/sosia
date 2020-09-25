@@ -2,7 +2,7 @@ import pandas as pd
 from string import Template
 
 from pybliometrics.scopus.exception import Scopus400Error, Scopus414Error,\
-    Scopus500Error
+    Scopus500Error, ScopusQueryError
 
 from sosia.processing.utils import expand_affiliation
 from sosia.utils import custom_print, print_progress
@@ -220,7 +220,7 @@ def stacked_query(group, res, template, joiner, q_type, refresh,
         verbose = total is not None
         i += len(group)
         print_progress(i, total, verbose)
-    except (Scopus400Error, Scopus500Error, Scopus414Error) as e:
+    except (Scopus400Error, Scopus414Error, Scopus500Error, ScopusQueryError) as e:
         # Split query group into two equally sized groups
         mid = len(group) // 2
         params = {"group": group[:mid], "res": res, "template": template,
