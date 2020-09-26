@@ -3,8 +3,7 @@ from string import Template
 
 from pandas import DataFrame
 
-from sosia.processing.caching import insert_data, retrieve_author_cits,\
-    retrieve_authors_year
+from sosia.processing.caching import insert_data, retrieve_author_info
 from sosia.processing.extracting import extract_authors
 from sosia.processing.filtering import filter_pub_counts
 from sosia.processing.getting import get_authors_from_sourceyear, get_authors
@@ -54,6 +53,7 @@ def find_matches(original, stacked, verbose, refresh):
     text = "Searching through characteristics of "\
            f"{len(original.search_group):,} authors..."
     custom_print(text, verbose)
+    conn = original.sql_conn
 
     # First round of filtering: minimum publications and main field
     # create df of authors
@@ -70,8 +70,7 @@ def find_matches(original, stacked, verbose, refresh):
     # number of publications in the relevant period.
     params = {"group": group, "ybefore": min(_years)-1,
               "yupto": original.year, "npapers": _npapers,
-              "yfrom": original.year_period, "verbose": verbose,
-              "conn": original.sql_conn}
+              "yfrom": original.year_period, "verbose": verbose, "conn": conn}
     group, _, _ = filter_pub_counts(**params)
     # Screen out profiles with too many publications over the full period
     if original.period:
@@ -83,7 +82,7 @@ def find_matches(original, stacked, verbose, refresh):
 
     # Third round of filtering: citations (in the FULL period)
     authors = DataFrame({"auth_id": group, "year": original.year})
-    auth_cits, missing = retrieve_author_cits(authors, original.sql_conn)
+    auth_cits, missing = retrieve_author_info(authors, conn, "author_ncits")
     if not missing.empty:
         total = missing.shape[0]
         text = f"Counting citations of {total:,} authors..."
@@ -96,7 +95,7 @@ def find_matches(original, stacked, verbose, refresh):
             missing.at[i, 'n_cits'] = n_cits
             print_progress(i + 1, total, verbose)
             if i % 100 == 0 or i >= len(missing):
-                insert_data(missing.iloc[start:i], original.sql_conn, table="author_ncits")
+                insert_data(missing.iloc[start:i], conn, table="author_ncits")
                 start = i
     auth_cits = auth_cits.append(missing)
     auth_cits['auth_id'] = auth_cits['auth_id'].astype("uint64")
@@ -114,7 +113,7 @@ def find_matches(original, stacked, verbose, refresh):
            "coauthors number..."
     custom_print(text, verbose)
     authors = DataFrame({"auth_id": group, "year": original.year}, dtype="uint64")
-    _, author_year_search = retrieve_authors_year(authors, original.sql_conn)
+    _, author_year_search = retrieve_author_info(authors, conn, "author_year")
     matches = []
     if stacked:  # Combine searches
         if not author_year_search.empty:
@@ -135,7 +134,7 @@ def find_matches(original, stacked, verbose, refresh):
                 res.index.name = "auth_id"
                 res = res.reset_index()
                 insert_data(res, original.sql_conn, table="author_year")
-        authors_year, _ = retrieve_authors_year(authors, original.sql_conn)
+        authors_year, _ = retrieve_author_info(authors, conn, "author_year")
         # Check for number of coauthors within margin
         if original._ignore_first_id or original.period:
             coauth_max = max(_ncoauth_full)

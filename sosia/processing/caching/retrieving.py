@@ -4,39 +4,6 @@ from sosia.processing.caching.inserting import insert_temporary_table
 from sosia.processing.caching.utils import temporary_merge
 
 
-def retrieve_author_cits(df, conn):
-    """Search authors citations in cache.
-
-    Parameters
-    ----------
-    df : DataFrame
-        DataFrame of authors to search in a year.
-
-    conn : sqlite3 connection
-        Standing connection to a SQLite3 database.
-
-    Returns
-    -------
-    incache : DataFrame
-        DataFrame of results found in cache.
-
-    tosearch: pd.DataFrame
-        List of authors not in cache.
-    """
-    cols = ["auth_id", "year"]
-    insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(conn, "author_ncits", merge_cols=cols)
-    if not incache.empty:
-        df = df.set_index(cols)
-        incache = incache.set_index(cols)
-        tosearch = df[~(df.index.isin(incache.index))]
-        incache = incache.reset_index()
-        tosearch = tosearch.reset_index()
-    else:
-        tosearch = df
-    return incache, tosearch
-
-
 def retrieve_authors(df, conn):
     """Search authors in cache.
 
@@ -59,15 +26,16 @@ def retrieve_authors(df, conn):
     cols = ["auth_id"]
     insert_temporary_table(df, merge_cols=cols, conn=conn)
     incache = temporary_merge(conn, "authors", merge_cols=cols)
-    tosearch = df.auth_id.tolist()
+    tosearch = df['auth_id'].tolist()
     if not incache.empty:
-        incache_list = incache.auth_id.tolist()
+        incache_list = incache["auth_id"].tolist()
         tosearch = [int(au) for au in tosearch if int(au) not in incache_list]
     return incache, tosearch
 
 
-def retrieve_authors_year(df, conn):
-    """Search authors publication information up to year of event in cache.
+def retrieve_author_info(df, conn, table):
+    """Retrieve information by author and year from specific table of
+    SQLite3 database.
 
     Parameters
     ----------
@@ -77,54 +45,29 @@ def retrieve_authors_year(df, conn):
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
 
+    table : str
+        The table of the SQLite3 database on which to perform the merge.
+
     Returns
     -------
-    incache : DataFrame
-        DataFrame of results found in cache.
+    incache : DataFrame()
+        DataFrame of results found in `conn`.
 
-    tosearch: DataFrame
-        DataFrame of authors not in cache with year of the event as second
-        column.
+    tosearch : DataFrame()
+        DataFrame of results not found in `conn`.
     """
     cols = ["auth_id", "year"]
     insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(conn, "author_year", merge_cols=cols)
+    incache = temporary_merge(conn, table, merge_cols=cols)
     if not incache.empty:
         df = df.set_index(cols)
         incache = incache.set_index(cols)
         tosearch = df[~(df.index.isin(incache.index))]
         incache = incache.reset_index()
         tosearch = tosearch.reset_index()
-        if tosearch.empty:
-            cols = ["auth_id", "year", "n_pubs", "n_coauth", "first_year"]
-            tosearch = pd.DataFrame(columns=cols)
     else:
         tosearch = df
     return incache, tosearch
-
-
-def retrieve_author_pubs(df, conn):
-    """Search author's publication information up to year of event in cache.
-
-    Parameters
-    ----------
-    df : DataFrame
-        DataFrame of authors to search with year of the event as second column.
-
-    conn : sqlite3 connection
-        Standing connection to a SQLite3 database.
-
-    Returns
-    -------
-    incache : DataFrame
-        DataFrame of results found in cache.
-    """
-    cols = ["auth_id", "year"]
-    insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(conn, "author_pubs", merge_cols=cols)
-    if incache.empty:
-        incache = pd.DataFrame()
-    return incache
 
 
 def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, stacked=False):

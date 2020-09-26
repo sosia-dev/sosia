@@ -11,8 +11,8 @@ from pandas.testing import assert_frame_equal
 
 from sosia.establishing import connect_database, make_database
 from sosia.processing import build_dict, insert_data, retrieve_authors,\
-    retrieve_author_pubs, retrieve_authors_year, retrieve_authors_from_sourceyear,\
-    robust_join, query_pubs_by_sourceyear
+    retrieve_author_info, retrieve_authors_from_sourceyear, robust_join,\
+    query_pubs_by_sourceyear
 
 test_cache = expanduser("~/.sosia/test.sqlite")
 refresh = 30
@@ -57,45 +57,46 @@ def test_retrieve_authors_insert():
     assert_equal(missing, [55317901900])
 
 
-def test_retrieve_author_pubs():
-    make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
-    df = pd.DataFrame(product([53164702100], [2010, 2017]),
-                      columns=["auth_id", "year"], dtype="int64")
-    pubs = retrieve_author_pubs(df, conn)
-    assert_equal(pubs.shape[0], 0)
-    assert_true(isinstance(pubs, pd.DataFrame))
-
-
-def test_retrieve_author_pubs_insert():
+def test_retrieve_author_info_authorpubs():
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
+    table = "author_pubs"
     data = {"auth_id": [53164702100, 53164702100],
             "year": [2010, 2017], "n_pubs": [0, 6]}
     expected = pd.DataFrame(data, dtype="int64")
     # Insert data
-    insert_data(expected.iloc[0].values, conn, table="author_pubs")
-    insert_data(expected.iloc[1].values, conn, table="author_pubs")
+    insert_data(expected.iloc[0].values, conn, table=table)
+    insert_data(expected.iloc[1].values, conn, table=table)
     # Retrieve data
-    received = retrieve_author_pubs(expected[["auth_id", "year"]], conn)
-    assert_frame_equal(received, expected)
+    cols = ["auth_id", "year"]
+    incache, tosearch = retrieve_author_info(expected[cols], conn, table)
+    assert_frame_equal(incache, expected)
+    assert_true(tosearch.empty)
 
 
-def test_retrieve_authors_year():
-    make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
-    data = {"auth_id": [53164702100, 57197093438], "year": [2016, 2016]}
-    expected = pd.DataFrame(data, dtype="int64")
-    incache, missing = retrieve_authors_year(expected, conn)
-    assert_true(incache.empty)
-    assert_frame_equal(missing, expected)
-
-
-def test_retrieve_authors_year_insert():
+def test_retrieve_author_info_authorncits():
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
+    table = "author_ncits"
+    data = {"auth_id": [53164702100, 53164702100],
+            "year": [2010, 2017], "n_cits": [0, 6]}
+    expected = pd.DataFrame(data, dtype="int64")
+    # Insert data
+    insert_data(expected, conn, table=table)
+    # Retrieve data
+    cols = ["auth_id", "year"]
+    incache, tosearch = retrieve_author_info(expected[cols], conn, table)
+    assert_frame_equal(incache, expected)
+    assert_true(tosearch.empty)
+
+
+def test_retrieve_author_info_authoryear():
+    make_database(test_cache, drop=True)
+    conn = connect_database(test_cache)
+    # Variables
+    table = "author_year"
     expected_auth = [53164702100, 57197093438]
     search_auth = [55317901900]
     year = 2016
@@ -110,9 +111,9 @@ def test_retrieve_authors_year_insert():
     expected = expected.sort_index().rename_axis('auth_id').reset_index()
     expected["year"] = year
     expected = expected[['auth_id', 'year', 'first_year', 'n_pubs', 'n_coauth']]
-    insert_data(expected, conn, table="author_year")
+    insert_data(expected, conn, table=table)
     # Retrieve data
-    incache, missing = retrieve_authors_year(df2, conn)
+    incache, missing = retrieve_author_info(df2, conn, table)
     assert_frame_equal(incache, expected)
     assert_equal(missing['auth_id'].tolist(), search_auth)
     assert_equal(missing['year'].tolist(), [year])

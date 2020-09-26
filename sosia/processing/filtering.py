@@ -3,7 +3,7 @@ from itertools import product
 from pandas import DataFrame
 
 from sosia.processing.caching import auth_npubs_retrieve_insert,\
-    retrieve_author_pubs
+    retrieve_author_info
 from sosia.utils import custom_print, print_progress
 
 
@@ -55,7 +55,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         years_check.extend([yfrom - 1])
     authors = DataFrame(product(group, years_check), dtype="int64",
                         columns=["auth_id", "year"])
-    auth_npubs = retrieve_author_pubs(authors, conn)
+    auth_npubs, _ = retrieve_author_info(authors, conn, "author_pubs")
     au_skip = []
     group_tocheck = set(group)
     older_authors = []
