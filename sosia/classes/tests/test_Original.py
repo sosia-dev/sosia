@@ -168,7 +168,7 @@ def test_find_matches_stacked_affiliations():
 
 def test_find_matches_stacked_period_affiliations():
     scientist4.find_matches(stacked=True, refresh=refresh)
-    expected_ids = ['56049973600', '56896085200', '57188695848', '57188709931']
+    expected_ids = ['57188695848', '57188709931']
     assert_equal(scientist4.matches, expected_ids)
 
 
