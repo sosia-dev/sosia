@@ -1,3 +1,15 @@
+import functools
+from time import sleep
+from urllib.error import HTTPError
+
+from pybliometrics.scopus.exception import (Scopus400Error, Scopus500Error)
+from sosia.processing.constants import QUERY_MAX_TRIES
+
+
+class AttemptFailed(Exception):
+    pass
+
+
 def build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.
@@ -49,6 +61,29 @@ def flat_set_from_df(df, col, condition=None):
         df = df[condition]
     lists = df[col].tolist()
     return set([item for sublist in lists for item in sublist])
+
+
+def handle_scopus_errors(func):
+    """ A decorator to handle errors returned by scopus """
+    @functools.wraps(func)
+    def try_query(*args, **kwargs):
+        mtries = 1
+        while mtries <= QUERY_MAX_TRIES:
+            try:
+                return func(*args, **kwargs)
+            except (AttributeError, Scopus500Error, KeyError, HTTPError):
+                # exception of all errors here has to be maintained due to the
+                # occurrence of unreplicable errors (e.g. 'cursor', HTTPError)
+                sleep(2.0)
+                mtries += 1
+                continue
+            except Scopus400Error:
+                text = f"Error translating query: {args[0]['query']}"
+                raise AttemptFailed(text)
+        text = f"Max number of query attempts reached: {QUERY_MAX_TRIES}.\n\
+                 Query: {args[0]['query']}"
+        raise AttemptFailed(text)
+    return try_query
 
 
 def robust_join(s, sep=','):

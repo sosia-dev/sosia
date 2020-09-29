@@ -1,13 +1,13 @@
 import pandas as pd
 from string import Template
 
-from pybliometrics.scopus.exception import Scopus400Error, Scopus414Error,\
-    Scopus500Error, ScopusQueryError
+from pybliometrics.scopus.exception import Scopus400Error
 
-from sosia.processing.utils import expand_affiliation
+from sosia.processing.utils import expand_affiliation, handle_scopus_errors
 from sosia.utils import custom_print, print_progress
 
 
+@handle_scopus_errors
 def base_query(q_type, query, refresh=False, fields=None, size_only=False):
     """Wrapper function to perform a particular search query.
 
@@ -43,40 +43,28 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
     ValueError:
         If q_type is none of the allowed values.
     """
-    from time import sleep
-    from urllib.error import HTTPError
 
     from pybliometrics.scopus import AuthorSearch, ScopusSearch
     
     params = {"query": query, "refresh": refresh, "download": not size_only}
-    # Download query until server is available
-    try:
+    
+    def create_obj(params):
         if q_type == "author":
-            obj = AuthorSearch(**params)
+            return AuthorSearch(**params)
         elif q_type == "docs":
             params["integrity_fields"] = fields
-            obj = ScopusSearch(**params)
-    except (AttributeError, Scopus500Error, KeyError, HTTPError):
-        # exception of all errors here has to be maintained due to the
-        # occurrence of not replicable errors (e.g. 'cursor', HTTPError)
-        sleep(2.0)
-        return base_query(q_type, query, refresh=True, fields=None,
-                          size_only=size_only)
-    if size_only:
-        return obj.get_results_size()
-    # Parse results, refresh once if integrity check fails or when server
-    # sends bad results (in this case pause querying for a while)
-    try:
-        if q_type == "author":
-            res = obj.authors
+            return ScopusSearch(**params)
+
+    def get_res(obj, size_only):
+        if size_only:
+            return obj.get_results_size()
+        elif q_type == "author":
+            return obj.authors or []
         elif q_type == "docs":
-            res = obj.results
-    except (AttributeError, Scopus500Error, KeyError, HTTPError):
-        # exception of all errors here has to be maintained due to the
-        # occurrence of not replicable errors (e.g. 'cursor', HTTPError)
-        return base_query(q_type, query, refresh=True, fields=None,
-                          size_only=size_only)
-    return res or []
+            return obj.results or []
+
+    obj = create_obj(params)
+    return get_res(obj, size_only)
 
 
 def count_citations(search_ids, pubyear, exclusion_ids=None):
