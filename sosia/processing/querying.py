@@ -193,19 +193,14 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     return res
 
 
-def stacked_query(group, res, template, joiner, q_type, refresh,
-                  i=0, total=None):
-    """Auxiliary function to recursively perform queries until they work.
+def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
+    """Auxiliary function to query list of items.
 
     Parameters
     ----------
     group : list of str
         Scopus IDs (of authors or sources) for which the stacked query should
         be conducted.
-
-    res : list
-        (Initially empty )Container to which the query results will be
-        appended.
 
     template : Template()
         A string template with one parameter named `fill` which will be used
@@ -221,45 +216,44 @@ def stacked_query(group, res, template, joiner, q_type, refresh,
     refresh : bool
         Whether the cached files should be refreshed or not.
 
-    i : int (optional, default=0)
-        A count variable to be used for printing the progress bar.
-
-    total : int (optional, default=None)
-        The total number of elements in the group.  If provided, a progress
-        bar will be printed.
+    stacked: bool
+        If True search for queries as close as possible to the maximum lenght
+        QUERY_MAX_LEN. If False, search elements in group one by one.
+        
+    verbose : bool (optional, default=False)
+        Whether to print information on the search progress.
 
     Returns
     -------
     res : list
         A list of namedtuples representing publications.
 
-    i : int
-        A running variable to indicate the progress.
-
     Notes
     -----
     Results of each successful query are appended to ´res´.
     """
-    group = [str(g) for g in group]  # make robust to passing int
-    q = template.substitute(fill=joiner.join(group))
-    try:
-        n = base_query(q_type, q, size_only=True)
-        if n > 5000 and len(group) > 1:
-            raise ScopusQueryError()
-        res.extend(base_query(q_type, q, refresh=refresh))
-        verbose = total is not None
-        i += len(group)
-        print_progress(i, total, verbose)
-    except (Scopus400Error, Scopus414Error, Scopus500Error, ScopusQueryError) as e:
-        # Split query group into two equally sized groups
-        mid = len(group) // 2
-        params = {"group": group[:mid], "res": res, "template": template,
-                  "i": i, "joiner": joiner, "q_type": q_type, "total": total,
-                  "refresh": refresh}
-        res, i = stacked_query(**params)
-        params.update({"group": group[mid:], "i": i})
-        res, i = stacked_query(**params)
-    return res, i
+    def run_query(query, q_type, template):
+        """ Runs one query from create_query_list output and reverts to
+        one-by-one queries of each element if Scopus400Error is returned """
+        try:
+            return base_query(q_type, query[0])
+        except Scopus400Error:
+            res = []
+            for element in query[1]:
+                q = template.substitute(fill=element)
+                res = base_query(q_type, q)
+                res.extend(res)
+            return res
+
+    maxlen = 1
+    if stacked:
+        maxlen = QUERY_MAX_LEN
+    queries_list = create_queries(group, joiner, template, maxlen)
+    res = []
+    for i, q in enumerate(queries_list):
+        print_progress(i, len(queries_list), verbose)
+        res.extend(run_query(q, q_type, template)) 
+    return res
 
 
 def valid_results(res):
