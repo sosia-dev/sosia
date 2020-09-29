@@ -115,15 +115,9 @@ def test_query_sources_by_year_stacked():
 
 
 def test_stacked_query():
-    # test a query with one journal-year above 5000
     group = [18400156716, 19300157101, 19400157208, 19400157312, 19500157223,
-             19600166213, 19700175482, 19700182353, 19800188009, 19900193211,
-             20100195028, 21100208103, 21100225839, 21100228010, 21100244622,
-             21100246535, 21100246537, 21100285035, 21100313905, 21100329904,
-             21100370441, 21100370876, 21100416121, 21100775937, 21100871308,
-             25674]
+             19600166213, 19700175482, 19700182353, 19800188009, 19900193211]
     template = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year+1}")
-    res = []
-    stacked_query(group, res, template, joiner=" OR ", q_type="docs",
-                  refresh=refresh)
-    assert_equal(len(res), 25948)
+    res = stacked_query(group, template, joiner=" OR ", q_type="docs",
+                  refresh=False, stacked=True, verbose=False)
+    assert_equal(len(res), 797)
