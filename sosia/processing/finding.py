@@ -94,8 +94,8 @@ def find_matches(original, stacked, verbose, refresh):
             n_cits = count_citations([str(au['auth_id'])], original.year+1)
             missing.at[i, 'n_cits'] = n_cits
             print_progress(i + 1, total, verbose)
-            if i % 100 == 0 or i >= len(missing):
-                insert_data(missing.iloc[start:i], conn, table="author_ncits")
+            if i % 100 == 0 or i == len(missing) - 1:
+                insert_data(missing.iloc[start:i+1], conn, table="author_ncits")
                 start = i
     auth_cits = auth_cits.append(missing)
     auth_cits['auth_id'] = auth_cits['auth_id'].astype("uint64")
@@ -115,61 +115,37 @@ def find_matches(original, stacked, verbose, refresh):
     authors = DataFrame({"auth_id": group, "year": original.year}, dtype="uint64")
     _, author_year_search = retrieve_author_info(authors, conn, "author_year")
     matches = []
-    if stacked:  # Combine searches
-        if not author_year_search.empty:
-            q = Template(f"AU-ID($fill) AND PUBYEAR BEF {original.year + 1}")
-            auth_year_group = author_year_search["auth_id"].tolist()
-            params = {"group": auth_year_group, "res": [],
-                      "template": q, "refresh": refresh,
-                      "joiner": ") OR AU-ID(", "q_type": "docs"}
-            if verbose:
-                params.update({"total": len(auth_year_group)})
-            res, _ = stacked_query(**params)
-            res = build_dict(res, auth_year_group)
-            if res:
-                # res can become empty after build_dict if a au_id is old
-                res = DataFrame.from_dict(res, orient="index")
-                res["year"] = original.year
-                res = res[["year", "first_year", "n_pubs", "n_coauth"]]
-                res.index.name = "auth_id"
-                res = res.reset_index()
-                insert_data(res, original.sql_conn, table="author_year")
-        authors_year, _ = retrieve_author_info(authors, conn, "author_year")
-        # Check for number of coauthors within margin
-        if original._ignore_first_id or original.period:
-            coauth_max = max(_ncoauth_full)
-        else:
-            coauth_max = max(_ncoauth)
-        mask = authors_year["n_coauth"].between(min(_ncoauth), coauth_max)
-        # Check for year of first publication within range
-        if not original._ignore_first_id:
-            same_start = authors_year["first_year"].between(min(_years), max(_years))
-            mask = mask & same_start
-        # Filter
-        matches = sorted(authors_year[mask]["auth_id"].tolist())
-    else:  # Query each author individually
-        for i, auth_id in enumerate(group):
-            print_progress(i + 1, len(group), verbose)
-            res = base_query("docs", f"AU-ID({auth_id})", refresh=refresh)
-            res = [p for p in res if p.coverDate and
-                   int(p.coverDate[:4]) <= original.year]
-            # Filter
-            min_year = int(min([p.coverDate[:4] for p in res]))
-            authids = [p.author_ids for p in res if p.author_ids]
-            authors = set([a for p in authids for a in p.split(";")])
-            n_coauth = len(authors) - 1  # Subtract 1 for focal author
-            if original._ignore_first_id and (n_coauth < max(_ncoauth)):
-                # Only number of coauthors should be big enough
-                continue
-            elif (original.period and ((n_coauth < max(_ncoauth)) or
-                  (min_year not in _years))):
-                # Number of coauthors should be "big enough" and first year
-                # in window
-                continue
-            elif ((len(res) not in _npapers) or (min_year not in _years) or
-                    (n_coauth not in _ncoauth)):
-                continue
-            matches.append(auth_id)
+
+    if not author_year_search.empty:
+        print("here")
+        q = Template(f"AU-ID($fill) AND PUBYEAR BEF {original.year + 1}")
+        auth_year_group = author_year_search["auth_id"].tolist()
+        params = {"group": auth_year_group, "template": q, "refresh": refresh,
+                  "joiner": ") OR AU-ID(", "q_type": "docs",
+                  "verbose": verbose, "stacked": stacked}
+        res = stacked_query(**params)
+        res = build_dict(res, auth_year_group)
+        if res:
+            # res can become empty after build_dict if a au_id is old
+            res = DataFrame.from_dict(res, orient="index")
+            res["year"] = original.year
+            res = res[["year", "first_year", "n_pubs", "n_coauth"]]
+            res.index.name = "auth_id"
+            res = res.reset_index()
+            insert_data(res, original.sql_conn, table="author_year")
+    authors_year, _ = retrieve_author_info(authors, conn, "author_year")
+    # Check for number of coauthors within margin
+    if original._ignore_first_id or original.period:
+        coauth_max = max(_ncoauth_full)
+    else:
+        coauth_max = max(_ncoauth)
+    mask = authors_year["n_coauth"].between(min(_ncoauth), coauth_max)
+    # Check for year of first publication within range
+    if not original._ignore_first_id:
+        same_start = authors_year["first_year"].between(min(_years), max(_years))
+        mask = mask & same_start
+    # Filter
+    matches = sorted(authors_year[mask]["auth_id"].tolist())
 
     if original.period:
         text = f"Left with {len(matches)} authors\nFiltering based on "\

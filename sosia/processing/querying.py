@@ -151,24 +151,13 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     dummy = pd.DataFrame(columns=columns)
 
     # Search authors
-    n = len(source_ids)
     msg = f"Parsing Scopus information for {year}..."
     custom_print(msg, verbose)
-    if stacked:
-        q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
-        params = {"group": [str(x) for x in sorted(source_ids)],
-                  "joiner": " OR ", "refresh": refresh, "q_type": "docs",
-                  "template": q, "res": []}
-        if verbose:
-            params.update({"total": n})
-        res, _ = stacked_query(**params)
-    else:
-        res = []
-        print_progress(0, n, verbose)
-        for idx, source_id in enumerate(source_ids):
-            q = f"SOURCE-ID({source_id}) AND PUBYEAR IS {year}"
-            res.extend(base_query("docs", q, refresh=refresh, fields=["eid"]))
-            print_progress(idx+1, n, verbose)
+    q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
+    params = {"group": [str(x) for x in sorted(source_ids)],
+              "joiner": " OR ", "refresh": refresh, "q_type": "docs",
+              "template": q, "verbose": verbose, "stacked": stacked}
+    res = stacked_query(**params)
 
     # Verify data is not empty
     if res:

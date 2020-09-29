@@ -35,13 +35,12 @@ def get_authors(authors, conn, refresh=False, verbose=False):
     auth_done, missing = retrieve_authors(authors, conn)
     # Query missing records
     if missing:
-        params = {"group": missing, "res": [],
-                  "refresh": refresh, "joiner": ") OR AU-ID(",
-                  "q_type": "author", "template": Template("AU-ID($fill)")}
+        params = {"group": missing, "refresh": refresh, "joiner": ") OR AU-ID(",
+                  "q_type": "author", "template": Template("AU-ID($fill)"),
+                  "stacked": True, "verbose": verbose}
         if verbose:
             print("Pre-filtering...")
-            params.update({"total": len(missing)})
-        res, _ = stacked_query(**params)
+        res = stacked_query(**params)
         res = pd.DataFrame(res)
         insert_data(res, conn, table="authors")
         auth_done, _ = retrieve_authors(authors, conn)
