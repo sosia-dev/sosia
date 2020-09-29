@@ -7,7 +7,8 @@ from nose.tools import assert_equal, assert_true, assert_false
 from pybliometrics.scopus import ScopusSearch
 import pandas as pd
 
-from sosia.processing import expand_affiliation, find_location, parse_docs
+from sosia.processing import (expand_affiliation, find_location, parse_docs,
+                              get_main_field)
 
 refresh = 30
 test_cache = expanduser("~/.sosia/") + "test.sqlite"
@@ -33,7 +34,7 @@ def test_find_location():
     assert_equal(aff, "University of Munich")
 
 
-def get_main_field():
+def test_get_main_field():
     fields = [1000, 1000, 2000, 2000, 2020, 2020]
     received = get_main_field(fields)
     expected = (2020, "ECON")
