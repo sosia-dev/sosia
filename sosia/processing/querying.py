@@ -4,6 +4,7 @@ from string import Template
 from pybliometrics.scopus.exception import Scopus400Error
 
 from sosia.processing.utils import expand_affiliation, handle_scopus_errors
+from sosia.processing.constants import QUERY_MAX_LEN
 from sosia.utils import custom_print, print_progress
 
 
@@ -80,6 +81,47 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
         count2 = count_citations(search_ids[mid:], pubyear, exclusion_ids)
         return count1 + count2
     return base_query("docs", q, size_only=True)
+
+
+def create_queries(group, joiner, template, maxlen):
+    """ Creates queries of a maximum lenght each, or using one element at
+    the time if maxlen is equal 1. Returns a list of tuples
+    where the first element of each tuple is the query and the 
+    second is the list of elements searched by the query.
+
+    Parameters
+    ----------
+    group : list
+        list of scopus elements to search.
+    template : Template()
+        A string template with one parameter named `fill` which will be used
+        as search query.
+    joiner : str
+        On which the group elements should be joined to fill the query.
+    maxlen : int
+        the maximum lenght a query can be. If equal 1, one element at the time
+        is used per query.
+
+    Returns
+    -------
+    queries_list : list of tuples
+        a list of tuples where the first element of each tuple is a query
+        and the second is the list of elements searched by the query.
+
+    """
+    group = [str(g) for g in group]  # make robust to passing int
+    group.sort()
+    queries_list  = []
+    start = 0
+    for i, g in enumerate(group):
+        sub_group = group[start:i+2]
+        query = template.substitute(fill=joiner.join(sub_group))
+        if maxlen == 1 or len(query) > maxlen or i + 1 == len(group):
+            sub_group = group[start:i+1]
+            query = template.substitute(fill=joiner.join(sub_group))
+            queries_list.append((query, sub_group))
+            start = i + 1
+    return queries_list
 
 
 def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,

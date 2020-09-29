@@ -8,7 +8,7 @@ from string import Template
 
 from sosia.establishing import connect_database
 from sosia.processing import base_query, count_citations,\
-    query_pubs_by_sourceyear, stacked_query
+    create_queries, query_pubs_by_sourceyear, stacked_query
 
 test_cache = expanduser("~/.sosia/test.sqlite")
 test_conn = connect_database(test_cache)
@@ -39,6 +39,39 @@ def test_count_citations():
     eids_long = eids * 200
     count3 = count_citations(eids_long, 2017, exclusion_ids=identifier)
     assert_equal(count3, 4)
+
+
+def test_create_queries():
+    # test with maxlenght bigger than 1
+    group = list(range(1,2000))
+    template = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year+1}")
+    joiner=" OR "
+    maxlen = 200
+    query_list = create_queries(group, joiner, template, maxlen)
+    query_maxlen = max([len(q[0]) for q in query_list])
+    query = 'SOURCE-ID(1 OR 10 OR 100 OR 1000 OR 1001 OR 1002 OR 1003 OR 1004'\
+        ' OR 1005 OR 1006 OR 1007 OR 1008 OR 1009 OR 101 OR 1010 OR 1011 OR 1012'\
+            ' OR 1013 OR 1014 OR 1015 OR 1016 OR 1017) AND PUBYEAR IS 2018'
+    sub_group = ['1', '10', '100', '1000', '1001', '1002', '1003', '1004',
+                 '1005', '1006', '1007', '1008', '1009', '101', '1010', '1011',
+                 '1012', '1013', '1014', '1015', '1016', '1017']
+    assert_true(isinstance(query_list, list))
+    assert_true(isinstance(query_list[0], tuple))
+    assert_true(isinstance(query_list, list))
+    assert_true(query_maxlen <= maxlen)
+    assert_equal(query_list[0][0], query)
+    assert_equal(query_list[0][1], sub_group)
+    # test with maxlenght equal 1
+    maxlen = 1
+    query_list = create_queries(group, joiner, template, maxlen)
+    group_maxlen = max([len(q[1]) for q in query_list])
+    assert_true(group_maxlen <= maxlen)
+    assert_true(isinstance(query_list, list))
+    assert_true(isinstance(query_list[0], tuple))
+    query = 'SOURCE-ID(1) AND PUBYEAR IS 2018'
+    sub_group = ['1']
+    assert_equal(query_list[0][0], query)
+    assert_equal(query_list[0][1], sub_group)    
 
 
 def test_query_sources_by_year():
