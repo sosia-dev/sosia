@@ -1,5 +1,3 @@
-from string import Template
-
 import pandas as pd
 
 from sosia.processing.caching import insert_data, retrieve_authors,\
@@ -22,18 +20,20 @@ def get_authors(authors, conn, refresh=False, verbose=False):
     refresh : bool (optional, default=False)
         Whether to refresh scopus cached files if they exist, or not.
 
-    verbose : bool (optional)
+    verbose : bool (optional, default=False)
         Whether to print information on the search progress.
 
     Returns
     -------
-    authors_data : DataFrame
+    data : DataFrame
         Data on the provided authors.
     """
+    from string import Template
+
+    # Retrieve existing data from SQL cache
     authors = pd.DataFrame(authors, columns=["auth_id"], dtype="int64")
-    # Retrieve existing data in cache
-    auth_done, missing = retrieve_authors(authors, conn)
-    # Query missing records
+    data, missing = retrieve_authors(authors, conn)
+    # Query missing records and insert at the same time
     if missing:
         params = {"group": missing, "refresh": refresh, "joiner": ") OR AU-ID(",
                   "q_type": "author", "template": Template("AU-ID($fill)"),
@@ -43,8 +43,8 @@ def get_authors(authors, conn, refresh=False, verbose=False):
         res = stacked_query(**params)
         res = pd.DataFrame(res)
         insert_data(res, conn, table="authors")
-        auth_done, _ = retrieve_authors(authors, conn)
-    return auth_done
+        data, _ = retrieve_authors(authors, conn)
+    return data
 
 
 def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
