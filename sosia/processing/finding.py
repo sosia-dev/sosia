@@ -110,14 +110,13 @@ def find_matches(original, stacked, verbose, refresh):
     # Fourth round of filtering: Download publications, verify coauthors
     # (in the FULL period) and first year.
     text = f"Left with {len(group):,} authors\nFiltering based on "\
-           "coauthors number..."
+           "coauthor count..."
     custom_print(text, verbose)
     authors = DataFrame({"auth_id": group, "year": original.year}, dtype="uint64")
     _, author_year_search = retrieve_author_info(authors, conn, "author_year")
     matches = []
 
     if not author_year_search.empty:
-        print("here")
         q = Template(f"AU-ID($fill) AND PUBYEAR BEF {original.year + 1}")
         auth_year_group = author_year_search["auth_id"].tolist()
         params = {"group": auth_year_group, "template": q, "refresh": refresh,
@@ -182,7 +181,8 @@ def find_matches(original, stacked, verbose, refresh):
     return matches
 
 
-def search_group_from_sources(original, stacked=False, verbose=False, refresh=False):
+def search_group_from_sources(original, stacked=False, verbose=False,
+                              refresh=False):
     """Define groups of authors based on publications from a set of sources.
 
     Parameters

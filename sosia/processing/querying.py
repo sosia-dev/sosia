@@ -149,7 +149,7 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     dummy = pd.DataFrame(columns=columns)
 
     # Search authors
-    msg = f"Parsing Scopus information for {year}..."
+    msg = f"... parsing Scopus information for {year}..."
     custom_print(msg, verbose)
     q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
     params = {"group": [str(x) for x in sorted(source_ids)],
@@ -232,9 +232,11 @@ def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
     if stacked:
         maxlen = QUERY_MAX_LEN
     queries_list = create_queries(group, joiner, template, maxlen)
+    total = len(queries_list)
+    print_progress(0, total, verbose)
     res = []
     for i, q in enumerate(queries_list):
-        print_progress(i, len(queries_list), verbose)
+        print_progress(i+1, total, verbose)
         res.extend(run_query(q, q_type, template))
     return res
 
