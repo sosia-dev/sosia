@@ -56,16 +56,16 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>> stefano.define_search_group()  # Authors publishing in similar sources
     >>> stefano.find_matches()  # Find matches satisfying all criteria
     >>> print(stefano.matches)
-    >>> ['56113324000']
+    >>> ['55022752500', '55810688700', '55824607400']
     >>> stefano.inform_matches()  # Optional step to provide additional information
-    >>> print(stefano.matches)
-    [Match(ID='56113324000', name="D'Ippolito, Beatrice",
-     first_name='Beatrice', surname="D'Ippolito", first_year=2014,
-     num_coauthors=10, num_publications=7, num_citations=62,
-     num_coauthors_period=10, num_publications_period=7 num_citations_period=62,
-     subjects=['BUSI', 'DECI', 'ENGI'], country='United Kingdom',
-     affiliation_id='60016418', affiliation='The York Management School, University of York',
-     language='eng', reference_sim=0.0065, abstract_sim=0.1352)]
+    >>> print(stefano.matches[0])
+    Match(ID='55022752500', name='Van der Borgh, Michel', first_name='Michel',
+    surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
+    num_citations=33, num_coauthors_period=6, num_publications_period=5,
+    num_citations_period=33, subjects=['BUSI', 'COMP', 'SOCI'], country='Netherlands',
+    affiliation_id='60032882', affiliation='Eindhoven University of Technology,
+    Department of Industrial Engineering & Innovation Sciences', language='eng',
+    reference_sim=0.0, abstract_sim=0.1217)
 
 
 .. inclusion-marker-end

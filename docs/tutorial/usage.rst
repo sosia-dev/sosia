@@ -85,20 +85,34 @@ Using `verbose=True` you receive additional information on this operation:
 .. code-block:: python
 
     >>> stefano.define_search_sources(verbose=True)
-    Found 65 sources matching main field 1405 and type(s) journal
+    Found 65 sources matching main field 1405 and source type(s) journal
 
 
 Defining the search group
 -------------------------
 
-The next step is to define a first search group that adhere to conditions 1 to 4 above and do not violate condition 5 (in the sense that we remove authors have too many publications).
+The next step is to define a first search group that adhere to conditions 1 to 4 above and do not violate condition 5 (in the sense that we remove authors with too many publications).
 
 .. code-block:: python
 
     >>> stefano.define_search_group(verbose=True)
-    Searching authors for search_group in 65 sources...
+    Defining 'search_group' using up to 65 sources...
+    ... parsing Scopus information for 2017...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 367 authors for search_group
+    ... parsing Scopus information for 2009...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2010...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2011...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2012...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2013...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2014...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Found 846 authors for search_group
+
 
 You can inspect the search group using `stefano.search_group`, which you can also override, pre-define or edit.
 
@@ -107,22 +121,22 @@ An alternative search process will try to minimize the number of queries.  The d
 .. code-block:: python
 
     >>> stefano.define_search_group(verbose=True, stacked=True)
-    Searching authors for search_group in 65 sources...
-    Searching authors for search_group in 65 sources...
-    Searching authors in 31 sources in 2017...
+    Defining 'search_group' using up to 65 sources...
+    ... parsing Scopus information for 2017...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Searching authors in 32 sources in 2010...
+    ... parsing Scopus information for 2009...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Searching authors in 32 sources in 2011...
+    ... parsing Scopus information for 2010...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Searching authors in 32 sources in 2012...
+    ... parsing Scopus information for 2011...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Searching authors in 31 sources in 2013...
+    ... parsing Scopus information for 2012...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 605 authors for search_group
-
-
-The number differs because less information is available.
+    ... parsing Scopus information for 2013...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2014...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Found 846 authors for search_group
 
 
 Finding matches
@@ -133,15 +147,33 @@ The final step is to search within this search group for authors that fulfill cr
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Searching through characteristics of 605 authors...
-    Left with 361 authors with sufficient number of publications and same main field
-    Filtering based on count of citations...
-    Left with 12 authors
-    Filtering based on coauthors number...
+    Searching through characteristics of 846 authors...
+    Pre-filtering...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 4 author(s) matching all criteria
+    Left with 503 authors with sufficient number of publications and same main field
+    Obtaining information for 503 authors without sufficient information in database...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Left with 97 authors based on publication information before 2009
+    Counting publications of 97 authors before 2018...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Left with 35 researchers
+    Counting citations of 35 authors...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Filtering based on count of citations...
+    Left with 5 authors
+    Filtering based on coauthor count...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Found 3 author(s) matching all criteria
+    Find matches...
+    Searching through characteristics of 846 authors...
+    Left with 503 authors with sufficient number of publications and same main field
+    Left with 35 researchers
+    Filtering based on count of citations...
+    Left with 5 authors
+    Filtering based on coauthor count...
+    Found 3 author(s) matching all criteria
     >>> print(stefano.matches)
-    ['53164702100', '55071051800', '55317901900', '55804519400']
+    ['55022752500', '55810688700', '55824607400']
 
 
 Adding information to matches
@@ -154,17 +186,18 @@ The researcher might need additional information to both assess match quality an
     >>> stefano.inform_matches(verbose=True)
     Providing additional information...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Match 53164702100: 0 abstract(s) and 1 reference list(s) out of 6 documents missing
     Match 55071051800: 2 abstract(s) and 0 reference list(s) out of 8 documents missing
     Match 55317901900: 0 abstract(s) and 0 reference list(s) out of 7 documents missing
     Match 55804519400: 0 abstract(s) and 0 reference list(s) out of 8 documents missing
     Original 55208373700: 0 abstract(s) and 1 reference list(s) out of 7 documents missing
-    >>> print(self.matches[0])
-    Match(ID='53164702100', name='Sapprasert, Koson', first_name='Koson', surname='Sapprasert',
-    first_year=2011, num_coauthors=7, num_publications=6, num_citations=193, num_coauthors_period=7,
-    num_publications_period=6, num_citations_period=193, subjects=['BUSI', 'ECON', 'DECI'],
-    country='Norway', affiliation_id='60010348', affiliation='TIK University of Oslo', language='eng',
-    reference_sim=0.0214, abstract_sim=0.1659)
+    >>> print(stefano.matches[0])
+    Match(ID='55022752500', name='Van der Borgh, Michel', first_name='Michel',
+    surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
+    num_citations=33, num_coauthors_period=6, num_publications_period=5, num_citations_period=33,
+    subjects=['BUSI', 'COMP', 'SOCI'], country='Netherlands', affiliation_id='60032882',
+    affiliation='Eindhoven University of Technology, Department of Industrial Engineering &
+    Innovation Sciences', language='eng', reference_sim=0.0, abstract_sim=0.1217)
+
 
 By default, `sosia` provides the following information:
 
@@ -191,47 +224,48 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
 
     >>> import pandas as pd
     >>> pd.set_option('display.max_columns', None)
-    >>> df = pd.DataFrame(matches)
+    >>> df = pd.DataFrame(stefano.matches)
     >>> df = df.set_index('ID')
     >>> df
-                              name first_name     surname  first_year  \
-    ID                                                                  
-    53164702100  Sapprasert, Koson      Koson  Sapprasert        2011   
-    55071051800      Doldor, Elena      Elena      Doldor        2013   
-    55317901900       Siepel, Josh       Josh      Siepel        2013   
-    55804519400  González, Domingo    Domingo    González        2013   
+                                  name  first_name        surname  first_year  \
+    ID                                                                          
+    55022752500  Van der Borgh, Michel      Michel  Van der Borgh        2012   
+    55810688700     Zapkau, Florian B.  Florian B.         Zapkau        2014   
+    55824607400   Pellegrino, Gabriele    Gabriele     Pellegrino        2011   
 
                  num_coauthors  num_publications  num_citations  \
     ID                                                            
-    53164702100              7                 6            193   
-    55071051800              6                 8             19   
-    55317901900              8                 7             53   
-    55804519400              7                 8              1   
+    55022752500              6                 5             33   
+    55810688700              8                 6             32   
+    55824607400              5                 7             34   
 
                  num_coauthors_period  num_publications_period  \
     ID                                                           
-    53164702100                     7                        6   
-    55071051800                     6                        8   
-    55317901900                     8                        7   
-    55804519400                     7                        8   
+    55022752500                     6                        5   
+    55810688700                     8                        6   
+    55824607400                     5                        7   
 
-                 num_citations_period            subjects         country  \
-    ID                                                                      
-    53164702100                   193  [BUSI, ECON, DECI]          Norway   
-    55071051800                    19  [BUSI, SOCI, ECON]  United Kingdom   
-    55317901900                    53  [BUSI, ECON, DECI]  United Kingdom   
-    55804519400                     1  [BUSI, ENGI, SOCI]            Peru   
+                 num_citations_period            subjects             country  \
+    ID                                                                          
+    55022752500                    33  [BUSI, COMP, SOCI]         Netherlands   
+    55810688700                    32        [BUSI, ECON]             Germany   
+    55824607400                    34  [BUSI, ECON, DECI]  Spain; Switzerland   
 
-                affiliation_id                                        affiliation  \
-    ID                                                                              
-    53164702100       60010348                             TIK University of Oslo   
-    55071051800       60022109  School of Business and Management, Queen Mary ...   
-    55317901900       60017317                         SPRU, University of Sussex   
-    55804519400       60071236  Departamento de Ingeniería, Pontificia Univers...   
+                               affiliation_id  \
+    ID                                          
+    55022752500                      60032882   
+    55810688700                      60025310   
+    55824607400  60001576; 60028186; 60121786   
 
-                 language  reference_sim  abstract_sim  
-    ID                                                  
-    53164702100       eng         0.0214        0.1659  
-    55071051800       eng         0.0000        0.1032  
-    55317901900       eng         0.0079        0.1224  
-    55804519400  eng; spa         0.0000        0.1156
+                                                       affiliation language  \
+    ID                                                                        
+    55022752500  Eindhoven University of Technology, Department...      eng   
+    55810688700                           University of Düsseldorf      eng   
+    55824607400  Barcelona Institute of Economics, University o...      eng   
+
+                 reference_sim  abstract_sim  
+    ID                                        
+    55022752500         0.0000        0.1217  
+    55810688700         0.0000        0.1179  
+    55824607400         0.0084        0.1074  
+
