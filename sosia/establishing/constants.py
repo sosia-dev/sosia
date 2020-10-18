@@ -1,9 +1,6 @@
 from os.path import expanduser
 
-URL_CONTENT = "https://www.elsevier.com/solutions/scopus/how-scopus-works/content"
-URL_SOURCES = "https://elsevier.com/?a=734751"
-URL_SOURCES_FILE = r"CiteScore 2011-2019 new methodology - June 2020.xlsb"
-
+DATA_REPO_URL = "https://raw.githubusercontent.com/sosia-dev/sosia-data/"
 FIELDS_SOURCES_LIST = expanduser("~/.sosia/") + "field_sources_list.csv"
 SOURCES_NAMES_LIST = expanduser("~/.sosia/") + "sources_names.csv"
 CONFIG_FILE = expanduser("~/.sosia/config.ini")
