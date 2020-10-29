@@ -77,11 +77,10 @@ def handle_scopus_errors(func):
                 sleep(2.0)
                 mtries += 1
                 continue
-            except Scopus400Error:
-                text = f"Error translating query: {args[0]['query']}"
-                raise AttemptFailed(text)
         text = f"Max number of query attempts reached: {QUERY_MAX_TRIES}.\n\
-                 Query: {args[0]['query']}"
+                 Verify your connection and settings or wait for the Scopus\
+                 server to return responsive. If the problem persists you can\
+                 report a bug"
         raise AttemptFailed(text)
     return try_query
 
