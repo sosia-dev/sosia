@@ -3,6 +3,7 @@
 
 from itertools import product
 from nose.tools import assert_equal, assert_true
+import numpy as np
 from os.path import expanduser
 
 import pandas as pd
@@ -131,7 +132,7 @@ def test_retrieve_authors_from_sourceyear():
     expected = query_pubs_by_sourceyear(expected_sources, expected_years[0])
     expected = expected.sort_values(["auids", "afid"]).reset_index(drop=True)
     expected = expected[['source_id', 'year', 'auids', 'afid']]
-    expected["source_id"] = expected["source_id"].astype(int)
+    expected["source_id"] = expected["source_id"].astype(np.int64)
     expected["auids"] = expected["auids"].str.split(";")
     insert_data(expected, conn, table="sources_afids")
     # Retrieve from cache
