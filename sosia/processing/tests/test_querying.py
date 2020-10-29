@@ -68,11 +68,12 @@ def test_create_queries_long():
 def test_create_queries_short():
     # Set variables
     group = list(range(1, 2000))
+    template = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year+1}")
     joiner = " OR "
     maxlen = 1
     # Run test
     received = create_queries(group, joiner, template, maxlen)
-    group_maxlen = max([len(q[1]) for q in query_list])
+    group_maxlen = max([len(q[1]) for q in received])
     # Compare
     assert_true(isinstance(received, list))
     assert_true(isinstance(received[0], tuple))
