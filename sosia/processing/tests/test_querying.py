@@ -36,9 +36,9 @@ def test_count_citations():
     eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
     count2 = count_citations(eids, 2017, exclusion_ids=identifier)
     assert_equal(count2, 1)
-    eids_long = eids * 200
+    eids_long = eids * 100
     count3 = count_citations(eids_long, 2017, exclusion_ids=identifier)
-    assert_equal(count3, 4)
+    assert_equal(count3, 1)
 
 
 def test_create_queries_long():

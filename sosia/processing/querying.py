@@ -9,7 +9,8 @@ from sosia.utils import custom_print, print_progress
 
 
 @handle_scopus_errors
-def base_query(q_type, query, refresh=False, fields=None, size_only=False):
+def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
+               size_only=False):
     """Wrapper function to perform a particular search query.
 
     Parameters
@@ -54,6 +55,7 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
             return AuthorSearch(**params)
         elif q_type == "docs":
             params["integrity_fields"] = fields
+            params["view"] = view
             return ScopusSearch(**params)
 
     def get_res(obj, size_only):
@@ -68,18 +70,23 @@ def base_query(q_type, query, refresh=False, fields=None, size_only=False):
     return get_res(obj, size_only)
 
 
-def count_citations(search_ids, pubyear, exclusion_ids=None):
+def count_citations(search_ids, pubyear, exclusion_ids=None, size_only=True):
     """Auxiliary function to count non-self citations up to a year."""
     if not exclusion_ids:
         exclusion_ids = search_ids
     q = f"REF({' OR '.join(search_ids)}) AND PUBYEAR BEF "\
         f"{pubyear} AND NOT AU-ID({') AND NOT AU-ID('.join(exclusion_ids)})"
-    # Break query if too long
-    if len(q) > 3785:
-        mid = len(search_ids) // 2
-        count1 = count_citations(search_ids[:mid], pubyear, exclusion_ids)
-        count2 = count_citations(search_ids[mid:], pubyear, exclusion_ids)
-        return count1 + count2
+    # Download if too long
+    if len(q) > QUERY_MAX_LEN:
+        template = Template(f"REF($fill) AND PUBYEAR BEF {pubyear} AND NOT"\
+                            f" (AU-ID({') OR AU-ID('.join(exclusion_ids)}))")
+        queries = create_queries(search_ids, " OR ", template, QUERY_MAX_LEN)
+        res = []
+        for q in queries:
+            r = long_query(q, "docs", template, view="STANDARD")
+            res.extend(r)
+        res = pd.DataFrame(res)
+        return len(res.eid.unique())
     return base_query("docs", q, size_only=True)
 
 
@@ -120,6 +127,20 @@ def create_queries(group, joiner, template, maxlen):
             queries.append((query, sub_group))
             start = i + 1
     return queries
+
+
+def long_query(query, q_type, template, view="COMPLETE"):
+    """ Runs one query from create_queries output and reverts to
+    one-by-one queries of each element if Scopus400Error is returned """
+    try:
+        return base_query(q_type, query[0], view=view)
+    except Scopus400Error:
+        res = []
+        for element in query[1]:
+            q = template.substitute(fill=element)
+            res = base_query(q_type, q)
+            res.extend(res)
+        return res
 
 
 def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
@@ -215,29 +236,16 @@ def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
     res : list
         A list of namedtuples representing publications.
     """
-    def run_query(query, q_type, template):
-        """ Runs one query from create_query_list output and reverts to
-        one-by-one queries of each element if Scopus400Error is returned """
-        try:
-            return base_query(q_type, query[0])
-        except Scopus400Error:
-            res = []
-            for element in query[1]:
-                q = template.substitute(fill=element)
-                res = base_query(q_type, q)
-                res.extend(res)
-            return res
-
     maxlen = 1
     if stacked:
         maxlen = QUERY_MAX_LEN
-    queries_list = create_queries(group, joiner, template, maxlen)
-    total = len(queries_list)
+    queries = create_queries(group, joiner, template, maxlen)
+    total = len(queries)
     print_progress(0, total, verbose)
     res = []
-    for i, q in enumerate(queries_list):
+    for i, q in enumerate(queries):
         print_progress(i+1, total, verbose)
-        res.extend(run_query(q, q_type, template))
+        res.extend(long_query(q, q_type, template))
     return res
 
 
