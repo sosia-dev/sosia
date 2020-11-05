@@ -67,16 +67,24 @@ def handle_scopus_errors(func):
     """ A decorator to handle errors returned by scopus """
     @functools.wraps(func)
     def try_query(*args, **kwargs):
-        mtries = 1
-        while mtries <= QUERY_MAX_TRIES:
+        tries = 1
+        while tries <= QUERY_MAX_TRIES:
             try:
                 return func(*args, **kwargs)
-            except (AttributeError, Scopus500Error, KeyError, HTTPError):
+            except (Scopus500Error, KeyError, HTTPError):
                 # exception of all errors here has to be maintained due to the
                 # occurrence of unreplicable errors (e.g. 'cursor', HTTPError)
                 sleep(2.0)
-                mtries += 1
+                tries += 1
                 continue
+            except AttributeError:
+                # try refreshing, or dropping "source_id" integrity if present
+                args = (args[0], args[1], True)
+                try:
+                    return func(*args, **kwargs)
+                except AttributeError:
+                    if "source_id" in kwargs["fields"]:
+                        kwargs["fields"].remove("source_id")    
         text = f"Max number of query attempts reached: {QUERY_MAX_TRIES}.\n\
                  Verify your connection and settings or wait for the Scopus\
                  server to return responsive. If the problem persists you can\
