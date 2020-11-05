@@ -94,9 +94,10 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
         to_add = to_add.append(new)
 
     # Format useful information
-    data = data.append(to_add).drop("afid", axis=1)
+    data = data.append(to_add)
     data = data[data["auids"] != ""]
     data["auids"] = data["auids"].str.replace(";", ",").str.split(",")
+    data["afid"] = data["afid"].astype(int)
 
     # Insert new information and information on missing data
     if empty:
