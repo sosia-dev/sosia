@@ -302,10 +302,6 @@ class Scientist(object):
             q = f"AU-ID({') OR AU-ID('.join(identifier)})"
         integrity_fields = ["eid", "author_ids", "coverDate", "source_id"]
         res = base_query("docs", q, refresh, fields=integrity_fields)
-        try:
-            _ = [int(p.source_id) for p in res if p.source_id]
-        except TypeError:
-            res = base_query("docs", q, refresh=True, fields=integrity_fields)
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = f"No publications found for author {'-'.join(identifier)} "\
