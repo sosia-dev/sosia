@@ -78,8 +78,8 @@ def test_coauthors():
     for coauth in expected:
         assert_true(coauth in scientist1.coauthors)
     assert_true(isinstance(scientist2.coauthors, set))
-    expected = {'55875219200', '54929867200', '57191249971', '36617057700',
-                '24464562500', '54930777900', '24781156100'}
+    expected = {'24464562500', '24781156100', '36617057700', '54929867200',
+                '54930777900', '55875219200', '57217825601'}
     assert_equal(len(scientist2.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist2.coauthors)
@@ -93,7 +93,7 @@ def test_coauthors():
     for coauth in expected:
         assert_true(coauth in scientist5.coauthors)
     expected = {'24464562500', '24781156100', '36617057700', '54929867200',
-                '54930777900', '55875219200', '57131011400', '57191249971'}
+                '54930777900', '55875219200', '57131011400', '57217825601'}
     assert_equal(len(scientist5.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist5.coauthors)
@@ -104,8 +104,8 @@ def test_coauthors_period():
     assert_equal(scientist2.coauthors_period, scientist2.coauthors)
     assert_equal(scientist3.coauthors_period, scientist3.coauthors)
     assert_equal(scientist4.coauthors_period, scientist4.coauthors)
-    expected = {"24464562500", "24781156100", "54930777900", "55875219200",
-                "57131011400", "57191249971"}
+    expected = {'24464562500', '24781156100', '54930777900',
+                '55875219200', '57131011400', '57217825601'}
     assert_equal(len(scientist5.coauthors_period), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist5.coauthors_period)
@@ -117,12 +117,12 @@ def test_fields():
                 2000, 1405, 2200, 2308, 2002, 1405, 2000, 2002, 2003,
                 2002, 1400, 2002, 1400, 1402, 2002, 3317, 1803, 1408,
                 1405, 1803, 1408, 2002, 3301]
-    assert_equal(scientist1.fields, expected)
+    assert_equal(set(scientist1.fields), set(expected))
     expected = [1803, 1408, 1405, 3300, 2300, 1400, 1405, 2002, 2200,
                 2002, 1405, 1400, 3300, 2300, 1405, 1803, 1408]
-    assert_equal(scientist2.fields, expected)
+    assert_equal(set(scientist2.fields), set(expected))
     expected = [1803, 1408, 1405, 2002, 2200, 2002, 1405, 1803, 1408]
-    assert_equal(scientist3.fields, expected)
+    assert_equal(set(scientist3.fields), set(expected))
 
 
 def test_first_year():
@@ -174,7 +174,7 @@ def test_sources_change():
 def test_main_field():
     assert_equal(scientist1.main_field, (2002, "ECON"))
     assert_equal(scientist2.main_field, (1405, "BUSI"))
-    assert_equal(scientist3.main_field, (1803, "BUSI"))
+    assert_equal(scientist3.main_field, (2002, "BUSI"))
 
 
 def test_name():
