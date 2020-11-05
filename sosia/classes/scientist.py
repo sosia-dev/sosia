@@ -349,7 +349,8 @@ class Scientist(object):
                           if p.source_id])
         self._sources = add_source_names(source_ids, self.source_names)
         self._active_year = int(max(pub_years))
-        self._fields = df[df["source_id"].isin(source_ids)]["asjc"].tolist()
+        mask = df["source_id"].isin(source_ids)
+        self._fields = df[mask]["asjc"].astype(int).tolist()
         self._main_field = get_main_field(self._fields)
         if not self._main_field[0]:
             text = "Not possible to determine research field(s) of " +\
