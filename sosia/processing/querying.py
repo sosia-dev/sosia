@@ -130,8 +130,25 @@ def create_queries(group, joiner, template, maxlen):
 
 
 def long_query(query, q_type, template, view="COMPLETE"):
-    """ Runs one query from create_queries output and reverts to
-    one-by-one queries of each element if Scopus400Error is returned """
+    """Run one query from create_queries output, and revert to
+    one-by-one queries of each element if Scopus400Error is returned.
+
+    Parameters
+    ----------
+    query : str
+        The query string.
+
+    q_type : str
+        Determines the query search that will be used.  Allowed values:
+        "author", "docs".
+
+    template : string.Template()
+        A string template with one parameter named `fill` which will be used
+        as search query.
+
+    view : str
+        Which Scopus API view to use in the query.
+    """
     try:
         return base_query(q_type, query[0], view=view)
     except Scopus400Error:
