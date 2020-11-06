@@ -5,7 +5,7 @@ from pandas import DataFrame
 
 from sosia.processing.caching import insert_data, retrieve_author_info
 from sosia.processing.extracting import extract_authors
-from sosia.processing.filtering import filter_pub_counts
+from sosia.processing.filtering import filter_pub_counts, same_affiliation
 from sosia.processing.getting import get_authors_from_sourceyear, get_authors
 from sosia.processing.querying import base_query, count_citations, stacked_query
 from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
@@ -34,8 +34,6 @@ def find_matches(original, stacked, verbose, refresh):
         is passed and stacked=False, results will be refreshed if they are
         older than that value in number of days.
     """
-    from sosia.classes import Scientist
-
     # Variables
     _years = range(original.first_year-original.year_margin,
                    original.first_year+original.year_margin+1)
@@ -171,13 +169,7 @@ def find_matches(original, stacked, verbose, refresh):
         text = f"Left with {len(matches)} authors\nFiltering based on "\
                "affiliations..."
         custom_print(text, verbose)
-        matches_copy = matches.copy()
-        for auth_id in matches_copy:
-            m = Scientist([str(auth_id)], original.year, period=original.period,
-                          refresh=refresh, sql_fname=original.sql_fname)
-            aff_ids = set([int(a) for a in m.affiliation_id.split("; ")])
-            if not aff_ids.intersection(original.search_affiliations):
-                matches.remove(auth_id)
+        matches[:] = [m for m in matches if same_affiliation(original, m, refresh)]
     return matches
 
 

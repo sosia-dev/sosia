@@ -145,3 +145,14 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
                 pubs_counts.append(n_pubs_yupto)
             print_progress(i+1, n, verbose)
     return group, pubs_counts, older_authors
+
+
+def same_affiliation(original, new, refresh=False):
+    """Whether a new scientist shares affiliation(s) with the
+    original scientist.
+    """
+    from sosia.classes import Scientist
+
+    m = Scientist([str(new)], original.year, period=original.period,
+                  refresh=refresh, sql_fname=original.sql_fname)
+    return any(str(a) in m.affiliation_id for a in original.search_affiliations)

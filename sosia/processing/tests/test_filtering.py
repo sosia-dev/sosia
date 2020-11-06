@@ -3,10 +3,11 @@
 
 from os.path import expanduser
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_false, assert_true
 
+from sosia.classes import Original
 from sosia.establishing import connect_database
-from sosia.processing.filtering import filter_pub_counts
+from sosia.processing.filtering import filter_pub_counts, same_affiliation
 
 test_cache = expanduser("~/.sosia/test.sqlite")
 test_conn = connect_database(test_cache)
@@ -30,3 +31,10 @@ def test_filter_pub_counts_period():
     assert_equal(sorted(g), [6602070937])
     assert_equal(sorted(pubs), [2])
     assert_equal(sorted(older), [20434039300, 54984906100, 56148489300])
+
+
+def test_same_affiliation():
+    original = Original(55208373700, year=2019, sql_fname=test_cache,
+                        search_affiliations=[60105007])
+    assert_true(same_affiliation(original, 57209617104))
+    assert_false(same_affiliation(original, 20434039300))
