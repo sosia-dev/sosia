@@ -59,18 +59,6 @@ class Scientist(object):
         self._citations_period = val
 
     @property
-    def city(self):
-        """City of the scientist's most frequent affiliation in the most
-        recent year (before the given year) that the scientist published.
-        """
-        return self._city
-
-    @city.setter
-    @accepts(str)
-    def city(self, val):
-        self._city = val
-
-    @property
     def country(self):
         """Country of the scientist's most frequent affiliation in the most
         recent year (before the given year) that the scientist published.
