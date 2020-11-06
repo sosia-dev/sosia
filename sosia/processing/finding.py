@@ -167,15 +167,15 @@ def find_matches(original, stacked, verbose, refresh):
                 matches.remove(m)
 
     # Eventually filter on affiliations
-    matches_copy = matches.copy()
     if original.search_affiliations:
         text = f"Left with {len(matches)} authors\nFiltering based on "\
                "affiliations..."
         custom_print(text, verbose)
+        matches_copy = matches.copy()
         for auth_id in matches_copy:
             m = Scientist([str(auth_id)], original.year, period=original.period,
                           refresh=refresh, sql_fname=original.sql_fname)
-            aff_ids = set(m.affiliation_id.replace(" ", "").split(";"))
+            aff_ids = set([int(a) for a in m.affiliation_id.split("; ")])
             if not aff_ids.intersection(original.search_affiliations):
                 matches.remove(auth_id)
     return matches
@@ -219,7 +219,7 @@ def search_group_from_sources(original, stacked=False, verbose=False,
         refresh=refresh, stacked=stacked, verbose=verbose)
     mask = None
     if original.search_affiliations:
-        mask = auth_today["afid"].astype(str).isin(original.search_affiliations)
+        mask = auth_today["afid"].isin(original.search_affiliations)
     today = flat_set_from_df(auth_today, "auids", condition=mask)
 
     # Authors active around year of first publication

@@ -155,7 +155,7 @@ class Original(Scientist):
         if isinstance(search_affiliations, (int, str)):
             search_affiliations = [search_affiliations]
         if search_affiliations:
-            search_affiliations = [str(a) for a in search_affiliations]
+            search_affiliations = [int(a) for a in search_affiliations]
         self.search_affiliations = search_affiliations
         self.refresh = refresh
         self.sql_fname = sql_fname
