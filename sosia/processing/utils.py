@@ -85,10 +85,9 @@ def handle_scopus_errors(func):
                 except AttributeError:
                     if "source_id" in kwargs["fields"]:
                         kwargs["fields"].remove("source_id")    
-        text = f"Max number of query attempts reached: {QUERY_MAX_TRIES}.\n\
-                 Verify your connection and settings or wait for the Scopus\
-                 server to return responsive. If the problem persists you can\
-                 report a bug"
+        text = f"Max number of query attempts reached: {QUERY_MAX_TRIES}.\n"\
+               "Verify your connection and settings or wait for the Scopus"\
+               "server to return responsive."
         raise AttemptFailed(text)
     return try_query
 

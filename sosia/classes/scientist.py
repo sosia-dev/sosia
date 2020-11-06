@@ -292,8 +292,8 @@ class Scientist(object):
         res = base_query("docs", q, refresh, fields=integrity_fields)
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
-            text = f"No publications found for author {'-'.join(identifier)} "\
-                   f"until {year}"
+            text = "No publications found for author "\
+                   f"{'-'.join(identifier)} until {year}"
             raise Exception(text)
         self._eids = eids or [p.eid for p in self._publications]
 
@@ -341,7 +341,7 @@ class Scientist(object):
         self._fields = df[mask]["asjc"].astype(int).tolist()
         self._main_field = get_main_field(self._fields)
         if not self._main_field[0]:
-            text = "Not possible to determine research field(s) of " +\
+            text = "Not possible to determine research field(s) of "\
                    "researcher.  Functionality is reduced."
             warn(text, UserWarning)
 
