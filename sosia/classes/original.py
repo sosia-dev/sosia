@@ -68,10 +68,10 @@ class Original(Scientist):
         self._search_sources = maybe_add_source_names(val, self.source_names)
 
     def __init__(self, scientist, year, year_margin=2, pub_margin=0.2,
-                 cits_margin=0.2, coauth_margin=0.2, period=None, refresh=False,
-                 eids=None, search_affiliations=None, sql_fname=None):
-        """Class to represent a scientist for which we want to find a control
-        group.
+                 cits_margin=0.2, coauth_margin=0.2, period=None,
+                 first_year_search="ID", search_affiliations=None, eids=None,
+                 refresh=False, sql_fname=None):
+        """Representation of a scientist for whom to find a control scientist.
 
         Parameters
         ----------
@@ -113,6 +113,14 @@ class Original(Scientist):
             The period in which to consider publications. If not provided,
             all publications are considered.
 
+        first_year_search: str (optional, default="ID")
+            How to determine characteristics of possible control scientists
+            in the first year of publication.   Mode "ID" uses Scopus Author
+            IDs only.  Mode "name" will select relevant profiles based on
+            their surname and first name but only when "period" is not None.
+            Select this mode to counter potential incompleteness of
+            author profiles.
+
         refresh : boolean (optional, default=False)
             Whether to refresh cached results (if they exist) or not. If int
             is passed, results will be refreshed if they are older than
@@ -140,6 +148,13 @@ class Original(Scientist):
             raise Exception("Argument pub_margin must be float or integer.")
         if not isinstance(coauth_margin, (int, float)):
             raise Exception("Argument coauth_margin must be float or integer.")
+        if first_year_search not in ("ID", "name"):
+            raise Exception("Argument first_year_search must be either ID or name.")
+        if first_year_search == "name" and not period:
+            first_year_search = "ID"
+            text = "Argument first_year_search set to ID: Argument period "\
+                   "must not be None"
+            warn(text)
 
         # Variables
         if not isinstance(scientist, list):
@@ -151,6 +166,7 @@ class Original(Scientist):
         self.cits_margin = cits_margin
         self.coauth_margin = coauth_margin
         self.period = period
+        self.first_year_name_search = first_year_search == "name"
         self.eids = eids
         if isinstance(search_affiliations, (int, str)):
             search_affiliations = [search_affiliations]
@@ -164,8 +180,7 @@ class Original(Scientist):
         Scientist.__init__(self, self.identifier, year, refresh=refresh,
                            period=period, sql_fname=self.sql_fname)
 
-    def define_search_group(self, stacked=False, verbose=False, refresh=False,
-                            ignore_first_id=False):
+    def define_search_group(self, stacked=False, verbose=False, refresh=False):
         """Define search_group.
 
         Parameters
@@ -180,23 +195,12 @@ class Original(Scientist):
 
         refresh : bool (optional, default=False)
             Whether to refresh cached results (if they exist) or not.
-
-        ignore_first_id: boolean (optional, default=False)
-            If True, the authors in the first year of publication of the
-            scientist are not selected based on their Author ID but based on
-            their surname and first name.
         """
         # Checks
         if not self.search_sources:
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise Exception(text)
-        self._ignore_first_id = ignore_first_id
-        if ignore_first_id and not self.period:
-            self._ignore_first_id = False
-            warn("ignore_first_id set back to False: period is None or "
-                 "the first year of the period is before the first year "
-                 "of publication of the scientist.")
 
         # Query journals
         params = {"original": self, "stacked": stacked,

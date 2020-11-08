@@ -132,13 +132,13 @@ def find_matches(original, stacked, verbose, refresh):
             insert_data(res, original.sql_conn, table="author_year")
     authors_year, _ = retrieve_author_info(authors, conn, "author_year")
     # Check for number of coauthors within margin
-    if original._ignore_first_id or original.period:
+    if original.first_year_name_search or original.period:
         coauth_max = max(_ncoauth_full)
     else:
         coauth_max = max(_ncoauth)
     mask = authors_year["n_coauth"].between(min(_ncoauth), coauth_max)
     # Check for year of first publication within range
-    if not original._ignore_first_id:
+    if not original.first_year_name_search:
         same_start = authors_year["first_year"].between(min(_years), max(_years))
         mask = mask & same_start
     # Filter
@@ -218,7 +218,7 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     min_year = original.first_year - original.year_margin
     max_year = original.first_year + original.year_margin
     then_years = [min_year-1]
-    if not original._ignore_first_id:
+    if not original.first_year_name_search:
         then_years.extend(range(min_year, max_year+1))
     sources_then = DataFrame(product(search_sources, then_years),
                              columns=["source_id", "year"])
@@ -234,6 +234,6 @@ def search_group_from_sources(original, stacked=False, verbose=False,
 
     # Compile group
     group = today
-    if not original._ignore_first_id:
+    if not original.first_year_name_search:
         group = today.intersection(then)
     return group
