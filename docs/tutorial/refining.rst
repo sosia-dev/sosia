@@ -2,13 +2,13 @@
 Refinig the search process
 --------------------------
 
-Additional search options are available to the user. First, the user can restrict the search of potential matches to authors affiliated to given institutions. This is achieved by providing a list of Scopus Affiliation IDs as value of the optional parameter `search_affiliations` in the class `Original`. For instance:
+Additional search options are available to the user. First, the user can restrict the search of potential matches to authors affiliated to given institutions. This is achieved by providing a list of Scopus Affiliation IDs as value of the optional parameter `affiliations` in the class `Original()`. For instance:
 
 .. code-block:: python
 
     >>> affiliations = [60002612, 60032111, 60000765]
     >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1,
-            pub_margin=1, coauth_margin=1, period=3,search_affiliations=affiliations)
+            pub_margin=1, coauth_margin=1, period=3, affiliations=affiliations)
 
 
 A second option allows to change the window of time within which the similarity between scientist and potential matches is considered. With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to change this behavior in order to focus on a shorter period of time before the year of treatment. This is done by initiating the class :doc:`Original <../reference/sosia.Original>` and setting the option `period` equal to the desired number of years,

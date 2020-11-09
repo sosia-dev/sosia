@@ -39,7 +39,7 @@ def find_location(auth_ids, pubs, year, refresh):
     -------
     country, affiliation_id, organization : str or None
         The country, city, affiliation ID, and affiliation name of the
-        scientist in the year closest to the given year, given that the
+        scientist in the year closest to the treatment year, given that the
         publications list valid information for each output. Equals None when
         no valid publications are found.
     """

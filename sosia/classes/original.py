@@ -16,7 +16,7 @@ class Original(Scientist):
     @property
     def matches(self):
         """List of Scopus IDs or list of namedtuples representing matches
-        of the original scientist in the year of treatment.
+        of the original scientist in the treatment year.
 
         Notes
         -----
@@ -30,10 +30,10 @@ class Original(Scientist):
     @property
     def search_group(self):
         """The set of authors that might be matches to the scientist.  The
-        set contains the intersection of all authors publishing in the given
-        year as well as authors publishing around the year of first
-        publication.  Some authors with too many publications in the given
-        year and authors having published too early are removed.
+        set contains the intersection of all authors publishing in the
+        treatment year as well as authors publishing around the year of first
+        publication.  Some authors with too many publications in the
+        treatment year and authors having published too early are removed.
 
         Notes
         -----
@@ -47,7 +47,7 @@ class Original(Scientist):
     @property
     def search_sources(self):
         """The set of sources (journals, books) comparable to the sources
-        the scientist published in until the given year.
+        the scientist published in until the treatment year.
         A sources is comparable if is belongs to the scientist's main field
         but not to fields alien to the scientist, and if the types of the
         sources are the same as the types of the sources in the scientist's
@@ -67,26 +67,26 @@ class Original(Scientist):
     def search_sources(self, val):
         self._search_sources = maybe_add_source_names(val, self.source_names)
 
-    def __init__(self, scientist, year, year_margin=2, pub_margin=0.2,
-                 cits_margin=0.2, coauth_margin=0.2, period=None,
-                 first_year_search="ID", search_affiliations=None, eids=None,
+    def __init__(self, scientist, treatment_year, first_year_margin=2, pub_margin=0.2,
+                 cits_margin=0.2, coauth_margin=0.2, affiliations=None,
+                 period=None, first_year_search="ID", eids=None,
                  refresh=False, sql_fname=None):
         """Representation of a scientist for whom to find a control scientist.
 
         Parameters
         ----------
-        scientist : str, int or list or str or int
+        scientist : str, int or list of str or int
             Scopus Author ID, or list of Scopus Author IDs, of the scientist
-            you want to find control groups for.
+            to find a control scientist for.
 
-        year : str or numeric
-            Year of the event.  Control groups will be matched on trends and
-            characteristics of the scientist up to this year.
+        treatment_year : str or numeric
+            Year of the event.  Control scientist will be matched on trends and
+            characteristics of the original scientist up to this year.
 
-        year_margin : numeric (optional, default=2)
+        first_year_margin : numeric (optional, default=2)
             Number of years by which the search for authors publishing around
-            the year of the focal scientist's year of first publication should
-            be extend in both directions.
+            the year of the original scientist's year of first publication
+            should be extend in both directions.
 
         pub_margin : numeric (optional, default=0.2)
             The left and right margin for the number of publications to match
@@ -109,22 +109,22 @@ class Original(Scientist):
             coauthors and the resulting value is rounded up.  If the value
             is an integer it is interpreted as fixed number of coauthors.
 
+        affiliations : list (optional, default=None)
+            A list of Scopus affiliation IDs.  If provided, sosia conditions
+            the match procedure on affiliation with these IDs in the
+            treatment year.
+
         period: int (optional, default=None)
             The period in which to consider publications. If not provided,
             all publications are considered.
 
         first_year_search: str (optional, default="ID")
             How to determine characteristics of possible control scientists
-            in the first year of publication.   Mode "ID" uses Scopus Author
+            in the first year of publication.  Mode "ID" uses Scopus Author
             IDs only.  Mode "name" will select relevant profiles based on
             their surname and first name but only when "period" is not None.
             Select this mode to counter potential incompleteness of
             author profiles.
-
-        refresh : boolean (optional, default=False)
-            Whether to refresh cached results (if they exist) or not. If int
-            is passed, results will be refreshed if they are older than
-            that value in number of days.
 
         eids : list (optional, default=None)
             A list of scopus EIDs of the publications of the scientist you
@@ -133,17 +133,18 @@ class Original(Scientist):
             publications, instead of the list of publications obtained from
             the Scopus Author ID.
 
-        search_affiliations : list (optional, default=None)
-            A list of Scopus affiliation IDs. If provided, sosia searches
-            for matches within this affiliation in the year provided.
+        refresh : boolean (optional, default=False)
+            Whether to refresh cached results (if they exist) or not.  If int
+            is passed, results will be refreshed if they are older than
+            that value in number of days.
 
         sql_fname : str (optional, default=None)
             The path of the SQLite database to connect to.  If None, will use
             the path specified in config.ini.
         """
         # Internal checks
-        if not isinstance(year_margin, (int, float)):
-            raise Exception("Argument year_margin must be float or integer.")
+        if not isinstance(first_year_margin, (int, float)):
+            raise Exception("Argument first_year_margin must be float or integer.")
         if not isinstance(pub_margin, (int, float)):
             raise Exception("Argument pub_margin must be float or integer.")
         if not isinstance(coauth_margin, (int, float)):
@@ -160,24 +161,24 @@ class Original(Scientist):
         if not isinstance(scientist, list):
             scientist = [scientist]
         self.identifier = [str(auth_id) for auth_id in scientist]
-        self.year = int(year)
-        self.year_margin = year_margin
+        self.treatment_year = int(treatment_year)
+        self.first_year_margin = first_year_margin
         self.pub_margin = pub_margin
         self.cits_margin = cits_margin
         self.coauth_margin = coauth_margin
         self.period = period
         self.first_year_name_search = first_year_search == "name"
         self.eids = eids
-        if isinstance(search_affiliations, (int, str)):
-            search_affiliations = [search_affiliations]
-        if search_affiliations:
-            search_affiliations = [int(a) for a in search_affiliations]
-        self.search_affiliations = search_affiliations
+        if isinstance(affiliations, (int, str)):
+            affiliations = [affiliations]
+        if affiliations:
+            affiliations = [int(a) for a in affiliations]
+        self.search_affiliations = affiliations
         self.refresh = refresh
         self.sql_fname = sql_fname
 
         # Instantiate superclass to load private variables
-        Scientist.__init__(self, self.identifier, year, refresh=refresh,
+        Scientist.__init__(self, self.identifier, treatment_year, refresh=refresh,
                            period=period, sql_fname=self.sql_fname)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False):
@@ -265,9 +266,9 @@ class Original(Scientist):
     def find_matches(self, stacked=False, verbose=False, refresh=False):
         """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
-        2. Has about the same number of publications in the year of treatment
-        3. Has about the same number of coauthors in the year of treatment
-        4. Has about the same number of citations in the year of treatment
+        2. Has about the same number of publications in the treatment year
+        3. Has about the same number of coauthors in the treatment year
+        4. Has about the same number of citations in the treatment year
         5. Works in the same field as the scientist's main field
 
         Parameters

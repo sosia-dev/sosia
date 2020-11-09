@@ -34,7 +34,7 @@ def test_filter_pub_counts_period():
 
 
 def test_same_affiliation():
-    original = Original(55208373700, year=2019, sql_fname=test_cache,
-                        search_affiliations=[60105007])
+    original = Original(55208373700, 2019, affiliations=[60105007],
+                        sql_fname=test_cache)
     assert_true(same_affiliation(original, 57209617104))
     assert_false(same_affiliation(original, 20434039300))

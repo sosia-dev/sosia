@@ -18,21 +18,21 @@ test_params = {"refresh": refresh, "sql_fname": test_cache}
 
 # Test objects
 # Normal values
-scientist1 = Original(55208373700, 2017, cits_margin=200, year_margin=1,
+scientist1 = Original(55208373700, 2017, cits_margin=200, first_year_margin=1,
                       pub_margin=0.1, coauth_margin=0.1, **test_params)
 # Using period and name search mode
 scientist2 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                      coauth_margin=1, year_margin=1, period=3,
+                      coauth_margin=1, first_year_margin=1, period=3,
                       first_year_search="name", **test_params)
 # Using affiliations
 affs = ["60010348", "60022109", "60017317"]
-scientist3 = Original(55208373700, 2017, cits_margin=200, year_margin=1,
-                      pub_margin=0.1, search_affiliations=affs, **test_params)
+scientist3 = Original(55208373700, 2017, cits_margin=200, first_year_margin=1,
+                      pub_margin=0.1, affiliations=affs, **test_params)
 # Using name search mode and affiliations
 affs = ["60002612", "60032111", "60000765"]
 scientist4 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                      coauth_margin=1, year_margin=1, period=3,
-                      first_year_search="name", search_affiliations=affs,
+                      coauth_margin=1, first_year_margin=1, period=3,
+                      first_year_search="name", affiliations=affs,
                       **test_params)
 
 # Expected matches

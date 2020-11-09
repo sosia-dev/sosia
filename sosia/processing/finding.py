@@ -35,8 +35,8 @@ def find_matches(original, stacked, verbose, refresh):
         older than that value in number of days.
     """
     # Variables
-    _years = range(original.first_year-original.year_margin,
-                   original.first_year+original.year_margin+1)
+    _years = range(original.first_year-original.first_year_margin,
+                   original.first_year+original.first_year_margin+1)
     if original.period:
         _npapers = margin_range(len(original.publications_period), original.pub_margin)
         _ncits = margin_range(original.citations_period, original.cits_margin)
@@ -106,7 +106,7 @@ def find_matches(original, stacked, verbose, refresh):
     group = auth_cits[mask]['auth_id'].tolist()
 
     # Fourth round of filtering: Download publications, verify coauthors
-    # (in the FULL period) and first year.
+    # (in the FULL period) and first year
     text = f"Left with {len(group):,} authors\nFiltering based on "\
            "coauthor count..."
     custom_print(text, verbose)
@@ -215,8 +215,8 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     today = flat_set_from_df(auth_today, "auids", condition=mask)
 
     # Authors active around year of first publication
-    min_year = original.first_year - original.year_margin
-    max_year = original.first_year + original.year_margin
+    min_year = original.first_year - original.first_year_margin
+    max_year = original.first_year + original.first_year_margin
     then_years = [min_year-1]
     if not original.first_year_name_search:
         then_years.extend(range(min_year, max_year+1))

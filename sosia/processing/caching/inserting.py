@@ -3,7 +3,7 @@ from sosia.processing.utils import flat_set_from_df, robust_join
 
 
 def auth_npubs_retrieve_insert(auth_id, year, conn):
-    """Retrieve an author's publication count until a given year and insert."""
+    """Retrieve an author's publication count until a given year, and insert."""
     from sosia.processing.querying import base_query
 
     q = f"AU-ID({auth_id}) AND PUBYEAR BEF {year+1}"

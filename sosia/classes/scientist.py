@@ -17,7 +17,9 @@ from sosia.utils import accepts
 class Scientist(object):
     @property
     def active_year(self):
-        """The scientist's year of first publication, as integer."""
+        """The scientist's most recent year with publication(s) before
+         provided year (which may be the same).
+         """
         return self._active_year
 
     @active_year.setter
@@ -28,8 +30,7 @@ class Scientist(object):
     @property
     def affiliation_id(self):
         """The affiliation ID (as string) of the scientist's most frequent
-        affiliation in the most recent year (before the given year) that
-        the scientist published.
+        affiliation in or before the active year.
         """
         return self._affiliation_id
 
@@ -40,7 +41,7 @@ class Scientist(object):
 
     @property
     def citations(self):
-        """The citations of the scientist until the given year."""
+        """The citations of the scientist until the provided year."""
         return self._citations
 
     @citations.setter
@@ -60,8 +61,7 @@ class Scientist(object):
 
     @property
     def country(self):
-        """Country of the scientist's most frequent affiliation in the most
-        recent year (before the given year) that the scientist published.
+        """Country belonging to the affiliation defined in affiliation_id.
         """
         return self._country
 
@@ -73,7 +73,7 @@ class Scientist(object):
     @property
     def coauthors(self):
         """Set of coauthors of the scientist on all publications until the
-        given year.
+        provided year.
         """
         return self._coauthors
 
@@ -96,7 +96,7 @@ class Scientist(object):
 
     @property
     def fields(self):
-        """The fields of the scientist until the given year, estimated from
+        """The fields of the scientist until the provided year, estimated from
         the sources (journals, books, etc.) she published in.
         """
         return self._fields
@@ -108,7 +108,7 @@ class Scientist(object):
 
     @property
     def first_year(self):
-        """The scientist's year of first publication, as integer."""
+        """The scientist's year of first publication."""
         return self._first_year
 
     @first_year.setter
@@ -156,7 +156,7 @@ class Scientist(object):
 
     @property
     def language(self):
-        """The language(s) of the documents published until the given year."""
+        """The language(s) of the scientist published in."""
         return self._language
 
     @language.setter
@@ -166,10 +166,7 @@ class Scientist(object):
 
     @property
     def organization(self):
-        """The affiliation name of the scientist's most frequent affiliation
-        in the most recent year (before the given year) that
-        the scientist published.
-        """
+        """The name belonging to the affiliation defined in affiliation_id."""
         return self._organization
 
     @organization.setter
@@ -179,9 +176,7 @@ class Scientist(object):
 
     @property
     def publications(self):
-        """The publications of the scientist published until
-        the given year.
-        """
+        """List of the scientists' publications."""
         return self._publications
 
     @publications.setter
@@ -204,7 +199,7 @@ class Scientist(object):
     @property
     def sources(self):
         """The Scopus IDs of sources (journals, books) in which the
-        scientist published until the given year.
+        scientist published in.
         """
         return self._sources
 
@@ -268,7 +263,7 @@ class Scientist(object):
         ------
         Exception
             When there are no publications for the author until the
-            given year.
+            provided year.
         """
         self.identifier = identifier
         self.year = int(year)
@@ -297,8 +292,8 @@ class Scientist(object):
             raise Exception(text)
         self._eids = eids or [p.eid for p in self._publications]
 
-        # Fist year (if period provided set first year of period, if
-        # not smaller than first year of publication
+        # Fist year (if period provided, set first year of period, if
+        # not smaller than first year of publication)
         pub_years = [p.coverDate[:4] for p in self._publications]
         self._first_year = int(min(pub_years))
         if period and year-period+1 <= self._first_year:
@@ -306,8 +301,7 @@ class Scientist(object):
 
         # Count of citations
         search_ids = eids or identifier
-        self._citations = count_citations(search_ids, self.year+1,
-                                          exclusion_ids=identifier)
+        self._citations = count_citations(search_ids, self.year+1, identifier)
 
         # Coauthors
         self._coauthors = set(extract_authors(self._publications)) - set(identifier)

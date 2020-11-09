@@ -25,7 +25,7 @@ A number of optional parameters will be used throughout the query process in ord
 
 .. code-block:: python
    
-    >>> stefano = Original(55208373700, 2017, year_margin=2,
+    >>> stefano = Original(55208373700, 2017, first_year_margin=2,
                            coauth_margin=0.2, pub_margin=0.2,
                            cits_margin=0.2)
 
