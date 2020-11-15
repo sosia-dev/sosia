@@ -145,8 +145,8 @@ def inform_match(profile, keywords):
         "num_coauthors": len(profile.coauthors),
         "num_publications": len(profile.publications),
         "num_citations": profile.citations,
-        "num_coauthors_period": len(profile.coauthors_period),
-        "num_publications_period": len(profile.publications_period),
+        "num_coauthors_period": len(profile.coauthors_period or "") or None,
+        "num_publications_period": len(profile.publications_period or "") or None,
         "num_citations_period": profile.citations_period,
         "subjects": profile.subjects,
         "country": profile.country,
@@ -218,8 +218,9 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
     print_progress(0, total, verbose)
     meta = namedtuple("Meta", "refs absts total")
     for idx, auth_id in enumerate(self.matches):
-        p = Scientist([auth_id], self.year, period=self.period,
-                      refresh=refresh, sql_fname=self.sql_fname)
+        period = self.year + 1 - self._period_year
+        p = Scientist([auth_id], self.year, period=period, refresh=refresh,
+                      sql_fname=self.sql_fname)
         match_info = inform_match(p, keywords)
         # Abstract and reference similarity is performed jointly
         if doc_parse:

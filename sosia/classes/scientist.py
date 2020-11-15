@@ -252,8 +252,9 @@ class Scientist(object):
             the Scopus Author ID(s).
 
         period: int (optional, default=None)
-            The period in which to consider publications. If not provided,
-            all publications are considered.
+            In additional starting x years prior to the treatment year,
+            which is also used to compute characteristics in the treatment
+            year.
 
         sql_fname : str (optional, default=None)
             The path of the SQLite database to connect to.  If None, will use
@@ -267,8 +268,6 @@ class Scientist(object):
         """
         self.identifier = identifier
         self.year = int(year)
-        self.period = period
-        self.year_period = None
         if not sql_fname:
             sql_fname = config.get('Filepaths', 'Database')
         self.sql_conn = connect_database(sql_fname)
@@ -292,12 +291,12 @@ class Scientist(object):
             raise Exception(text)
         self._eids = eids or [p.eid for p in self._publications]
 
-        # Fist year (if period provided, set first year of period, if
-        # not smaller than first year of publication)
+        # First year of publication
         pub_years = [p.coverDate[:4] for p in self._publications]
         self._first_year = int(min(pub_years))
-        if period and year-period+1 <= self._first_year:
-            self.period = None
+        self._period_year = self.year - (period or (self.year+1)) + 1
+        if self._period_year < self._first_year:
+            self._period_year = 0
 
         # Count of citations
         search_ids = eids or identifier
@@ -307,14 +306,13 @@ class Scientist(object):
         self._coauthors = set(extract_authors(self._publications)) - set(identifier)
 
         # Period counts simply set to total if period is or goes back to None
-        if self.period:
-            self.year_period = year-period+1
+        if self._period_year:
             pubs = [p for p in self._publications if
-                    year >= int(p.coverDate[:4]) >= self.year_period]
+                    self._period_year <= int(p.coverDate[:4]) <= year]
             self._publications_period = pubs
             if not len(self._publications_period):
                 text = f"No publications found for author {'-'.join(identifier)}"\
-                       f" until {year} in a {self.year_period}-years period"
+                       f" until {year} in a {self._period_year}-years period"
                 raise Exception(text)
             eids_period = [p.eid for p in self._publications_period]
             n_cits = count_citations(eids_period, self.year+1, identifier)
@@ -322,9 +320,9 @@ class Scientist(object):
             self._coauthors_period = set(extract_authors(self._publications_period))
             self._coauthors_period -= set(identifier)
         else:
-            self._coauthors_period = self._coauthors
-            self._publications_period = self._publications
-            self._citations_period = self._citations
+            self._coauthors_period = None
+            self._publications_period = None
+            self._citations_period = None
 
         # Author search information
         source_ids = set([int(p.source_id) for p in self._publications

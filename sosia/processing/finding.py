@@ -37,17 +37,16 @@ def find_matches(original, stacked, verbose, refresh):
     # Variables
     _years = range(original.first_year-original.first_year_margin,
                    original.first_year+original.first_year_margin+1)
+    _npapers = margin_range(len(original.publications), original.pub_margin)
+    _max_papers = max(_npapers)
+    _ncits = margin_range(original.citations, original.cits_margin)
+    _max_cits = max(_ncits)
+    _ncoauth = margin_range(len(original.coauthors), original.coauth_margin)
+    _max_coauth = max(_ncoauth)
     if original.period:
         _npapers = margin_range(len(original.publications_period), original.pub_margin)
         _ncits = margin_range(original.citations_period, original.cits_margin)
         _ncoauth = margin_range(len(original.coauthors_period), original.coauth_margin)
-        _npapers_full = margin_range(len(original.publications), original.pub_margin)
-        _ncits_full = margin_range(original.citations, original.cits_margin)
-        _ncoauth_full = margin_range(len(original.coauthors), original.coauth_margin)
-    else:
-        _npapers = margin_range(len(original.publications), original.pub_margin)
-        _ncits = margin_range(original.citations, original.cits_margin)
-        _ncoauth = margin_range(len(original.coauthors), original.coauth_margin)
     text = "Searching through characteristics of "\
            f"{len(original.search_group):,} authors..."
     custom_print(text, verbose)
@@ -68,11 +67,11 @@ def find_matches(original, stacked, verbose, refresh):
     # number of publications in the relevant period.
     params = {"group": group, "ybefore": min(_years)-1,
               "yupto": original.year, "npapers": _npapers,
-              "yfrom": original.year_period, "verbose": verbose, "conn": conn}
+              "yfrom": original._period_year, "verbose": verbose, "conn": conn}
     group, _, _ = filter_pub_counts(**params)
     # Screen out profiles with too many publications over the full period
     if original.period:
-        params.update({"npapers": [1, max(_npapers_full)], "yfrom": None,
+        params.update({"npapers": [1, _max_papers], "yfrom": None,
                        "group": group})
         group, _, _ = filter_pub_counts(**params)
     text = f"Left with {len(group):,} researchers"
@@ -99,10 +98,7 @@ def find_matches(original, stacked, verbose, refresh):
     auth_cits['auth_id'] = auth_cits['auth_id'].astype("uint64")
     # Keep if citations are in range
     custom_print("Filtering based on count of citations...", verbose)
-    max_cits = max(_ncits)
-    if original.period:
-        max_cits = max(_ncits_full)
-    mask = auth_cits["n_cits"].between(min(_ncits), max_cits)
+    mask = auth_cits["n_cits"].between(min(_ncits), _max_cits)
     group = auth_cits[mask]['auth_id'].tolist()
 
     # Fourth round of filtering: Download publications, verify coauthors
@@ -132,11 +128,7 @@ def find_matches(original, stacked, verbose, refresh):
             insert_data(res, original.sql_conn, table="author_year")
     authors_year, _ = retrieve_author_info(authors, conn, "author_year")
     # Check for number of coauthors within margin
-    if original.first_year_name_search or original.period:
-        coauth_max = max(_ncoauth_full)
-    else:
-        coauth_max = max(_ncoauth)
-    mask = authors_year["n_coauth"].between(min(_ncoauth), coauth_max)
+    mask = authors_year["n_coauth"].between(min(_ncoauth), _max_coauth)
     # Check for year of first publication within range
     if not original.first_year_name_search:
         same_start = authors_year["first_year"].between(min(_years), max(_years))
@@ -144,9 +136,10 @@ def find_matches(original, stacked, verbose, refresh):
     # Filter
     matches = sorted(authors_year[mask]["auth_id"].tolist())
 
+    text = f"Left with {len(matches)} authors"
+    custom_print(text, verbose)
     if original.period:
-        text = f"Left with {len(matches)} authors\nFiltering based on "\
-               "exact period citations and coauthors..."
+        text =  "Filtering based on citations and coauthor count during period..."
         custom_print(text, verbose)
         # Further screen matches based on period cits and coauths
         to_loop = [m for m in matches]  # temporary copy
@@ -154,7 +147,7 @@ def find_matches(original, stacked, verbose, refresh):
             res = base_query("docs", f"AU-ID({m})", refresh=refresh,
                              fields=["eid", "author_ids", "coverDate"])
             pubs = [p for p in res if
-                    original.year >= int(p.coverDate[:4]) >= original.year_period]
+                    original._period_year <= int(p.coverDate[:4]) <= original.year]
             coauths = set(extract_authors(pubs)) - {str(m)}
             if not (min(_ncoauth) <= len(coauths) <= max(_ncoauth)):
                 matches.remove(m)
@@ -166,8 +159,7 @@ def find_matches(original, stacked, verbose, refresh):
 
     # Eventually filter on affiliations
     if original.search_affiliations:
-        text = f"Left with {len(matches)} authors\nFiltering based on "\
-               "affiliations..."
+        text = "Filtering based on affiliations..."
         custom_print(text, verbose)
         matches[:] = [m for m in matches if same_affiliation(original, m, refresh)]
     return matches

@@ -67,10 +67,10 @@ class Original(Scientist):
     def search_sources(self, val):
         self._search_sources = maybe_add_source_names(val, self.source_names)
 
-    def __init__(self, scientist, treatment_year, first_year_margin=2, pub_margin=0.2,
-                 cits_margin=0.2, coauth_margin=0.2, affiliations=None,
-                 period=None, first_year_search="ID", eids=None,
-                 refresh=False, sql_fname=None):
+    def __init__(self, scientist, treatment_year, first_year_margin=2,
+                 pub_margin=0.2, cits_margin=0.2, coauth_margin=0.2,
+                 affiliations=None, period=None, first_year_search="ID",
+                 eids=None, refresh=False, sql_fname=None):
         """Representation of a scientist for whom to find a control scientist.
 
         Parameters
@@ -115,8 +115,10 @@ class Original(Scientist):
             treatment year.
 
         period: int (optional, default=None)
-            The period in which to consider publications. If not provided,
-            all publications are considered.
+            An additional period prior to the publication year on which to
+            match scientists.
+            Note: If the value is larger than the publication range, period
+            sets back to None.
 
         first_year_search: str (optional, default="ID")
             How to determine characteristics of possible control scientists

@@ -153,6 +153,7 @@ def same_affiliation(original, new, refresh=False):
     """
     from sosia.classes import Scientist
 
-    m = Scientist([str(new)], original.year, period=original.period,
-                  refresh=refresh, sql_fname=original.sql_fname)
+    period = original.year + 1 - original._period_year
+    m = Scientist([str(new)], original.year, period=period, refresh=refresh,
+                  sql_fname=original.sql_fname)
     return any(str(a) in m.affiliation_id for a in original.search_affiliations)

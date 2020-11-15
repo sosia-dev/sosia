@@ -7,11 +7,11 @@ Additional search options are available to the user. First, the user can restric
 .. code-block:: python
 
     >>> affiliations = [60002612, 60032111, 60000765]
-    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1,
-            pub_margin=1, coauth_margin=1, period=3, affiliations=affiliations)
+    >>> scientist_aff = sosia.Original(55208373700, 2017, cits_margin=1,
+            pub_margin=1, coauth_margin=1, affiliations=affiliations)
 
 
-A second option allows to change the window of time within which the similarity between scientist and potential matches is considered. With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to change this behavior in order to focus on a shorter period of time before the year of treatment. This is done by initiating the class :doc:`Original <../reference/sosia.Original>` and setting the option `period` equal to the desired number of years,
+A second option allows to change the window of time within which the similarity between scientist and potential matches is considered. With default settings, `sosia` searches for matches that are similar to the scientist provided, based on indicators constructed over the entire period between the first year of publication of the scientist until the year provided as year of treatment. It is possible to add another shorter prior to the year of treatment. For this, set parameter `period` equal to the desired length of the period,
 
 .. code-block:: python
 
@@ -25,8 +25,8 @@ Finally, for demanding users, there exists an option to attenuate the issue of d
 
 .. code-block:: python
 
-    >>> scientist_period = sosia.Original(55208373700, 2017, cits_margin=1,
+    >>> scientist_name = sosia.Original(55208373700, 2017, cits_margin=1,
             pub_margin=1, coauth_margin=1, period=3, first_year_search="name")
-    >>> scientist_period.define_search_group()
+    >>> scientist_name.define_search_group()
 
 This allows to ignore whether or not the same Author ID is valid for the full period down to the first year of publication of the target scientist. `sosia` will still filter out Author IDs whose first year of publication is too old, but it will maintain as potential matches Author IDs whose first year of publication is after the year margin provided (this is, the first year of publication of the Author IDs can be later than the upper margin of first year of publication of the target scientist). By now, it is left to the user to complete the profiles of the authors obtained and to reevaluate in a second stage whether they are indeed good matches.

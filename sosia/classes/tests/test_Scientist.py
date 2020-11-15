@@ -62,10 +62,7 @@ def test_citations():
 
 
 def test_citations_period():
-    assert_equal(scientist1.citations_period, scientist1.citations)
-    assert_equal(scientist2.citations_period, scientist2.citations)
-    assert_equal(scientist3.citations_period, scientist3.citations)
-    assert_equal(scientist4.citations_period, scientist4.citations)
+    assert_equal(scientist2.citations_period, None)
     assert_equal(scientist5.citations_period, 4)
 
 
@@ -100,10 +97,7 @@ def test_coauthors():
 
 
 def test_coauthors_period():
-    assert_equal(scientist1.coauthors_period, scientist1.coauthors)
-    assert_equal(scientist2.coauthors_period, scientist2.coauthors)
-    assert_equal(scientist3.coauthors_period, scientist3.coauthors)
-    assert_equal(scientist4.coauthors_period, scientist4.coauthors)
+    assert_equal(scientist3.coauthors_period, None)
     expected = {'24464562500', '24781156100', '54930777900',
                 '55875219200', '57131011400', '57217825601'}
     assert_equal(len(scientist5.coauthors_period), len(expected))
@@ -218,8 +212,5 @@ def test_publication_languages():
 
 
 def test_publications_period():
-    assert_equal(scientist1.publications_period, scientist1.publications)
-    assert_equal(scientist2.publications_period, scientist2.publications)
-    assert_equal(scientist3.publications_period, scientist3.publications)
-    assert_equal(scientist4.publications_period, scientist4.publications)
+    assert_equal(scientist1.publications_period, None)
     assert_equal(len(scientist5.publications_period), 4)
