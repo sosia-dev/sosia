@@ -161,9 +161,8 @@ def test_find_matches_stacked():
 
 def test_find_matches_stacked_affiliations():
     scientist3.find_matches(stacked=True, refresh=refresh)
-    expect_m = [m for m in MATCHES if m.ID != '55804519400']
-    expect_ids = [m.ID for m in expect_m]
-    assert_equal(scientist3.matches, expect_ids)
+    expected = [m.ID for m in MATCHES if m.ID != '55804519400']
+    assert_equal(scientist3.matches, expected)
 
 
 def test_find_matches_stacked_period_affiliations():
