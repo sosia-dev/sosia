@@ -197,8 +197,7 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
 
     # Verify data is not empty
     if res:
-        res = pd.DataFrame(res)
-        res = res.dropna(subset=["author_ids"])
+        res = pd.DataFrame(res).dropna(subset=["author_ids"])
         if res.empty:
             return dummy
     else:

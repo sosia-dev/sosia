@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """Tests for processing.utils module."""
 
-from os.path import expanduser
-
-from nose.tools import assert_equal, assert_true, assert_false
-from pybliometrics.scopus import ScopusSearch
 import pandas as pd
+from nose.tools import assert_equal, assert_true
+from pybliometrics.scopus import ScopusSearch
 
 from sosia.processing import expand_affiliation, flat_set_from_df, margin_range
 
@@ -13,15 +11,14 @@ refresh = 30
 
 
 def test_expand_affiliation():
-    auth_id = 6701809842
-    pubs = ScopusSearch(f"AU-ID({auth_id})", refresh=refresh).results
+    pubs = ScopusSearch(f"AU-ID(6701809842)", refresh=refresh).results
     res = pd.DataFrame(pubs)
     res = expand_affiliation(res)
     assert_true(len(res) >= 180)
     expect_columns = ['source_id', 'author_ids', 'afid']
-    assert_equal(set(res.columns.tolist()), set(expect_columns))
-    assert_true(any(res.author_ids.str.contains(";")))
-    assert_false(any(res.afid.str.contains(";")))
+    assert_equal(set(res.columns), set(expect_columns))
+    assert_true(any(res['author_ids'].str.contains(";")))
+    assert_true(all(isinstance(x, (int, float)) for x in res['afid'].unique()))
 
 
 def test_flat_set_from_df():

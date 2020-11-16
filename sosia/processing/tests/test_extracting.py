@@ -3,27 +3,14 @@
 
 from os.path import expanduser
 
-from nose.tools import assert_equal, assert_true, assert_false
+from nose.tools import assert_equal
 from pybliometrics.scopus import ScopusSearch
-import pandas as pd
 
-from sosia.processing import (expand_affiliation, find_location, parse_docs,
-                              get_main_field)
+from sosia.processing import find_location, parse_docs, get_main_field
 
 refresh = 30
 test_cache = expanduser("~/.sosia/") + "test.sqlite"
 test_id = 6701809842
-
-
-def test_expand_affiliation():
-    pubs = ScopusSearch(f"AU-ID({test_id})", refresh=refresh).results
-    res = pd.DataFrame(pubs)
-    res = expand_affiliation(res)
-    assert_true(len(res) >= 180)
-    expect_columns = ['source_id', 'author_ids', 'afid']
-    assert_equal(set(res.columns.tolist()), set(expect_columns))
-    assert_true(any(res.author_ids.str.contains(";")))
-    assert_false(any(res.afid.str.contains(";")))
 
 
 def test_find_location():

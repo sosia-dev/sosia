@@ -50,6 +50,7 @@ def expand_affiliation(df):
               .melt(id_vars=['source_id', 'author_ids'], value_name="afid")
               .drop("variable", axis=1)
               .dropna())
+    res['afid'] = res['afid'].astype(float)
     return res
 
 

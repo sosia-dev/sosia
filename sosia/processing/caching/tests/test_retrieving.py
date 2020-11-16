@@ -129,10 +129,12 @@ def test_retrieve_authors_from_sourceyear():
     df = pd.DataFrame(product(expected_sources, expected_years),
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
-    expected = query_pubs_by_sourceyear(expected_sources, expected_years[0])
+    expected = query_pubs_by_sourceyear(expected_sources, expected_years[0],
+                                        refresh=refresh)
+    expected["source_id"] = expected["source_id"].astype(np.int64)
+    expected["afid"] = expected["afid"].astype(int).astype(str)
     expected = expected.sort_values(["auids", "afid"]).reset_index(drop=True)
     expected = expected[['source_id', 'year', 'auids', 'afid']]
-    expected["source_id"] = expected["source_id"].astype(np.int64)
     expected["auids"] = expected["auids"].str.split(";")
     insert_data(expected, conn, table="sources_afids")
     # Retrieve from cache
