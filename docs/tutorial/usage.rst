@@ -2,34 +2,17 @@
 Using sosia step-by-step
 ------------------------
 
-
 Characteristics of the scientist
 --------------------------------
 
-The main class is :doc:`Original <../reference/sosia.Original>`.  You initiate it with the Scopus Author ID, or a list of Scopus Author IDs, of the researcher you are looking for, and the year of treatment:
+The only class to interact with is :doc:`Original() <../reference/sosia.Original>`.  It represents the scientist for whom you'd like to find matches.  You initiate it with the Scopus Author ID and the year of treatment.
 
 .. code-block:: python
    
     >>> from sosia import Original
     >>> stefano = Original(55208373700, 2017)
 
-You can provide a list of Scopus Author IDs, in the case the author you are interested in has more than one. All properties and the control group will be based on the publications associated to all Scopus Author IDs and published before the year you provide. You can also set as an optional parameter a list of Scopus EIDs corresponding to a list of publications. If you do so, all properties of the scientists and the control group will be based on the publications in this list only, published before they year you provide: 
-
-.. code-block:: python
-   
-    >>> eids = ['2-s2.0-84959420483', '2-s2.0-84949113230',
-                '2-s2.0-84961390052', '2-s2.0-84866317084']
-    >>> scientist1_eids = sosia.Original(55208373700, 2017, eids=eids)
-
-A number of optional parameters will be used throughout the query process in order to define "about" similarity.  There are margins for the first year of publication, the number of co-authors and the number of publications:
-
-.. code-block:: python
-   
-    >>> stefano = Original(55208373700, 2017, first_year_margin=2,
-                           coauth_margin=0.2, pub_margin=0.2,
-                           cits_margin=0.2)
-
-This will find matches who started publishing the year of the scientist's first publication plus or minus 2 years, who in the year of treatment have the same number of coauthors plus or minus 20% of that number (at least 1), and who in the year of treatment have the same number of publications plus or minus 20% of that number (at least 1).  If the last two parameters receive integers rather than floats, they will be interpreted as absolute margin.
+All properties and the control group are based on the publications associated with the profile and published before the treatment year.
 
 Upon initation, `pybliometrics` performs queries on the Scopus database under the hood.  The information is valid in the year of treatment and used to find similarities:
 
@@ -38,18 +21,19 @@ Upon initation, `pybliometrics` performs queries on the Scopus database under th
     >>> stefano.country
     'Switzerland'
     >>> stefano.coauthors
-    {'54929867200', '54930777900', '36617057700', '24781156100', '55875219200'}
+    {'57217825601', '54930777900', '36617057700', '54929867200', '55875219200',
+     '24464562500', '24781156100'}
     >>> stefano.fields
-    [1803, 1408, 1405, 1400, 1405, 2002, 2200]
+    [2300, 3300, 2002, 1405, 1400, 1405, 1408, 1803, 2200, 2002, 1405, 1400,
+     3300, 2300, 1405, 1803, 1408]
     >>> stefano.first_year
     2012
     >>> stefano.sources
-    {(21100858668, None), (22900, 'Research Policy'),
-    (23013, 'Industry and Innovation'), (18769, 'Applied Economics Letters'),
-    (15143, 'Regional Studies')}
+    [(15143, 'Regional Studies'), (18769, 'Applied Economics Letters'),
+     (22900, 'Research Policy'), (23013, 'Industry and Innovation'), (21100858668, None)]
     >>> stefano.main_field
     (1405, 'BUSI')
-    
+
 Additionally, `stefano.publications` is a list of namedtuples storing information about the indexed publications.  Each property can be manually overriden:
 
 .. code-block:: python
@@ -62,9 +46,25 @@ Additionally, `stefano.publications` is a list of namedtuples storing informatio
     (1406, 'ECON')
 
 
+Similarity parameters
+---------------------
+
+`sosia` tries to find researchers that are similar to the Original in the year of treatment.  Currently `sosia` defines similar along four margins: the start of the academic career, the number of co-authors and publications, and the total citation count.  Another researcher (read: Scopus profile) is similar if her characteristics fall within the margin around the Original's characteristics.  If all characteristics are similar, and the other researcher is not a co-author, she is a match.
+
+By default (i.e., if not specified), the margins for the first year of publication is 2, for the number of co-author, the number of publication, and for the number of citations it is 20%.  Margins work in either direction.  You can override these paramters.  `sosia` interprets integer values as absolute deviation, and float values as relative deviation:
+
+.. code-block:: python
+   
+    >>> stefano = Original(55208373700, 2017, first_year_margin=2,
+                           coauth_margin=0.2, pub_margin=0.2,
+                           cits_margin=0.2)
+
+This will find matches who started publishing the year of the scientist's first publication plus or minus 2 years, who in the year of treatment have the same number of coauthors plus or minus 20% of that number (at least 1), and who in the year of treatment have the same number of publications plus or minus 20% of that number (at least 1).
+
+
 Defining search sources
 -----------------------
-The next step is to define a list of sources similar (in type and area) to the sources the scientist published until the year of treatment.  A source is similar if (i) it is associated to the scientist's main field, (ii) is of the same type(s) of the scientist's sources and (iii) is not associated to fields alien to the scientist.  You define the list of search sources with a method to the class and access the results using a property:
+The first step is to define a list of sources similar (in type and area) to the sources the scientist published until the year of treatment.  `sosia` uses these source to define an intial search group.  A source is similar if (i) it is associated to the scientist's main field, (ii) is of the same type(s) of the scientist's sources and (iii) is not associated to fields alien to the scientist.  Here type of source refers to journal, conference proceeding, book, etc.  You define the list of search sources with a method to the class and access the results using a property:
 
 .. code-block:: python
 
@@ -78,7 +78,9 @@ The next step is to define a list of sources similar (in type and area) to the s
     (21100889873, 'International Journal of Recent Technology and Engineering'),
     (21100898637, 'Research Policy: X')]
 
-Property `search_sources` is a list of tuples storing source ID and source title.  As before, you can override (or predefine) your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the source the scientist publishes in: `stefano.search_sources = stefano.sources`.
+Property `search_sources` is a list of tuples storing source ID and source title.
+
+As before, you can override (or predefine) your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the source the scientist publishes in: `stefano.search_sources = stefano.sources`.
 
 Using `verbose=True` you receive additional information on this operation:
 
@@ -116,7 +118,7 @@ The next step is to define a first search group that adhere to conditions 1 to 4
 
 You can inspect the search group using `stefano.search_group`, which you can also override, pre-define or edit.
 
-An alternative search process will try to minimize the number of queries.  The downside is that the resulting query cannot be reused for other searches (of other scientists).  Activate this by setting `stacked=True`:
+An alternative search process will try to minimize the number of queries.  The downside is that the resulting query, which pybliometrics caches under the hood, cannot be reused for other searches (of other scientists).  Activate this setting with `stacked=True`:
 
 .. code-block:: python
 
@@ -179,7 +181,7 @@ The final step is to search within this search group for authors that fulfill cr
 Adding information to matches
 -----------------------------
 
-The researcher might need additional information to both assess match quality and select matches.  Using `.inform_matches()` one can source certain specified information.  It returns list of `namedtuples <https://docs.python.org/2/library/collections.html#collections.namedtuple>`_:
+You might need additional information to both assess match quality and select matches.  Method `.inform_matches()` adds certain specified information to each match.  Attribute `stefano.matches` then becomes a list of `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_:
 
 .. code-block:: python
 
@@ -197,7 +199,6 @@ The researcher might need additional information to both assess match quality an
     subjects=['BUSI', 'COMP', 'SOCI'], country='Netherlands', affiliation_id='60032882',
     affiliation='Eindhoven University of Technology, Department of Industrial Engineering &
     Innovation Sciences', language='eng', reference_sim=0.0, abstract_sim=0.1217)
-
 
 By default, `sosia` provides the following information:
 
