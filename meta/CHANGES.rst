@@ -3,6 +3,31 @@ Change Log
 
 .. toctree::
 
+0.4
+~~~
+
+2020-12-04
+
+* End support for Python 3.5.
+* Reorganize config.ini.
+* In `Original()`, add parameters "sql_name" and "first_year_search", and rename parameters: "year": "treatment_year", "year_margin": "first_year_margin", "search_affiliations": "affiliations".
+* In `Original().find_matches()`, remove parameter "ignore_first_id".
+* In `Original()`, change default values for parameters: "year_margin": 0.2, "pub_margin": 0.2, "cits_margin": 0.2, "coauth_margin": 0.2.
+* Rename function `create_cache()` to `make_database()`.
+* Rename tables in MySQL database: `author_size` becomes `author_pubs`, `author_cits_size` becomes `author_ncits`.
+* In `Original().find_matches()` remove parameters "information", "stop_words", "tfidf_kwds"; always create a plain list.
+* Add property `.matches` to `Original()`.
+* Create new method `Original().inform_matches()` to add additional information to matches.
+* Use externally provided list of sources and their fields.
+* Remove unused property `Original().city`.
+* Raise warning if there are too few publications to determine a field.
+* Allow integer values for "refresh" in all instances, require pybliometrics >= 2.7.
+* Require numpy.
+* Fix bug originating from missing reference EIDs.
+* Fix bug originating from missing source IDs.
+* Improve documentaton, add tutorial.
+* Add citation dunder.
+
 0.3.1
 ~~~~~
 
