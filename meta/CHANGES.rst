@@ -3,6 +3,14 @@ Change Log
 
 .. toctree::
 
+0.4.1
+~~~~~
+
+2020-12-08
+
+* Fix bug when creating a new config.ini.
+* Require pybliometrics >= 2.7.2.
+
 0.4
 ~~~
 
