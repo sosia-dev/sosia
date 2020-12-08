@@ -1,9 +1,9 @@
 Match Authors in Scopus automatically with sosia
 ================================================
 
-sosia (Italian for *doppelgänger*) creates control groups for authors, by searching the Scopus database using `pybliometrics <https://pybliometrics.readthedocs.io/en/latest/index.html>`_.  After configuring your local pybliometrics (providing access credentials and eventually setting cache directories), you can use sosia.
+sosia (Italian for *doppelgänger*) finds researchers that are similar to another one. Use the matching researcher as a control in Diff-in-Diff anlyses. sosia is developed and `described <https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3742602>`_ by econometricians for scientists of science.
 
-sosia is written in Python 3, by econometric scientists for econometric scientists.
+sosia does not pre-compute annual characteristics to find controls. Instead, sosia searches the entire Scopus database via `pybliometrics <https://pybliometrics.readthedocs.io/en/latest/index.html>`_. Configure both--and let sosia find a match for you.
 
 =======
 Example
