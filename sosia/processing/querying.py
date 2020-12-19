@@ -70,7 +70,7 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
     return get_res(obj, size_only)
 
 
-def count_citations(search_ids, pubyear, exclusion_ids=None, size_only=True):
+def count_citations(search_ids, pubyear, exclusion_ids=None):
     """Auxiliary function to count non-self citations up to a year."""
     if not exclusion_ids:
         exclusion_ids = search_ids
@@ -129,7 +129,7 @@ def create_queries(group, joiner, template, maxlen):
     return queries
 
 
-def long_query(query, q_type, template, view="COMPLETE"):
+def long_query(query, q_type, template, refresh=False, view="COMPLETE"):
     """Run one query from create_queries output, and revert to
     one-by-one queries of each element if Scopus400Error is returned.
 
@@ -146,16 +146,19 @@ def long_query(query, q_type, template, view="COMPLETE"):
         A string template with one parameter named `fill` which will be used
         as search query.
 
+    refresh : bool (optional, default=False)
+        Whether to refresh cached files if they exist, or not.
+
     view : str
         Which Scopus API view to use in the query.
     """
     try:
-        return base_query(q_type, query[0], view=view)
+        return base_query(q_type, query[0], refresh=refresh, view=view)
     except Scopus400Error:
         res = []
         for element in query[1]:
             q = template.substitute(fill=element)
-            res = base_query(q_type, q)
+            res = base_query(q_type, q, refresh=refresh)
             res.extend(res)
         return res
 
@@ -261,7 +264,7 @@ def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
     res = []
     for i, q in enumerate(queries):
         print_progress(i+1, total, verbose)
-        res.extend(long_query(q, q_type, template))
+        res.extend(long_query(q, q_type, template, refresh))
     return res
 
 

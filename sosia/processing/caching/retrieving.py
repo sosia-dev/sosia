@@ -70,7 +70,7 @@ def retrieve_author_info(df, conn, table):
     return incache, tosearch
 
 
-def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, stacked=False):
+def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False):
     """Search through sources by year for authors in SQL database.
 
     Parameters
@@ -84,10 +84,6 @@ def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, stacked=Fals
     refresh : bool (optional, default=False)
         Whether to refresh cached search files.
 
-    stacked : bool (optional, default=False)
-        Whether to use fewer queries that are not reusable, or to use modular
-        queries of the form "SOURCE-ID(<SID>) AND PUBYEAR IS <YYYY>".
-
     Returns
     -------
     data : DataFrame
@@ -99,9 +95,8 @@ def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False, stacked=Fals
     """
     # Preparation
     cursor = conn.cursor()
-    if refresh:
-        tables = ("sources", "sources_afids")
-        for table in tables:
+    if not isinstance(refresh, bool) or refresh:
+        for table in ("sources", "sources_afids"):
             q = f"DELETE FROM {table} WHERE source_id=? AND year=?"
             cursor.executemany(q, tosearch.to_records(index=False))
             conn.commit()

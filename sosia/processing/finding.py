@@ -192,7 +192,6 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     """
     # Define variables
     search_sources, _ = zip(*original.search_sources)
-    params = {"refresh": refresh, "verbose": verbose, "stacked": stacked}
     text = f"Defining 'search_group' using up to {len(search_sources):,} sources..."
     custom_print(text, verbose)
 
