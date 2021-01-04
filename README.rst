@@ -35,7 +35,7 @@ or development version from GitHub repository:
 
 .. code:: bash
 
-    pip install git+git://github.com/sosia-dev/sosia
+    pip install git+https://github.com/sosia-dev/sosia
 
 Functioning
 ===========
