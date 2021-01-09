@@ -245,7 +245,7 @@ class Original(Scientist):
         # Select source IDs
         selected_ids = df[same_field & same_type]["source_id"].unique()
         selected = df[df["source_id"].isin(selected_ids)].copy()
-        selected["asjc"] = selected["asjc"].astype(str) + " "
+        selected["asjc"] = selected["asjc"].astype(int).astype(str) + " "
         grouped = (selected.groupby("source_id")
                            .sum()["asjc"]
                            .to_frame())
