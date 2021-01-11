@@ -1,3 +1,11 @@
+def clean_name(text):
+    import re
+    chars_to_remove = "()"
+    rx = '[' + re.escape(''.join(chars_to_remove)) + ']'
+    cleaned = re.sub(rx, ' ', text)
+    return cleaned.strip()
+
+
 def custom_print(text, verbose):
     """Print text if verbose."""
     if verbose:
