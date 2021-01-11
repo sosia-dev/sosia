@@ -3,6 +3,7 @@ from collections import namedtuple
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 
+from sosia.processing.utils import handle_scopus_errors
 from sosia.processing.nlp import clean_abstract, compute_similarity
 from sosia.utils import print_progress
 
@@ -272,10 +273,16 @@ def parse_docs(eids, refresh):
         cited references, joined on a blank.  The fourth element is the
         number of valid abstract information.
     """
+    @handle_scopus_errors
+    def query(eid):
+        return AbstractRetrieval(eid, view="FULL", refresh=refresh)
+
     docs = []
+    # TO DO: we should use abstracts already in publications downloaded
+    # (re-downloading them one by one is not necessary and takes lots of time)
     for eid in eids:
         try:
-            docs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh))
+            docs.append(query(eid))
         except Scopus404Error:
             continue
     ref_lst = [ab.references for ab in docs if ab.references]
