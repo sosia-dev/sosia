@@ -42,6 +42,13 @@ scientist4 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
 # To test disambiguation
 scientist5 = Original(55208373700, 2017, cits_margin=200, first_year_margin=2,
                       pub_margin=0.2, coauth_margin=0.2, **test_params)
+scientist5.matches = ['35324709800', '36195966900', '53164702100',
+                      '55022752500', '55071051800', '55212317400',
+                      '55308662800', '55317901900', '55515260500',
+                      '55567912500', '55694169400', '55804519400',
+                      '55810688700', '55824607400', '55930211600',
+                      '55963523600', '55991142100', '56132478200',
+                      '56282273300', '56856438600', '57189495106']
 
 
 # Expected matches
@@ -224,8 +231,16 @@ def test_inform_matches():
 def test_matches_disambiguator():
     # within same subjects
     # create only a generator of dismbiguators
-    scientist1.matches_disambiguator()
-    assert_true(isinstance(scientist1.m_disambiguators, GeneratorType))
+    scientist5.matches_disambiguator()
+    assert_true(isinstance(scientist5.m_disambiguators, GeneratorType))
+
+
+def test_disambiguate_matches():
+    # the actions are chosen randomly (not based on an actual disambiguation)
+    actions = ["", "k"]
+    with mock.patch('builtins.input', side_effect=actions):
+        scientist5.disambiguate_matches()
+    assert_equal(len(scientist5.matches_disambiguated), 15)
 
 
 def test_matches_disambiguator_compile_info():
@@ -238,14 +253,7 @@ def test_matches_disambiguator_compile_info():
     assert_frame_equal(scientist1.matches_uniqueness, expect_uniqueness)
     assert_true(scientist1.matches_homonyms.empty)
 
-    # add matches to scientist5 (to test more features)
-    scientist5.matches = ['35324709800', '36195966900', '53164702100',
-                          '55022752500', '55071051800', '55212317400',
-                          '55308662800', '55317901900', '55515260500',
-                          '55567912500', '55694169400', '55804519400',
-                          '55810688700', '55824607400', '55930211600',
-                          '55963523600', '55991142100', '56132478200',
-                          '56282273300', '56856438600', '57189495106']
+    # scientist5 (to test more features)
     scientist5.matches_disambiguator(compile_info=True)
     assert_true(isinstance(scientist5.matches_homonyms, pd.DataFrame))
     cols = ['ID', 'ID_homonym', 'surname', 'initials', 'givenname',
@@ -297,7 +305,7 @@ def test_matches_disambiguator_limit():
     assert_equal(scientist5.matches_homonyms.ID_homonym.tolist(), expected)
 
 
-def test_disambiguate_matches():
+def test_disambiguate_matches_compile_info():
     # the actions are chosen randomly (not based on an actual disambiguation)
     actions = ["", "k", "", "d", "k", "", "d", "k 56223966400", "d"]
     with mock.patch('builtins.input', side_effect=actions):
