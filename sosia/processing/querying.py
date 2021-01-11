@@ -90,6 +90,19 @@ def count_citations(search_ids, pubyear, exclusion_ids=None, size_only=True):
     return base_query("docs", q, size_only=True)
 
 
+def cross_citations(self, match):
+    """Count number of times self cites match or match cites self."""
+    if self._eids:
+        q = f"((REF({match}) AND EID({' OR '.join(self._eids)}))"\
+            f" OR (REF({' OR '.join(self._eids)}) AND AU-ID({match})))"\
+            f" AND PUBYEAR BEF {self.year + 1}"
+    else:
+        q = f"((REF({match}) AND AU-ID({' OR '.join(self.identifier)}))"\
+            f" OR (REF({' OR '.join(self.identifier)}) AND AU-ID({match})))"\
+            f" AND PUBYEAR BEF {self.year + 1}"
+    return base_query("docs", q, size_only=True, refresh=True)
+
+
 def create_queries(group, joiner, template, maxlen):
     """Create queries combining `maxlen` entities of a `group` to search for.
 

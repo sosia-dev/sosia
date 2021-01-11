@@ -324,8 +324,10 @@ class Scientist(object):
         # Load list of publications
         if eids:
             q = f"EID({' OR '.join(eids)})"
+            self._eids = eids
         else:
             q = f"AU-ID({') OR AU-ID('.join(identifier)})"
+            self._eids = None
         integrity_fields = ["eid", "author_ids", "coverDate", "source_id"]
         res = base_query("docs", q, refresh, fields=integrity_fields)
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
@@ -333,7 +335,6 @@ class Scientist(object):
             text = "No publications found for author "\
                    f"{'-'.join(identifier)} until {year}"
             raise NoPublications(text)
-        self._eids = eids or [p.eid for p in self._publications]
 
         # First year of publication
         pub_years = [p.coverDate[:4] for p in self._publications]
@@ -425,7 +426,7 @@ class Scientist(object):
         from json import JSONDecodeError
         from pybliometrics.scopus.exception import Scopus404Error
         langs = set()
-        for eid in self._eids:
+        for eid in [p.eid for p in self._publications]:
             try:
                 ab = AbstractRetrieval(eid, view="FULL", refresh=refresh)
             except JSONDecodeError:

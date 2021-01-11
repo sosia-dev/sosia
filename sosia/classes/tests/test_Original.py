@@ -252,7 +252,7 @@ def test_matches_disambiguator_compile_info():
             'affiliation', 'documents', 'affiliation_id', 'city',
             'country', 'areas', 'first_year', 'num_publications',
             'num_citations', 'num_coauthors', 'reference_sim',
-            'abstract_sim']
+            'abstract_sim', 'cross_citations']
     assert_equal(scientist5.matches_homonyms.columns.tolist(), cols)
     expected = ['55515260500', '55515260500', '55515260500', '55515260500',
                 '55515260500', '55515260500']

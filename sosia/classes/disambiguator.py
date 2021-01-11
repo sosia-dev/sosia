@@ -198,7 +198,8 @@ class Disambiguator(Scientist):
         from sosia.classes import Original
 
         allowed_fields = ["first_year", "num_publications", "num_citations",
-                          "num_coauthors", "reference_sim", "abstract_sim"]
+                          "num_coauthors", "reference_sim", "abstract_sim",
+                          "cross_citations"]
         if fields:
             invalid = [x for x in fields if x not in allowed_fields]
             if invalid:

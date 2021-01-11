@@ -40,7 +40,7 @@ def test_homonyms():
     cols = ['surname', 'initials', 'givenname', 'affiliation', 'documents',
             'affiliation_id', 'city', 'country', 'areas', 'ID', 'first_year',
             'num_publications', 'num_citations', 'num_coauthors',
-            'reference_sim', 'abstract_sim']
+            'reference_sim', 'abstract_sim', 'cross_citations']
     assert_equal(scientist1.homonyms.ID.tolist(), expected)
     assert_equal(scientist1.homonyms.columns.tolist(), cols)
     # 2

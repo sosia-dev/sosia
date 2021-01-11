@@ -208,8 +208,9 @@ class Original(Scientist):
         self.sql_fname = sql_fname
 
         # Instantiate superclass to load private variables
-        Scientist.__init__(self, self.identifier, treatment_year, refresh=refresh,
-                           period=period, sql_fname=self.sql_fname)
+        Scientist.__init__(self, self.identifier, treatment_year,
+                           refresh=refresh, period=period, eids=self.eids,
+                           sql_fname=self.sql_fname)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False):
         """Define search_group.
@@ -387,7 +388,7 @@ class Original(Scientist):
                           "num_coauthors_period", "num_publications_period",
                           "num_citations_period", "subjects", "country",
                           "affiliation_id", "affiliation", "language",
-                          "reference_sim", "abstract_sim"]
+                          "reference_sim", "abstract_sim", "cross_citations"]
         if fields:
             invalid = [x for x in fields if x not in allowed_fields]
             if invalid:

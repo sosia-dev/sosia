@@ -5,6 +5,7 @@ from pybliometrics.scopus.exception import Scopus404Error
 
 from sosia.processing.utils import handle_scopus_errors
 from sosia.processing.nlp import clean_abstract, compute_similarity
+from sosia.processing.querying import cross_citations
 from sosia.utils import print_progress
 
 
@@ -237,6 +238,9 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
                 abs_cos = compute_similarity(absts, focal_abs, tokenize=True,
                                              **kwds)
                 match_info["abstract_sim"] = abs_cos
+        if "cross_citations" in keywords:
+            _count = cross_citations(self, auth_id)
+            match_info["cross_citations"] = _count
         out.append(m(**match_info))
         print_progress(idx+1, total, verbose)
 
