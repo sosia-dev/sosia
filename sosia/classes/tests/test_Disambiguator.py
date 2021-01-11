@@ -43,14 +43,14 @@ def test_homonyms():
             'reference_sim', 'abstract_sim', 'cross_citations']
     assert_equal(scientist1.homonyms.ID.tolist(), expected)
     assert_equal(scientist1.homonyms.columns.tolist(), cols)
-    # 2
+    # 2 (in_subjects = False)
     expected = ['57189045584', '56708258300', '57209105951', '57210253022',
                 '57206034883', '56818365000', '57217210913', '57198260240',
                 '57198260239', '56709712700']
     assert_equal(scientist2.homonyms.ID.tolist(), expected)
-    # 3
+    # 3 (less fields)
     assert_true(scientist3.homonyms.empty)
-    # 4
+    # 4 (less fields, higher limit for number of homonyms)
     expected = ['57203322376', '57198984555', '57117072300', '57199865447',
                 '9233480100', '57211748047', '36570881000', '7402594766',
                 '57215598612', '57214382058', '57214382052', '56174116400',

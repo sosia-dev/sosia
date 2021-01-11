@@ -251,7 +251,7 @@ class Disambiguator(Scientist):
         """
 
         def display_homonyms(homonyms):
-            """ Auxiliariy function to display information on homonyms """
+            """Auxiliariy function to display information on homonyms."""
             homonyms_cols = self.homonyms.columns.tolist()
             select = ["ID", "documents", "surname", "givenname", "initials",
                       "affiliation", "affiliation_id", "city", "country",
@@ -263,8 +263,8 @@ class Disambiguator(Scientist):
                   f"{chunks})")
 
         def list_ids(action_ids, allowed_ids):
-            """ Auxiliariy function to generate list from user input, testing
-            that the ids are included in the homonyms list """
+            """Auxiliariy function to generate list from user input, testing
+            that the ids are included in the homonyms list."""
             ids = [i.strip() for i in action_ids.split(",")]
             for i in ids:
                 if i not in allowed_ids:
@@ -273,7 +273,7 @@ class Disambiguator(Scientist):
             return ids
 
         def robust_input(Text):
-            """ Auxiliariy function to ask for user input testing if valid """
+            """Auxiliariy function to ask for user input testing if valid."""
             action = None
             while not action:
                 action = input(Text)
