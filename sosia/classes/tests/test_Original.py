@@ -312,3 +312,16 @@ def test_disambiguate_matches_stop_at():
     with mock.patch('builtins.input', side_effect=actions):
         scientist5.disambiguate_matches(stop_at=5)
     assert_true(5 <= len(scientist5.matches_disambiguated) < 17)
+
+
+def test_disambiguate_matches_invalid_keep():
+    # also matches that are not valid based on additional IDs are maintained
+    # the actions are chosen randomly (not based on an actual disambiguation)
+    actions = ["", "k", "k 57196653055", "d", "", "k 57196653042",
+               "d", "k 57220585789", "d", "", "k", "d"]
+    with mock.patch('builtins.input', side_effect=actions):
+        scientist5.disambiguate_matches(invalid="keep")
+    assert_true(len(scientist5.matches_disambiguated), 24)
+    check_match = scientist5.matches_disambiguated[-4]
+    expected = ['56856438600', '57196653042', '57220585789']
+    assert_true(check_match.all_IDs, expected)

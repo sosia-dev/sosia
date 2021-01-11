@@ -405,7 +405,7 @@ class Disambiguator(Scientist):
                 continue
             if action[0][0] == "a":
                 # abort
-                self.disambiguated_ids = self.identifier.copy()
+                self.disambiguated_ids = None
                 action = "e"
                 continue
 

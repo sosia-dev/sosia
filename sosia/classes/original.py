@@ -489,8 +489,8 @@ class Original(Scientist):
             already unique.
 
         invalid : str, (optional, default="drop")
-            Whether to "keep" or "drop" matches whose identifier are found
-            to be invalid (most likely due to changes in Scopus).
+            Whether to "keep" or "drop" matches found to be not valid after
+            the disambiguation.
 
         Notes
         -------
@@ -509,8 +509,9 @@ class Original(Scientist):
               "-------------------------------------\n"
               f"   First year: {self.first_year}     \n")
         for i, d in enumerate(self.m_disambiguators):
+            all_ids = []
             print("\n.........................................\n"
-                  f"   Match {i+1} of {len(self.m_disambiguators)}"
+                  f"   Match {i+1} of {len(self.matches)}"
                   f" - ID: {','.join(d.identifier)}\n"
                   ".........................................\n")
             if d.homonyms_num > d.limit:
@@ -536,21 +537,36 @@ class Original(Scientist):
                 instructions =\
                        f"\n\n---  Screen {len(old)} too old homonyms ---\n\n"\
                        "\nAs action, type:\n"\
-                       "'(k)eep' as soon as ANY homonym is found correct"\
-                       " (the Match will be discarded).\n"\
-                       "'(d)rop' or (e)xit if NONE is correct.\n"\
+                       "'(k)eep' if ANY is the same person"\
+                       " (the match will be discarded).\n"\
+                       "'(d)rop' or (e)xit if NONE is the same person"\
+                       "(the match will be maintained).\n"\
                        "'(s)copus' to browse all homonyms in Scopus\n"\
                        "'(g)oogle' to browse name and affilaition in Google\n"\
-                       "'(a)bort' to stop AND drop the match)\n"\
+                       "'(a)bort' to stop AND discard the match)\n"\
+                       "Add space and a comma-sep list of homonyms to perform"\
+                       "an action on a subset."
+                if invalid == "keep":
+                    instructions = \
+                       f"\n\n---  Screen {len(old)} too old homonyms ---\n\n"\
+                       "\nAs action, type:\n"\
+                       "'(k)eep' to keep all homonyms.\n"\
+                       "'(d)rop' to drop all homonyms\n"\
+                       "'(s)copus' to browse all homonyms in Scopus\n"\
+                       "'(g)oogle' to browse name and affilaition in Google\n"\
+                       "'(e)xit' to exit (current results preserved)\n"\
+                       "'(a)bort' to stop AND discard the match)\n"\
                        "Add space and a comma-sep list of homonyms to perform"\
                        "an action on a subset."
                 d.disambiguate(subset=old, instructions=instructions)
                 if not d.disambiguated_ids or len(d.disambiguated_ids) > 1:
-                    print(f"{d.identifier} is dropped.")
                     if invalid == "keep":
-                        m = match_dis(ID=d.identifier, all_IDs=[])
+                        all_ids.extend(d.disambiguated_ids)
+                        m = match_dis(ID=d.identifier, all_IDs=all_ids)
                         self._matches_disambiguated.append(m)
-                    continue
+                    else:
+                        print(f"{d.identifier} is discarded.")
+                        continue
             # TODO: add one group check for when "first_year_search="name""
             # TODO: add reassessing balance
             # TODO: add assessing full period when period option used
@@ -565,7 +581,7 @@ class Original(Scientist):
                     "'(s)copus' to browse all homonyms in Scopus\n"\
                     "'(g)oogle' to browse name and affilaition in Google\n"\
                     "'(e)xit' to exit (previous commands are saved)\n"\
-                    "'(a)bort' to stop and exclude the match\n"\
+                    "'(a)bort' to stop AND discard the match\n"\
                     "Add space and a comma-sep list of homonyms to perform"\
                     "an action on a subset."
                 d.disambiguate(subset=other, instructions=instructions,
@@ -573,6 +589,8 @@ class Original(Scientist):
                 if not d.disambiguated_ids:
                     print(f"{d.identifier} is dropped.")
                     continue
+                all_ids.extend([i for i in d.disambiguated_ids if i not in
+                                all_ids])
                 m = match_dis(ID=d.identifier, all_IDs=d.disambiguated_ids)
                 self._matches_disambiguated.append(m)
             # TODO: update all matches information based on possible additional

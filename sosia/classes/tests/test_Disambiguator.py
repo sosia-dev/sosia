@@ -118,30 +118,27 @@ def test_disambiguate():
         scientist1.disambiguate()
     assert_equal(scientist1.disambiguated_ids, expected)
     # try something and abort
-    expected = ['56408947300']
     actions = ['', 'k 56708258300', 'a']
     with mock.patch('builtins.input', side_effect=actions):
         scientist1.disambiguate()
-    assert_equal(scientist1.disambiguated_ids, expected)
+    assert_equal(scientist1.disambiguated_ids, None)
 
 
 def test_disambiguate_show_main():
     # the actions are chosen randomly (not based on an actual disambiguation)
     # suppress showing main scientist
-    expected = ['56408947300']
     actions = ['k 56708258300', 'a']
     with mock.patch('builtins.input', side_effect=actions):
         scientist1.disambiguate(show_main=False)
-    assert_equal(scientist1.disambiguated_ids, expected)
+    assert_equal(scientist1.disambiguated_ids, None)
 
 
 def test_disambiguate_search_cv():
     # the actions are chosen randomly (not based on an actual disambiguation)
     # searching for cv at the same time
-    expected = ['56408947300']
     actions = ['', 'http://mock/link', 'k 56708258300', 'a']
     with mock.patch('builtins.input', side_effect=actions):
         scientist1.disambiguate(show_main=False, search_cv=True)
-    assert_equal(scientist1.disambiguated_ids, expected)
+    assert_equal(scientist1.disambiguated_ids, None)
     assert_equal(scientist1.cv_file_id, 'Rossi_Giacomo_56408947300')
     assert_equal(scientist1.cv_link, "http://mock/link")
