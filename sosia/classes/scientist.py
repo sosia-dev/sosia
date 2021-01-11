@@ -11,7 +11,7 @@ from sosia.establishing import config, connect_database
 from sosia.processing import add_source_names, base_query, count_citations,\
     extract_authors, find_location, get_authors, get_main_field,\
     maybe_add_source_names, read_fields_sources_list
-from sosia.utils import accepts
+from sosia.utils import accepts, clean_name
 
 
 class NoPublications(Exception):
@@ -395,9 +395,9 @@ class Scientist(object):
         try:
             au = df.sort_values("documents", ascending=False).iloc[0]
             self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")] or None
-            self._surname = au.surname or None
-            self._first_name = au.givenname or None
-            self._initials = au.initials or None
+            self._surname = clean_name(au.surname) or None
+            self._first_name = clean_name(au.givenname) or None
+            self._initials = clean_name(au.initials) or None
             self._last_affiliation = au.affiliation or None
             self._last_city = au.city or None
             self._last_country = au.country or None
