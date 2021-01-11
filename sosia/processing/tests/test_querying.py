@@ -15,7 +15,6 @@ test_conn = connect_database(test_cache)
 test_id = 53164702100
 year = 2017
 refresh = 30
-query_missing_sourceid = "EID(2-s2.0-85042244066)"
 
 
 def test_base_query():
@@ -28,10 +27,6 @@ def test_base_query_author():
     query = f"AU-ID({test_id})"
     size = base_query("author", query, size_only=True)
     assert_equal(size, 1)
-    # test robustness to missing source IDs
-    fields = ["eid", "author_ids", "coverDate", "source_id"]
-    res = base_query("docs", query_missing_sourceid, refresh, fields=fields)
-    assert_equal(res[0].source_id, None)
 
 
 def test_count_citations():
@@ -86,7 +81,7 @@ def test_create_queries_short():
     expected = 'SOURCE-ID(1) AND PUBYEAR IS 2018'
     sub_group = ['1']
     assert_equal(received[0][0], expected)
-    assert_equal(received[0][1], sub_group)    
+    assert_equal(received[0][1], sub_group)
 
 
 def test_query_sources_by_year():
