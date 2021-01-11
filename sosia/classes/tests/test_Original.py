@@ -3,9 +3,13 @@
 
 import warnings
 from collections import namedtuple
+import numpy as np
 from os.path import expanduser
+from types import GeneratorType
 
+import mock
 import pandas as pd
+from pandas.testing import assert_frame_equal
 from nose.tools import assert_equal, assert_true
 
 from sosia.classes import Original
@@ -20,6 +24,7 @@ test_params = {"refresh": refresh, "sql_fname": test_cache}
 # Normal values
 scientist1 = Original(55208373700, 2017, cits_margin=200, first_year_margin=1,
                       pub_margin=0.1, coauth_margin=0.1, **test_params)
+
 # Using period and name search mode
 scientist2 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                       coauth_margin=1, first_year_margin=1, period=3,
@@ -34,6 +39,10 @@ scientist4 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                       coauth_margin=1, first_year_margin=1, period=3,
                       first_year_search="name", affiliations=affs,
                       **test_params)
+# To test disambiguation
+scientist5 = Original(55208373700, 2017, cits_margin=200, first_year_margin=2,
+                      pub_margin=0.2, coauth_margin=0.2, **test_params)
+
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\
@@ -84,6 +93,30 @@ MATCHES = [
         language='eng; spa',
         reference_sim=0.0,
         abstract_sim=0.1183)]
+
+# expected disambiuguation results for matches of scientists5
+Match_disambiguated = namedtuple("Match_disambiguated", "ID all_IDs")
+MATCHES_DISAMBIGUATED = [
+    Match_disambiguated(ID=['35324709800'], all_IDs=['35324709800']),
+    Match_disambiguated(ID=['36195966900'], all_IDs=['36195966900']),
+    Match_disambiguated(ID=['53164702100'], all_IDs=['53164702100']),
+    Match_disambiguated(ID=['55022752500'], all_IDs=['55022752500']),
+    Match_disambiguated(ID=['55071051800'], all_IDs=['55071051800']),
+    Match_disambiguated(ID=['55212317400'], all_IDs=['55212317400']),
+    Match_disambiguated(ID=['55308662800'], all_IDs=['55308662800']),
+    Match_disambiguated(ID=['55317901900'], all_IDs=['55317901900']),
+    Match_disambiguated(ID=['55567912500'], all_IDs=['55567912500']),
+    Match_disambiguated(ID=['55694169400'], all_IDs=['55694169400']),
+    Match_disambiguated(ID=['55810688700'], all_IDs=['55810688700']),
+    Match_disambiguated(ID=['55824607400'], all_IDs=['55824607400']),
+    Match_disambiguated(ID=['55930211600'], all_IDs=['55930211600']),
+    Match_disambiguated(ID=['55963523600'], all_IDs=['55963523600']),
+    Match_disambiguated(ID=['55991142100'], all_IDs=['55991142100']),
+    Match_disambiguated(ID=['56856438600'],
+                        all_IDs=['56856438600', '57220585789', '57211907197',
+                                 '57196653055']),
+    Match_disambiguated(ID=['57189495106'],
+                        all_IDs=['57189495106', '56223966400'])]
 
 
 def test_search_sources():
@@ -186,3 +219,96 @@ def test_inform_matches():
     for e in recieved:
         assert_true(isinstance(e.abstract_sim, float))
         assert_true(0 <= e.abstract_sim <= 1)
+
+
+def test_matches_disambiguator():
+    # within same subjects
+    # create only a generator of dismbiguators
+    scientist1.matches_disambiguator()
+    assert_true(isinstance(scientist1.m_disambiguators, GeneratorType))
+
+
+def test_matches_disambiguator_compile_info():
+    # compile information
+    scientist1.matches_disambiguator(compile_info=True)
+    _dic = {"ID": ['53164702100', '55071051800', '55317901900', '55804519400'],
+            "uniqueness": [1.0, 1.0, 1.0, np.nan],
+            "homonyms_num": [0, 0, 0, 203]}
+    expect_uniqueness = pd.DataFrame(_dic)
+    assert_frame_equal(scientist1.matches_uniqueness, expect_uniqueness)
+    assert_true(scientist1.matches_homonyms.empty)
+
+    # add matches to scientist5 (to test more features)
+    scientist5.matches = ['35324709800', '36195966900', '53164702100',
+                          '55022752500', '55071051800', '55212317400',
+                          '55308662800', '55317901900', '55515260500',
+                          '55567912500', '55694169400', '55804519400',
+                          '55810688700', '55824607400', '55930211600',
+                          '55963523600', '55991142100', '56132478200',
+                          '56282273300', '56856438600', '57189495106']
+    scientist5.matches_disambiguator(compile_info=True)
+    assert_true(isinstance(scientist5.matches_homonyms, pd.DataFrame))
+    cols = ['ID', 'ID_homonym', 'surname', 'initials', 'givenname',
+            'affiliation', 'documents', 'affiliation_id', 'city',
+            'country', 'areas', 'first_year', 'num_publications',
+            'num_citations', 'num_coauthors', 'reference_sim',
+            'abstract_sim']
+    assert_equal(scientist5.matches_homonyms.columns.tolist(), cols)
+    expected = ['55515260500', '55515260500', '55515260500', '55515260500',
+                '55515260500', '55515260500']
+    assert_equal(scientist5.matches_homonyms.ID.tolist(), expected)
+    expected = ['56424167900', '56139234900', '57191843211', '55856793100',
+                '51565022800', '57209260852']
+    assert_equal(scientist5.matches_homonyms.ID_homonym.tolist(), expected)
+
+
+def test_matches_disambiguator_limit():
+    # increase limit (and reduce fields)
+    fields = ["first_year", "num_publications", "reference_sim"]
+    scientist5.matches_disambiguator(homonym_fields=fields, compile_info=True,
+                                     limit=16, verbose=True)
+    expected = ['35324709800', '36195966900', '53164702100', '55022752500',
+                '55071051800', '55212317400', '55308662800', '55317901900',
+                '55515260500', '55567912500', '55694169400', '55804519400',
+                '55810688700', '55824607400', '55930211600', '55963523600',
+                '55991142100', '56132478200', '56282273300', '56856438600',
+                '57189495106']
+    assert_equal(scientist5.matches_uniqueness.ID.tolist(), expected)
+    cols = ['ID', 'ID_homonym', 'surname', 'initials', 'givenname',
+            'affiliation', 'documents', 'affiliation_id', 'city',
+            'country', 'areas', 'first_year', 'num_publications',
+            'reference_sim']
+    assert_equal(scientist5.matches_homonyms.columns.tolist(), cols)
+    expected = ['55515260500', '55515260500', '55515260500', '55515260500',
+                '55515260500', '55515260500', '56856438600', '56856438600',
+                '56856438600', '56856438600', '56856438600', '56856438600',
+                '56856438600', '56856438600', '56856438600', '56856438600',
+                '57189495106', '57189495106', '57189495106', '57189495106',
+                '57189495106', '57189495106', '57189495106', '57189495106',
+                '57189495106', '57189495106', '57189495106']
+    assert_equal(scientist5.matches_homonyms.ID.tolist(), expected)
+    expected = ['56424167900', '56139234900', '57191843211', '55856793100',
+                '51565022800', '57209260852', '57165222700', '57189284830',
+                '7401607961', '57220585789', '57211907197', '57196653055',
+                '57196653042', '57191768971', '56987166100', '35621870200',
+                '56388278900', '56926663500', '51663886900', '57189307598',
+                '56223966400', '57212959804', '57212959811', '56381003000',
+                '57195356113', '57196843037', '56409399300']
+    assert_equal(scientist5.matches_homonyms.ID_homonym.tolist(), expected)
+
+
+def test_disambiguate_matches():
+    # the actions are chosen randomly (not based on an actual disambiguation)
+    actions = ["", "k", "", "d", "k", "", "d", "k 56223966400", "d"]
+    with mock.patch('builtins.input', side_effect=actions):
+        scientist5.disambiguate_matches()
+    assert_equal(scientist5.matches_disambiguated, MATCHES_DISAMBIGUATED)
+
+
+def test_disambiguate_matches_stop_at():
+    # stop if enough found (but it keeps searching for unique ones)
+    # the actions are chosen randomly (not based on an actual disambiguation)
+    actions = ["", "k", "", "d", "k", "", "d", "k 56223966400", "d"]
+    with mock.patch('builtins.input', side_effect=actions):
+        scientist5.disambiguate_matches(stop_at=5)
+    assert_true(5 <= len(scientist5.matches_disambiguated) < 17)
