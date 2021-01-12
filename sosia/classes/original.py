@@ -407,10 +407,10 @@ class Original(Scientist):
                               in_subjects=True, limit=10, verbose=False,
                               refresh=False, sql_fname=None):
         """ For each match found create a Disambiguator class object and store
-        the list in self.m_disambiguators. If compile_info is True, loop the
-        list a compile the information on matches uniqueness and homonyms and
-        create the attributes self.matches_uniqueness and
-        self.matches_homonyms.
+        them in the generator self.m_disambiguators. If compile_info is True,
+        resolve the generator into a list and compile the information
+        on matches uniqueness and homonyms creating the attributes
+        self.matches_uniqueness and self.matches_homonyms.
 
         Parameters
         ----------
