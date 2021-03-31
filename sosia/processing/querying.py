@@ -3,12 +3,12 @@ from string import Template
 
 from pybliometrics.scopus.exception import Scopus400Error
 
-from sosia.processing.utils import expand_affiliation, handle_scopus_errors
+from sosia.processing.utils import expand_affiliation, handle_scopus_connectivity
 from sosia.processing.constants import QUERY_MAX_LEN
 from sosia.utils import custom_print, print_progress
 
 
-@handle_scopus_errors
+@handle_scopus_connectivity
 def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
                size_only=False):
     """Wrapper function to perform a particular search query.
@@ -27,8 +27,8 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
 
     fields : list of field names (optional, default=None)
         Fields in the Scopus query that must always present.  To be passed
-         onto pybliometrics.scopus.ScopusSearch.  Will be ignored
-         when q_type = "author".
+        onto pybliometrics.scopus.ScopusSearch.  Will be ignored
+        when q_type = "author".
 
     size_only : bool (optional, default=False)
         Whether to not download results and return the number
@@ -50,24 +50,23 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
 
     params = {"query": query, "refresh": refresh, "download": not size_only}
 
-    def create_obj(params):
-        if q_type == "author":
-            return AuthorSearch(**params)
-        elif q_type == "docs":
-            params["integrity_fields"] = fields
-            params["view"] = view
-            return ScopusSearch(**params)
-
-    def get_res(obj, size_only):
+    if q_type == "author":
+        au = AuthorSearch(**params)
         if size_only:
-            return obj.get_results_size()
-        elif q_type == "author":
-            return obj.authors or []
-        elif q_type == "docs":
-            return obj.results or []
-
-    obj = create_obj(params)
-    return get_res(obj, size_only)
+            return au.get_results_size()
+        else:
+            return au.authors or []
+    elif q_type == "docs":
+        params["integrity_fields"] = fields
+        params["view"] = view
+        if size_only:
+            return ScopusSearch(**params).get_results_size()
+        try:
+            return ScopusSearch(**params).results or []
+        except AttributeError:
+            params.pop("integrity_fields")
+            params["refresh"] = True
+            return ScopusSearch(**params).results or []
 
 
 def count_citations(search_ids, pubyear, exclusion_ids=None):

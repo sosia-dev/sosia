@@ -1,8 +1,6 @@
 import functools
 from time import sleep
-from urllib.error import HTTPError
 
-from pybliometrics.scopus.exception import (Scopus400Error, Scopus500Error)
 from sosia.processing.constants import QUERY_MAX_TRIES
 
 
@@ -64,8 +62,16 @@ def flat_set_from_df(df, col, condition=None):
     return set([item for sublist in lists for item in sublist])
 
 
-def handle_scopus_errors(func):
-    """ A decorator to handle errors returned by scopus """
+def handle_scopus_connectivity(func):
+    """A decorator to handle errors returned by scopus.
+    Causes a querying function to attempt to access the server
+    `QUERY_MAX_TRIES` more times.  Circumvents the problem of unreplicable
+    errors, such as missing cursor or unresponsive server.
+    """
+    from urllib.error import HTTPError
+
+    from pybliometrics.scopus.exception import Scopus500Error
+
     @functools.wraps(func)
     def try_query(*args, **kwargs):
         tries = 1
@@ -73,19 +79,9 @@ def handle_scopus_errors(func):
             try:
                 return func(*args, **kwargs)
             except (Scopus500Error, KeyError, HTTPError):
-                # exception of all errors here has to be maintained due to the
-                # occurrence of unreplicable errors (e.g. 'cursor', HTTPError)
                 sleep(2.0)
                 tries += 1
                 continue
-            except AttributeError:
-                # try refreshing, or dropping "source_id" integrity if present
-                args = (args[0], args[1], True)
-                try:
-                    return func(*args, **kwargs)
-                except AttributeError:
-                    if "source_id" in kwargs["fields"]:
-                        kwargs["fields"].remove("source_id")
         text = f"Max number of query attempts reached: {QUERY_MAX_TRIES}.\n"\
                "Verify your connection and settings or wait for the Scopus"\
                "server to return responsive."
