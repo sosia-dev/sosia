@@ -287,11 +287,19 @@ class Disambiguator(Scientist):
                     action = None
             return action
 
+        # ask to search cv
+        if search_cv:
+            search = ["scopus", "researchgate", "linkedin", "google"]
+            if isinstance(search_cv, list):
+                search = search_cv
+            self.search_cv(search=search)
+
         # prepare elements to screen
         self.disambiguated_ids = self.identifier.copy()
         if self.homonyms_num == 0:
             print("Already unique")
             return None
+
         homonyms = self.homonyms
         if subset:
             homonyms = self.homonyms[homonyms.ID.isin(subset)]
@@ -311,13 +319,6 @@ class Disambiguator(Scientist):
         if instructions:
             # overwrite instructions
             display_instructions = instructions
-
-        # ask to search cv
-        if search_cv:
-            search = ["scopus", "researchgate", "linkedin", "google"]
-            if isinstance(search_cv, list):
-                search = search_cv
-            self.search_cv(search=search)
 
         # do screening asking user input
         if show_main:
