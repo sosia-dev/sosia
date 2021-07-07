@@ -11,7 +11,11 @@ from sosia.establishing import config, connect_database
 from sosia.processing import add_source_names, base_query, count_citations,\
     extract_authors, find_location, get_authors, get_main_field,\
     maybe_add_source_names, read_fields_sources_list
-from sosia.utils import accepts
+from sosia.utils import accepts, clean_name
+
+
+class NoPublications(Exception):
+    pass
 
 
 class Scientist(object):
@@ -125,6 +129,46 @@ class Scientist(object):
     @accepts(str)
     def first_name(self, val):
         self._name = val
+
+    @property
+    def initials(self):
+        """The scientist's surname."""
+        return self._initials
+
+    @initials.setter
+    @accepts(str)
+    def initials(self, val):
+        self._initials = val
+
+    @property
+    def last_affiliation(self):
+        """The scientist's surname."""
+        return self._last_affiliation
+
+    @last_affiliation.setter
+    @accepts(str)
+    def last_affiliation(self, val):
+        self._last_affiliation = val
+
+    @property
+    def last_city(self):
+        """The scientist's surname."""
+        return self._last_city
+
+    @last_city.setter
+    @accepts(str)
+    def last_city(self, val):
+        self._last_city = val
+
+    @property
+    def last_country(self):
+        """The scientist's surname."""
+        return self._last_country
+
+    @last_country.setter
+    @accepts(str)
+    def last_country(self, val):
+        self._last_country = val
 
     @property
     def main_field(self):
@@ -280,16 +324,17 @@ class Scientist(object):
         # Load list of publications
         if eids:
             q = f"EID({' OR '.join(eids)})"
+            self._eids = eids
         else:
             q = f"AU-ID({') OR AU-ID('.join(identifier)})"
+            self._eids = None
         integrity_fields = ["eid", "author_ids", "coverDate", "source_id"]
         res = base_query("docs", q, refresh, fields=integrity_fields)
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
         if not len(self._publications):
             text = "No publications found for author "\
                    f"{'-'.join(identifier)} until {year}"
-            raise Exception(text)
-        self._eids = eids or [p.eid for p in self._publications]
+            raise NoPublications(text)
 
         # First year of publication
         pub_years = [p.coverDate[:4] for p in self._publications]
@@ -334,7 +379,7 @@ class Scientist(object):
         self._main_field = get_main_field(self._fields)
         if not self._main_field[0]:
             text = "Not possible to determine research field(s) of "\
-                   "researcher.  Functionality is reduced."
+                   f"{self.identifier}.  Functionality is reduced."
             warn(text, UserWarning)
 
         # Most recent geolocation
@@ -348,21 +393,40 @@ class Scientist(object):
         # Author name from profile with most documents
         df = get_authors(self.identifier, self.sql_conn,
                          refresh=refresh, verbose=False)
-        au = df.sort_values("documents", ascending=False).iloc[0]
-        self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
-        self._surname = au.surname or None
-        self._first_name = au.givenname or None
-        name = ", ".join([self._surname or "", au.givenname or ""])
-        if name == ", ":
-            name = None
-        self._name = name
+        try:
+            au = df.sort_values("documents", ascending=False).iloc[0]
+            self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")] or None
+            self._surname = clean_name(au.surname) or None
+            self._first_name = clean_name(au.givenname) or None
+            self._initials = clean_name(au.initials) or None
+            self._last_affiliation = au.affiliation or None
+            self._last_city = au.city or None
+            self._last_country = au.country or None
+            name = ", ".join([self._surname or "", au.givenname or ""])
+            if name == ", ":
+                name = None
+            self._name = name
+        except IndexError:
+            text = "No author profile was found. "\
+                   "The profile of the identifier provided may be outdated. "\
+                   "Some attributes could not be retrieved (subjects, name"\
+                   "attributes, last affiliation attributes)."
+            warn(text, UserWarning)
+            self._subjects = None
+            self._surname = None
+            self._first_name = None
+            self._initials = None
+            self._last_affiliation = None
+            self._last_city = None
+            self._last_country = None
+            self._name = None
 
     def get_publication_languages(self, refresh=False):
         """Parse languages of published documents."""
         from json import JSONDecodeError
         from pybliometrics.scopus.exception import Scopus404Error
         langs = set()
-        for eid in self._eids:
+        for eid in [p.eid for p in self._publications]:
             try:
                 ab = AbstractRetrieval(eid, view="FULL", refresh=refresh)
             except JSONDecodeError:

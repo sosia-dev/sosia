@@ -3,7 +3,9 @@ from collections import namedtuple
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 
+from sosia.processing.utils import handle_scopus_errors
 from sosia.processing.nlp import clean_abstract, compute_similarity
+from sosia.processing.querying import cross_citations
 from sosia.utils import print_progress
 
 
@@ -236,6 +238,9 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
                 abs_cos = compute_similarity(absts, focal_abs, tokenize=True,
                                              **kwds)
                 match_info["abstract_sim"] = abs_cos
+        if "cross_citations" in keywords:
+            _count = cross_citations(self, auth_id)
+            match_info["cross_citations"] = _count
         out.append(m(**match_info))
         print_progress(idx+1, total, verbose)
 
@@ -272,10 +277,16 @@ def parse_docs(eids, refresh):
         cited references, joined on a blank.  The fourth element is the
         number of valid abstract information.
     """
+    @handle_scopus_errors
+    def query(eid):
+        return AbstractRetrieval(eid, view="FULL", refresh=refresh)
+
     docs = []
+    # TO DO: we should use abstracts already in publications downloaded
+    # (re-downloading them one by one is not necessary and takes lots of time)
     for eid in eids:
         try:
-            docs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh))
+            docs.append(query(eid))
         except Scopus404Error:
             continue
     ref_lst = [ab.references for ab in docs if ab.references]

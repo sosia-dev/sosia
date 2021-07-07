@@ -6,9 +6,11 @@ from os.path import expanduser
 from nose.tools import assert_equal, assert_true
 from string import Template
 
+from sosia.classes import Scientist
+
 from sosia.establishing import connect_database
 from sosia.processing import base_query, count_citations, create_queries,\
-    query_pubs_by_sourceyear, stacked_query
+    cross_citations, query_pubs_by_sourceyear, stacked_query
 
 test_cache = expanduser("~/.sosia/test.sqlite")
 test_conn = connect_database(test_cache)
@@ -41,6 +43,7 @@ def test_count_citations():
     assert_equal(count3, 1)
 
 
+
 def test_create_queries_long():
     # Set variables
     group = list(range(1, 2000))
@@ -63,6 +66,17 @@ def test_create_queries_long():
                  '1012', '1013', '1014', '1015', '1016', '1017']
     assert_equal(received[0][0], expected)
     assert_equal(received[0][1], sub_group)
+
+
+def test_cross_citations():
+    scientist = Scientist(["6701809842"], 2001, refresh=refresh)
+    _count = cross_citations(scientist, 6701809842)
+    assert_equal(_count, 2)
+    # using eids to define scientist publications
+    eids = [p.eid for p in scientist.publications]
+    scientist = Scientist(["6701809842"], 2001, eids=eids, refresh=refresh)
+    _count = cross_citations(scientist, 6701809842)
+    assert_equal(_count, 2)
 
 
 def test_create_queries_short():
