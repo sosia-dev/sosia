@@ -6,8 +6,8 @@ def auth_npubs_retrieve_insert(auth_id, year, conn):
     """Retrieve an author's publication count until a given year, and insert."""
     from sosia.processing.querying import base_query
 
-    q = f"AU-ID({auth_id}) AND PUBYEAR BEF {year+1}"
-    npubs = base_query("docs", q, size_only=True)
+    docs = base_query("docs", f"AU-ID({auth_id})")
+    npubs = len([x for x in docs if int(x.coverDate[:4]) <= year])
     tp = (auth_id, year, npubs)
     insert_data(tp, conn, table="author_pubs")
     return npubs
