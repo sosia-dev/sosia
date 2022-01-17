@@ -215,7 +215,7 @@ def search_group_from_sources(original, stacked=False, verbose=False,
                              columns=["source_id", "year"])
     auth_then = get_authors_from_sourceyear(sources_then, original.sql_conn,
         refresh=refresh, stacked=stacked, verbose=verbose)
-    mask = auth_then["year"].between(min_year, max_year, inclusive=True)
+    mask = auth_then["year"].between(min_year, max_year)
     then = flat_set_from_df(auth_then, "auids", condition=mask)
 
     # Remove authors active before
