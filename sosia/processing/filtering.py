@@ -1,7 +1,3 @@
-from itertools import product
-
-from pandas import DataFrame
-
 from sosia.processing.caching import auth_npubs_retrieve_insert,\
     retrieve_author_info
 from sosia.utils import custom_print, print_progress
@@ -49,11 +45,15 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
     older_authors : list of str
         Scopus IDs filtered out because have publications before ybefore.
     """
+    from itertools import product
+
+    from pandas import DataFrame
+
     group = [int(x) for x in group]
     years_check = [ybefore, yupto]
     if yfrom:
         years_check.extend([yfrom - 1])
-    authors = DataFrame(product(group, years_check), dtype="int64",
+    authors = DataFrame(product(group, years_check), dtype="uint64",
                         columns=["auth_id", "year"])
     auth_npubs, _ = retrieve_author_info(authors, conn, "author_pubs")
     au_skip = []
@@ -154,6 +154,6 @@ def same_affiliation(original, new, refresh=False):
     from sosia.classes import Scientist
 
     period = original.year + 1 - original._period_year
-    m = Scientist([str(new)], original.year, period=period, refresh=refresh,
+    m = Scientist([new], original.year, period=period, refresh=refresh,
                   sql_fname=original.sql_fname)
     return any(str(a) in m.affiliation_id for a in original.search_affiliations)

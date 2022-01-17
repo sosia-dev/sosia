@@ -162,7 +162,7 @@ class Original(Scientist):
         # Variables
         if not isinstance(scientist, list):
             scientist = [scientist]
-        self.identifier = [str(auth_id) for auth_id in scientist]
+        self.identifier = [int(auth_id) for auth_id in scientist]
         self.treatment_year = int(treatment_year)
         self.first_year_margin = first_year_margin
         self.pub_margin = pub_margin
@@ -212,7 +212,7 @@ class Original(Scientist):
 
         # Remove own IDs and coauthors
         search_group -= set(self.identifier)
-        search_group -= {str(i) for i in self.coauthors}
+        search_group -= self.coauthors
 
         # Finalize
         self._search_group = sorted(search_group)
@@ -306,7 +306,7 @@ class Original(Scientist):
         matches = find_matches(self, stacked, verbose, refresh)
         text = f"Found {len(matches):,} author(s) matching all criteria"
         custom_print(text, verbose)
-        self._matches = sorted([str(auth_id) for auth_id in matches])
+        self._matches = sorted([auth_id for auth_id in matches])
 
     def inform_matches(self, fields=None, verbose=False, refresh=False,
                        stop_words=None, **tfidf_kwds):

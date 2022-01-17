@@ -25,11 +25,11 @@ scientist2 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                       coauth_margin=1, first_year_margin=1, period=3,
                       first_year_search="name", **test_params)
 # Using affiliations
-affs = ["60010348", "60022109", "60017317"]
+affs = [60010348, 60022109, 60017317]
 scientist3 = Original(55208373700, 2017, cits_margin=200, first_year_margin=1,
                       pub_margin=0.1, affiliations=affs, **test_params)
 # Using name search mode and affiliations
-affs = ["60002612", "60032111", "60000765"]
+affs = [60002612, 60032111, 60000765]
 scientist4 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
                       coauth_margin=1, first_year_margin=1, period=3,
                       first_year_search="name", affiliations=affs,
@@ -41,7 +41,7 @@ fields = "ID name first_year num_coauthors num_publications num_citations "\
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(
-        ID='53164702100',
+        ID=53164702100,
         name='Sapprasert, Koson',
         first_year=2011,
         num_coauthors=7,
@@ -52,7 +52,7 @@ MATCHES = [
         reference_sim=0.0214,
         abstract_sim=0.1702),
     Match(
-        ID='55071051800',
+        ID=55071051800,
         name='Doldor, Elena',
         first_year=2013,
         num_coauthors=6,
@@ -63,7 +63,7 @@ MATCHES = [
         reference_sim=0.0,
         abstract_sim=0.1021),
     Match(
-        ID='55317901900',
+        ID=55317901900,
         name='Siepel, Josh',
         first_year=2013,
         num_coauthors=8,
@@ -74,8 +74,8 @@ MATCHES = [
         reference_sim=0.0079,
         abstract_sim=0.1274),
     Match(
-        ID='55804519400',
-        name='González, Domingo',
+        ID=55804519400,
+        name='González, Miguel Domingo',
         first_year=2013,
         num_coauthors=7,
         num_publications=8,
@@ -161,13 +161,13 @@ def test_find_matches_stacked():
 
 def test_find_matches_stacked_affiliations():
     scientist3.find_matches(stacked=True, refresh=refresh)
-    expected = [m.ID for m in MATCHES if m.ID != '55804519400']
+    expected = [m.ID for m in MATCHES if m.ID != 55804519400]
     assert_equal(scientist3.matches, expected)
 
 
 def test_find_matches_stacked_period_affiliations():
     scientist4.find_matches(stacked=True, refresh=refresh)
-    expected_ids = ['57188695848', '57188709931']
+    expected_ids = [57188695848, 57188709931]
     assert_equal(scientist4.matches, expected_ids)
 
 

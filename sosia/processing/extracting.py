@@ -12,7 +12,7 @@ def extract_authors(pubs):
     publications.
     """
     l = [x.author_ids.split(";") for x in pubs if isinstance(x.author_ids, str)]
-    return [au for sl in l for au in sl]
+    return [int(au) for sl in l for au in sl]
 
 
 def find_location(auth_ids, pubs, year, refresh):
@@ -57,7 +57,8 @@ def find_location(auth_ids, pubs, year, refresh):
         authgroup = [a for a in authgroup if a.auid in auth_ids
                      and a.country and a.affiliation_id and a.organization]
         countries = "; ".join(sorted(set([a.country for a in authgroup])))
-        aff_ids = "; ".join(sorted(set([a.affiliation_id for a in authgroup])))
+        aff_ids = [str(a.affiliation_id) for a in authgroup if a]
+        aff_ids = "; ".join(sorted(set(aff_ids)))
         orgs = "; ".join(sorted(set([a.organization for a in authgroup])))
         if not countries and not aff_ids and not orgs:
             continue

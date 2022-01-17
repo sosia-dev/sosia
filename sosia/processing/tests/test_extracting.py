@@ -15,10 +15,10 @@ test_id = 6701809842
 
 def test_find_location():
     pubs = ScopusSearch(f"AU-ID({test_id})", refresh=refresh).results
-    ctry, aid, aff = find_location([str(test_id)], pubs, 2000, refresh=30)
+    ctry, aid, aff = find_location([test_id], pubs, 2000, refresh=30)
     assert_equal(ctry, "Germany")
     assert_equal(aid, "60028717")
-    assert_equal(aff, "University of Munich")
+    assert_equal(aff, "Universität München")
 
 
 def test_get_main_field():

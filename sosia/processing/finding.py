@@ -227,4 +227,4 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     group = today
     if not original.first_year_name_search:
         group = today.intersection(then)
-    return group
+    return {int(a) for a in group}

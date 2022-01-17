@@ -31,7 +31,7 @@ def get_authors(authors, conn, refresh=False, verbose=False):
     from string import Template
 
     # Retrieve existing data from SQL cache
-    authors = pd.DataFrame(authors, columns=["auth_id"], dtype="int64")
+    authors = pd.DataFrame(authors, columns=["auth_id"], dtype="uint64")
     data, missing = retrieve_authors(authors, conn)
     # Query missing records and insert at the same time
     if missing:

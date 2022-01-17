@@ -73,7 +73,8 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
     """Auxiliary function to count non-self citations up to a year."""
     if not exclusion_ids:
         exclusion_ids = search_ids
-    q = f"REF({' OR '.join(search_ids)}) AND PUBYEAR BEF "\
+    exclusion_ids = [str(i) for i in exclusion_ids]
+    q = f"REF({' OR '.join([str(i) for i in search_ids])}) AND PUBYEAR BEF "\
         f"{pubyear} AND NOT AU-ID({') AND NOT AU-ID('.join(exclusion_ids)})"
     # Download if too long
     if len(q) > QUERY_MAX_LEN:
@@ -114,7 +115,7 @@ def create_queries(group, joiner, template, maxlen):
         A list of tuples where the first element of each tuple is a query
         and the second is the list of elements searched by the query.
     """
-    group = sorted([str(g) for g in group])  # make robust to passing int
+    group = sorted([str(g) for g in group])
     queries = []
     start = 0
     for i, g in enumerate(group):

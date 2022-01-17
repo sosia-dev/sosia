@@ -10,7 +10,7 @@ from sosia.processing.initializing import add_source_names,\
 
 
 def test_add_source_names():
-    s = Scientist(["55208373700"], 2017)
+    s = Scientist([55208373700], 2017)
     expected = [(14351, "Brain Research Reviews"),
                 (18632, "Progress in Brain Research")]
     ids, names = zip(*expected)

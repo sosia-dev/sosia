@@ -21,8 +21,8 @@ Upon initation, `pybliometrics` performs queries on the Scopus database under th
     >>> stefano.country
     'Switzerland'
     >>> stefano.coauthors
-    {'57217825601', '54930777900', '36617057700', '54929867200', '55875219200',
-     '24464562500', '24781156100'}
+    {57217825601, 54930777900, 36617057700, 54929867200, 55875219200,
+     24464562500, 24781156100}
     >>> stefano.fields
     [2300, 3300, 2002, 1405, 1400, 1405, 1408, 1803, 2200, 2002, 1405, 1400,
      3300, 2300, 1405, 1803, 1408]
@@ -175,7 +175,7 @@ The final step is to search within this search group for authors that fulfill cr
     Filtering based on coauthor count...
     Found 3 author(s) matching all criteria
     >>> print(stefano.matches)
-    ['55022752500', '55810688700', '55824607400']
+    [55022752500, 55810688700, 55824607400]
 
 
 Adding information to matches
@@ -193,7 +193,7 @@ You might need additional information to both assess match quality and select ma
     Match 55804519400: 0 abstract(s) and 0 reference list(s) out of 8 documents missing
     Original 55208373700: 0 abstract(s) and 1 reference list(s) out of 7 documents missing
     >>> print(stefano.matches[0])
-    Match(ID='55022752500', name='Van der Borgh, Michel', first_name='Michel',
+    Match(ID=55022752500, name='Van der Borgh, Michel', first_name='Michel',
     surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
     num_citations=33, num_coauthors_period=6, num_publications_period=5, num_citations_period=33,
     subjects=['BUSI', 'COMP', 'SOCI'], country='Netherlands', affiliation_id='60032882',

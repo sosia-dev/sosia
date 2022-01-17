@@ -29,7 +29,7 @@ def retrieve_authors(df, conn):
     tosearch = df['auth_id'].tolist()
     if not incache.empty:
         incache_list = incache["auth_id"].tolist()
-        tosearch = [int(au) for au in tosearch if int(au) not in incache_list]
+        tosearch = [au for au in tosearch if au not in incache_list]
     return incache, tosearch
 
 

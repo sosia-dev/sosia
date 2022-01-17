@@ -7,16 +7,16 @@ from nose.tools import assert_equal, assert_true, assert_false
 from sosia.classes import Scientist
 
 refresh = 30
-scientist1 = Scientist(["6701809842"], 2001, refresh=refresh)
-scientist2 = Scientist(["55208373700", "55208373700"], 2017, refresh=refresh)
+scientist1 = Scientist([6701809842], 2001, refresh=refresh)
+scientist2 = Scientist([55208373700, 55208373700], 2017, refresh=refresh)
 eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
-scientist3 = Scientist(["55208373700"], 2017, eids=eids, refresh=refresh)
-scientist4 = Scientist(["55208373700"], 2015, refresh=refresh)
-scientist5 = Scientist(["55208373700"], 2018, period=2, refresh=refresh)
+scientist3 = Scientist([55208373700], 2017, eids=eids, refresh=refresh)
+scientist4 = Scientist([55208373700], 2015, refresh=refresh)
+scientist5 = Scientist([55208373700], 2018, period=2, refresh=refresh)
 
 
 def test_affiliation():
-    org = 'University of Munich'
+    org = 'Universität München'
     assert_equal(scientist1.organization, org)
     org = 'École Polytechnique Fédérale de Lausanne (EPFL)'
     assert_equal(scientist2.organization, org)
@@ -63,34 +63,34 @@ def test_citations():
 
 def test_citations_period():
     assert_equal(scientist2.citations_period, None)
-    assert_equal(scientist5.citations_period, 4)
+    assert_equal(scientist5.citations_period, 3)
 
 
 def test_coauthors():
     assert_true(isinstance(scientist1.coauthors, set))
-    expected = {'7005044638', '6602701792', '35838036900', '6506756510',
-                '24364642400', '6506571902', '6506426539', '6701494844',
-                '11042582400', '7004064836', '7101829476'}
+    expected = {7005044638, 6602701792, 35838036900, 6506756510,
+                24364642400, 6506571902, 6506426539, 6701494844,
+                11042582400, 7004064836, 7101829476}
     assert_equal(len(scientist1.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist1.coauthors)
     assert_true(isinstance(scientist2.coauthors, set))
-    expected = {'24464562500', '24781156100', '36617057700', '54929867200',
-                '54930777900', '55875219200', '57217825601'}
+    expected = {24464562500, 24781156100, 36617057700, 54929867200,
+                54930777900, 55875219200, 57217825601}
     assert_equal(len(scientist2.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist2.coauthors)
     assert_true(isinstance(scientist3.coauthors, set))
-    expected = {'36617057700', '55875219200', '54930777900', '54929867200'}
+    expected = {36617057700, 55875219200, 54930777900, 54929867200}
     assert_equal(len(scientist3.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist3.coauthors)
-    expected = {'36617057700', '54929867200', '54930777900', '55875219200'}
+    expected = {36617057700, 54929867200, 54930777900, 55875219200}
     assert_equal(len(scientist3.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist5.coauthors)
-    expected = {'24464562500', '24781156100', '36617057700', '54929867200',
-                '54930777900', '55875219200', '57131011400', '57217825601'}
+    expected = {24464562500, 24781156100, 36617057700, 54929867200,
+                54930777900, 55875219200, 57131011400, 57217825601}
     assert_equal(len(scientist5.coauthors), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist5.coauthors)
@@ -98,8 +98,8 @@ def test_coauthors():
 
 def test_coauthors_period():
     assert_equal(scientist3.coauthors_period, None)
-    expected = {'24464562500', '24781156100', '54930777900',
-                '55875219200', '57131011400', '57217825601'}
+    expected = {24464562500, 24781156100, 54930777900,
+                55875219200, 57131011400, 57217825601}
     assert_equal(len(scientist5.coauthors_period), len(expected))
     for coauth in expected:
         assert_true(coauth in scientist5.coauthors_period)
@@ -184,7 +184,7 @@ def test_publications():
     # scientist1
     received = scientist1.publications
     assert_true(len(received) >= 11)
-    assert_equal(received[1].eid, '2-s2.0-0001093103')
+    assert_equal(received[2].eid, '2-s2.0-0001093103')
     for p in received:
         assert_true(all(c in p._fields for c in cols))
     # scientist2
