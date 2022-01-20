@@ -5,9 +5,16 @@ import pandas as pd
 from nose.tools import assert_equal, assert_true
 from pybliometrics.scopus import ScopusSearch
 
-from sosia.processing import expand_affiliation, flat_set_from_df, margin_range
+from sosia.processing import compute_overlap, expand_affiliation,\
+    flat_set_from_df, margin_range
 
 refresh = 30
+
+
+def test_compute_overlap():
+    set1 = set("abc")
+    set2 = set("cde")
+    assert_equal(compute_overlap(set1, set2), 1)
 
 
 def test_expand_affiliation():

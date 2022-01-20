@@ -35,6 +35,13 @@ def build_dict(results, chunk):
     return d
 
 
+def compute_overlap(left, right):
+    """Compute overlap of two sets in a robust way."""
+    if not left and not right:
+        return None
+    return len(left.intersection(right))
+
+
 def expand_affiliation(df):
     """Auxiliary function to expand the information about the affiliation
     in publications from ScopusSearch.

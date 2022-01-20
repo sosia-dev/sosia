@@ -3,7 +3,7 @@ from collections import namedtuple
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 
-from sosia.processing.nlp import compute_similarity
+from sosia.processing.utils import compute_overlap
 from sosia.utils import print_progress
 
 
@@ -199,7 +199,7 @@ def inform_matches(self, keywords, verbose, refresh, **kwds):
     m = namedtuple("Match", fields)
 
     # Preparation
-    doc_parse = "reference_sim" in keywords
+    doc_parse = "num_cited_refs" in keywords
     if doc_parse:
         focal_docs = parse_docs([d.eid for d in self.publications], refresh)
         focal_refs, focal_refs_n = focal_docs
@@ -219,9 +219,9 @@ def inform_matches(self, keywords, verbose, refresh, **kwds):
             eids = [d.eid for d in p.publications]
             refs, refs_n = parse_docs(eids, refresh)
             completeness[auth_id] = (refs_n, len(eids))
-            if "reference_sim" in keywords:
-                ref_cos = compute_similarity(refs, focal_refs, **kwds)
-                match_info["reference_sim"] = ref_cos
+            if "num_cited_refs" in keywords:
+                ref_cos = compute_overlap(refs, focal_refs, **kwds)
+                match_info["num_cited_refs"] = ref_cos
         out.append(m(**match_info))
         print_progress(idx+1, total, verbose)
 
@@ -236,8 +236,7 @@ def inform_matches(self, keywords, verbose, refresh, **kwds):
 
 
 def parse_docs(eids, refresh):
-    """Find references of articles published up until the given year as
-    continuous string.
+    """Find the set of references of provided articles.
 
     Parameters
     ----------
@@ -249,11 +248,11 @@ def parse_docs(eids, refresh):
 
     Returns
     -------
-    t : tuple
-        A tuple with two elements: The third element is a continuous string
-        of Scopus Abstract EIDs representing cited references, joined on a
-        blank.  The second element is the number of documents
-        with valid reference information.
+    refs : set
+        The set of Scopus Document EIDs of cited references.
+
+    n_valid_refs : int
+        The number of documents with valid reference information.
     """
     docs = []
     for eid in eids:
@@ -264,7 +263,7 @@ def parse_docs(eids, refresh):
     ref_lst = [ab.references for ab in docs if ab.references]
     valid_refs = len(ref_lst)
     ref_ids = [ref.id for sl in ref_lst for ref in sl]
-    refs = " ".join(filter(None, ref_ids)).strip()
+    refs = set(filter(None, ref_ids))
     return refs, valid_refs
 
 

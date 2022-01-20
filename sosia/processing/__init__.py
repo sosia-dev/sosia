@@ -4,6 +4,5 @@ from sosia.processing.extracting import *
 from sosia.processing.filtering import *
 from sosia.processing.finding import *
 from sosia.processing.initializing import *
-from sosia.processing.nlp import *
 from sosia.processing.querying import *
 from sosia.processing.utils import *

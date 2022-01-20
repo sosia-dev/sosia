@@ -37,7 +37,7 @@ scientist4 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\
-         "country language reference_sim"
+         "country language num_cited_refs"
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(
@@ -49,7 +49,7 @@ MATCHES = [
         num_citations=190,
         country='Norway',
         language='eng',
-        reference_sim=0.0214),
+        num_cited_refs=4),
     Match(
         ID=55071051800,
         name='Doldor, Elena',
@@ -59,7 +59,7 @@ MATCHES = [
         num_citations=19,
         country='United Kingdom',
         language='eng',
-        reference_sim=0.0),
+        num_cited_refs=0),
     Match(
         ID=55317901900,
         name='Siepel, Josh',
@@ -69,7 +69,7 @@ MATCHES = [
         num_citations=52,
         country='United Kingdom',
         language='eng',
-        reference_sim=0.0079),
+        num_cited_refs=7),
     Match(
         ID=55804519400,
         name='González, Miguel Domingo',
@@ -79,7 +79,7 @@ MATCHES = [
         num_citations=1,
         country='Peru',
         language='eng; spa',
-        reference_sim=0.0)]
+        num_cited_refs=0)]
 
 
 def test_search_sources():
@@ -173,9 +173,9 @@ def test_inform_matches():
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
-            "country", "reference_sim"]
+            "country", "num_cited_refs"]
     df_r = pd.DataFrame(recieved)
-    df_r["reference_sim"] = df_r["reference_sim"].round(3)
+    df_r["num_cited_refs"] = df_r["num_cited_refs"].round(3)
     df_m = pd.DataFrame(MATCHES)
-    df_m["reference_sim"] = df_m["reference_sim"].round(3)
+    df_m["num_cited_refs"] = df_m["num_cited_refs"].round(3)
     pd.testing.assert_frame_equal(df_r[cols], df_m[cols])

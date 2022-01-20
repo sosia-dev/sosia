@@ -317,7 +317,7 @@ class Original(Scientist):
         fields : iterable (optional, default=None)
             Which information to provide. Allowed values are "first_year",
             "num_coauthors", "num_publications", "num_citations", "country",
-            "language", "reference_sim".  If None, will use all
+            "language", "num_cited_refs".  If None, will use all
             available fields.
 
         verbose : bool (optional, default=False)
@@ -331,7 +331,7 @@ class Original(Scientist):
         tfidf_kwds : keywords
             Parameters to pass to TfidfVectorizer from the sklearn package
             for reference vectorization.  Not used when `information=False` or
-            or when "reference_sim" is not in `information`.  See
+            or when "num_cited_refs" is not in `information`.  See
             https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
             for possible values.
 
@@ -354,7 +354,7 @@ class Original(Scientist):
                           "num_coauthors_period", "num_publications_period",
                           "num_citations_period", "subjects", "country",
                           "affiliation_id", "affiliation", "language",
-                          "reference_sim"]
+                          "num_cited_refs"]
         if fields:
             invalid = [x for x in fields if x not in allowed_fields]
             if invalid:

@@ -198,7 +198,7 @@ You might need additional information to both assess match quality and select ma
     num_citations=33, num_coauthors_period=6, num_publications_period=5, num_citations_period=33,
     subjects=['BUSI', 'COMP', 'SOCI'], country='Netherlands', affiliation_id='60032882',
     affiliation='Eindhoven University of Technology, Department of Industrial Engineering &
-    Innovation Sciences', language='eng', reference_sim=0.0)
+    Innovation Sciences', language='eng', num_cited_refs=0)
 
 By default, `sosia` provides the following information:
 
@@ -214,7 +214,7 @@ By default, `sosia` provides the following information:
 * `affiliation_id`: The most frequent Scopus Affiliation ID of all affiliations listed on publications most recent to the year of treatment
 * `affiliation`: The most frequent affiliation of all affiliations listed on publications most recent to the year of treatment
 * `language`: The language(s) of the published documents of an author up until the year of treatment
-* `reference_sim`: The cosine similarity of references listed in publications up until the year of treatment between the matched scientist and the scientist (references may be missing)
+* `num_cited_refs`: The number of jointly cited references as per publications up until the year of treatment (reference lists may be missing)
 
 Alternatively, you can provide a list of above keywords to only obtain information on these keywords.  This is helpful as some information takes time to gather.
 
@@ -263,9 +263,9 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     55810688700                           University of Düsseldorf      eng   
     55824607400  Barcelona Institute of Economics, University o...      eng   
 
-                 reference_sim
+                 num_cited_refs
     ID                                        
-    55022752500         0.0000
-    55810688700         0.0000
-    55824607400         0.0084
+    55022752500         0
+    55810688700         0
+    55824607400         5
 
