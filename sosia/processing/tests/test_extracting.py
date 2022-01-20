@@ -50,19 +50,3 @@ def test_parse_docs():
                      '47949124687 84920182751 84887864855 84866332329 '
                      '84984932935 33845620645 0942299814')
     assert_equal(received[0], expected_refs)
-    expected_abs = (
-        "Through an analysis of 497 foreign researchers in Italy "
-        "and Portugal we verify the impact of home linkages on return "
-        "mobility choices and scientific productivity. We consider the "
-        "presence of several different types of linkages of the researchers "
-        "working abroad with their country of origin and control for the "
-        "most relevant contextual factors (age, research area, position in "
-        "the host country, etc.). The probability of return to their home "
-        "country and scientific productivity in the host country are both "
-        "higher for researchers that maintain home linkages. We conclude "
-        "that the presence of home linkages directly benefits both "
-        "countries in addition to the indirect benefit of expanding the "
-        "scientific networks. Policy implications and suggestions for "
-        "further research are discussed."
-    )
-    assert_equal(received[2], expected_abs)

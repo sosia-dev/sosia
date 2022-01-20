@@ -3,7 +3,7 @@ from collections import namedtuple
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 
-from sosia.processing.nlp import clean_abstract, compute_similarity
+from sosia.processing.nlp import compute_similarity
 from sosia.utils import print_progress
 
 
@@ -164,7 +164,7 @@ def inform_match(profile, keywords):
     return match_info
 
 
-def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
+def inform_matches(self, keywords, verbose, refresh, **kwds):
     """Add match-specific information to all matches.
 
     Parameters
@@ -175,9 +175,6 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
     keywords : iterable of strings
         Which information to add to matches.
 
-    stop_words : list
-        A list of words that should be filtered in the analysis of abstracts.
-
     verbose : bool
         Whether to report on the progress of the process and the completeness
         of document information.
@@ -187,7 +184,7 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
 
     kwds : keywords
         Parameters to pass to sklearn.feature_extraction.text.TfidfVectorizer
-        for abstract and reference vectorization.
+        for reference vectorization.
 
     Returns
     -------
@@ -195,9 +192,6 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
         A list of namedtuples representing matches.  Provided information
         depend on provided keywords.
     """
-    from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
-    from string import digits, punctuation
-
     from sosia.classes import Scientist
 
     # Create Match object
@@ -205,19 +199,16 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
     m = namedtuple("Match", fields)
 
     # Preparation
-    doc_parse = "reference_sim" in keywords or "abstract_sim" in keywords
+    doc_parse = "reference_sim" in keywords
     if doc_parse:
         focal_docs = parse_docs([d.eid for d in self.publications], refresh)
-        focal_refs, focal_refs_n, focal_abs, focal_abs_n = focal_docs
-        if not stop_words:
-            stop_words = list(ENGLISH_STOP_WORDS) + list(punctuation + digits)
+        focal_refs, focal_refs_n = focal_docs
 
     # Add selected information match-by-match
     out = []
     completeness = {}
     total = len(self.matches)
     print_progress(0, total, verbose)
-    meta = namedtuple("Meta", "refs absts total")
     for idx, auth_id in enumerate(self.matches):
         period = self.year + 1 - self._period_year
         p = Scientist([auth_id], self.year, period=period, refresh=refresh,
@@ -226,34 +217,27 @@ def inform_matches(self, keywords, stop_words, verbose, refresh, **kwds):
         # Abstract and reference similarity is performed jointly
         if doc_parse:
             eids = [d.eid for d in p.publications]
-            refs, refs_n, absts, absts_n = parse_docs(eids, refresh)
-            completeness[auth_id] = meta(refs=refs_n, absts=absts_n,
-                                         total=len(eids))
+            refs, refs_n = parse_docs(eids, refresh)
+            completeness[auth_id] = (refs_n, len(eids))
             if "reference_sim" in keywords:
                 ref_cos = compute_similarity(refs, focal_refs, **kwds)
                 match_info["reference_sim"] = ref_cos
-            if "abstract_sim" in keywords:
-                kwds.update({"stop_words": stop_words})
-                abs_cos = compute_similarity(absts, focal_abs, tokenize=True,
-                                             **kwds)
-                match_info["abstract_sim"] = abs_cos
         out.append(m(**match_info))
         print_progress(idx+1, total, verbose)
 
     # Eventually print information on missing information
     if verbose and doc_parse:
         for auth_id, completeness in completeness.items():
-            _print_missing_docs([auth_id], completeness.absts,
-                                completeness.refs, completeness.total)
+            _print_missing_docs([auth_id], completeness[0], completeness[1])
         focal_pubs_n = len(self.publications)
-        _print_missing_docs(self.identifier, focal_abs_n, focal_refs_n,
-                            focal_pubs_n, res_type="Original")
+        _print_missing_docs(self.identifier, focal_refs_n, focal_pubs_n,
+                            res_type="Original")
     return out
 
 
 def parse_docs(eids, refresh):
-    """Find abstract and references of articles published up until
-    the given year, both as continuous string.
+    """Find references of articles published up until the given year as
+    continuous string.
 
     Parameters
     ----------
@@ -266,12 +250,10 @@ def parse_docs(eids, refresh):
     Returns
     -------
     t : tuple
-        A tuple with our elements: The first element is a continuous string
-        of cleaned abstracts, joined on a blank.  The second element is the
-        number of documents with valid reference information.  The third
-        element is a continuous string of Scopus Abstract EIDs representing
-        cited references, joined on a blank.  The fourth element is the
-        number of valid abstract information.
+        A tuple with two elements: The third element is a continuous string
+        of Scopus Abstract EIDs representing cited references, joined on a
+        blank.  The second element is the number of documents
+        with valid reference information.
     """
     docs = []
     for eid in eids:
@@ -283,16 +265,14 @@ def parse_docs(eids, refresh):
     valid_refs = len(ref_lst)
     ref_ids = [ref.id for sl in ref_lst for ref in sl]
     refs = " ".join(filter(None, ref_ids)).strip()
-    absts = [clean_abstract(ab.abstract) for ab in docs if ab.abstract]
-    valid_absts = len(absts)
-    absts = " ".join(absts).strip()
-    return refs, valid_refs, absts, valid_absts
+    return refs, valid_refs
 
 
-def _print_missing_docs(auth_id, valid_abs, valid_refs, total, res_type="Match"):
+def _print_missing_docs(auth_id, n_valid_refs, total, res_type="Match"):
     """Auxiliary function to print information on missing abstracts and
     reference lists stored in a dictionary d.
     """
-    text = f"{res_type} {';'.join(auth_id)}: {total-valid_abs} abstract(s) "\
-           f"and {total-valid_refs} reference list(s) out of {total} documents missing"
+    auth_ids = [str(a) for a in auth_id]
+    text = f"{res_type} {';'.join(auth_ids)}: {total-n_valid_refs} reference "\
+           f"list(s) out of {total} documents missing"
     print(text)

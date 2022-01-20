@@ -188,17 +188,17 @@ You might need additional information to both assess match quality and select ma
     >>> stefano.inform_matches(verbose=True)
     Providing additional information...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Match 55071051800: 2 abstract(s) and 0 reference list(s) out of 8 documents missing
-    Match 55317901900: 0 abstract(s) and 0 reference list(s) out of 7 documents missing
-    Match 55804519400: 0 abstract(s) and 0 reference list(s) out of 8 documents missing
-    Original 55208373700: 0 abstract(s) and 1 reference list(s) out of 7 documents missing
+    Match 55071051800: 0 reference list(s) out of 8 document(s) missing
+    Match 55317901900: 0 reference list(s) out of 7 document(s) missing
+    Match 55804519400: 0 reference list(s) out of 8 document(s) missing
+    Original 55208373700: 1 reference list(s) out of 7 documents missing
     >>> print(stefano.matches[0])
     Match(ID=55022752500, name='Van der Borgh, Michel', first_name='Michel',
     surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
     num_citations=33, num_coauthors_period=6, num_publications_period=5, num_citations_period=33,
     subjects=['BUSI', 'COMP', 'SOCI'], country='Netherlands', affiliation_id='60032882',
     affiliation='Eindhoven University of Technology, Department of Industrial Engineering &
-    Innovation Sciences', language='eng', reference_sim=0.0, abstract_sim=0.1217)
+    Innovation Sciences', language='eng', reference_sim=0.0)
 
 By default, `sosia` provides the following information:
 
@@ -215,7 +215,6 @@ By default, `sosia` provides the following information:
 * `affiliation`: The most frequent affiliation of all affiliations listed on publications most recent to the year of treatment
 * `language`: The language(s) of the published documents of an author up until the year of treatment
 * `reference_sim`: The cosine similarity of references listed in publications up until the year of treatment between the matched scientist and the scientist (references may be missing)
-* `abstract_sim`: The cosine similarity of words used in abstracts of publications up until the year of treatment between the matched scientist and the scientist, approriately filtered and stemmed using `nltk <https://www.nltk.org/>`_ and `sklearn <https://scikit-learn.org//>`_ (abstracts my be missing)
 
 Alternatively, you can provide a list of above keywords to only obtain information on these keywords.  This is helpful as some information takes time to gather.
 
@@ -264,9 +263,9 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     55810688700                           University of Düsseldorf      eng   
     55824607400  Barcelona Institute of Economics, University o...      eng   
 
-                 reference_sim  abstract_sim  
+                 reference_sim
     ID                                        
-    55022752500         0.0000        0.1217  
-    55810688700         0.0000        0.1179  
-    55824607400         0.0084        0.1074  
+    55022752500         0.0000
+    55810688700         0.0000
+    55824607400         0.0084
 

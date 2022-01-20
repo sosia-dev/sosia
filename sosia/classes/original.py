@@ -309,7 +309,7 @@ class Original(Scientist):
         self._matches = sorted([auth_id for auth_id in matches])
 
     def inform_matches(self, fields=None, verbose=False, refresh=False,
-                       stop_words=None, **tfidf_kwds):
+                       **tfidf_kwds):
         """Add information to matches to aid in selection process.
 
         Parameters
@@ -317,8 +317,8 @@ class Original(Scientist):
         fields : iterable (optional, default=None)
             Which information to provide. Allowed values are "first_year",
             "num_coauthors", "num_publications", "num_citations", "country",
-            "language", "reference_sim", "abstract_sim".  If None, will
-            use all available fields.
+            "language", "reference_sim".  If None, will use all
+            available fields.
 
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
@@ -328,15 +328,10 @@ class Original(Scientist):
             is passed and stacked=False, results will be refreshed if they are
             older than that value in number of days.
 
-        stop_words : list (optional, default=None)
-            A list of words that should be filtered in the analysis of
-            abstracts.  If None uses the list of English stopwords
-            by nltk, augmented with numbers and interpunctuation.
-
         tfidf_kwds : keywords
             Parameters to pass to TfidfVectorizer from the sklearn package
-            for abstract vectorization.  Not used when `information=False` or
-            or when "abstract_sim" is not in `information`.  See
+            for reference vectorization.  Not used when `information=False` or
+            or when "reference_sim" is not in `information`.  See
             https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
             for possible values.
 
@@ -359,7 +354,7 @@ class Original(Scientist):
                           "num_coauthors_period", "num_publications_period",
                           "num_citations_period", "subjects", "country",
                           "affiliation_id", "affiliation", "language",
-                          "reference_sim", "abstract_sim"]
+                          "reference_sim"]
         if fields:
             invalid = [x for x in fields if x not in allowed_fields]
             if invalid:
@@ -370,6 +365,5 @@ class Original(Scientist):
             fields = allowed_fields
 
         custom_print("Providing additional information...", verbose)
-        matches = inform_matches(self, fields, stop_words, verbose, refresh,
-                                 **tfidf_kwds)
+        matches = inform_matches(self, fields, verbose, refresh, **tfidf_kwds)
         self._matches = matches
