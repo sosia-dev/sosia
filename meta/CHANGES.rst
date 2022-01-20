@@ -3,6 +3,18 @@ Change Log
 
 .. toctree::
 
+0.5
+~~~
+
+2022-01-20
+
+* In `.inform_matches()`, remove abstract similarity and reference list similarity computation and corresponding keywords "abstract_sim" and "reference_sim"; do not require `nltk` and `scikit-learn` anymore.
+* In `.inform_matches()`, add "num_cited_refs" as number of jointly cited references up until provided year.
+* Increase robustness to Scopus server problems.
+* Allow to refresh downloaded results when using very large stacked source-based searches.
+* Fix bug with integer conversion when using pandas > 1.1.5.
+* Require pybliometrics >= 3.2.0.
+
 0.4.1
 ~~~~~
 
