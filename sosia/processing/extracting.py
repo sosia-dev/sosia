@@ -15,9 +15,9 @@ def extract_authors(pubs):
     return [int(au) for sl in l for au in sl]
 
 
-def find_location(auth_ids, pubs, year, refresh):
-    """Find the most common country, affiliation ID, and affiliation name
-    of a scientist using her most recent publications with valid information.
+def find_location(auth_ids, pubs, year):
+    """Find the most common affiliation ID and country of a scientist on
+    publications with valid information of the most recent year.
 
     Parameters
     ----------
@@ -32,39 +32,36 @@ def find_location(auth_ids, pubs, year, refresh):
     year : int
         The year for which we would like to have the country.
 
-    refresh : bool
-        Whether to refresh all cached files or not.
-
     Returns
     -------
-    country, affiliation_id, organization : str or None
-        The country, city, affiliation ID, and affiliation name of the
-        scientist in the year closest to the treatment year, given that the
-        publications list valid information for each output. Equals None when
-        no valid publications are found.
+    affiliation_id, country : str or None
+        The most common affiliation_id and the most common country of the
+        scientist in the year closest to the treatment year, given that
+        the publications list valid information for each output.  Equals
+        None when no valid publications are found.
     """
+    from collections import Counter
     from operator import attrgetter
     # Available papers of most recent year with publications
     papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
+    papers = [p for p in papers if p.author_ids and p.author_afids]
     papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
-    params = {"view": "FULL", "refresh": refresh}
-    # Return most recent complete information
-    for p in papers:
-        try:
-            authgroup = AbstractRetrieval(p.eid, **params).authorgroup or []
-        except Scopus404Error:
-            continue
-        authgroup = [a for a in authgroup if a.auid in auth_ids
-                     and a.country and a.affiliation_id and a.organization]
-        countries = "; ".join(sorted(set([a.country for a in authgroup])))
-        aff_ids = [str(a.affiliation_id) for a in authgroup if a]
-        aff_ids = "; ".join(sorted(set(aff_ids)))
-        orgs = "; ".join(sorted(set([a.organization for a in authgroup])))
-        if not countries and not aff_ids and not orgs:
-            continue
-        return countries, aff_ids, orgs
-    # Return None-triple if all else fails
-    return countries, aff_ids, orgs
+    recent = [p for p in papers if p.coverDate[:4] == papers[0].coverDate[:4]]
+    # Adff affiliation ID and geographic information of recent publications
+    aff_ids = []
+    countries = []
+    for p in recent:
+        authors = [int(a) for a in p.author_ids.split(";")]
+        for focal in set(auth_ids).intersection(authors):
+            idx = authors.index(focal)
+        aff_ids.extend(p.author_afids.split(";")[idx].split("-"))
+        countries.extend(p.affiliation_country.split(";")[idx].split("-"))
+    # Find most commont ID and country
+    aff_counts = Counter(aff_ids or [None])
+    country_counts = Counter(countries or [None])
+    aff_id = aff_counts.most_common()[0][0]
+    country = country_counts.most_common()[0][0]
+    return aff_id, country
 
 
 def get_main_field(fields):

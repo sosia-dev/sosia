@@ -5,7 +5,7 @@
 
 from warnings import warn
 
-from pybliometrics.scopus import AbstractRetrieval
+from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
 
 from sosia.establishing import config, connect_database
 from sosia.processing import add_source_names, base_query, count_citations,\
@@ -339,11 +339,11 @@ class Scientist(object):
             warn(text, UserWarning)
 
         # Most recent geolocation
-        ctry, afid, org = find_location(identifier, self._publications,
-                                        year, refresh=refresh)
+        afid, ctry = find_location(identifier, self._publications, year)
         self._country = ctry
         self._affiliation_id = afid
-        self._organization = org
+        aff = AffiliationRetrieval(afid, refresh=refresh)
+        self._organization = aff.org_type
         self._language = None
 
         # Author name from profile with most documents
