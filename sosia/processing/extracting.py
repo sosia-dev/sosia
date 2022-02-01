@@ -164,13 +164,13 @@ def inform_match(profile, keywords, refresh):
     return match_info
 
 
-def inform_matches(self, keywords, verbose, refresh, **kwds):
+def inform_matches(self, keywords, verbose, refresh):
     """Add match-specific information to all matches.
 
     Parameters
     ----------
     self : sosia.Original()
-        Object whose matches should received additional information
+        Object whose matches should receive additional information.
 
     keywords : iterable of strings
         Which information to add to matches.
@@ -181,10 +181,6 @@ def inform_matches(self, keywords, verbose, refresh, **kwds):
 
     refresh : bool
         Whether to refresh all cached files or not.
-
-    kwds : keywords
-        Parameters to pass to sklearn.feature_extraction.text.TfidfVectorizer
-        for reference vectorization.
 
     Returns
     -------
@@ -220,7 +216,7 @@ def inform_matches(self, keywords, verbose, refresh, **kwds):
             refs, refs_n = parse_docs(eids, refresh)
             completeness[auth_id] = (refs_n, len(eids))
             if "num_cited_refs" in keywords:
-                ref_cos = compute_overlap(refs, focal_refs, **kwds)
+                ref_cos = compute_overlap(refs, focal_refs)
                 match_info["num_cited_refs"] = ref_cos
         out.append(m(**match_info))
         print_progress(idx+1, total, verbose)

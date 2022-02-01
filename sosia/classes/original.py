@@ -190,7 +190,7 @@ class Original(Scientist):
         ----------
         stacked : bool (optional, default=False)
             Whether to combine searches in few queries or not.  Cached
-            files with most likely not be reusable.  Set to True if you
+            files will most likely not be reusable.  Set to True if you
             query in distinct fields or you want to minimize API key usage.
 
         verbose : bool (optional, default=False)
@@ -308,17 +308,18 @@ class Original(Scientist):
         custom_print(text, verbose)
         self._matches = sorted([auth_id for auth_id in matches])
 
-    def inform_matches(self, fields=None, verbose=False, refresh=False,
-                       **tfidf_kwds):
+    def inform_matches(self, fields=None, verbose=False, refresh=False):
         """Add information to matches to aid in selection process.
 
         Parameters
         ----------
         fields : iterable (optional, default=None)
-            Which information to provide. Allowed values are "first_year",
-            "num_coauthors", "num_publications", "num_citations", "country",
-            "language", "num_cited_refs".  If None, will use all
-            available fields.
+            Which information to provide.  Allowed values are "first_name",
+            "surname", "first_year", "num_coauthors", "num_publications",
+            "num_citations", "num_coauthors_period", "num_publications_period",
+            "num_citations_period", "subjects", "country", "affiliation_id",
+            "affiliation", "language", "num_cited_refs".  If None, will use
+            all available fields.
 
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
@@ -328,13 +329,6 @@ class Original(Scientist):
             is passed and stacked=False, results will be refreshed if they are
             older than that value in number of days.
 
-        tfidf_kwds : keywords
-            Parameters to pass to TfidfVectorizer from the sklearn package
-            for reference vectorization.  Not used when `information=False` or
-            or when "num_cited_refs" is not in `information`.  See
-            https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
-            for possible values.
-
         Notes
         -----
         Matches including corresponding information are available through
@@ -342,8 +336,8 @@ class Original(Scientist):
 
         Raises
         ------
-        fields
-            If fields contains invalid keywords.
+        ValueError
+            If `fields` contains invalid keywords.
         """
         # Checks
         if not self._matches:
@@ -365,5 +359,5 @@ class Original(Scientist):
             fields = allowed_fields
 
         custom_print("Providing additional information...", verbose)
-        matches = inform_matches(self, fields, verbose, refresh, **tfidf_kwds)
+        matches = inform_matches(self, fields, verbose, refresh)
         self._matches = matches
