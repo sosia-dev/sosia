@@ -119,7 +119,7 @@ def get_main_field(fields):
     return main_4, name
 
 
-def inform_match(profile, keywords):
+def inform_match(profile, keywords, refresh):
     """Create namedtuple adding information to matches.
 
     Parameters
@@ -129,6 +129,9 @@ def inform_match(profile, keywords):
 
     keywords : iterable of strings
         Which information to add to the match.
+
+    refresh : bool
+        Whether to refresh all cached files or not.
 
     Returns
     -------
@@ -156,11 +159,8 @@ def inform_match(profile, keywords):
     }
     match_info = {k: v for k, v in info.items() if k in keywords + ["ID", "name"]}
     if "language" in keywords:
-        try:
-            match_info["language"] = profile.get_publication_languages().language
-        except Scopus404Error:  # Refresh profile
-            profile = Scientist(profile.identifier, profile.year, refresh=True)
-            match_info["language"] = profile.get_publication_languages().language
+        lang = profile.get_publication_languages(refresh=refresh).language
+        match_info["language"] = lang
     return match_info
 
 
@@ -213,7 +213,7 @@ def inform_matches(self, keywords, verbose, refresh, **kwds):
         period = self.year + 1 - self._period_year
         p = Scientist([auth_id], self.year, period=period, refresh=refresh,
                       sql_fname=self.sql_fname)
-        match_info = inform_match(p, keywords)
+        match_info = inform_match(p, keywords, refresh=refresh)
         # Abstract and reference similarity is performed jointly
         if doc_parse:
             eids = [d.eid for d in p.publications]

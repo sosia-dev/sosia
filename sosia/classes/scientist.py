@@ -360,14 +360,11 @@ class Scientist(object):
 
     def get_publication_languages(self, refresh=False):
         """Parse languages of published documents."""
-        from json import JSONDecodeError
         from pybliometrics.scopus.exception import Scopus404Error
         langs = set()
         for eid in self._eids:
             try:
                 ab = AbstractRetrieval(eid, view="FULL", refresh=refresh)
-            except JSONDecodeError:
-                ab = AbstractRetrieval(eid, view="FULL", refresh=True)
             except Scopus404Error:
                 continue
             langs.add(ab.language)
