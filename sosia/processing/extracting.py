@@ -15,9 +15,9 @@ def extract_authors(pubs):
     return [int(au) for sl in l for au in sl]
 
 
-def find_location(auth_ids, pubs, year):
-    """Find the most common affiliation ID and country of a scientist on
-    publications with valid information of the most recent year.
+def find_main_affiliation(auth_ids, pubs, year):
+    """Find the most common affiliation ID of a scientist on publications
+    with valid information of the most recent year.
 
     Parameters
     ----------
@@ -34,11 +34,11 @@ def find_location(auth_ids, pubs, year):
 
     Returns
     -------
-    affiliation_id, country : str or None
-        The most common affiliation_id and the most common country of the
-        scientist in the year closest to the treatment year, given that
-        the publications list valid information for each output.  Equals
-        None when no valid publications are found.
+    affiliation_id : str or None
+        The most common affiliation_id of the scientist in the year closest
+        to the treatment year, given that the publications list valid
+        information for each output.  Equals None when no valid
+        publications are found.
     """
     from collections import Counter
     from operator import attrgetter
@@ -47,21 +47,16 @@ def find_location(auth_ids, pubs, year):
     papers = [p for p in papers if p.author_ids and p.author_afids]
     papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
     recent = [p for p in papers if p.coverDate[:4] == papers[0].coverDate[:4]]
-    # Adff affiliation ID and geographic information of recent publications
+    # Add affiliation ID and geographic information of recent publications
     aff_ids = []
-    countries = []
     for p in recent:
         authors = [int(a) for a in p.author_ids.split(";")]
         for focal in set(auth_ids).intersection(authors):
             idx = authors.index(focal)
         aff_ids.extend(p.author_afids.split(";")[idx].split("-"))
-        countries.extend(p.affiliation_country.split(";")[idx].split("-"))
-    # Find most commont ID and country
+    # Find most commont ID
     aff_counts = Counter(aff_ids or [None])
-    country_counts = Counter(countries or [None])
-    aff_id = aff_counts.most_common()[0][0]
-    country = country_counts.most_common()[0][0]
-    return aff_id, country
+    return aff_counts.most_common()[0][0]
 
 
 def get_main_field(fields):

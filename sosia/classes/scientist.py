@@ -9,7 +9,7 @@ from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
 
 from sosia.establishing import config, connect_database
 from sosia.processing import add_source_names, base_query, count_citations,\
-    extract_authors, find_location, get_authors, get_main_field,\
+    extract_authors, find_main_affiliation, get_authors, get_main_field,\
     maybe_add_source_names, read_fields_sources_list
 from sosia.utils import accepts
 
@@ -339,10 +339,10 @@ class Scientist(object):
             warn(text, UserWarning)
 
         # Most recent geolocation
-        afid, ctry = find_location(identifier, self._publications, year)
-        self._country = ctry
+        afid = find_main_affiliation(identifier, self._publications, year)
         self._affiliation_id = afid
         aff = AffiliationRetrieval(afid, refresh=refresh)
+        self._country = aff.country
         self._organization = aff.org_type
         self._language = None
 

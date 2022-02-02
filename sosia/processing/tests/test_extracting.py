@@ -6,18 +6,17 @@ from os.path import expanduser
 from nose.tools import assert_equal
 from pybliometrics.scopus import ScopusSearch
 
-from sosia.processing import find_location, parse_docs, get_main_field
+from sosia.processing import find_main_affiliation, get_main_field, parse_docs
 
 refresh = 30
 test_cache = expanduser("~/.sosia/") + "test.sqlite"
 test_id = 6701809842
 
 
-def test_find_location():
+def test_find_main_affiliation():
     pubs = ScopusSearch(f"AU-ID({test_id})", refresh=refresh).results
-    aff_id, country = find_location([test_id], pubs, 2000)
+    aff_id = find_main_affiliation([test_id], pubs, 2000)
     assert_equal(aff_id, "60028717")
-    assert_equal(country, "Germany")
 
 
 def test_get_main_field():
