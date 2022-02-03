@@ -40,23 +40,26 @@ def find_main_affiliation(auth_ids, pubs, year):
         information for each output.  Equals None when no valid
         publications are found.
     """
-    from collections import Counter
-    from operator import attrgetter
-    # Available papers of most recent year with publications
-    papers = [p for p in pubs if int(p.coverDate[:4]) <= year]
-    papers = [p for p in papers if p.author_ids and p.author_afids]
-    papers = sorted(papers, key=attrgetter("coverDate"), reverse=True)
-    recent = [p for p in papers if p.coverDate[:4] == papers[0].coverDate[:4]]
-    # Add affiliation ID and geographic information of recent publications
-    aff_ids = []
-    for p in recent:
+    from collections import defaultdict, Counter
+    # Find affiliation ID of all available publications
+    affs = defaultdict(lambda: Counter())
+    for p in pubs:
+        cur_year = int(p.coverDate[:4])
+        if cur_year > year:
+            continue
         authors = [int(a) for a in p.author_ids.split(";")]
         for focal in set(auth_ids).intersection(authors):
             idx = authors.index(focal)
-        aff_ids.extend(p.author_afids.split(";")[idx].split("-"))
-    # Find most commont ID
-    aff_counts = Counter(aff_ids or [None])
-    return aff_counts.most_common()[0][0]
+        try:
+            aff_ids = p.author_afids.split(";")[idx].split("-")
+        except IndexError:
+            continue
+        if not aff_ids:
+            continue
+        affs[cur_year].update(Counter(aff_ids))
+    # Use only most recent publications
+    max_year = max(affs.keys())
+    return affs[max_year].most_common()[0][0]
 
 
 def get_main_field(fields):
