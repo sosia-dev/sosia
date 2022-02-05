@@ -41,6 +41,7 @@ def find_main_affiliation(auth_ids, pubs, year):
         publications are found.
     """
     from collections import defaultdict, Counter
+    pubs = [p for p in pubs if p.author_ids and p.author_afids]
     # Find affiliation ID of all available publications
     affs = defaultdict(lambda: Counter())
     for p in pubs:
@@ -52,14 +53,16 @@ def find_main_affiliation(auth_ids, pubs, year):
             idx = authors.index(focal)
         try:
             aff_ids = p.author_afids.split(";")[idx].split("-")
-        except IndexError:
+        except (IndexError, UnboundLocalError):
             continue
-        if not aff_ids:
-            continue
-        affs[cur_year].update(Counter(aff_ids))
+        affs[cur_year].update(Counter([a for a in aff_ids if a]))
     # Use only most recent publications
-    max_year = max(affs.keys())
-    return affs[max_year].most_common()[0][0]
+    try:
+        max_year = max(affs.keys())
+        main_aff = affs[max_year].most_common()[0][0]
+    except (IndexError, ValueError):
+        main_aff = None
+    return main_aff
 
 
 def get_main_field(fields):

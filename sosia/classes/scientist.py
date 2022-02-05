@@ -341,9 +341,13 @@ class Scientist(object):
         # Most recent geolocation
         afid = find_main_affiliation(identifier, self._publications, year)
         self._affiliation_id = afid
-        aff = AffiliationRetrieval(afid, refresh=refresh)
-        self._country = aff.country
-        self._organization = aff.org_type
+        try:
+            aff = AffiliationRetrieval(afid, refresh=refresh)
+            self._country = aff.country
+            self._organization = aff.org_type
+        except ValueError:
+            self._country = None
+            self._organization = None
         self._language = None
 
         # Author name from profile with most documents
