@@ -91,10 +91,10 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
                                        stacked=stacked, verbose=verbose)
         no_info = set(sources) - set(new["source_id"].unique())
         empty.extend([(s, year) for s in no_info])
-        to_add = to_add.append(new)
+        to_add = pd.concat([to_add, new])
 
     # Format useful information
-    data = data.append(to_add)
+    data = pd.concat([data, to_add])
     data = data[data["auids"] != ""]
     data["auids"] = data["auids"].str.replace(";", ",").str.split(",")
 
@@ -103,7 +103,7 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
         sources, years = list(zip(*empty))
         d = {"source_id": sources, "year": years, "auids": [""]*len(sources),
              "afid": [""]*len(sources)}
-        to_add = to_add.append(pd.DataFrame(d))
+        to_add = pd.concat([to_add, pd.DataFrame(d)])
     if not to_add.empty:
         to_add["auids"] = to_add["auids"].str.replace(";", ",").str.split(",")
         insert_data(to_add, conn, table="sources_afids")

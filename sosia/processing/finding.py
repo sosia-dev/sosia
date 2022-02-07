@@ -1,7 +1,7 @@
 from itertools import product
 from string import Template
 
-from pandas import DataFrame
+import pandas as pd
 
 from sosia.processing.caching import insert_data, retrieve_author_info
 from sosia.processing.extracting import extract_authors
@@ -78,7 +78,7 @@ def find_matches(original, stacked, verbose, refresh):
     custom_print(text, verbose)
 
     # Third round of filtering: citations (in the FULL period)
-    authors = DataFrame({"auth_id": group, "year": original.year})
+    authors = pd.DataFrame({"auth_id": group, "year": original.year})
     auth_cits, missing = retrieve_author_info(authors, conn, "author_ncits")
     if not missing.empty:
         total = missing.shape[0]
@@ -94,7 +94,7 @@ def find_matches(original, stacked, verbose, refresh):
             if i % 100 == 0 or i == len(missing) - 1:
                 insert_data(missing.iloc[start:i+1], conn, table="author_ncits")
                 start = i
-    auth_cits = auth_cits.append(missing)
+    auth_cits = pd.concat([auth_cits, missing])
     auth_cits['auth_id'] = auth_cits['auth_id'].astype("uint64")
     # Keep if citations are in range
     custom_print("Filtering based on count of citations...", verbose)
@@ -106,7 +106,8 @@ def find_matches(original, stacked, verbose, refresh):
     text = f"Left with {len(group):,} authors\nFiltering based on "\
            "coauthor count..."
     custom_print(text, verbose)
-    authors = DataFrame({"auth_id": group, "year": original.year}, dtype="uint64")
+    authors = pd.DataFrame({"auth_id": group, "year": original.year},
+                           dtype="uint64")
     _, author_year_search = retrieve_author_info(authors, conn, "author_year")
     matches = []
 
@@ -120,7 +121,7 @@ def find_matches(original, stacked, verbose, refresh):
         res = build_dict(res, auth_year_group)
         if res:
             # res can become empty after build_dict if a au_id is old
-            res = DataFrame.from_dict(res, orient="index")
+            res = pd.DataFrame.from_dict(res, orient="index")
             res["year"] = original.year
             res = res[["year", "first_year", "n_pubs", "n_coauth"]]
             res.index.name = "auth_id"
@@ -196,8 +197,8 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     custom_print(text, verbose)
 
     # Retrieve author list for today
-    sources_today = DataFrame(product(search_sources, [original.active_year]),
-                              columns=["source_id", "year"])
+    sources_today = pd.DataFrame(product(search_sources, [original.active_year]),
+                                 columns=["source_id", "year"])
     auth_today = get_authors_from_sourceyear(sources_today, original.sql_conn,
         refresh=refresh, stacked=stacked, verbose=verbose)
     mask = None
@@ -211,8 +212,8 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     then_years = [min_year-1]
     if not original.first_year_name_search:
         then_years.extend(range(min_year, max_year+1))
-    sources_then = DataFrame(product(search_sources, then_years),
-                             columns=["source_id", "year"])
+    sources_then = pd.DataFrame(product(search_sources, then_years),
+                                columns=["source_id", "year"])
     auth_then = get_authors_from_sourceyear(sources_then, original.sql_conn,
         refresh=refresh, stacked=stacked, verbose=verbose)
     mask = auth_then["year"].between(min_year, max_year)
