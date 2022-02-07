@@ -28,6 +28,16 @@ class Scientist(object):
         self._active_year = val
 
     @property
+    def affiliation_country(self):
+        """The current country of the affiliation defined in affiliation_id."""
+        return self._affiliation_country
+
+    @affiliation_country.setter
+    @accepts(str)
+    def affiliation_country(self, val):
+        self._affiliation_country = val
+
+    @property
     def affiliation_id(self):
         """The affiliation ID (as string) of the scientist's most frequent
         affiliation in or before the active year.
@@ -38,6 +48,26 @@ class Scientist(object):
     @accepts(str)
     def affiliation_id(self, val):
         self._affiliation_id = val
+
+    @property
+    def affiliation_name(self):
+        """The current name of the affiliation defined in affiliation_id."""
+        return self._affiliation_name
+
+    @affiliation_name.setter
+    @accepts(str)
+    def affiliation_name(self, val):
+        self._affiliation_name = val
+
+    @property
+    def affiliation_type(self):
+        """The current type of the affiliation defined in affiliation_id."""
+        return self._affiliation_type
+
+    @affiliation_type.setter
+    @accepts(str)
+    def affiliation_type(self, val):
+        self.affiliation_type = val
 
     @property
     def citations(self):
@@ -58,17 +88,6 @@ class Scientist(object):
     @accepts(int)
     def citations_period(self, val):
         self._citations_period = val
-
-    @property
-    def country(self):
-        """Country belonging to the affiliation defined in affiliation_id.
-        """
-        return self._country
-
-    @country.setter
-    @accepts(str)
-    def country(self, val):
-        self._country = val
 
     @property
     def coauthors(self):
@@ -163,16 +182,6 @@ class Scientist(object):
     @accepts(str)
     def language(self, val):
         self._language = val
-
-    @property
-    def organization(self):
-        """The name belonging to the affiliation defined in affiliation_id."""
-        return self._organization
-
-    @organization.setter
-    @accepts(str)
-    def organization(self, val):
-        self._organization = val
 
     @property
     def publications(self):
@@ -343,11 +352,13 @@ class Scientist(object):
         self._affiliation_id = afid
         try:
             aff = AffiliationRetrieval(afid, refresh=refresh)
-            self._country = aff.country
-            self._organization = aff.org_type
+            self._affiliation_country = aff.country
+            self._affiliation_name = aff.affiliation_name
+            self._affiliation_type = aff.org_type
         except ValueError:
-            self._country = None
-            self._organization = None
+            self._affiliation_country = None
+            self._affiliation_name = None
+            self._affiliation_type = None
         self._language = None
 
         # Author name from profile with most documents

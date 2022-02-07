@@ -37,7 +37,7 @@ scientist4 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\
-         "country language num_cited_refs"
+         "affiliation_country language num_cited_refs"
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(
@@ -47,7 +47,7 @@ MATCHES = [
         num_coauthors=7,
         num_publications=6,
         num_citations=190,
-        country='Norway',
+        affiliation_country='Norway',
         language='eng',
         num_cited_refs=4),
     Match(
@@ -57,7 +57,7 @@ MATCHES = [
         num_coauthors=6,
         num_publications=8,
         num_citations=19,
-        country='United Kingdom',
+        affiliation_country='United Kingdom',
         language='eng',
         num_cited_refs=0),
     Match(
@@ -67,7 +67,7 @@ MATCHES = [
         num_coauthors=8,
         num_publications=7,
         num_citations=52,
-        country='United Kingdom',
+        affiliation_country='United Kingdom',
         language='eng',
         num_cited_refs=7),
     Match(
@@ -77,7 +77,7 @@ MATCHES = [
         num_coauthors=7,
         num_publications=8,
         num_citations=1,
-        country='Peru',
+        affiliation_country='Peru',
         language='eng; spa',
         num_cited_refs=0)]
 
@@ -173,7 +173,7 @@ def test_inform_matches():
     assert_equal(len(recieved), len(MATCHES))
     assert_true(isinstance(recieved, list))
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
-            "country", "num_cited_refs"]
+            "affiliation_country", "num_cited_refs"]
     df_r = pd.DataFrame(recieved)
     df_r["num_cited_refs"] = df_r["num_cited_refs"].round(3)
     df_m = pd.DataFrame(MATCHES)

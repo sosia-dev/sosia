@@ -151,9 +151,10 @@ def inform_match(profile, keywords, refresh):
         "num_publications_period": len(profile.publications_period or "") or None,
         "num_citations_period": profile.citations_period,
         "subjects": profile.subjects,
-        "country": profile.country,
+        "affiliation_country": profile.affiliation_country,
         "affiliation_id": profile.affiliation_id,
-        "affiliation": profile.organization
+        "affiliation_name": profile.affiliation_name,
+        "affiliation_type": profile.affiliation_type,
     }
     match_info = {k: v for k, v in info.items() if k in keywords + ["ID", "name"]}
     if "language" in keywords:

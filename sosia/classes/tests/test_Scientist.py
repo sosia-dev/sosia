@@ -15,18 +15,20 @@ scientist4 = Scientist([55208373700], 2015, refresh=refresh)
 scientist5 = Scientist([55208373700], 2018, period=2, refresh=refresh)
 
 
-def test_affiliation():
-    org = 'Universität München'
-    assert_equal(scientist1.organization, org)
-    org = 'École Polytechnique Fédérale de Lausanne (EPFL)'
-    assert_equal(scientist2.organization, org)
-    org = 'Department of Economics and Management of Innovation, '\
-          'École Polytechnique Fédérale de Lausanne'
-    assert_equal(scientist3.organization, org)
-    org = 'École Polytechnique Fédérale de Lausanne, CEMI, CDM MTEI-GE'
-    assert_equal(scientist4.organization, org)
-    org = 'Max Planck Institute for Innovation and Competition'
-    assert_equal(scientist5.organization, org)
+def test_active_year():
+    assert_equal(scientist1.active_year, 2001)
+    assert_equal(scientist2.active_year, 2017)
+    assert_equal(scientist3.active_year, 2016)
+    assert_equal(scientist4.active_year, 2012)
+    assert_equal(scientist5.active_year, 2018)
+
+
+def test_affiliation_country():
+    assert_equal(scientist1.affiliation_country, "Germany")
+    assert_equal(scientist2.affiliation_country, "Switzerland")
+    assert_equal(scientist3.affiliation_country, "Switzerland")
+    assert_equal(scientist4.affiliation_country, "Switzerland")
+    assert_equal(scientist5.affiliation_country, "Germany")
 
 
 def test_affiliation_id():
@@ -37,20 +39,23 @@ def test_affiliation_id():
     assert_equal(scientist5.affiliation_id, '60105007')
 
 
-def test_active_year():
-    assert_equal(scientist1.active_year, 2001)
-    assert_equal(scientist2.active_year, 2017)
-    assert_equal(scientist3.active_year, 2016)
-    assert_equal(scientist4.active_year, 2012)
-    assert_equal(scientist5.active_year, 2018)
+def test_affiliation_name():
+    assert_equal(scientist1.affiliation_name,
+                 'Ludwig-Maximilians-Universität München')
+    epfl = 'Ecole Polytechnique Fédérale de Lausanne'
+    assert_equal(scientist2.affiliation_name, epfl)
+    assert_equal(scientist3.affiliation_name, epfl)
+    assert_equal(scientist4.affiliation_name, epfl)
+    assert_equal(scientist5.affiliation_name,
+                 'Max Planck Institute for Innovation and Competition')
 
 
-def test_country():
-    assert_equal(scientist1.country, "Germany")
-    assert_equal(scientist2.country, "Switzerland")
-    assert_equal(scientist3.country, "Switzerland")
-    assert_equal(scientist4.country, "Switzerland")
-    assert_equal(scientist5.country, "Germany")
+def test_affiliation_type():
+    assert_equal(scientist1.affiliation_type, 'univ')
+    assert_equal(scientist2.affiliation_type, 'univ')
+    assert_equal(scientist3.affiliation_type, 'univ')
+    assert_equal(scientist4.affiliation_type, 'univ')
+    assert_equal(scientist5.affiliation_type, 'resi')
 
 
 def test_citations():

@@ -317,9 +317,10 @@ class Original(Scientist):
             Which information to provide.  Allowed values are "first_name",
             "surname", "first_year", "num_coauthors", "num_publications",
             "num_citations", "num_coauthors_period", "num_publications_period",
-            "num_citations_period", "subjects", "country", "affiliation_id",
-            "affiliation", "language", "num_cited_refs".  If None, will use
-            all available fields.
+            "num_citations_period", "subjects", "affiliation_country",
+            "affiliation_id", "affiliation_name", "affiliation_type",
+            "language", "num_cited_refs".  If None, will use all
+            available fields.
 
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
@@ -346,8 +347,9 @@ class Original(Scientist):
         allowed_fields = ["first_name", "surname", "first_year",
                           "num_coauthors", "num_publications", "num_citations",
                           "num_coauthors_period", "num_publications_period",
-                          "num_citations_period", "subjects", "country",
-                          "affiliation_id", "affiliation", "language",
+                          "num_citations_period", "subjects",
+                          "affiliation_country", "affiliation_id",
+                          "affiliation_name", "affiliation_type", "language",
                           "num_cited_refs"]
         if fields:
             invalid = [x for x in fields if x not in allowed_fields]
