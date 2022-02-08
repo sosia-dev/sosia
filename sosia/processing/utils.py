@@ -47,16 +47,13 @@ def expand_affiliation(df):
     in publications from ScopusSearch.
     """
     from pandas import Series
-    res = df[["source_id", "author_ids", "afid"]].copy()
-    res['afid'] = res["afid"].str.split(';')
-    res = (res["afid"].apply(Series)
-              .merge(res, right_index=True, left_index=True)
-              .drop(["afid"], axis=1)
-              .melt(id_vars=['source_id', 'author_ids'], value_name="afid")
-              .drop("variable", axis=1)
-              .dropna())
-    res['afid'] = res['afid'].astype(float)
-    return res
+    temp = df.set_index(["source_id", "author_ids"])[["afid"]]
+    temp = (temp["afid"].str.split(";", expand=True)
+                .stack().dropna().reset_index()
+                .drop("level_2", axis=1)
+                .rename(columns={0: "afid"}))
+    temp['afid'] = temp['afid'].astype(float)
+    return temp
 
 
 def flat_set_from_df(df, col, condition=None):
