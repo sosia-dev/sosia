@@ -185,7 +185,7 @@ You might need additional information to both assess match quality and select ma
 .. code-block:: python
 
     >>> stefano.inform_matches(verbose=True)
-    Providing additional information...
+    Providing information for 3 matches...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     Match 55022752500: 0 reference list(s) out of 5 documents missing
     Match 55810688700: 0 reference list(s) out of 6 documents missing

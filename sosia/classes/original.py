@@ -360,6 +360,7 @@ class Original(Scientist):
         else:
             fields = allowed_fields
 
-        custom_print("Providing additional information...", verbose)
+        text = f"Providing information for {len(self._matches):,} matches..."
+        custom_print(text, verbose)
         matches = inform_matches(self, fields, verbose, refresh)
         self._matches = matches
