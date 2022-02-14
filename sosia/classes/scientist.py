@@ -6,6 +6,7 @@
 from warnings import warn
 
 from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
+from pybliometrics.scopus.exception import Scopus404Error
 
 from sosia.establishing import config, connect_database
 from sosia.processing import add_source_names, base_query, count_citations,\
@@ -355,7 +356,7 @@ class Scientist(object):
             self._affiliation_country = aff.country
             self._affiliation_name = aff.affiliation_name
             self._affiliation_type = aff.org_type
-        except ValueError:
+        except (Scopus404Error, ValueError):
             self._affiliation_country = None
             self._affiliation_name = None
             self._affiliation_type = None
@@ -375,7 +376,6 @@ class Scientist(object):
 
     def get_publication_languages(self, refresh=False):
         """Parse languages of published documents."""
-        from pybliometrics.scopus.exception import Scopus404Error
         langs = set()
         for eid in self._eids:
             try:
