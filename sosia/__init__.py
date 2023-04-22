@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
-from pbr.version import VersionInfo
+import sys
 
-_v = VersionInfo("sosia").semantic_version()
-__version__ = _v.release_string()
-version_info = _v.version_tuple()
+if sys.version_info >= (3, 8):
+    from importlib.metadata import version
+else:
+    from importlib_metadata import version
+
+__version__ = version("sosia")
 
 __citation__ = 'Rose, Michael E. and Stefano H. Baruffaldi: "Finding '\
     'Doppelgängers in Scopus: How to Build Scientists Control Groups Using '\

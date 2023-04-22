@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.2", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sosia"
+authors = [{name = "Michael E. Rose and Stefano H. Baruffaldi", email = "Michael.Ernst.Rose@gmail.com"}]
+maintainers = [{name = "Michael E. Rose", email = "Michael.Ernst.Rose@gmail.com"}]
+description = "Find control groups for academics in Scopus"
+readme = "README.rst"
+license = {text = "MIT"}
+dependencies = [
+    "numpy",
+    "pandas>=1.1.5",
+    "pybliometrics>=3.2.0",
+    "simplejson",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+keywords = ["sosia", "control groups", "research"]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/sosia-dev/sosia"
+"Bug Tracker" = "https://github.com/sosia-dev/sosia/issues"
+"Documentation (stable)" = "https://sosia.readthedocs.io/en/stable/"
+"Documentation (latest)" = "https://sosia.readthedocs.io/en/latest/"
+
+[tool.distutils.bdist_wheel]
+universal = 1
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["sosia", "sosia.*"]
+
+[tool.setuptools_scm]
+
