@@ -88,7 +88,7 @@ def test_search_sources():
         s.define_search_sources()
         search_sources = s.search_sources
         assert_equal(len(search_sources), 65)
-        assert_true((14726, "Technovation") in search_sources)
+        assert_true((20206, "Academy of Management Review") in search_sources)
         assert_true((15143, "Regional Studies") in search_sources)
 
 
@@ -157,13 +157,13 @@ def test_find_matches_stacked():
 
 def test_find_matches_stacked_affiliations():
     scientist3.find_matches(stacked=True, refresh=refresh)
-    expected = [m.ID for m in MATCHES if m.ID != 55804519400]
+    expected = [m.ID for m in MATCHES if m.ID != 53164702100]
     assert_equal(scientist3.matches, expected)
 
 
 def test_find_matches_stacked_period_affiliations():
     scientist4.find_matches(stacked=True, refresh=refresh)
-    expected_ids = [57188695848, 57188709931]
+    expected_ids = [56049973600, 57188695848, 57188709931]
     assert_equal(scientist4.matches, expected_ids)
 
 
