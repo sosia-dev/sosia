@@ -3,6 +3,21 @@ Change Log
 
 .. toctree::
 
+0.6
+~~~
+
+2023-04-23
+
+* Drop usage of configuration file and recommend project-specific databases.
+* In class `Scientist(), rename properties: `.country` -> `.affiliation_country`, `.affiliation` -> `.affiliation_name`.
+* In class `Scientist(), create property `.affiliation_type`.
+* In `.create_fields_sources_list()`, make use of parameter "verbose".
+* Make retrieval of affiliation related information robust to missing information (404 error).
+* Pass on "refresh" parameter from `inform_matches()`.
+* Use pyproject.toml for packaging, drop `pbr` (PEP 621).
+* Use XDG compliant file storage for support files in `~/.cache/sosia/`.
+* Improve various methods and functions for stability and speed.
+
 0.5
 ~~~
 
