@@ -7,7 +7,8 @@ Initial set-up
 .. code-block:: python
    
     >>> import sosia
-    >>> sosia.create_fields_sources_list()
+    >>> sosia.create_fields_sources_list(verbose=True)
+    Stored information for 83,264 sources as well as 184,984 field-source assigments in /home/merose/.cache/sosia
 
 
 To speed up the process, sosia makes use of a SQLite Database.  Specify the path in `~/.config/sosia` (or keep the default which is `~/.cache/sosia/main.sqlite`).  Then initiate the database:
