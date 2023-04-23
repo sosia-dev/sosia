@@ -21,17 +21,17 @@ def make_database(fname=None, drop=False):
     Parameters
     ----------
     fname : str (optional, default=None)
-        The path of the SQLite database to connect to.  If None will use
-        the path provided in `~/.config/sosia`.
+        The path of the SQLite database to connect to.  If None will default
+        to `~/.cache/sosia/main.sqlite`.
 
     drop : boolean (optional, default=False)
         If True, deletes and recreates all tables in cache (irreversible).
     """
-    from sosia.establishing.constants import DB_TABLES
-    from sosia.establishing.config import config
+    from sosia.establishing.constants import DB_TABLES, DEFAULT_DATABASE
 
     if not fname:
-        fname = config.get('Filepaths', 'Database')
+        fname = DEFAULT_DATABASE
+
     conn = sqlite3.connect(fname)
     cursor = conn.cursor()
     for table, variables in DB_TABLES.items():

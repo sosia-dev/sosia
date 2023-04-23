@@ -10,7 +10,7 @@ The only class to interact with is :doc:`Original() <../reference/sosia.Original
 .. code-block:: python
    
     >>> from sosia import Original
-    >>> stefano = Original(55208373700, 2017)
+    >>> stefano = Original(55208373700, 2017, sql_fname=DB_NAME)
 
 All properties and the control group are based on the publications associated with the profile and published before the treatment year.
 
@@ -57,7 +57,7 @@ By default (i.e., if not specified), the margins for the first year of publicati
    
     >>> stefano = Original(55208373700, 2017, first_year_margin=2,
                            coauth_margin=0.2, pub_margin=0.2,
-                           cits_margin=0.2)
+                           cits_margin=0.2, sql_fname=DB_NAME)
 
 This will find matches who started publishing the year of the scientist's first publication plus or minus 2 years, who in the year of treatment have the same number of coauthors plus or minus 20% of that number (at least 1), and who in the year of treatment have the same number of publications plus or minus 20% of that number (at least 1).
 

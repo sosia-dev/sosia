@@ -11,9 +11,13 @@ Initial set-up
     Stored information for 83,264 sources as well as 184,984 field-source assigments in /home/merose/.cache/sosia
 
 
-To speed up the process, sosia makes use of a SQLite Database.  Specify the path in `~/.config/sosia` (or keep the default which is `~/.cache/sosia/main.sqlite`).  Then initiate the database:
+To speed up the process, sosia makes use of a SQLite Database.  Specify the path and pass it on in:
 
 .. code-block:: python
    
-    >>> import sosia
-    >>> sosia.make_database()
+    >>> from pathlib import Path
+    >>> DB_NAME = Path("./sosia/project.sqlite")
+    >>> sosia.make_database(DB_NAME)
+
+
+The database can be anywhere; for small projects we advise to have it in the project folder, for large projects we recomment other places such as `~/.cache/sosia/<project_name>.sqlite`.  If you do not specify a path, `sosia` will default to `~/.cache/sosia/main.sqlite`.

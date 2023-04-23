@@ -3,16 +3,21 @@
 
 from collections import namedtuple
 from nose.tools import assert_equal, assert_true, assert_false
+from pathlib import Path
 
 from sosia.classes import Scientist
+from sosia.establishing import make_database
 
-refresh = 30
-scientist1 = Scientist([6701809842], 2001, refresh=refresh)
-scientist2 = Scientist([55208373700, 55208373700], 2017, refresh=refresh)
+test_cache = Path.home()/".cache/sosia/test.sqlite"
+refresh = False
+test_params = {"refresh": refresh, "sql_fname": test_cache}
+
+scientist1 = Scientist([6701809842], 2001, **test_params)
+scientist2 = Scientist([55208373700, 55208373700], 2017, **test_params)
 eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
-scientist3 = Scientist([55208373700], 2017, eids=eids, refresh=refresh)
-scientist4 = Scientist([55208373700], 2015, refresh=refresh)
-scientist5 = Scientist([55208373700], 2018, period=2, refresh=refresh)
+scientist3 = Scientist([55208373700], 2017, eids=eids, **test_params)
+scientist4 = Scientist([55208373700], 2015, **test_params)
+scientist5 = Scientist([55208373700], 2018, period=2, **test_params)
 
 
 def test_active_year():

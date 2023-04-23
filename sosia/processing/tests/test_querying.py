@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 """Tests for processing.querying module."""
 
-from os.path import expanduser
-
 from nose.tools import assert_equal, assert_true
 from string import Template
 
-from sosia.establishing import connect_database
 from sosia.processing import base_query, count_citations, create_queries,\
     query_pubs_by_sourceyear, stacked_query
 
-test_cache = expanduser("~/.sosia/test.sqlite")
-test_conn = connect_database(test_cache)
 test_id = 53164702100
 year = 2017
 refresh = 30

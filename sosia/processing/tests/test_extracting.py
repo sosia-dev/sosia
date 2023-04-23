@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 """Tests for processing.extracting module."""
 
-from os.path import expanduser
-
 from nose.tools import assert_equal
 from pybliometrics.scopus import ScopusSearch
 
 from sosia.processing import find_main_affiliation, get_main_field, parse_docs
 
 refresh = 30
-test_cache = expanduser("~/.sosia/") + "test.sqlite"
 test_id = 6701809842
 
 

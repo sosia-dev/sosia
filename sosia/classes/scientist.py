@@ -8,7 +8,7 @@ from warnings import warn
 from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 
-from sosia.establishing import config, connect_database
+from sosia.establishing import connect_database, DEFAULT_DATABASE
 from sosia.processing import add_source_names, base_query, count_citations,\
     extract_authors, find_main_affiliation, get_authors, get_main_field,\
     maybe_add_source_names, read_fields_sources_list
@@ -266,9 +266,9 @@ class Scientist(object):
             which is also used to compute characteristics in the treatment
             year.
 
-        sql_fname : str (optional, default=None)
-            The path of the SQLite database to connect to.  If None, will use
-            the path specified in config.ini.
+        sql_fname : str (optional or pathlib.Path(), default=None)
+            The path of the SQLite database to connect to.  If None will
+            default to `~/.cache/sosia/main.sqlite`.
 
         Raises
         ------
@@ -279,7 +279,7 @@ class Scientist(object):
         self.identifier = identifier
         self.year = int(year)
         if not sql_fname:
-            sql_fname = config.get('Filepaths', 'Database')
+            sql_fname = DEFAULT_DATABASE
         self.sql_conn = connect_database(sql_fname)
 
         # Read mapping of fields to sources

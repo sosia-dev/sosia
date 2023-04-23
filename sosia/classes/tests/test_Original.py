@@ -3,16 +3,19 @@
 
 import warnings
 from collections import namedtuple
-from os.path import expanduser
+from pathlib import Path
 
 import pandas as pd
 from nose.tools import assert_equal, assert_true
 
 from sosia.classes import Original
+from sosia.establishing import make_database
 
 warnings.filterwarnings("ignore")
 
-test_cache = expanduser("~/.sosia/test.sqlite")
+test_cache = Path.home()/".cache/sosia/test.sqlite"
+test_cache.unlink(missing_ok=True)
+make_database(test_cache)
 refresh = False
 test_params = {"refresh": refresh, "sql_fname": test_cache}
 
@@ -179,3 +182,4 @@ def test_inform_matches():
     df_m = pd.DataFrame(MATCHES)
     df_m["num_cited_refs"] = df_m["num_cited_refs"].round(3)
     pd.testing.assert_frame_equal(df_r[cols], df_m[cols])
+

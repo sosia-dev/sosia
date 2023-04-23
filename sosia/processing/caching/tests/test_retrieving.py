@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tests for processing.caching.retrieving module."""
 
+import numpy as np
 from itertools import product
 from nose.tools import assert_equal, assert_true
-import numpy as np
-from os.path import expanduser
+from pathlib import Path
 
 import pandas as pd
 from pybliometrics.scopus import ScopusSearch, AuthorSearch
@@ -15,7 +15,7 @@ from sosia.processing import build_dict, insert_data, retrieve_authors,\
     retrieve_author_info, retrieve_authors_from_sourceyear, robust_join,\
     query_pubs_by_sourceyear
 
-test_cache = expanduser("~/.sosia/test.sqlite")
+test_cache = Path.home()/".cache/sosia/test.sqlite"
 refresh = 30
 
 
