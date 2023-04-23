@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 """Tests for processing.caching.retrieving module."""
 
-import numpy as np
 from itertools import product
-from nose.tools import assert_equal, assert_true
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
-from pybliometrics.scopus import ScopusSearch, AuthorSearch
+from nose.tools import assert_equal, assert_true
 from pandas.testing import assert_frame_equal
+from pybliometrics.scopus import ScopusSearch, AuthorSearch
 
 from sosia.establishing import connect_database, make_database
 from sosia.processing import build_dict, insert_data, retrieve_authors,\
@@ -46,13 +45,14 @@ def test_retrieve_authors_insert():
                      'country', 'areas']
     # Insert data
     q = f"AU-ID({robust_join(expected_auth, sep=') OR AU-ID(')})"
-    res = pd.DataFrame(AuthorSearch(q, refresh=refresh).authors, dtype="int64")
-    res["auth_id"] = res["eid"].str.split("-").str[-1]
+    res = pd.DataFrame(AuthorSearch(q, refresh=refresh).authors)
+    res["auth_id"] = res["eid"].str.split("-").str[-1].astype("uint64")
+    res["affiliation_id"] = res["affiliation_id"].astype(float)
     res = res[expected_cols]
     insert_data(res, conn, table="authors")
     # Retrieve data
     df = pd.DataFrame(expected_auth + search_auth, columns=["auth_id"],
-                      dtype="int64")
+                      dtype="uint64")
     incache, missing = retrieve_authors(df, conn)
     assert_equal(incache.shape[0], 2)
     assert_equal(missing, [55317901900])
@@ -108,7 +108,7 @@ def test_retrieve_author_info_authoryear():
     fill = robust_join(expected_auth, sep=') OR AU-ID(')
     q = f"(AU-ID({fill})) AND PUBYEAR BEF {year+1}"
     d = build_dict(ScopusSearch(q, refresh=refresh).results, expected_auth)
-    expected = pd.DataFrame.from_dict(d, orient="index", dtype="int64")
+    expected = pd.DataFrame.from_dict(d, orient="index")
     expected = expected.sort_index().rename_axis('auth_id').reset_index()
     expected["year"] = year
     expected = expected[['auth_id', 'year', 'first_year', 'n_pubs', 'n_coauth']]

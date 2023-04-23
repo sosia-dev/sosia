@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for establishing.database module."""
 
 from pathlib import Path

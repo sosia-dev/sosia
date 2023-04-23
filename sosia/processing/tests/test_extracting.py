@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for processing.extracting module."""
 
 from nose.tools import assert_equal

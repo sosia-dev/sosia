@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for processing.utils module."""
 
 import pandas as pd

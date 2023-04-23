@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """Tests for processing.initializing module."""
+
+from pathlib import Path
 
 import pandas as pd
 from nose.tools import assert_equal
-from pathlib import Path
 
 from sosia.classes import Scientist
 from sosia.establishing import make_database

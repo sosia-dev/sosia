@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 """Tests for processing.getting module."""
 
-from nose.tools import assert_equal, assert_true
 from pathlib import Path
 
+from nose.tools import assert_equal, assert_true
 from pandas import DataFrame
 
 from sosia.establishing import connect_database, make_database

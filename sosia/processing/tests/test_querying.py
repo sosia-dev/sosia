@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """Tests for processing.querying module."""
 
-from nose.tools import assert_equal, assert_true
 from string import Template
+
+from nose.tools import assert_equal, assert_true
 
 from sosia.processing import base_query, count_citations, create_queries,\
     query_pubs_by_sourceyear, stacked_query

@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """Tests for class `Scientist`."""
 
 from collections import namedtuple
-from nose.tools import assert_equal, assert_true, assert_false
 from pathlib import Path
+
+from nose.tools import assert_equal, assert_true, assert_false
 
 from sosia.classes import Scientist
 from sosia.establishing import make_database

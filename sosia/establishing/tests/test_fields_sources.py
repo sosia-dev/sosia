@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 """Tests for establishing.fields_sources module."""
-
-from os import remove
 
 import pandas as pd
 from nose.tools import assert_equal, assert_true
@@ -9,14 +6,8 @@ from nose.tools import assert_equal, assert_true
 from sosia.establishing.constants import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST
 from sosia.establishing.fields_sources import create_fields_sources_list
 
-try:
-    remove(FIELDS_SOURCES_LIST)
-except FileNotFoundError:
-    pass
-try:
-    remove(SOURCES_NAMES_LIST)
-except FileNotFoundError:
-    pass
+FIELDS_SOURCES_LIST.unlink(missing_ok=True)
+FIELDS_SOURCES_LIST.unlink(missing_ok=True)
 create_fields_sources_list()
 
 
