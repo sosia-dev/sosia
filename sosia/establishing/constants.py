@@ -1,9 +1,10 @@
-from os.path import expanduser
+from pathlib import Path
 
 DATA_REPO_URL = "https://raw.githubusercontent.com/sosia-dev/sosia-data/"
-FIELDS_SOURCES_LIST = expanduser("~/.sosia/") + "field_sources_list.csv"
-SOURCES_NAMES_LIST = expanduser("~/.sosia/") + "sources_names.csv"
-CONFIG_FILE = expanduser("~/.sosia/config.ini")
+_cache_folder = Path.home()/".cache/sosia/"
+FIELDS_SOURCES_LIST = _cache_folder/"field_sources_list.csv"
+SOURCES_NAMES_LIST = _cache_folder/"sources_names.csv"
+CONFIG_FILE = Path.home()/".config/sosia"
 
 DB_TABLES = {
     "author_ncits":

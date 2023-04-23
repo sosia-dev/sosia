@@ -22,7 +22,7 @@ def make_database(fname=None, drop=False):
     ----------
     fname : str (optional, default=None)
         The path of the SQLite database to connect to.  If None will use
-        the path provided in `~/.sosia/config.ini`.
+        the path provided in `~/.config/sosia`.
 
     drop : boolean (optional, default=False)
         If True, deletes and recreates all tables in cache (irreversible).

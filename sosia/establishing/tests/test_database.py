@@ -7,7 +7,7 @@ from nose.tools import assert_true
 
 from sosia.establishing.database import make_database
 
-test_cache = expanduser("~/.sosia/test.sqlite")
+test_cache = expanduser("~/.cache/sosia/test.sqlite")
 
 
 def test_make_database():
