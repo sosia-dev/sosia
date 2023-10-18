@@ -24,7 +24,9 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    'sphinx_copybutton'
 ]
+copybutton_prompt_text = ">>> "
 autodoc_member_order = "groupwise"
 templates_path = ["_templates"]
 source_suffix = ".rst"
