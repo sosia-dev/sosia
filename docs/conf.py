@@ -9,7 +9,7 @@ sys.path.insert(0, project_root)
 # -- Project information -----------------------------------------------------
 
 project = "sosia"
-author = "Stefano H. Baruffaldi and Michael E. Rose"
+author = "Michael E. Rose and Stefano H. Baruffaldi"
 copyright = f"2017-{date.today().year} {author}"
 
 import sosia
@@ -80,7 +80,7 @@ latex_documents = [
         master_doc,
         "sosia.tex",
         "sosia Documentation",
-        "Stefano H. Baruffaldi and Michael E. Rose",
+        "Michael E. Rose and Stefano H. Baruffaldi",
         "manual",
     )
 ]
