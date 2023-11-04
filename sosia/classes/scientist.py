@@ -283,9 +283,11 @@ class Scientist(object):
         self.sql_conn = connect_database(sql_fname)
 
         # Read mapping of fields to sources
-        df, names = read_fields_sources_list()
-        self.field_source = df
-        self.source_names = names.set_index("source_id")["title"].to_dict()
+        fields, info = read_fields_sources_list()
+        self.field_source = fields
+        self.source_info = info
+        source_names = self.source_info.set_index("source_id")["title"].to_dict()
+        self.source_names = source_names
 
         # Load list of publications
         if eids:
@@ -340,8 +342,8 @@ class Scientist(object):
                           if p.source_id])
         self._sources = add_source_names(source_ids, self.source_names)
         self._active_year = int(max(pub_years))
-        mask = df["source_id"].isin(source_ids)
-        self._fields = df[mask]["asjc"].astype(int).tolist()
+        mask = fields["source_id"].isin(source_ids)
+        self._fields = fields[mask]["asjc"].astype(int).tolist()
         self._main_field = get_main_field(self._fields)
         if not self._main_field[0]:
             text = "Not possible to determine research field(s) of "\

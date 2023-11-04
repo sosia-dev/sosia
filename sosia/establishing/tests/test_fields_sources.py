@@ -3,25 +3,27 @@
 import pandas as pd
 from nose.tools import assert_equal, assert_true
 
-from sosia.establishing.constants import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST
-from sosia.establishing.fields_sources import create_fields_sources_list
+from sosia.establishing.constants import FIELD_SOURCE_MAP, SOURCE_INFO
+from sosia.establishing.fields_sources import get_field_source_information
 
-FIELDS_SOURCES_LIST.unlink(missing_ok=True)
-FIELDS_SOURCES_LIST.unlink(missing_ok=True)
-create_fields_sources_list()
+FIELD_SOURCE_MAP.unlink(missing_ok=True)
+FIELD_SOURCE_MAP.unlink(missing_ok=True)
+get_field_source_information()
 
 
 def test_fields_sources_list():
-    df = pd.read_csv(FIELDS_SOURCES_LIST)
+    df = pd.read_csv(FIELD_SOURCE_MAP)
     assert_true(isinstance(df, pd.DataFrame))
-    assert_equal(list(df.columns), ["asjc", "source_id", "type"])
-    assert_true(df.shape[0] > 55130)
+    assert_equal(list(df.columns), ["source_id", "asjc"])
+    assert_true(df.shape[0] > 200_000)
 
 
 def test_sources_names_list():
-    df = pd.read_csv(SOURCES_NAMES_LIST, index_col=0)
+    df = pd.read_csv(SOURCE_INFO, index_col=0)
     assert_true(isinstance(df, pd.DataFrame))
-    assert_equal(list(df.columns), ["title"])
-    assert_true(df.shape[0] > 74000)
-    assert_equal(df.loc[12005].title, "Journal of Traumatic Stress")
-    assert_equal(df.loc[21100875102].title, "Diagnostyka")
+    assert_equal(list(df.columns), ["type", "title"])
+    assert_true(df.shape[0] > 90_000)
+    assert_equal(df.loc[12005, "type"], "jr")
+    assert_equal(df.loc[12005, "title"], "Journal of Traumatic Stress")
+    assert_equal(df.loc[12200, "type"], "cp")
+    assert_equal(df.loc[12200, "title"], "Proceedings of the Summer Computer Simulation Conference")

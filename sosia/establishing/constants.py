@@ -2,8 +2,8 @@ from pathlib import Path
 
 DATA_REPO_URL = "https://raw.githubusercontent.com/sosia-dev/sosia-data/"
 _cache_folder = Path.home()/".cache/sosia/"
-FIELDS_SOURCES_LIST = _cache_folder/"field_sources_list.csv"
-SOURCES_NAMES_LIST = _cache_folder/"sources_names.csv"
+FIELD_SOURCE_MAP = _cache_folder / "field_sources_list.csv"
+SOURCE_INFO = _cache_folder / "source_info.csv"
 DEFAULT_DATABASE = _cache_folder/'main.sqlite'
 
 DB_TABLES = {

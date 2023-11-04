@@ -1,5 +1,5 @@
-from sosia.establishing.constants import FIELDS_SOURCES_LIST, SOURCES_NAMES_LIST
-from sosia.establishing.fields_sources import create_fields_sources_list
+from sosia.establishing.constants import FIELD_SOURCE_MAP, SOURCE_INFO
+from sosia.establishing.fields_sources import get_field_source_information
 
 
 def add_source_names(source_ids, names):
@@ -20,15 +20,15 @@ def maybe_add_source_names(source_ids, names):
 
 
 def read_fields_sources_list():
-    """Auxiliary function to read FIELDS_SOURCES_LIST and create it before,
+    """Auxiliary function to read FIELD_SOURCE_MAP and create it before,
     if necessary.
     """
     from pandas import read_csv
     try:
-        sources = read_csv(FIELDS_SOURCES_LIST)
-        names = read_csv(SOURCES_NAMES_LIST)
+        field = read_csv(FIELD_SOURCE_MAP)
+        info = read_csv(SOURCE_INFO)
     except FileNotFoundError:
-        create_fields_sources_list()
-        sources = read_csv(FIELDS_SOURCES_LIST)
-        names = read_csv(SOURCES_NAMES_LIST)
-    return sources, names
+        get_field_source_information()
+        field = read_csv(FIELD_SOURCE_MAP)
+        info = read_csv(SOURCE_INFO)
+    return field, info

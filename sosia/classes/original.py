@@ -234,32 +234,32 @@ class Original(Scientist):
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
         """
-        df = self.field_source
+        field_df = self.field_source
+        info_df = self.source_info
         # Sources in scientist's main field
-        same_field = df["asjc"] == self.main_field[0]
+        mask_same_field = field_df["asjc"] == self.main_field[0]
+        same_field = set(field_df[mask_same_field]["source_id"].unique())
         # Types of Scientist's sources
         own_source_ids, _ = zip(*self.sources)
-        same_sources = df["source_id"].isin(own_source_ids)
-        main_types = df[same_sources]["type"].unique()
-        same_type = df["type"].isin(main_types)
+        same_sources = info_df["source_id"].isin(own_source_ids)
+        main_types = info_df[same_sources]["type"].unique()
+        mask_same_types = info_df["type"].isin(main_types)
+        same_type = info_df[mask_same_types]["source_id"].unique()
         # Select source IDs
-        selected_ids = df[same_field & same_type]["source_id"].unique()
-        selected = df[df["source_id"].isin(selected_ids)].copy()
-        selected["asjc"] = selected["asjc"].astype(int).astype(str) + " "
-        grouped = (selected.groupby("source_id")
-                           .sum()["asjc"]
-                           .to_frame())
+        selected_ids = same_field.intersection(same_type)
+        selected = field_df[field_df["source_id"].isin(selected_ids)].copy()
+        grouped = selected.groupby("source_id")["asjc"].unique().to_frame()
         # Deselect sources with alien fields
-        grouped["asjc"] = grouped["asjc"].astype(str).str.split().apply(set)
-        fields = set(str(f) for f in self.fields)
-        no_alien_field = grouped["asjc"].apply(lambda s: len(s - fields) == 0)
-        grouped = grouped[no_alien_field]
+        fields = set(self.fields)
+        no_alien_field = grouped["asjc"].apply(lambda s: len(set(s) - fields) == 0)
+        grouped = grouped[no_alien_field].drop(columns="asjc")
         # Add source names
-        sources = set((s, self.source_names.get(s)) for s in grouped.index)
+        sources = grouped.join(info_df.set_index("source_id")["title"])
+        sources = set(sources.reset_index().itertuples(index=False, name=None))
         # Add own sources
         sources.update(self.sources)
         # Finalize
-        self._search_sources = sorted(sources)
+        self._search_sources = sorted(sources, key=lambda x: x[0])
         text = f"Found {len(sources):,} sources matching main field "\
                f"{self.main_field[0]} and source type(s) {'; '.join(main_types)}"
         custom_print(text, verbose)
