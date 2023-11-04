@@ -70,11 +70,9 @@ The first step is to define a list of sources similar (in type and area) to the 
 
     >>> stefano.define_search_sources()
     >>> stefano.search_sources
-    [(14726, 'Technovation'), (15143, 'Regional Studies'),
-    (16680, 'Engineering Science and Education Journal'),
-    (17047, 'Chronicle of Higher Education'), (18769, 'Applied Economics Letters'),
-    # 57 more sources omitted
-    (21100889873, 'International Journal of Recent Technology and Engineering'),
+    [(15143, 'Regional Studies'), (16680, 'Engineering Science and Education
+     Journal'), (17047, 'Chronicle of Higher Education')
+    # 56 more sources omitted
     (21100898637, 'Research Policy: X')]
 
 Property `search_sources` is a list of tuples storing source ID and source title.
@@ -86,7 +84,7 @@ Using `verbose=True` you receive additional information on this operation:
 .. code-block:: python
 
     >>> stefano.define_search_sources(verbose=True)
-    Found 65 sources matching main field 1405 and source type(s) journal
+    Found 61 sources matching main field 1405 and source type(s) jr
 
 
 Defining the search group
@@ -97,21 +95,17 @@ The next step is to define a first search group that adhere to conditions 1 to 4
 .. code-block:: python
 
     >>> stefano.define_search_group(verbose=True)
-    Defining 'search_group' using up to 65 sources...
-    ... parsing Scopus information for 2017...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2009...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Defining 'search_group' using up to 61 sources...
+    .. parsing Scopus information for 2017...
+    100%|█████████████████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 232.94it/s]
     ... parsing Scopus information for 2010...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    100%|█████████████████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 253.99it/s]
     ... parsing Scopus information for 2011...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    100%|█████████████████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 270.35it/s]
     ... parsing Scopus information for 2012...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    100%|█████████████████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 253.48it/s]
     ... parsing Scopus information for 2013...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2014...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    100%|█████████████████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 200.54it/s]
     Found 863 authors for search_group
 
 
@@ -137,7 +131,7 @@ An alternative search process will try to minimize the number of queries.  The d
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     ... parsing Scopus information for 2014...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 863 authors for search_group
+    Found 787 authors for search_group
 
 
 Finding matches
@@ -148,33 +142,23 @@ The final step is to search within this search group for authors that fulfill cr
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Searching through characteristics of 863 authors...
+    Searching through characteristics of 787 authors...
     Pre-filtering...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Left with 516 authors with sufficient number of publications and same main field
-    Obtaining information for 516 authors without sufficient information in database...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Left with 97 authors based on publication information before 2009
-    Counting publications of 97 authors before 2018...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    100%|████████████████████████████████████████████████████████████████████████████████████████████████| 4/4 [03:17<00:00, 49.41s/it]
+    Left with 473 authors with sufficient number of publications and same main field
+    Obtaining information for 447 authors without sufficient information in database...
+    Left with 59 authors based on publication information before 2009
+    Counting publications of 59 authors before 2018...
     Left with 34 researchers
-    Counting citations of 34 authors...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Counting citations of 22 authors...
     Filtering based on count of citations...
-    Left with 6 authors
+    Left with 7 authors
     Filtering based on coauthor count...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 3 author(s) matching all criteria
-    Find matches...
-    Searching through characteristics of 846 authors...
-    Left with 503 authors with sufficient number of publications and same main field
-    Left with 35 researchers
-    Filtering based on count of citations...
-    Left with 5 authors
-    Filtering based on coauthor count...
-    Found 3 author(s) matching all criteria
+    100%|████████████████████████████████████████████████████████████████████████████████████████████████| 6/6 [00:05<00:00,  1.00it/s]
+    Left with 4 authors
+    Found 4 author(s) matching all criteria
     >>> print(stefano.matches)
-    [55022752500, 55810688700, 55824607400]
+    [55022752500, 55567912500, 55810688700, 55824607400]
 
 
 Adding information to matches
@@ -185,20 +169,20 @@ You might need additional information to both assess match quality and select ma
 .. code-block:: python
 
     >>> stefano.inform_matches(verbose=True)
-    Providing information for 3 matches...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    Providing information for 4 matches...
     Match 55022752500: 0 reference list(s) out of 5 documents missing
+    Match 55567912500: 0 reference list(s) out of 6 documents missing
     Match 55810688700: 0 reference list(s) out of 6 documents missing
     Match 55824607400: 0 reference list(s) out of 7 documents missing
     Original 55208373700: 1 reference list(s) out of 7 documents missing
     >>> print(stefano.matches[0])
     Match(ID=55022752500, name='Van der Borgh, Michel', first_name='Michel',
-    surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
-    num_citations=33, num_coauthors_period=6, num_publications_period=5,
-    num_citations_period=33, subjects=['BUSI', 'COMP', 'SOCI'],
-    affiliation_country='Netherlands', affiliation_id='60032882',
-    affiliation_name='Eindhoven University of Technology, Department of Industrial Engineering & Innovation Sciences',
-    affiliation_type="univ", language='eng', num_cited_refs=0)
+          surname='Van der Borgh', first_year=2012, num_coauthors=6,
+          num_publications=5, num_citations=36, num_coauthors_period=None,
+          num_publications_period=None, num_citations_period=None,
+          subjects=['BUSI', 'ECON', 'COMP'], affiliation_country='Netherlands',
+          affiliation_id='60032882', affiliation_name='Technische Universiteit
+          Eindhoven', affiliation_type='univ', language='eng', num_cited_refs=0)
 
 By default, `sosia` provides the following information:
 
@@ -224,43 +208,49 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
 .. code-block:: python
 
     >>> import pandas as pd
-    >>> pd.set_option('display.max_columns', None)
+    >>> pd.set_option('display.max_columns', None)  # this is just for full display
     >>> df = pd.DataFrame(stefano.matches)
     >>> df = df.set_index('ID')
     >>> df
                                   name  first_name        surname  first_year  \
     ID                                                                          
     55022752500  Van der Borgh, Michel      Michel  Van der Borgh        2012   
+    55567912500          Eling, Katrin      Katrin          Eling        2013   
     55810688700     Zapkau, Florian B.  Florian B.         Zapkau        2014   
     55824607400   Pellegrino, Gabriele    Gabriele     Pellegrino        2011   
 
                  num_coauthors  num_publications  num_citations  \
     ID                                                            
-    55022752500              6                 5             34   
+    55022752500              6                 5             36   
+    55567912500              5                 6             37   
     55810688700              8                 6             33   
-    55824607400              5                 7             32   
+    55824607400              5                 7             34   
 
                 num_coauthors_period num_publications_period num_citations_period  \
     ID                                                                              
     55022752500                 None                    None                 None   
+    55567912500                 None                    None                 None   
     55810688700                 None                    None                 None   
     55824607400                 None                    None                 None   
 
                            subjects affiliation_country affiliation_id  \
     ID                                                                   
     55022752500  [BUSI, ECON, COMP]         Netherlands       60032882   
-    55810688700        [BUSI, ECON]             Germany       60025310   
+    55567912500  [BUSI, COMP, ENGI]         Netherlands       60032882   
+    55810688700  [BUSI, ECON, MEDI]             Germany       60025310   
     55824607400  [BUSI, ECON, DECI]         Switzerland       60028186   
 
                                          affiliation_name affiliation_type  \
     ID                                                                       
     55022752500         Technische Universiteit Eindhoven             univ   
-    55810688700                Heinrich Heine Universitat             univ   
+    55567912500         Technische Universiteit Eindhoven             univ   
+    55810688700     Heinrich-Heine-Universität Düsseldorf             univ   
     55824607400  Ecole Polytechnique Fédérale de Lausanne             univ   
 
                 language  num_cited_refs  
     ID                                    
     55022752500      eng               0  
+    55567912500      eng               0  
     55810688700      eng               0  
-    55824607400      eng               5
+    55824607400      eng               5  
 

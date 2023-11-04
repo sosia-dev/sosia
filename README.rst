@@ -48,7 +48,7 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
 
     >>> import sosia
     >>> 
-    >>> sosia.create_fields_sources_list()  # Necessary only once
+    >>> sosia.get_field_source_information()  # Necessary only once
     >>> sosia.make_database()  # Necessary only once
     >>> 
     >>> stefano = sosia.Original(55208373700, 2019)  # Scopus ID and year
@@ -56,16 +56,15 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>> stefano.define_search_group()  # Authors publishing in similar sources
     >>> stefano.find_matches()  # Find matches satisfying all criteria
     >>> print(stefano.matches)
-    >>> ['55022752500', '55810688700', '55824607400']
+    >>> [55320703900, 55817553500, 56113324000, 56276429200]
     >>> stefano.inform_matches()  # Optional step to provide additional information
     >>> print(stefano.matches[0])
-    Match(ID='55022752500', name='Van der Borgh, Michel', first_name='Michel',
-    surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
-    num_citations=33, num_coauthors_period=6, num_publications_period=5,
-    num_citations_period=33, subjects=['BUSI', 'COMP', 'SOCI'], country='Netherlands',
-    affiliation_id='60032882', affiliation='Eindhoven University of Technology,
-    Department of Industrial Engineering & Innovation Sciences', language='eng',
-    reference_sim=0.0, abstract_sim=0.1217)
+    Match(ID=55320703900, name='Arts, Sam', first_name='Sam', surname='Arts',
+          first_year=2012, num_coauthors=9, num_publications=8, num_citations=74,
+          num_coauthors_period=None, num_publications_period=None, num_citations_period=None, subjects=['BUSI', 'ECON', 'DECI'],
+          affiliation_country='Belgium', affiliation_id='60025063',
+          affiliation_name='KU Leuven', affiliation_type='univ',
+          language='eng', num_cited_refs=28)
 
 
 .. inclusion-marker-end
