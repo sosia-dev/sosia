@@ -3,12 +3,11 @@ from string import Template
 
 from pybliometrics.scopus.exception import Scopus400Error
 
-from sosia.processing.utils import expand_affiliation, handle_scopus_connectivity
+from sosia.processing.utils import expand_affiliation
 from sosia.processing.constants import QUERY_MAX_LEN
 from sosia.utils import custom_print, print_progress
 
 
-@handle_scopus_connectivity
 def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
                size_only=False):
     """Wrapper function to perform a particular search query.

@@ -6,4 +6,3 @@ ASJC_2D = {10: "MULT", 11: "AGRI", 12: "ARTS", 13: "BIOC", 14: "BUSI",
            35: "DENT", 36: "HEAL"}
 
 QUERY_MAX_LEN = 2000
-QUERY_MAX_TRIES = 10
