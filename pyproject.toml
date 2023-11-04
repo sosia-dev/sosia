@@ -11,7 +11,7 @@ readme = "README.rst"
 license = {text = "MIT"}
 dependencies = [
     "numpy",
-    "pandas>=1.1.5",
+    "pandas>=2.1.0",
     "pybliometrics>=3.5.2",
     "tqdm"
 ]

@@ -213,7 +213,7 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     res["year"] = year
     res["author_ids"] = res["author_ids"] + ";"
     grouping_cols = ["source_id", "year", "afid"]
-    res = (res.groupby(grouping_cols)[["author_ids"]].apply(sum)
+    res = (res.groupby(grouping_cols)["author_ids"].sum()
               .reset_index()
               .rename(columns={"author_ids": "auids"}))
     res["auids"] = res["auids"].str.strip(";")

@@ -94,7 +94,10 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
         to_add = pd.concat([to_add, new])
 
     # Format useful information
-    data = pd.concat([data, to_add])
+    if data.empty:
+        data = to_add
+    else:
+        data = pd.concat([data, to_add])
     data = data[data["auids"] != ""]
     data["auids"] = data["auids"].str.replace(";", ",").str.split(",")
 
