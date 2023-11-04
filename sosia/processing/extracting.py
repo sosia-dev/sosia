@@ -2,9 +2,9 @@ from collections import namedtuple
 
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
+from tqdm import tqdm
 
 from sosia.processing.utils import compute_overlap
-from sosia.utils import print_progress
 
 
 def extract_authors(pubs):
@@ -202,9 +202,7 @@ def inform_matches(self, keywords, verbose, refresh):
     # Add selected information match-by-match
     out = []
     completeness = {}
-    total = len(self.matches)
-    print_progress(0, total, verbose)
-    for idx, auth_id in enumerate(self.matches):
+    for auth_id in tqdm(self.matches, disable=~verbose):
         period = self.year + 1 - self._period_year
         p = Scientist([auth_id], self.year, period=period, refresh=refresh,
                       sql_fname=self.sql_fname)
@@ -218,7 +216,6 @@ def inform_matches(self, keywords, verbose, refresh):
                 ref_cos = compute_overlap(refs, focal_refs)
                 match_info["num_cited_refs"] = ref_cos
         out.append(m(**match_info))
-        print_progress(idx+1, total, verbose)
 
     # Eventually print information on missing information
     if verbose and doc_parse:

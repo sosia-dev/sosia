@@ -1,6 +1,8 @@
+from tqdm import tqdm
+
 from sosia.processing.caching import auth_npubs_retrieve_insert,\
     retrieve_author_info
-from sosia.utils import custom_print, print_progress
+from sosia.utils import custom_print
 
 
 def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
@@ -109,19 +111,16 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
 
     # Verify that publications before minimum year are 0
     if group_tocheck:
-        n = len(group_tocheck)
-        text = f"Obtaining information for {n:,} authors without sufficient "\
-               "information in database..."
+        text = f"Obtaining information for {len(group_tocheck):,} authors "\
+               "without sufficient information in database..."
         custom_print(text, verbose)
-        print_progress(0, n, verbose)
         to_loop = [x for x in group_tocheck]  # Temporary copy
-        for i, auth_id in enumerate(to_loop):
+        for auth_id in tqdm(to_loop, disable=~verbose):
             npubs_ybefore = auth_npubs_retrieve_insert(auth_id, ybefore, conn)
             if npubs_ybefore:
                 group.remove(auth_id)
                 group_tocheck.remove(auth_id)
                 older_authors.append(auth_id)
-            print_progress(i+1, n, verbose)
         text = f"Left with {len(group):,} authors based on publication "\
                f"information before {ybefore}"
         custom_print(text, verbose)
@@ -129,11 +128,10 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
     # Verify that publications before the given year fall in range
     group_tocheck.update(au_skip)
     if group_tocheck:
-        n = len(group_tocheck)
-        text = f"Counting publications of {n:,} authors before {yupto+1}..."
+        text = f"Counting publications of {len(group_tocheck):,} authors "\
+               f"before {yupto+1}..."
         custom_print(text, verbose)
-        print_progress(0, n, verbose)
-        for i, au in enumerate(group_tocheck):
+        for au in tqdm(group_tocheck, disable=~verbose):
             n_pubs_yupto = auth_npubs_retrieve_insert(au, yupto, conn)
             # Eventually decrease publication count
             if yfrom and n_pubs_yupto >= min(npapers):
@@ -143,7 +141,6 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
                 group.remove(au)
             else:
                 pubs_counts.append(n_pubs_yupto)
-            print_progress(i+1, n, verbose)
     return group, pubs_counts, older_authors
 
 

@@ -2,6 +2,7 @@ from itertools import product
 from string import Template
 
 import pandas as pd
+from tqdm import tqdm
 
 from sosia.processing.caching import insert_data, retrieve_author_info
 from sosia.processing.extracting import extract_authors
@@ -9,7 +10,7 @@ from sosia.processing.filtering import filter_pub_counts, same_affiliation
 from sosia.processing.getting import get_authors_from_sourceyear, get_authors
 from sosia.processing.querying import base_query, count_citations, stacked_query
 from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
-from sosia.utils import custom_print, print_progress
+from sosia.utils import custom_print
 
 
 def find_matches(original, stacked, verbose, refresh):
@@ -85,12 +86,10 @@ def find_matches(original, stacked, verbose, refresh):
         text = f"Counting citations of {total:,} authors..."
         custom_print(text, verbose)
         missing['n_cits'] = 0
-        print_progress(0, total, verbose)
         start = 0
-        for i, au in missing.iterrows():
+        for i, au in tqdm(missing.iterrows(), disable=~verbose, total=total):
             n_cits = count_citations([str(au['auth_id'])], original.year+1)
             missing.at[i, 'n_cits'] = n_cits
-            print_progress(i + 1, total, verbose)
             if i % 100 == 0 or i == len(missing) - 1:
                 insert_data(missing.iloc[start:i+1], conn, table="author_ncits")
                 start = i

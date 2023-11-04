@@ -1,11 +1,12 @@
-import pandas as pd
 from string import Template
 
+import pandas as pd
 from pybliometrics.scopus.exception import Scopus400Error
+from tqdm import tqdm
 
 from sosia.processing.utils import expand_affiliation
 from sosia.processing.constants import QUERY_MAX_LEN
-from sosia.utils import custom_print, print_progress
+from sosia.utils import custom_print
 
 
 def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
@@ -258,11 +259,8 @@ def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
     if stacked:
         maxlen = QUERY_MAX_LEN
     queries = create_queries(group, joiner, template, maxlen)
-    total = len(queries)
-    print_progress(0, total, verbose)
     res = []
-    for i, q in enumerate(queries):
-        print_progress(i+1, total, verbose)
+    for q in tqdm(queries, disable=~verbose):
         res.extend(long_query(q, q_type, template, refresh))
     return res
 

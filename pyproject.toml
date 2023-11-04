@@ -12,7 +12,8 @@ license = {text = "MIT"}
 dependencies = [
     "numpy",
     "pandas>=1.1.5",
-    "pybliometrics>=3.5.2"
+    "pybliometrics>=3.5.2",
+    "tqdm"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
