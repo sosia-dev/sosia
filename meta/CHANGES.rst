@@ -3,6 +3,17 @@ Change Log
 
 .. toctree::
 
+0.6.1
+~~~~~
+
+2023-11-05
+
+* Rename `.create_fields_sources_list()` to `.get_field_source_information()`.
+* Use `tqdm` to print progress bars.
+* Adopt improved format of field-source assignment and source information.
+* Upgrade third-party code usage.
+* Improve documentation, add copy-code button, update code examples.
+
 0.6
 ~~~
 
