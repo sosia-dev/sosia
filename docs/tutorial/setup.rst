@@ -9,7 +9,7 @@ Initial set-up
     >>> import sosia
     >>> sosia.get_field_source_information(verbose=True)
     Stored information for 91,271 sources as well as 204,906 field-source
-    assigments in /home/merose/.cache/sosia/
+    assignments in /home/merose/.cache/sosia/
 
 
 To speed up the process, sosia makes use of a SQLite Database.  Specify the path and pass it on in:
@@ -21,4 +21,4 @@ To speed up the process, sosia makes use of a SQLite Database.  Specify the path
     >>> sosia.make_database(DB_NAME)
 
 
-The database can be anywhere; for small projects we advise to have it in the project folder, for large projects we recomment other places such as `~/.cache/sosia/<project_name>.sqlite`.  If you do not specify a path, `sosia` will default to `~/.cache/sosia/main.sqlite`.
+The database can be anywhere; for small projects we advise to have it in the project folder, for large projects we recommend other places such as `~/.cache/sosia/<project_name>.sqlite`.  If you do not specify a path, `sosia` will default to `~/.cache/sosia/main.sqlite`.

@@ -28,5 +28,5 @@ def get_field_source_information(verbose=False):
     fields.to_csv(FIELD_SOURCE_MAP)
 
     text = f"Stored information for {info.shape[0]:,} sources as well as "\
-        f"{fields.shape[0]:,} field-source assigments in {SOURCE_INFO.parent}/"
+        f"{fields.shape[0]:,} field-source assignments in {SOURCE_INFO.parent}"
     custom_print(text, verbose)

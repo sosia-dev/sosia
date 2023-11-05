@@ -14,7 +14,7 @@ The only class to interact with is :doc:`Original() <../reference/sosia.Original
 
 All properties and the control group are based on the publications associated with the profile and published before the treatment year.
 
-Upon initation, `pybliometrics` performs queries on the Scopus database under the hood.  The information is valid in the year of treatment and used to find similarities:
+Upon initiation, `pybliometrics` performs queries on the Scopus database under the hood.  The information is valid in the year of treatment and used to find similarities:
 
 .. code-block:: python
 
@@ -49,9 +49,9 @@ Additionally, `stefano.publications` is a list of namedtuples storing informatio
 Similarity parameters
 ---------------------
 
-`sosia` tries to find researchers that are similar to the Original in the year of treatment.  Currently `sosia` defines similar along four margins: the start of the academic career, the number of co-authors and publications, and the total citation count.  Another researcher (read: Scopus profile) is similar if her characteristics fall within the margin around the Original's characteristics.  If all characteristics are similar, and the other researcher is not a co-author, she is a match.
+`sosia` tries to find researchers that are similar to the Original in the year of treatment.  Currently, `sosia` defines similar along four margins: the start of the academic career, the number of co-authors and publications, and the total citation count.  Another researcher (read: Scopus profile) is similar if her characteristics fall within the margin around the Original's characteristics.  If all characteristics are similar, and the other researcher is not a co-author, she is deemed a match.
 
-By default (i.e., if not specified), the margins for the first year of publication is 2, for the number of co-author, the number of publication, and for the number of citations it is 20%.  Margins work in either direction.  You can override these paramters.  `sosia` interprets integer values as absolute deviation, and float values as relative deviation:
+By default (i.e., if not specified), the margins for the first year of publication is 2, for the number of co-authors, the number of publications, and for the number of citations it is 20%.  Margins apply in either direction.  You can override these parameters.  `sosia` interprets integer values as absolute deviation, and float values as a percentage for relative deviation:
 
 .. code-block:: python
    
@@ -59,12 +59,12 @@ By default (i.e., if not specified), the margins for the first year of publicati
                            coauth_margin=0.2, pub_margin=0.2,
                            cits_margin=0.2, sql_fname=DB_NAME)
 
-This will find matches who started publishing the year of the scientist's first publication plus or minus 2 years, who in the year of treatment have the same number of coauthors plus or minus 20% of that number (at least 1), and who in the year of treatment have the same number of publications plus or minus 20% of that number (at least 1).
+This configuration will find matches who started publishing the year of the scientist's first publication plus or minus 2 years, who in the year of treatment have the same number of coauthors plus or minus 20% of that number (with a minimum of 1), and who in the year of treatment have the same number of publications plus or minus 20% of that number (with a minimum of 1).
 
 
 Defining search sources
 -----------------------
-The first step is to define a list of sources similar (in type and area) to the sources the scientist published until the year of treatment.  `sosia` uses these source to define an intial search group.  A source is similar if (i) it is associated to the scientist's main field, (ii) is of the same type(s) of the scientist's sources and (iii) is not associated to fields alien to the scientist.  Here type of source refers to journal, conference proceeding, book, etc.  You define the list of search sources with a method to the class and access the results using a property:
+The first step is to define a list of sources similar (in type and area) to the sources the scientist published until the year of treatment. `sosia` uses these sources to define an initial search group. A source is similar if (i) it is associated with the scientist's main field, (ii) is of the same type(s) as the scientist's sources, and (iii) is not associated with fields alien to the scientist. Here the type of source refers to journal, conference proceeding, book, etc. You define the list of search sources with a method to the class and access the results using a property:
 
 .. code-block:: python
 
@@ -111,7 +111,7 @@ The next step is to define a first search group that adhere to conditions 1 to 4
 
 You can inspect the search group using `stefano.search_group`, which you can also override, pre-define or edit.
 
-An alternative search process will try to minimize the number of queries.  The downside is that the resulting query, which pybliometrics caches under the hood, cannot be reused for other searches (of other scientists).  Activate this setting with `stacked=True`:
+An alternative search process, which tries to minimize the number of queries, can be activated with `stacked=True`. The downside of this method is that the resulting query, which pybliometrics caches under the hood, cannot be reused for other searches (of other scientists).
 
 .. code-block:: python
 
@@ -189,9 +189,9 @@ By default, `sosia` provides the following information:
 * `first_year`: The year of the first recorded publication
 * `num_coauthors`: The number of coauthors (Scopus Author profiles) up to the year of treatment
 * `num_publications`: The number of indexed publications up to the year of treatment
-* `num_citations`: The number of citations up until up to year of treatment
-* `num_coauthors_period`: The number of coauthors (Scopus Author profiles) within the `period` desired (if not provided, equal to num_coauthors)
-* `num_publications_period`: The number of indexed publications within the `period` desired (if not provided, equal to num_publications)
+* `num_citations`: The number of citations up to the year of treatment
+* `num_coauthors_period`: The number of coauthors (Scopus Author profiles) within the desired `period` (if not provided, equal to num_coauthors)
+* `num_publications_period`: The number of indexed publications within the desired `period` (if not provided, equal to num_publications)
 * `num_citations_period`: The number of citations within the `period` desired  (if not provided, equal to num_citations)
 * `subjects`: List of research subjects in which the matched author has published up to the year of treatment
 * `affiliation_country`: The current country of the affiliation belonging to "affiliation_id"
