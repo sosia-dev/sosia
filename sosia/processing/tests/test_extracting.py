@@ -1,9 +1,11 @@
 """Tests for processing.extracting module."""
 
 from nose.tools import assert_equal
-from pybliometrics.scopus import ScopusSearch
+from pybliometrics.scopus import ScopusSearch, init
 
 from sosia.processing import find_main_affiliation, get_main_field, parse_docs
+
+init()
 
 refresh = 30
 test_id = 6701809842
