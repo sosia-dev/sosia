@@ -46,7 +46,9 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
         If q_type is none of the allowed values.
     """
 
-    from pybliometrics.scopus import AuthorSearch, ScopusSearch
+    from pybliometrics.scopus import AuthorSearch, ScopusSearch, init
+
+    init()
 
     params = {"query": query, "refresh": refresh, "download": not size_only}
 

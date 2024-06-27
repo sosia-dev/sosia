@@ -12,7 +12,7 @@ license = {text = "MIT"}
 dependencies = [
     "numpy",
     "pandas>=2.1.0",
-    "pybliometrics>=3.5.2",
+    "pybliometrics>=4.0",
     "tqdm"
 ]
 classifiers = [
