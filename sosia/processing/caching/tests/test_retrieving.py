@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from nose.tools import assert_equal, assert_true
 from pandas.testing import assert_frame_equal
 from pybliometrics.scopus import ScopusSearch, AuthorSearch
 
@@ -29,9 +28,9 @@ def test_retrieve_authors():
                      'country', 'areas']
     # Retrieve data
     incache, missing = retrieve_authors(df, conn)
-    assert_equal(incache.shape[0], 0)
-    assert_equal(incache.columns.to_list(), expected_cols)
-    assert_equal(missing, expected_auth)
+    assert incache.shape[0] == 0
+    assert incache.columns.to_list() == expected_cols
+    assert missing == expected_auth
 
 
 def test_retrieve_authors_insert():
@@ -54,8 +53,8 @@ def test_retrieve_authors_insert():
     df = pd.DataFrame(expected_auth + search_auth, columns=["auth_id"],
                       dtype="uint64")
     incache, missing = retrieve_authors(df, conn)
-    assert_equal(incache.shape[0], 2)
-    assert_equal(missing, [55317901900])
+    assert incache.shape[0] == 2
+    assert missing == [55317901900]
 
 
 def test_retrieve_author_info_authorpubs():
@@ -73,7 +72,7 @@ def test_retrieve_author_info_authorpubs():
     cols = ["auth_id", "year"]
     incache, tosearch = retrieve_author_info(expected[cols], conn, table)
     assert_frame_equal(incache, expected)
-    assert_true(tosearch.empty)
+    assert tosearch.empty
 
 
 def test_retrieve_author_info_authorncits():
@@ -90,7 +89,7 @@ def test_retrieve_author_info_authorncits():
     cols = ["auth_id", "year"]
     incache, tosearch = retrieve_author_info(expected[cols], conn, table)
     assert_frame_equal(incache, expected)
-    assert_true(tosearch.empty)
+    assert tosearch.empty
 
 
 def test_retrieve_author_info_authoryear():
@@ -116,8 +115,8 @@ def test_retrieve_author_info_authoryear():
     # Retrieve data
     incache, missing = retrieve_author_info(df2, conn, table)
     assert_frame_equal(incache, expected)
-    assert_equal(missing['auth_id'].tolist(), search_auth)
-    assert_equal(missing['year'].tolist(), [year])
+    assert missing['auth_id'].tolist() == search_auth
+    assert missing['year'].tolist() == [year]
 
 
 def test_retrieve_authors_from_sourceyear():

@@ -17,11 +17,8 @@ def get_field_source_information(verbose=False):
     """
     fname = DATA_REPO_URL + "main/sources/source_info.csv"
     info = pd.read_csv(fname, index_col=0)
-    try:
-        info.to_csv(SOURCE_INFO)
-    except OSError:
-        SOURCE_INFO.parent.mkdir()
-        info.to_csv(SOURCE_INFO)
+    SOURCE_INFO.parent.mkdir(parents=True, exist_ok=True)
+    info.to_csv(SOURCE_INFO)
 
     fname = DATA_REPO_URL + "main/sources/field_sources_map.csv"
     fields = pd.read_csv(fname, index_col=0)

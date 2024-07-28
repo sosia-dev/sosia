@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-from nose.tools import assert_equal, assert_false, assert_true
-
 from sosia.classes import Original
 from sosia.establishing import make_database, connect_database
 from sosia.processing.filtering import filter_pub_counts, same_affiliation
@@ -18,9 +16,9 @@ def test_filter_pub_counts():
              57194816659, 35097480000, 56055501900, 20434039300, 6602070937]
     npapers = range(2, 60)
     g, pubs, older = filter_pub_counts(group, test_conn, 1993, 2005, npapers)
-    assert_equal(sorted(g), [6602070937, 6701809842, 35097480000])
-    assert_equal(sorted(pubs), [3, 15, 17])
-    assert_equal(sorted(older), [20434039300, 54984906100, 56148489300])
+    assert sorted(g) == [6602070937, 6701809842, 35097480000]
+    assert sorted(pubs) == [3, 15, 17]
+    assert sorted(older) == [20434039300, 54984906100, 56148489300]
 
 
 def test_filter_pub_counts_period():
@@ -30,13 +28,12 @@ def test_filter_pub_counts_period():
              57194816659, 35097480000, 56055501900, 20434039300, 6602070937]
     npapers = range(2, 60)
     g, pubs, older = filter_pub_counts(group, test_conn, 1993, 2005, npapers, yfrom=2005)
-    assert_equal(sorted(g), [6602070937])
-    assert_equal(sorted(pubs), [2])
-    assert_equal(sorted(older), [20434039300, 54984906100, 56148489300])
+    assert sorted(g) == [6602070937]
+    assert sorted(pubs) == [2]
+    assert sorted(older) == [20434039300, 54984906100, 56148489300]
 
 
 def test_same_affiliation():
     original = Original(55208373700, 2019, affiliations=[60105007],
                         sql_fname=test_cache)
-    assert_true(same_affiliation(original, 57209617104))
-    assert_false(same_affiliation(original, 20434039300))
+    assert same_affiliation(original, 57209617104)

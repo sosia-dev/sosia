@@ -32,6 +32,7 @@ def make_database(fname=None, drop=False):
     if not fname:
         fname = DEFAULT_DATABASE
 
+    fname.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(fname)
     cursor = conn.cursor()
     for table, variables in DB_TABLES.items():

@@ -1,6 +1,5 @@
 """Tests for processing.extracting module."""
 
-from nose.tools import assert_equal
 from pybliometrics.scopus import ScopusSearch, init
 
 from sosia.processing import find_main_affiliation, get_main_field, parse_docs
@@ -14,14 +13,14 @@ test_id = 6701809842
 def test_find_main_affiliation():
     pubs = ScopusSearch(f"AU-ID({test_id})", refresh=refresh).results
     aff_id = find_main_affiliation([test_id], pubs, 2000)
-    assert_equal(aff_id, "60028717")
+    assert aff_id == "60028717"
 
 
 def test_get_main_field():
     fields = [1000, 1000, 2000, 2000, 2020, 2020]
     received = get_main_field(fields)
     expected = (2020, "ECON")
-    assert_equal(received, expected)
+    assert received == expected
 
 
 def test_parse_docs():
@@ -43,4 +42,4 @@ def test_parse_docs():
         '23044470851', '78649697033', '55049124635', '33845620645',
         '30444461409', '0034435025', '47949124687',  '84887864855',
         '84866332329', '84984932935', '0034423919', '0141625872'])
-    assert_equal(sorted(received[0]), sorted(expected_refs))
+    assert sorted(received[0]) == sorted(expected_refs)

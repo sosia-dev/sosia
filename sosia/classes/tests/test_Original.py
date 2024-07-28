@@ -5,7 +5,6 @@ from collections import namedtuple
 from pathlib import Path
 
 import pandas as pd
-from nose.tools import assert_equal, assert_true
 
 from sosia.classes import Original
 from sosia.establishing import make_database
@@ -73,9 +72,9 @@ def test_search_sources():
     for s in scientists_list:
         s.define_search_sources()
         search_sources = s.search_sources
-        assert_equal(len(search_sources), 61)
-        assert_true((20206, "Academy of Management Review") in search_sources)
-        assert_true((15143, "Regional Studies") in search_sources)
+        assert len(search_sources) == 61
+        assert (20206, "Academy of Management Review") in search_sources
+        assert (15143, "Regional Studies") in search_sources
 
 
 def test_search_sources_change():
@@ -83,68 +82,68 @@ def test_search_sources_change():
     expected = [(14351, "Brain Research Reviews"),
                 (18632, "Progress in Brain Research")]
     scientist1.search_sources, _ = zip(*expected)
-    assert_equal(scientist1.search_sources, expected)
+    assert scientist1.search_sources == expected
     scientist1.search_sources = backup
 
 
 def test_search_group():
     scientist1.define_search_group(refresh=refresh)
     recieved = scientist1.search_group
-    assert_true(isinstance(recieved, list))
-    assert_true(570 <= len(recieved) <= 680)
+    assert isinstance(recieved, list)
+    assert 570 <= len(recieved) <= 680
 
 
 def test_search_group_stacked():
     scientist1.define_search_group(stacked=True, refresh=refresh)
     recieved = scientist1.search_group
-    assert_true(isinstance(recieved, list))
-    assert_true(570 <= len(recieved) <= 680)
+    assert isinstance(recieved, list)
+    assert 570 <= len(recieved) <= 680
 
 
 def test_search_group_ignore():
     scientist2.define_search_group(refresh=refresh)
     recieved = scientist2.search_group
-    assert_true(isinstance(recieved, list))
-    assert_true(4000 <= len(recieved) <= 4500)
+    assert isinstance(recieved, list)
+    assert 4000 <= len(recieved) <= 4500
 
 
 def test_search_group_ignore_stacked():
     scientist2.define_search_group(stacked=True, refresh=refresh)
     recieved = scientist2.search_group
-    assert_true(isinstance(recieved, list))
-    assert_true(4200 <= len(recieved) <= 4300)
+    assert isinstance(recieved, list)
+    assert 4200 <= len(recieved) <= 4300
 
 
 def test_search_group_affiliations_stacked():
     scientist3.define_search_group(stacked=True, refresh=refresh)
     recieved = scientist3.search_group
-    assert_true(isinstance(recieved, list))
-    assert_true(15 <= len(recieved) <= 25)
+    assert isinstance(recieved, list)
+    assert 15 <= len(recieved) <= 25
 
 
 def test_find_matches():
     scientist1.find_matches(refresh=refresh)
     expected = [m.ID for m in MATCHES]
-    assert_equal(scientist1.matches, expected)
+    assert scientist1.matches == expected
 
 
 def test_find_matches_stacked():
     scientist1.find_matches(stacked=True, refresh=refresh)
     expected = [m.ID for m in MATCHES]
-    assert_equal(scientist1.matches, expected)
+    assert scientist1.matches == expected
 
 
 def test_find_matches_stacked_affiliations():
     scientist3.find_matches(stacked=True, refresh=refresh)
     expected = [m.ID for m in MATCHES if m.ID != 53164702100]
-    assert_equal(scientist3.matches, expected)
+    assert scientist3.matches == expected
 
 
 def test_inform_matches():
     scientist1.inform_matches(refresh=refresh)
     recieved = scientist1.matches
-    assert_equal(len(recieved), len(MATCHES))
-    assert_true(isinstance(recieved, list))
+    assert len(recieved) == len(MATCHES)
+    assert isinstance(recieved, list)
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
             "affiliation_country", "num_cited_refs"]
     df_r = pd.DataFrame(recieved)
