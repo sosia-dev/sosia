@@ -135,7 +135,7 @@ def test_find_matches_stacked():
 
 def test_find_matches_stacked_affiliations():
     scientist3.find_matches(stacked=True, refresh=refresh)
-    expected = [m.ID for m in MATCHES if m.ID != 53164702100]
+    expected = [m.ID for m in MATCHES]
     assert scientist3.matches == expected
 
 

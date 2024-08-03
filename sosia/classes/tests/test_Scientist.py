@@ -45,7 +45,7 @@ def test_affiliation_id():
 def test_affiliation_name():
     lmu = 'Ludwig-Maximilians-Universität München'
     assert scientist1.affiliation_name == lmu
-    epfl = 'Ecole Polytechnique Fédérale de Lausanne'
+    epfl = 'École Polytechnique Fédérale de Lausanne'
     assert scientist2.affiliation_name == epfl
     assert scientist3.affiliation_name == epfl
     assert scientist4.affiliation_name == epfl

@@ -15,5 +15,5 @@ def test_make_database():
     assert test_cache.is_file()
 
 
-def teardown_module():
-    test_cache.unlink(missing_ok=True)
+#def teardown_module():
+#    test_cache.unlink(missing_ok=True)
