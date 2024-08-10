@@ -5,7 +5,7 @@ from pybliometrics.scopus.exception import Scopus400Error
 from tqdm import tqdm
 
 from sosia.processing.utils import expand_affiliation
-from sosia.processing.constants import QUERY_MAX_LEN
+from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN
 from sosia.utils import custom_print
 
 
@@ -53,6 +53,7 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
     params = {"query": query, "refresh": refresh, "download": not size_only}
 
     if q_type == "author":
+        params["count"] = AUTHOR_SEARCH_MAX_COUNT
         au = AuthorSearch(**params)
         if size_only:
             return au.get_results_size()
@@ -262,7 +263,7 @@ def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
         maxlen = QUERY_MAX_LEN
     queries = create_queries(group, joiner, template, maxlen)
     res = []
-    for q in tqdm(queries, disable=~verbose):
+    for q in tqdm(queries, disable=not verbose):
         res.extend(long_query(q, q_type, template, refresh))
     return res
 
