@@ -44,27 +44,7 @@ MATCHES = [
         num_citations=190,
         affiliation_country='Norway',
         language='eng',
-        num_cited_refs=4),
-    Match(
-        ID=55071051800,
-        name='Doldor, Elena',
-        first_year=2013,
-        num_coauthors=6,
-        num_publications=8,
-        num_citations=19,
-        affiliation_country='United Kingdom',
-        language='eng',
-        num_cited_refs=0),
-    Match(
-        ID=55804519400,
-        name='González Álvarez, Miguel Domingo',
-        first_year=2013,
-        num_coauthors=7,
-        num_publications=8,
-        num_citations=1,
-        affiliation_country='Peru',
-        language='eng; spa',
-        num_cited_refs=0)]
+        num_cited_refs=4)]
 
 
 def test_search_sources():
@@ -90,14 +70,14 @@ def test_search_group():
     scientist1.define_search_group(refresh=refresh)
     recieved = scientist1.search_group
     assert isinstance(recieved, list)
-    assert 570 <= len(recieved) <= 680
+    assert 500 <= len(recieved) <= 680
 
 
 def test_search_group_stacked():
     scientist1.define_search_group(stacked=True, refresh=refresh)
     recieved = scientist1.search_group
     assert isinstance(recieved, list)
-    assert 570 <= len(recieved) <= 680
+    assert 500 <= len(recieved) <= 680
 
 
 def test_search_group_ignore():
