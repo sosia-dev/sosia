@@ -108,7 +108,6 @@ def find_matches(original, stacked, verbose, refresh):
     authors = pd.DataFrame({"auth_id": group, "year": original.year},
                            dtype="uint64")
     _, author_year_search = retrieve_author_info(authors, conn, "author_year")
-    matches = []
 
     if not author_year_search.empty:
         q = Template(f"AU-ID($fill) AND PUBYEAR BEF {original.year + 1}")
@@ -119,7 +118,7 @@ def find_matches(original, stacked, verbose, refresh):
         res = stacked_query(**params)
         res = build_dict(res, auth_year_group)
         if res:
-            # res can become empty after build_dict if a au_id is old
+            # res can become empty after build_dict if an au_id is old
             res = pd.DataFrame.from_dict(res, orient="index")
             res["year"] = original.year
             res = res[["year", "first_year", "n_pubs", "n_coauth"]]
@@ -139,7 +138,7 @@ def find_matches(original, stacked, verbose, refresh):
     text = f"Left with {len(matches)} authors"
     custom_print(text, verbose)
     if original.period:
-        text =  "Filtering based on citations and coauthor count during period..."
+        text = "Filtering based on citations and coauthor count during period..."
         custom_print(text, verbose)
         # Further screen matches based on period cits and coauths
         to_loop = [m for m in matches]  # temporary copy

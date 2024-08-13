@@ -81,7 +81,7 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
         f"{pubyear} AND NOT AU-ID({') AND NOT AU-ID('.join(exclusion_ids)})"
     # Download if too long
     if len(q) > QUERY_MAX_LEN:
-        template = Template(f"REF($fill) AND PUBYEAR BEF {pubyear} AND NOT"\
+        template = Template(f"REF($fill) AND PUBYEAR BEF {pubyear} AND NOT"
                             f" (AU-ID({') OR AU-ID('.join(exclusion_ids)}))")
         queries = create_queries(search_ids, " OR ", template, QUERY_MAX_LEN)
         res = []

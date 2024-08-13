@@ -1,6 +1,6 @@
 import pandas as pd
 
-from sosia.establishing.constants import DATA_REPO_URL, FIELD_SOURCE_MAP,\
+from sosia.establishing.constants import DATA_REPO_URL, FIELD_SOURCE_MAP, \
     SOURCE_INFO
 from sosia.utils import custom_print
 

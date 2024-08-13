@@ -1,6 +1,6 @@
 from tqdm import tqdm
 
-from sosia.processing.caching import auth_npubs_retrieve_insert,\
+from sosia.processing.caching import auth_npubs_retrieve_insert, \
     retrieve_author_info
 from sosia.utils import custom_print
 

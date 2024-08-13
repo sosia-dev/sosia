@@ -6,8 +6,8 @@ from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 
 from sosia.establishing import connect_database, DEFAULT_DATABASE
-from sosia.processing import add_source_names, base_query, count_citations,\
-    extract_authors, find_main_affiliation, get_authors, get_main_field,\
+from sosia.processing import add_source_names, base_query, count_citations, \
+    extract_authors, find_main_affiliation, get_authors, get_main_field, \
     maybe_add_source_names, read_fields_sources_list
 from sosia.utils import accepts
 

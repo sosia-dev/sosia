@@ -11,8 +11,8 @@ def extract_authors(pubs):
     """Get list of author IDs from a list of namedtuples representing
     publications.
     """
-    l = [x.author_ids.split(";") for x in pubs if isinstance(x.author_ids, str)]
-    return [int(au) for sl in l for au in sl]
+    auths = [x.author_ids.split(";") for x in pubs if isinstance(x.author_ids, str)]
+    return [int(au) for sl in auths for au in sl]
 
 
 def find_main_affiliation(auth_ids, pubs, year):
@@ -136,8 +136,6 @@ def inform_match(profile, keywords, refresh):
     match_info : dict
         Information corresponding to provided keywords.
     """
-    from sosia.classes import Scientist
-
     info = {
         "ID": profile.identifier[0],
         "name": profile.name,
