@@ -115,7 +115,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
                "without sufficient information in database..."
         custom_print(text, verbose)
         to_loop = [x for x in group_tocheck]  # Temporary copy
-        for auth_id in tqdm(to_loop, disable=~verbose):
+        for auth_id in tqdm(to_loop, disable=not verbose):
             npubs_ybefore = auth_npubs_retrieve_insert(auth_id, ybefore, conn)
             if npubs_ybefore:
                 group.remove(auth_id)
@@ -131,7 +131,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         text = f"Counting publications of {len(group_tocheck):,} authors "\
                f"before {yupto+1}..."
         custom_print(text, verbose)
-        for au in tqdm(group_tocheck, disable=~verbose):
+        for au in tqdm(group_tocheck, disable=not verbose):
             n_pubs_yupto = auth_npubs_retrieve_insert(au, yupto, conn)
             # Eventually decrease publication count
             if yfrom and n_pubs_yupto >= min(npapers):

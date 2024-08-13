@@ -87,7 +87,7 @@ def find_matches(original, stacked, verbose, refresh):
         custom_print(text, verbose)
         missing['n_cits'] = 0
         start = 0
-        for i, au in tqdm(missing.iterrows(), disable=~verbose, total=total):
+        for i, au in tqdm(missing.iterrows(), disable=not verbose, total=total):
             n_cits = count_citations([str(au['auth_id'])], original.year+1)
             missing.at[i, 'n_cits'] = n_cits
             if i % 100 == 0 or i == len(missing) - 1:
