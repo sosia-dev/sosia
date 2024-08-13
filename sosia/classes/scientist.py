@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Author:   Michael E. Rose <michael.ernst.rose@gmail.com>
 """Super class to represent a scientist."""
 
 from warnings import warn

@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Authors:   Michael E. Rose <michael.ernst.rose@gmail.com>
-#            Stefano H. Baruffaldi <ste.baruffaldi@gmail.com>
 """Main class for sosia."""
 
 from warnings import warn
