@@ -48,7 +48,7 @@ class Original(Scientist):
     def search_sources(self):
         """The set of sources (journals, books) comparable to the sources
         the scientist published in until the treatment year.
-        A sources is comparable if is belongs to the scientist's main field
+        A source is comparable if it belongs to the scientist's main field
         but not to fields alien to the scientist, and if the types of the
         sources are the same as the types of the sources in the scientist's
         main field where she published in.
@@ -80,39 +80,39 @@ class Original(Scientist):
             to find a control scientist for.
 
         treatment_year : str or numeric
-            Year of the event.  Control scientist will be matched on trends and
-            characteristics of the original scientist up to this year.
+            Year in which the comparison takes place.  Control scientist will
+            be matched on trends and characteristics of the original
+            scientist up to this year.
 
         first_year_margin : numeric (optional, default=2)
-            Number of years by which the search for authors publishing around
-            the year of the original scientist's year of first publication
-            should be extend in both directions.
+            The left and right margin for year of first publication to match
+            possible matches and the scientist on.
 
         pub_margin : numeric (optional, default=0.2)
             The left and right margin for the number of publications to match
             possible matches and the scientist on.  If the value is a float,
-            it is interpreted as percentage of the scientists number of
+            it is interpreted as percentage of the scientist's number of
             publications and the resulting value is rounded up.  If the value
-            is an integer it is interpreted as fixed number of publications.
+            is an integer, it is interpreted as fixed number of publications.
 
         cits_margin : numeric (optional, default=0.2)
             The left and right margin for the number of citations to match
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientists number of
             publications and the resulting value is rounded up.  If the value
-            is an integer it is interpreted as fixed number of citations.
+            is an integer, it is interpreted as fixed number of citations.
 
         coauth_margin : numeric (optional, default=0.2)
             The left and right margin for the number of coauthors to match
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientists number of
             coauthors and the resulting value is rounded up.  If the value
-            is an integer it is interpreted as fixed number of coauthors.
+            is an integer, it is interpreted as fixed number of coauthors.
 
         affiliations : list (optional, default=None)
             A list of Scopus affiliation IDs.  If provided, sosia conditions
             the match procedure on affiliation with these IDs in the
-            treatment year.
+            year of comparison.
 
         period: int (optional, default=None)
             An additional period prior to the publication year on which to

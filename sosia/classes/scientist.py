@@ -30,7 +30,7 @@ class Scientist(object):
 
     @property
     def affiliation_country(self):
-        """The current country of the affiliation defined in affiliation_id."""
+        """The country of the scientist's affiliation."""
         return self._affiliation_country
 
     @affiliation_country.setter
@@ -41,7 +41,7 @@ class Scientist(object):
     @property
     def affiliation_id(self):
         """The affiliation ID (as string) of the scientist's most frequent
-        affiliation in or before the active year.
+        affiliation in the active year.
         """
         return self._affiliation_id
 
@@ -52,7 +52,7 @@ class Scientist(object):
 
     @property
     def affiliation_name(self):
-        """The current name of the affiliation defined in affiliation_id."""
+        """The name of the scientist's affiliation."""
         return self._affiliation_name
 
     @affiliation_name.setter
@@ -62,7 +62,7 @@ class Scientist(object):
 
     @property
     def affiliation_type(self):
-        """The current type of the affiliation defined in affiliation_id."""
+        """The type of the scientist's affiliation."""
         return self._affiliation_type
 
     @affiliation_type.setter
@@ -72,7 +72,7 @@ class Scientist(object):
 
     @property
     def citations(self):
-        """The citations of the scientist until the provided year."""
+        """The citation count of the scientist until the provided year."""
         return self._citations
 
     @citations.setter
@@ -82,7 +82,7 @@ class Scientist(object):
 
     @property
     def citations_period(self):
-        """The citations of the scientist during the given period."""
+        """The citation count of the scientist during the given period."""
         return self._citations_period
 
     @citations_period.setter
@@ -93,7 +93,7 @@ class Scientist(object):
     @property
     def coauthors(self):
         """Set of coauthors of the scientist on all publications until the
-        provided year.
+        comparison year.
         """
         return self._coauthors
 
@@ -176,7 +176,7 @@ class Scientist(object):
 
     @property
     def language(self):
-        """The language(s) of the scientist published in."""
+        """The language(s) the scientist published in."""
         return self._language
 
     @language.setter
@@ -208,7 +208,7 @@ class Scientist(object):
 
     @property
     def sources(self):
-        """The Scopus IDs of sources (journals, books) in which the
+        """The Scopus IDs of sources (journals, books, etc.) in which the
         scientist published in.
         """
         return self._sources
@@ -256,19 +256,18 @@ class Scientist(object):
             that value in number of days.
 
         eids : list (optional, default=None)
-            A list of scopus EIDs of the publications of the scientist.  If
-            it is provided, the scientist's properties are set based on these
+            A list of Scopus EIDs of the publications of the scientist.  If
+            provided, the scientist's properties are inferred from these
             publications, instead of the list of publications obtained from
             the Scopus Author ID(s).
 
         period: int (optional, default=None)
-            In additional starting x years prior to the treatment year,
-            which is also used to compute characteristics in the treatment
-            year.
+            An additional point in time to match characteristics on.  Will
+            fe interpreted as number years prior to the comparison year.
 
         sql_fname : str (optional or pathlib.Path(), default=None)
-            The path of the SQLite database to connect to.  If None will
-            default to `~/.cache/sosia/main.sqlite`.
+            The path of the local SQLite database to connect to.  If None,
+            will default to `~/.cache/sosia/main.sqlite`.
 
         Raises
         ------
