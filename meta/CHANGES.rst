@@ -3,6 +3,16 @@ Change Log
 
 .. toctree::
 
+
+0.6.2
+~~~~~
+
+2024-08-13
+
+* Fix bug related to searching information for authors in the search group via Scopus Author Search API.
+* Fix bugs related to the progress bars.
+* Improve, update and fix documentation.
+
 0.6.1
 ~~~~~
 
