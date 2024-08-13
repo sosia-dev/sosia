@@ -74,7 +74,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         au_remove.update(auth_npubs[mask]["auth_id"])
         # Authors with no pubs before min year
         mask = ((auth_npubs["year"] == ybefore) & (auth_npubs["n_pubs"] == 0))
-        au_ok_miny = set(auth_npubs[mask]["auth_id"].unique())
+        au_ok_miny = set(auth_npubs.loc[mask, "auth_id"].unique())
         # Check publications in range
         if yfrom:
             # Keep authors where subtracting publications from before period
@@ -92,7 +92,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
                  (auth_npubs["n_pubs"] < min(npapers))) |
                 ((auth_npubs["year"] <= yupto) &
                  (auth_npubs["n_pubs"] > max(npapers))))
-        remove = auth_npubs[mask]["auth_id"]
+        remove = auth_npubs.loc[mask, "auth_id"]
         au_remove.update(remove)
         # Authors with pubs count within the range before the given year
         mask = (((auth_npubs["year"] == yupto) &
@@ -102,7 +102,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         # Keep authors that match both conditions
         au_ok = au_ok_miny.intersection(au_ok_year["auth_id"].unique())
         mask = au_ok_year["auth_id"].isin(au_ok)
-        pubs_counts = au_ok_year[mask]["n_pubs"].tolist()
+        pubs_counts = au_ok_year.loc[mask, "n_pubs"].tolist()
         # Skip citation check for authors that match only the first condition,
         # with the second being unknown
         au_skip = set([x for x in au_ok_miny if x not in au_remove | au_ok])

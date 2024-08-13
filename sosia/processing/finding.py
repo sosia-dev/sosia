@@ -58,7 +58,7 @@ def find_matches(original, stacked, verbose, refresh):
     authors = get_authors(original.search_group, original.sql_conn, verbose=verbose)
     same_field = authors['areas'].str.startswith(original.main_field[1])
     enough_pubs = authors['documents'].astype(int) >= int(min(_npapers))
-    group = sorted(authors[same_field & enough_pubs]["auth_id"].tolist())
+    group = sorted(authors.loc[same_field & enough_pubs, "auth_id"].tolist())
     text = f"Left with {len(group):,} authors with sufficient "\
            "number of publications and same main field"
     custom_print(text, verbose)
@@ -98,7 +98,7 @@ def find_matches(original, stacked, verbose, refresh):
     # Keep if citations are in range
     custom_print("Filtering based on count of citations...", verbose)
     mask = auth_cits["n_cits"].between(min(_ncits), _max_cits)
-    group = auth_cits[mask]['auth_id'].tolist()
+    group = auth_cits.loc[mask, 'auth_id'].tolist()
 
     # Fourth round of filtering: Download publications, verify coauthors
     # (in the FULL period) and first year

@@ -89,7 +89,7 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
             r = long_query(q, "docs", template, view="STANDARD")
             res.extend(r)
         res = pd.DataFrame(res)
-        return len(res.eid.unique())
+        return res["eid"].nunique()
     return base_query("docs", q, size_only=True)
 
 
@@ -188,9 +188,7 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     verbose : bool (optional, default=False)
         Whether to print information on the search progress.
     """
-    # Dummy return value
-    columns = ["source_id", "year", "auids", "afid"]
-    dummy = pd.DataFrame(columns=columns)
+    dummy = pd.DataFrame(columns=["source_id", "year", "auids", "afid"])
 
     # Search authors
     msg = f"... parsing Scopus information for {year}..."

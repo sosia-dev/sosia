@@ -60,11 +60,8 @@ def retrieve_author_info(df, conn, table):
     insert_temporary_table(df, conn, merge_cols=cols)
     incache = temporary_merge(conn, table, merge_cols=cols)
     if not incache.empty:
-        df = df.set_index(cols)
-        incache = incache.set_index(cols)
-        tosearch = df[~(df.index.isin(incache.index))]
-        incache = incache.reset_index()
-        tosearch = tosearch.reset_index()
+        merged = df.merge(incache, on=cols, how='left', indicator=True)
+        tosearch = merged[merged['_merge'] == 'left_only'].drop(columns='_merge')
     else:
         tosearch = df
     return incache, tosearch

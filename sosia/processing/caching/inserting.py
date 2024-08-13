@@ -46,7 +46,7 @@ def insert_data(data, conn, table):
     wildcard_tables = {"authors", "author_ncits", "author_year", "sources",
                        "sources_afids"}
     if table in wildcard_tables:
-        values = ["?"]*len(cols)
+        values = ["?"] * len(cols)
     else:
         values = (str(d) for d in data)
     q = f"INSERT OR IGNORE INTO {table} ({','.join(cols)}) "\
@@ -57,7 +57,7 @@ def insert_data(data, conn, table):
         if data.empty:
             return None
         if table == 'authors':
-            data["auth_id"] = data.apply(lambda x: x.eid.split("-")[-1], axis=1)
+            data["auth_id"] = data['eid'].str.split('-').str[-1]
         elif table in ('sources', 'sources_afids'):
             if table == 'sources' and "afid" in data.columns:
                 data = (data.groupby(["source_id", "year"])[["auids"]]

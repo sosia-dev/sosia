@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import defaultdict, Counter, namedtuple
 
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
@@ -36,11 +36,10 @@ def find_main_affiliation(auth_ids, pubs, year):
     -------
     affiliation_id : str or None
         The most common affiliation_id of the scientist in the year closest
-        to the treatment year, given that the publications list valid
+        to the provided year, given that the publications list valid
         information for each output.  Equals None when no valid
         publications are found.
     """
-    from collections import defaultdict, Counter
     pubs = [p for p in pubs if p.author_ids and p.author_afids]
     # Find affiliation ID of all available publications
     affs = defaultdict(lambda: Counter())
@@ -85,8 +84,6 @@ def get_main_field(fields):
     ----
     We exclude multidisciplinary and give preference to non-general fields.
     """
-    from collections import Counter
-
     from sosia.processing.constants import ASJC_2D
 
     # Exclude Multidisciplinary
