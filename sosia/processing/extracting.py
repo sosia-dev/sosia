@@ -255,10 +255,15 @@ def parse_docs(eids, refresh):
 
 
 def _print_missing_docs(auth_id, n_valid_refs, total, res_type="Match"):
-    """Auxiliary function to print information on missing abstracts and
-    reference lists stored in a dictionary d.
-    """
+    """Auxiliary function to print information on reference lists."""
     auth_ids = [str(a) for a in auth_id]
-    text = f"{res_type} {';'.join(auth_ids)}: {total-n_valid_refs} reference "\
-           f"list(s) out of {total} documents missing"
+    prefix = f"{res_type} {';'.join(auth_ids)}:"
+    missing = total-n_valid_refs
+    if missing:
+        plural = "s" if missing > 1 else ""
+        middle = f"{missing} reference list{plural} out "
+    else:
+        middle = "No reference list"
+    suffix = f"of {total} documents missing"
+    text = " ".join([prefix, middle, suffix])
     print(text)

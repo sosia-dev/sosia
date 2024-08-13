@@ -176,11 +176,11 @@ You may need additional information to both assess match quality and select matc
     >>> stefano.inform_matches(verbose=True)
     Found 4 author(s) matching all criteria
 	Providing information for 4 matches...
-	Match 55022752500: 0 reference list(s) out of 5 documents missing
-	Match 55567912500: 0 reference list(s) out of 6 documents missing
-	Match 55810688700: 0 reference list(s) out of 6 documents missing
-	Match 55824607400: 0 reference list(s) out of 7 documents missing
-	Original 55208373700: 1 reference list(s) out of 7 documents missing
+	Match 55022752500: No reference list of 5 documents missing
+	Match 55567912500: No reference list of 6 documents missing
+	Match 55810688700: No reference list of 6 documents missing
+	Match 55824607400: No reference list of 7 documents missing
+	Original 55208373700: 1 reference list out  of 7 documents missing
 
 By default, `sosia` provides the following information:
 
