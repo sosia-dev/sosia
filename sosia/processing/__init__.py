@@ -1,3 +1,5 @@
+"""This module imports various processing functionalities for Sosia."""
+
 from sosia.processing.caching import *
 from sosia.processing.constants import *
 from sosia.processing.extracting import *

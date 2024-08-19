@@ -1,3 +1,6 @@
+"""Module with utility functions for processing and caching data."""
+
+from copy import deepcopy
 import pandas as pd
 
 
@@ -14,7 +17,6 @@ def d_to_df_for_cache(d, source_id):
     source_id: int
         Scopus identifier of the source.
     """
-    from copy import deepcopy
     d2 = deepcopy(d)
     for y in d2:
         d2[y] = [d2[y]]

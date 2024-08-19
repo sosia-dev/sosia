@@ -1,3 +1,10 @@
+"""
+Module with a function for filtering authors based on restrictions in the number of 
+publications in different periods.
+"""
+
+from itertools import product
+from pandas import DataFrame
 from tqdm import tqdm
 
 from sosia.processing.caching import auth_npubs_retrieve_insert, \
@@ -47,10 +54,6 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
     older_authors : list of str
         Scopus IDs filtered out because have publications before ybefore.
     """
-    from itertools import product
-
-    from pandas import DataFrame
-
     group = [int(x) for x in group]
     years_check = [ybefore, yupto]
     if yfrom:
@@ -65,7 +68,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
     # Use information in database
     if not auth_npubs.empty:
         # Remove authors based on age
-        mask = ((auth_npubs["year"] <= ybefore) & (auth_npubs["n_pubs"] > 0))
+        mask = (auth_npubs["year"] <= ybefore) & (auth_npubs["n_pubs"] > 0)
         au_remove = set(auth_npubs[mask]["auth_id"].unique())
         older_authors.extend(au_remove)
         # Remove if number of pubs in year is in any case too small
@@ -73,7 +76,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
                 (auth_npubs["n_pubs"] < min(npapers)))
         au_remove.update(auth_npubs[mask]["auth_id"])
         # Authors with no pubs before min year
-        mask = ((auth_npubs["year"] == ybefore) & (auth_npubs["n_pubs"] == 0))
+        mask = (auth_npubs["year"] == ybefore) & (auth_npubs["n_pubs"] == 0)
         au_ok_miny = set(auth_npubs.loc[mask, "auth_id"].unique())
         # Check publications in range
         if yfrom:

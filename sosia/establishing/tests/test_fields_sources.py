@@ -25,4 +25,5 @@ def test_sources_names_list():
     assert df.loc[12005, "type"] == "jr"
     assert df.loc[12005, "title"] == "Journal of Traumatic Stress"
     assert df.loc[90641, "type"] == "cp"
-    assert df.loc[90641, "title"] == "Proceedings of the Conference on Traffic and Transportation Studies, ICTTS"
+    expected_title = "Proceedings of the Conference on Traffic and Transportation Studies, ICTTS"
+    assert df.loc[90641, "title"] == expected_title

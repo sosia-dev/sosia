@@ -1,3 +1,5 @@
+"""This module is the entry point for the `sosia` package."""
+
 import sys
 
 if sys.version_info >= (3, 8):

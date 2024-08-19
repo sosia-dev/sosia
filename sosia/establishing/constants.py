@@ -1,3 +1,5 @@
+"""Module of constants used to establish the connection to the data."""
+
 from pathlib import Path
 
 DATA_REPO_URL = "https://raw.githubusercontent.com/sosia-dev/sosia-data/"

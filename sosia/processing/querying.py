@@ -1,3 +1,5 @@
+"""Module with functions for querying and processing data from Scopus."""
+
 from string import Template
 
 import pandas as pd
@@ -271,5 +273,5 @@ def valid_results(res):
     try:
         _ = [p for p in res if p.subtype == "ar" and int(p.coverDate[:4])]
         return True
-    except:
+    except (AttributeError, TypeError, ValueError):
         return False

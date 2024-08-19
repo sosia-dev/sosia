@@ -1,3 +1,8 @@
+"""
+Module with functions for finding matches within a search group based on various criteria
+such as publications, citations, coauthors, and affiliations.
+"""
+
 from itertools import product
 from string import Template
 
@@ -148,12 +153,12 @@ def find_matches(original, stacked, verbose, refresh):
             pubs = [p for p in res if
                     original._period_year <= int(p.coverDate[:4]) <= original.year]
             coauths = set(extract_authors(pubs)) - {str(m)}
-            if not (min(_ncoauth) <= len(coauths) <= max(_ncoauth)):
+            if not min(_ncoauth) <= len(coauths) <= max(_ncoauth):
                 matches.remove(m)
                 continue
             eids_period = [p.eid for p in pubs]
             n_cits = count_citations(eids_period, original.year+1, [str(m)])
-            if not (min(_ncits) <= n_cits <= max(_ncits)):
+            if not min(_ncits) <= n_cits <= max(_ncits):
                 matches.remove(m)
 
     # Eventually filter on affiliations
