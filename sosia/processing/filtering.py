@@ -1,5 +1,4 @@
-"""
-Module with a function for filtering authors based on restrictions in the number of 
+"""Module with a function for filtering authors based on restrictions in the number of 
 publications in different periods.
 """
 

@@ -1,5 +1,4 @@
-"""
-Module with functions for finding matches within a search group based on various criteria
+"""Module with functions for finding matches within a search group based on various criteria
 such as publications, citations, coauthors, and affiliations.
 """
 

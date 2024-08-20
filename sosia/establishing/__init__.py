@@ -1,5 +1,4 @@
-"""
-This module imports the necessary functions and classes for establishing connections
+"""This module imports the necessary functions and classes for establishing connections
 and accessing data in `sosia`.
 """
 from sosia.establishing.constants import *

@@ -1,5 +1,4 @@
-"""
-Module that provides functions for downloading and storing field-source information from the
+"""Module that provides functions for downloading and storing field-source information from the
 sosia-dev/sosia-data repository.
 """
 
