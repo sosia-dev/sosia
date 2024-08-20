@@ -1,9 +1,12 @@
+"""Module with utility functions for processing data in sosia."""
+
+from collections import defaultdict
+from math import ceil, inf
+
 def build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.
     """
-    from math import inf
-    from collections import defaultdict
     chunk = [int(au) for au in chunk]
     d = defaultdict(
         lambda: {"first_year": inf, "pubs": set(), "coauth": set(),
@@ -36,7 +39,6 @@ def expand_affiliation(df):
     """Auxiliary function to expand the information about the affiliation
     in publications from ScopusSearch.
     """
-    from pandas import Series
     temp = df.set_index(["source_id", "author_ids"])[["afid"]]
     temp = (temp["afid"].str.split(";", expand=True)
                 .stack().dropna().reset_index()
@@ -77,12 +79,11 @@ def margin_range(base, val):
     r : range
         A range object representing the margin range.
     """
-    from math import ceil
     if isinstance(val, float):
         margin = ceil(val * base)
         r = range(base - margin, base + margin + 1)
     elif isinstance(val, int):
         r = range(base - val, base + val + 1)
     else:
-        raise Exception("Value must be either float or int.")
+        raise TypeError("Value must be either float or int.")
     return r

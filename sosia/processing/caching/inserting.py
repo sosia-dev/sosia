@@ -1,3 +1,5 @@
+"""Module with functions for inserting data into a SQL database."""
+
 from sosia.establishing import DB_TABLES
 from sosia.processing.utils import flat_set_from_df, robust_join
 

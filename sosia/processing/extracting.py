@@ -1,9 +1,12 @@
+"""Module with functions for extracting information from publications and matching scientists."""
+
 from collections import defaultdict, Counter, namedtuple
 
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 from tqdm import tqdm
 
+from sosia.processing.constants import ASJC_2D
 from sosia.processing.utils import compute_overlap
 
 
@@ -84,8 +87,6 @@ def get_main_field(fields):
     ----
     We exclude multidisciplinary and give preference to non-general fields.
     """
-    from sosia.processing.constants import ASJC_2D
-
     # Exclude Multidisciplinary
     while 1000 in fields:
         fields.remove(1000)

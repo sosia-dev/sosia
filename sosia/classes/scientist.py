@@ -1,4 +1,4 @@
-"""Super class to represent a scientist."""
+"""Module with super class to represent a `Scientist`."""
 
 from warnings import warn
 
@@ -13,6 +13,8 @@ from sosia.utils import accepts
 
 
 class Scientist(object):
+    """Class to represent a scientist.
+    """
     @property
     def active_year(self):
         """The scientist's most recent year with publication(s) before
@@ -158,7 +160,7 @@ class Scientist(object):
     @main_field.setter
     def main_field(self, val):
         if not isinstance(val, tuple) or len(val) != 2:
-            raise Exception("Value must be a two-element tuple.")
+            raise TypeError("Value must be a two-element tuple.")
         self._main_field = val
 
     @property
@@ -293,10 +295,10 @@ class Scientist(object):
         integrity_fields = ["eid", "author_ids", "coverDate", "source_id"]
         res = base_query("docs", q, refresh, fields=integrity_fields)
         self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
-        if not len(self._publications):
+        if not self._publications:
             text = "No publications found for author "\
                    f"{'-'.join([str(i) for i in identifier])} until {year}"
-            raise Exception(text)
+            raise ValueError(text)
         self._eids = eids or [p.eid for p in self._publications]
 
         # First year of publication
@@ -318,11 +320,11 @@ class Scientist(object):
             pubs = [p for p in self._publications if
                     self._period_year <= int(p.coverDate[:4]) <= year]
             self._publications_period = pubs
-            if not len(self._publications_period):
+            if not self._publications_period:
                 text = "No publications found for author "\
                        f"{'-'.join([str(i) for i in identifier])} until "\
                        f"{year} in a {self._period_year}-years period"
-                raise Exception(text)
+                raise ValueError(text)
             eids_period = [p.eid for p in self._publications_period]
             n_cits = count_citations(eids_period, self.year+1, identifier)
             self._citations_period = n_cits

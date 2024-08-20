@@ -1,3 +1,7 @@
+"""Module with functions related to initializing the sosia processing."""
+
+from pandas import read_csv
+
 from sosia.establishing.constants import FIELD_SOURCE_MAP, SOURCE_INFO
 from sosia.establishing.fields_sources import get_field_source_information
 
@@ -23,7 +27,6 @@ def read_fields_sources_list():
     """Auxiliary function to read FIELD_SOURCE_MAP and create it before,
     if necessary.
     """
-    from pandas import read_csv
     try:
         field = read_csv(FIELD_SOURCE_MAP)
         info = read_csv(SOURCE_INFO)

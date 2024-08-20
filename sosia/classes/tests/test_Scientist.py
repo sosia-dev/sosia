@@ -1,10 +1,8 @@
 """Tests for class `Scientist`."""
 
-from collections import namedtuple
 from pathlib import Path
 
 from sosia.classes import Scientist
-from sosia.establishing import make_database
 
 test_cache = Path.home()/".cache/sosia/test.sqlite"
 refresh = False

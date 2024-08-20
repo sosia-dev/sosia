@@ -1,3 +1,5 @@
+"""Module that contains functions for retrieving data from a SQLite3 database cache."""
+
 import pandas as pd
 
 from sosia.processing.caching.inserting import insert_temporary_table

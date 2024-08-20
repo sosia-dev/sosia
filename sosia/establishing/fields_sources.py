@@ -1,3 +1,7 @@
+"""Module that provides functions for downloading and storing field-source information from the
+sosia-dev/sosia-data repository.
+"""
+
 import pandas as pd
 
 from sosia.establishing.constants import DATA_REPO_URL, FIELD_SOURCE_MAP, \

@@ -1,3 +1,7 @@
+"""Module with functions for retrieving and processing author data."""
+
+from string import Template
+
 import pandas as pd
 
 from sosia.processing.caching import insert_data, retrieve_authors,\
@@ -28,8 +32,6 @@ def get_authors(authors, conn, refresh=False, verbose=False):
     data : DataFrame
         Data on the provided authors.
     """
-    from string import Template
-
     # Retrieve existing data from SQL cache
     authors = pd.DataFrame(authors, columns=["auth_id"], dtype="uint64")
     data, missing = retrieve_authors(authors, conn)

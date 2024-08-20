@@ -1,3 +1,5 @@
+"""Module with constants used in sosia for processing."""
+
 ASJC_2D = {10: "MULT", 11: "AGRI", 12: "ARTS", 13: "BIOC", 14: "BUSI",
            15: "CENG", 16: "CHEM", 17: "COMP", 18: "DECI", 19: "EART",
            20: "ECON", 21: "ENER", 22: "ENGI", 23: "ENVI", 24: "IMMU",

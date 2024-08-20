@@ -1,4 +1,8 @@
+"""This module provides functions for connecting to and creating a SQLite database."""
+
 import sqlite3
+
+from numpy import int32, int64
 
 
 def connect_database(fname):
@@ -9,7 +13,6 @@ def connect_database(fname):
     fname : str
         The path of the SQLite3 database to connect to.
     """
-    from numpy import int32, int64
     for val in (int32, int64):
         sqlite3.register_adapter(val, int)
     return sqlite3.connect(fname)

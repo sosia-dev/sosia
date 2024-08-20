@@ -1,4 +1,4 @@
-"""Main class for sosia."""
+"""Main module of `sosia` containing the `Original` class."""
 
 from warnings import warn
 
@@ -9,6 +9,7 @@ from sosia.utils import accepts, custom_print
 
 
 class Original(Scientist):
+    """Representation of a scientist for whom to find a control scientist."""
     @property
     def matches(self):
         """List of Scopus IDs or list of namedtuples representing matches
@@ -18,10 +19,7 @@ class Original(Scientist):
         -----
         Property is initiated via .find_matches().
         """
-        try:
-            return self._matches
-        except AttributeError:
-            return None
+        return self._matches
 
     @property
     def search_group(self):
@@ -35,10 +33,7 @@ class Original(Scientist):
         -----
         Property is initiated via .define_search_group().
         """
-        try:
-            return self._search_group
-        except AttributeError:
-            return None
+        return self._search_group
 
     @property
     def search_sources(self):
@@ -142,13 +137,13 @@ class Original(Scientist):
         """
         # Internal checks
         if not isinstance(first_year_margin, (int, float)):
-            raise Exception("Argument first_year_margin must be float or integer.")
+            raise TypeError("Argument first_year_margin must be float or integer.")
         if not isinstance(pub_margin, (int, float)):
-            raise Exception("Argument pub_margin must be float or integer.")
+            raise TypeError("Argument pub_margin must be float or integer.")
         if not isinstance(coauth_margin, (int, float)):
-            raise Exception("Argument coauth_margin must be float or integer.")
+            raise TypeError("Argument coauth_margin must be float or integer.")
         if first_year_search not in ("ID", "name"):
-            raise Exception("Argument first_year_search must be either ID or name.")
+            raise ValueError("Argument first_year_search must be either ID or name.")
         if first_year_search == "name" and not period:
             first_year_search = "ID"
             text = "Argument first_year_search set to ID: Argument period "\
@@ -174,6 +169,8 @@ class Original(Scientist):
         self.search_affiliations = affiliations
         self.refresh = refresh
         self.sql_fname = sql_fname
+        self._search_group = None
+        self._matches = None
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, treatment_year, refresh=refresh,
@@ -199,7 +196,7 @@ class Original(Scientist):
         if not self.search_sources:
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
-            raise Exception(text)
+            raise RuntimeError(text)
 
         # Query journals
         params = {"original": self, "stacked": stacked,
@@ -292,7 +289,7 @@ class Original(Scientist):
         if not self.search_group:
             text = "No search group defined.  Please run "\
                    ".define_search_group() first."
-            raise Exception(text)
+            raise RuntimeError(text)
         if not isinstance(refresh, bool) and stacked:
             refresh = False
             warn("refresh parameter must be boolean when stacked=True.  "
@@ -339,7 +336,7 @@ class Original(Scientist):
         # Checks
         if not self._matches:
             text = "No matches defined.  Please run .find_matches() first."
-            raise Exception(text)
+            raise RuntimeError(text)
         allowed_fields = ["first_name", "surname", "first_year",
                           "num_coauthors", "num_publications", "num_citations",
                           "num_coauthors_period", "num_publications_period",
