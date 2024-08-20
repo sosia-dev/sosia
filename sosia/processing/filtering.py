@@ -3,6 +3,7 @@ publications in different periods.
 """
 
 from itertools import product
+
 from pandas import DataFrame
 from tqdm import tqdm
 

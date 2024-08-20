@@ -1,6 +1,7 @@
 """This module provides functions for connecting to and creating a SQLite database."""
 
 import sqlite3
+
 from numpy import int32, int64
 
 
