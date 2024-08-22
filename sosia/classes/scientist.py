@@ -1,5 +1,8 @@
 """Module with super class to represent a `Scientist`."""
 
+from __future__ import annotations
+from pathlib import Path
+from typing import NamedTuple, List, Optional, Union
 from warnings import warn
 
 from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
@@ -16,7 +19,7 @@ class Scientist(object):
     """Class to represent a scientist.
     """
     @property
-    def active_year(self):
+    def active_year(self) -> int:
         """The scientist's most recent year with publication(s) before
          provided year (which may be the same).
          """
@@ -24,21 +27,21 @@ class Scientist(object):
 
     @active_year.setter
     @accepts(int)
-    def active_year(self, val):
+    def active_year(self, val: int) -> None:
         self._active_year = val
 
     @property
-    def affiliation_country(self):
+    def affiliation_country(self) -> Optional[str]:
         """The country of the scientist's affiliation."""
         return self._affiliation_country
 
     @affiliation_country.setter
     @accepts(str)
-    def affiliation_country(self, val):
+    def affiliation_country(self, val: str) -> None:
         self._affiliation_country = val
 
     @property
-    def affiliation_id(self):
+    def affiliation_id(self) -> Optional[str]:
         """The affiliation ID (as string) of the scientist's most frequent
         affiliation in the active year.
         """
@@ -46,51 +49,51 @@ class Scientist(object):
 
     @affiliation_id.setter
     @accepts(str)
-    def affiliation_id(self, val):
+    def affiliation_id(self, val: str) -> None:
         self._affiliation_id = val
 
     @property
-    def affiliation_name(self):
+    def affiliation_name(self) -> Optional[str]:
         """The name of the scientist's affiliation."""
         return self._affiliation_name
 
     @affiliation_name.setter
     @accepts(str)
-    def affiliation_name(self, val):
+    def affiliation_name(self, val: str) -> None:
         self._affiliation_name = val
 
     @property
-    def affiliation_type(self):
+    def affiliation_type(self) -> Optional[str]:
         """The type of the scientist's affiliation."""
         return self._affiliation_type
 
     @affiliation_type.setter
     @accepts(str)
-    def affiliation_type(self, val):
+    def affiliation_type(self, val: str) -> None:
         self.affiliation_type = val
 
     @property
-    def citations(self):
+    def citations(self) -> Optional[Union[int, List[NamedTuple]]]:
         """The citation count of the scientist until the provided year."""
         return self._citations
 
     @citations.setter
     @accepts(int)
-    def citations(self, val):
+    def citations(self, val: int) -> None:
         self._citations = val
 
     @property
-    def citations_period(self):
+    def citations_period(self) -> Optional[Union[int, List[NamedTuple]]]:
         """The citation count of the scientist during the given period."""
         return self._citations_period
 
     @citations_period.setter
     @accepts(int)
-    def citations_period(self, val):
+    def citations_period(self, val: int) -> None:
         self._citations_period = val
 
     @property
-    def coauthors(self):
+    def coauthors(self) -> Union[set, list, tuple]:
         """Set of coauthors of the scientist on all publications until the
         comparison year.
         """
@@ -98,11 +101,11 @@ class Scientist(object):
 
     @coauthors.setter
     @accepts((set, list, tuple))
-    def coauthors(self, val):
+    def coauthors(self, val: Union[set, list, tuple]) -> None:
         self._coauthors = val
 
     @property
-    def coauthors_period(self):
+    def coauthors_period(self) -> Optional[Union[set, list, tuple]]:
         """Set of coauthors of the scientist on all publications during the
         given period.
         """
@@ -110,11 +113,11 @@ class Scientist(object):
 
     @coauthors_period.setter
     @accepts((set, list, tuple))
-    def coauthors_period(self, val):
+    def coauthors_period(self, val: Union[set, list, tuple]) -> None:
         self._coauthors_period = val
 
     @property
-    def fields(self):
+    def fields(self) -> Union[set, list, tuple]:
         """The fields of the scientist until the provided year, estimated from
         the sources (journals, books, etc.) she published in.
         """
@@ -122,31 +125,31 @@ class Scientist(object):
 
     @fields.setter
     @accepts((set, list, tuple))
-    def fields(self, val):
+    def fields(self, val: Union[set, list, tuple]) -> None:
         self._fields = val
 
     @property
-    def first_year(self):
+    def first_year(self) -> int:
         """The scientist's year of first publication."""
         return self._first_year
 
     @first_year.setter
     @accepts(int)
-    def first_year(self, val):
+    def first_year(self, val: int) -> None:
         self._first_year = val
 
     @property
-    def first_name(self):
+    def first_name(self) -> Optional[str]:
         """The scientist's first name."""
         return self._first_name
 
     @first_name.setter
     @accepts(str)
-    def first_name(self, val):
+    def first_name(self, val: str) -> None:
         self._name = val
 
     @property
-    def main_field(self):
+    def main_field(self) -> tuple:
         """The scientist's main field of research, as tuple in
         the form (ASJC code, general category).
 
@@ -158,43 +161,43 @@ class Scientist(object):
         return self._main_field
 
     @main_field.setter
-    def main_field(self, val):
+    def main_field(self, val: tuple) -> None:
         if not isinstance(val, tuple) or len(val) != 2:
             raise TypeError("Value must be a two-element tuple.")
         self._main_field = val
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """The scientist's complete name."""
         return self._name
 
     @name.setter
     @accepts(str)
-    def name(self, val):
+    def name(self, val: str) -> None:
         self._name = val
 
     @property
-    def language(self):
+    def language(self) -> Optional[str]:
         """The language(s) the scientist published in."""
         return self._language
 
     @language.setter
     @accepts(str)
-    def language(self, val):
+    def language(self, val: str) -> None:
         self._language = val
 
     @property
-    def publications(self):
+    def publications(self) -> Union[set, list, tuple]:
         """List of the scientists' publications."""
         return self._publications
 
     @publications.setter
     @accepts((set, list, tuple))
-    def publications(self, val):
+    def publications(self, val: Union[set, list, tuple]) -> None:
         self._publications = val
 
     @property
-    def publications_period(self):
+    def publications_period(self) -> Optional[Union[set, list, tuple]]:
         """The publications of the scientist published during
         the given period.
         """
@@ -202,11 +205,11 @@ class Scientist(object):
 
     @publications_period.setter
     @accepts((set, list, tuple))
-    def publications_period(self, val):
+    def publications_period(self, val: Union[set, list, tuple]) -> None:
         self._publications_period = val
 
     @property
-    def sources(self):
+    def sources(self) -> Union[list, tuple]:
         """The Scopus IDs of sources (journals, books, etc.) in which the
         scientist published in.
         """
@@ -214,31 +217,38 @@ class Scientist(object):
 
     @sources.setter
     @accepts((list, tuple))
-    def sources(self, val):
+    def sources(self, val: Union[list, tuple]) -> None:
         self._sources = maybe_add_source_names(val, self.source_names)
 
     @property
-    def surname(self):
+    def surname(self) -> Optional[str]:
         """The scientist's surname."""
         return self._surname
 
     @surname.setter
     @accepts(str)
-    def surname(self, val):
+    def surname(self, val: str):
         self._name = val
 
     @property
-    def subjects(self):
+    def subjects(self) -> Union[set, list, tuple]:
         """The subject areas of the scientist's publications."""
         return self._subjects
 
     @subjects.setter
     @accepts((set, list, tuple))
-    def subjects(self, val):
+    def subjects(self, val: Union[set, list, tuple]) -> None:
         self._subjects = val
 
-    def __init__(self, identifier, year, refresh=False, period=None, eids=None,
-                 sql_fname=None):
+    def __init__(
+        self,
+        identifier: List[int],
+        year: Union[str, int],
+        refresh: bool = False,
+        period: Optional[int] = None,
+        eids: Optional[list] = None,
+        sql_fname: Optional[Union[str, Path]] = None,
+    ) -> None:
         """Class to represent a scientist.
 
         Parameters
@@ -294,10 +304,10 @@ class Scientist(object):
             q = f"AU-ID({') OR AU-ID('.join([str(i) for i in identifier])})"
         integrity_fields = ["eid", "author_ids", "coverDate", "source_id"]
         res = base_query("docs", q, refresh, fields=integrity_fields)
-        self._publications = [p for p in res if int(p.coverDate[:4]) <= year]
+        self._publications = [p for p in res if int(p.coverDate[:4]) <= self.year]
         if not self._publications:
             text = "No publications found for author "\
-                   f"{'-'.join([str(i) for i in identifier])} until {year}"
+                   f"{'-'.join([str(i) for i in identifier])} until {self.year}"
             raise ValueError(text)
         self._eids = eids or [p.eid for p in self._publications]
 
@@ -374,7 +384,7 @@ class Scientist(object):
             name = None
         self._name = name
 
-    def get_publication_languages(self, refresh=False):
+    def get_publication_languages(self, refresh=False) -> Scientist:
         """Parse languages of published documents."""
         langs = set()
         for eid in self._eids:

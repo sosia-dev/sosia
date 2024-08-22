@@ -1,5 +1,7 @@
 """Main module of `sosia` containing the `Original` class."""
 
+from __future__ import annotations
+from typing import Iterable, List, Optional, Union
 from warnings import warn
 
 from sosia.classes import Scientist
@@ -11,7 +13,7 @@ from sosia.utils import accepts, custom_print
 class Original(Scientist):
     """Representation of a scientist for whom to find a control scientist."""
     @property
-    def matches(self):
+    def matches(self) -> Optional[List]:
         """List of Scopus IDs or list of namedtuples representing matches
         of the original scientist in the treatment year.
 
@@ -22,7 +24,7 @@ class Original(Scientist):
         return self._matches
 
     @property
-    def search_group(self):
+    def search_group(self) -> Optional[List[int]]:
         """The set of authors that might be matches to the scientist.  The
         set contains the intersection of all authors publishing in the
         treatment year as well as authors publishing around the year of first
@@ -36,7 +38,7 @@ class Original(Scientist):
         return self._search_group
 
     @property
-    def search_sources(self):
+    def search_sources(self) -> Optional[Union[set, list, tuple]]:
         """The set of sources (journals, books) comparable to the sources
         the scientist published in until the treatment year.
         A source is comparable if it belongs to the scientist's main field
@@ -48,20 +50,28 @@ class Original(Scientist):
         -----
         Property is initiated via .define_search_sources().
         """
-        try:
-            return self._search_sources
-        except AttributeError:
-            return None
+        return self._search_sources
 
     @search_sources.setter
     @accepts((set, list, tuple))
-    def search_sources(self, val):
+    def search_sources(self, val: Union[set, list, tuple]) -> None:
         self._search_sources = maybe_add_source_names(val, self.source_names)
 
-    def __init__(self, scientist, treatment_year, first_year_margin=2,
-                 pub_margin=0.2, cits_margin=0.2, coauth_margin=0.2,
-                 affiliations=None, period=None, first_year_search="ID",
-                 eids=None, refresh=False, sql_fname=None):
+    def __init__(
+        self,
+        scientist: Union[str, int, List[Union[str, int]]],
+        treatment_year: Union[str, int],
+        first_year_margin: int = 2,
+        pub_margin: float = 0.2,
+        cits_margin: float = 0.2,
+        coauth_margin: float = 0.2,
+        affiliations: Optional[List] = None,
+        period: Optional[int] = None,
+        first_year_search: str = "ID",
+        eids: Optional[List] = None,
+        refresh: bool = False,
+        sql_fname: Optional[str] = None,
+    ) -> None:
         """Representation of a scientist for whom to find a control scientist.
 
         Parameters
@@ -169,6 +179,7 @@ class Original(Scientist):
         self.search_affiliations = affiliations
         self.refresh = refresh
         self.sql_fname = sql_fname
+        self._search_sources = None
         self._search_group = None
         self._matches = None
 
@@ -176,7 +187,12 @@ class Original(Scientist):
         Scientist.__init__(self, self.identifier, treatment_year, refresh=refresh,
                            period=period, sql_fname=self.sql_fname)
 
-    def define_search_group(self, stacked=False, verbose=False, refresh=False):
+    def define_search_group(
+        self,
+        stacked: Optional[bool] = False,
+        verbose: Optional[bool] = False,
+        refresh: Optional[bool] = False,
+    ) -> Original:
         """Define search_group.
 
         Parameters
@@ -213,7 +229,7 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def define_search_sources(self, verbose=False):
+    def define_search_sources(self, verbose: bool = False) -> Original:
         """Define .search_sources.
 
         Within the list of search sources sosia will search for matching
@@ -258,7 +274,9 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def find_matches(self, stacked=False, verbose=False, refresh=False):
+    def find_matches(
+        self, stacked: bool = False, verbose: bool = False, refresh: bool = False
+    ) -> None:
         """Find matches within search_group based on four criteria:
         1. Started publishing in about the same year
         2. Has about the same number of publications in the treatment year
@@ -301,7 +319,12 @@ class Original(Scientist):
         custom_print(text, verbose)
         self._matches = sorted([auth_id for auth_id in matches])
 
-    def inform_matches(self, fields=None, verbose=False, refresh=False):
+    def inform_matches(
+        self,
+        fields: Optional[Iterable] = None,
+        verbose: bool = False,
+        refresh: bool = False,
+    ) -> None:
         """Add information to matches to aid in selection process.
 
         Parameters

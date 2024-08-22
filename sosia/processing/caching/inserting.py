@@ -1,10 +1,15 @@
 """Module with functions for inserting data into a SQL database."""
 
+from sqlite3 import Connection
+from typing import List, Literal, Tuple, Union
+
+import pandas as pd
+
 from sosia.establishing import DB_TABLES
 from sosia.processing.utils import flat_set_from_df, robust_join
 
 
-def auth_npubs_retrieve_insert(auth_id, year, conn):
+def auth_npubs_retrieve_insert(auth_id: int, year: int, conn: Connection) -> int:
     """Retrieve an author's publication count until a given year, and insert."""
     from sosia.processing.querying import base_query
 
@@ -15,13 +20,24 @@ def auth_npubs_retrieve_insert(auth_id, year, conn):
     return npubs
 
 
-def insert_data(data, conn, table):
+def insert_data(
+    data: Union[pd.DataFrame, Tuple],
+    conn: Connection,
+    table: Literal[
+        "authors",
+        "author_ncits",
+        "author_pubs",
+        "author_year",
+        "sources",
+        "sources_afids",
+    ],
+) -> None:
     """Insert new information in SQL database.
 
     Parameters
     ----------
     data : DataFrame or 3-tuple
-        Dataframe with authors information or (when table="source") a
+        Dataframe with authors information or (when table="sources") a
         3-element tuple.
 
     conn : sqlite3 connection
@@ -39,7 +55,7 @@ def insert_data(data, conn, table):
         If parameter table is not one of the allowed values.
     """
     # Checks
-    if table not in DB_TABLES.keys():
+    if table not in DB_TABLES:
         msg = f"table parameter must be one of {', '.join(DB_TABLES.keys())}"
         raise ValueError(msg)
 
@@ -78,7 +94,9 @@ def insert_data(data, conn, table):
     conn.commit()
 
 
-def insert_temporary_table(df, conn, merge_cols):
+def insert_temporary_table(df: pd.DataFrame,
+                           conn: Connection,
+                           merge_cols: List[str]) -> None:
     """Temporarily create a table in SQL database in order to prepare a
     merge with `merge_cols`.
 

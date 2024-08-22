@@ -9,7 +9,7 @@ from sosia.establishing.constants import DATA_REPO_URL, FIELD_SOURCE_MAP, \
 from sosia.utils import custom_print
 
 
-def get_field_source_information(verbose=False):
+def get_field_source_information(verbose: bool = False) -> None:
     """Download two files from sosia-dev/sosia-data repository:
     1. List of Scopus source IDs with additional information
     2. Mapping of sources to ASJC codes
