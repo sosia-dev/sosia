@@ -189,9 +189,9 @@ class Original(Scientist):
 
     def define_search_group(
         self,
-        stacked: Optional[bool] = False,
-        verbose: Optional[bool] = False,
-        refresh: Optional[bool] = False,
+        stacked: bool = False,
+        verbose: bool = False,
+        refresh: bool = False,
     ) -> Original:
         """Define search_group.
 

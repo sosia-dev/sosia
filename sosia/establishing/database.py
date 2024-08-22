@@ -1,13 +1,13 @@
 """This module provides functions for connecting to and creating a SQLite database."""
 
 from pathlib import Path
-from typing import Optional
 import sqlite3
+from typing import Optional
 
 from numpy import int32, int64
 
 
-def connect_database(fname) -> sqlite3.Connection:
+def connect_database(fname: str) -> sqlite3.Connection:
     """Connect to local SQLite3 database to be used as cache.
 
     Parameters

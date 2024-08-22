@@ -1,7 +1,7 @@
 """Module that contains functions for retrieving data from a SQLite3 database cache."""
 
 from sqlite3 import Connection
-from typing import Optional, Tuple
+from typing import Tuple
 
 import pandas as pd
 
@@ -76,7 +76,7 @@ def retrieve_author_info(df: pd.DataFrame,
 
 def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
                                      conn: Connection,
-                                     refresh: Optional[bool] = False):
+                                     refresh: bool = False):
     """Search through sources by year for authors in SQL database.
 
     Parameters

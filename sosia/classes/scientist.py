@@ -384,7 +384,7 @@ class Scientist(object):
             name = None
         self._name = name
 
-    def get_publication_languages(self, refresh=False) -> Scientist:
+    def get_publication_languages(self, refresh: bool = False) -> Scientist:
         """Parse languages of published documents."""
         langs = set()
         for eid in self._eids:
