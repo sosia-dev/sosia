@@ -1,8 +1,9 @@
 """Module with super class to represent a `Scientist`."""
 
 from __future__ import annotations
+from collections.abc import Set
 from pathlib import Path
-from typing import NamedTuple, List, Optional, Union
+from typing import NamedTuple, List, Optional, Tuple, Union
 from warnings import warn
 
 from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
@@ -93,7 +94,7 @@ class Scientist(object):
         self._citations_period = val
 
     @property
-    def coauthors(self) -> Union[set, list, tuple]:
+    def coauthors(self) -> Union[Set, List, Tuple]:
         """Set of coauthors of the scientist on all publications until the
         comparison year.
         """
@@ -101,11 +102,11 @@ class Scientist(object):
 
     @coauthors.setter
     @accepts((set, list, tuple))
-    def coauthors(self, val: Union[set, list, tuple]) -> None:
+    def coauthors(self, val: Union[Set, List, Tuple]) -> None:
         self._coauthors = val
 
     @property
-    def coauthors_period(self) -> Optional[Union[set, list, tuple]]:
+    def coauthors_period(self) -> Optional[Union[Set, List, Tuple]]:
         """Set of coauthors of the scientist on all publications during the
         given period.
         """
@@ -113,11 +114,11 @@ class Scientist(object):
 
     @coauthors_period.setter
     @accepts((set, list, tuple))
-    def coauthors_period(self, val: Union[set, list, tuple]) -> None:
+    def coauthors_period(self, val: Union[Set, List, Tuple]) -> None:
         self._coauthors_period = val
 
     @property
-    def fields(self) -> Union[set, list, tuple]:
+    def fields(self) -> Union[Set, List, Tuple]:
         """The fields of the scientist until the provided year, estimated from
         the sources (journals, books, etc.) she published in.
         """
@@ -125,7 +126,7 @@ class Scientist(object):
 
     @fields.setter
     @accepts((set, list, tuple))
-    def fields(self, val: Union[set, list, tuple]) -> None:
+    def fields(self, val: Union[Set, List, Tuple]) -> None:
         self._fields = val
 
     @property
@@ -149,7 +150,7 @@ class Scientist(object):
         self._name = val
 
     @property
-    def main_field(self) -> tuple:
+    def main_field(self) -> Tuple:
         """The scientist's main field of research, as tuple in
         the form (ASJC code, general category).
 
@@ -187,17 +188,17 @@ class Scientist(object):
         self._language = val
 
     @property
-    def publications(self) -> Union[set, list, tuple]:
+    def publications(self) -> Union[Set, List, Tuple]:
         """List of the scientists' publications."""
         return self._publications
 
     @publications.setter
     @accepts((set, list, tuple))
-    def publications(self, val: Union[set, list, tuple]) -> None:
+    def publications(self, val: Union[Set, List, Tuple]) -> None:
         self._publications = val
 
     @property
-    def publications_period(self) -> Optional[Union[set, list, tuple]]:
+    def publications_period(self) -> Optional[Union[Set, List, Tuple]]:
         """The publications of the scientist published during
         the given period.
         """
@@ -205,7 +206,7 @@ class Scientist(object):
 
     @publications_period.setter
     @accepts((set, list, tuple))
-    def publications_period(self, val: Union[set, list, tuple]) -> None:
+    def publications_period(self, val: Union[Set, List, Tuple]) -> None:
         self._publications_period = val
 
     @property
@@ -231,13 +232,13 @@ class Scientist(object):
         self._name = val
 
     @property
-    def subjects(self) -> Union[set, list, tuple]:
+    def subjects(self) -> Union[Set, List, Tuple]:
         """The subject areas of the scientist's publications."""
         return self._subjects
 
     @subjects.setter
     @accepts((set, list, tuple))
-    def subjects(self, val: Union[set, list, tuple]) -> None:
+    def subjects(self, val: Union[Set, List, Tuple]) -> None:
         self._subjects = val
 
     def __init__(
@@ -304,7 +305,7 @@ class Scientist(object):
             q = f"AU-ID({') OR AU-ID('.join([str(i) for i in identifier])})"
         integrity_fields = ["eid", "author_ids", "coverDate", "source_id"]
         res = base_query("docs", q, refresh, fields=integrity_fields)
-        self._publications = [p for p in res if int(p.coverDate[:4]) <= self.year]
+        self._publications = [p for p in res if int(p.coverDate[:4]) <= int(year)]
         if not self._publications:
             text = "No publications found for author "\
                    f"{'-'.join([str(i) for i in identifier])} until {self.year}"

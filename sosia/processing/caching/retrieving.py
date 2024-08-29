@@ -1,7 +1,7 @@
 """Module that contains functions for retrieving data from a SQLite3 database cache."""
 
 from sqlite3 import Connection
-from typing import Tuple
+from typing import List, Tuple
 
 import pandas as pd
 
@@ -9,7 +9,7 @@ from sosia.processing.caching.inserting import insert_temporary_table
 from sosia.processing.caching.utils import temporary_merge
 
 
-def retrieve_authors(df: pd.DataFrame, conn: Connection) -> Tuple[pd.DataFrame, list]:
+def retrieve_authors(df: pd.DataFrame, conn: Connection) -> Tuple[pd.DataFrame, List]:
     """Search authors in cache.
 
     Parameters

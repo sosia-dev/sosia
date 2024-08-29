@@ -1,7 +1,8 @@
 """Main module of `sosia` containing the `Original` class."""
 
 from __future__ import annotations
-from typing import Iterable, List, Optional, Union
+from collections.abc import Iterable, Set
+from typing import List, Optional, Tuple ,Union
 from warnings import warn
 
 from sosia.classes import Scientist
@@ -38,7 +39,7 @@ class Original(Scientist):
         return self._search_group
 
     @property
-    def search_sources(self) -> Optional[Union[set, list, tuple]]:
+    def search_sources(self) -> Optional[Union[Set, List, Tuple]]:
         """The set of sources (journals, books) comparable to the sources
         the scientist published in until the treatment year.
         A source is comparable if it belongs to the scientist's main field
@@ -54,7 +55,7 @@ class Original(Scientist):
 
     @search_sources.setter
     @accepts((set, list, tuple))
-    def search_sources(self, val: Union[set, list, tuple]) -> None:
+    def search_sources(self, val: Union[Set, List, Tuple]) -> None:
         self._search_sources = maybe_add_source_names(val, self.source_names)
 
     def __init__(

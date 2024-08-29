@@ -1,5 +1,6 @@
 """This module provides functions for connecting to and creating a SQLite database."""
 
+
 from pathlib import Path
 import sqlite3
 from typing import Optional
