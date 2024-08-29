@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.2", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=69.1", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -21,10 +21,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
@@ -36,9 +37,6 @@ Homepage = "https://github.com/sosia-dev/sosia"
 "Bug Tracker" = "https://github.com/sosia-dev/sosia/issues"
 "Documentation (stable)" = "https://sosia.readthedocs.io/en/stable/"
 "Documentation (latest)" = "https://sosia.readthedocs.io/en/latest/"
-
-[tool.distutils.bdist_wheel]
-universal = 1
 
 [tool.setuptools]
 include-package-data = false
