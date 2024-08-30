@@ -1,14 +1,13 @@
 """Module with utility functions for processing and caching data."""
 
-from collections.abc import Iterable
 from copy import deepcopy
 from sqlite3 import Connection
-from typing import Dict
+from typing import Iterable
 
 import pandas as pd
 
 
-def d_to_df_for_cache(d: Dict, source_id: int) -> pd.DataFrame:
+def d_to_df_for_cache(d: dict, source_id: int) -> pd.DataFrame:
     """Function to create a DataFrame of sources, years and list of authors
     from a dictionary where keys are the years and values are the list of
     authors.

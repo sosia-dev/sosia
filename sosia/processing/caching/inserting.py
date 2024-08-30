@@ -1,7 +1,7 @@
 """Module with functions for inserting data into a SQL database."""
 
 from sqlite3 import Connection
-from typing import List, Literal, Tuple, Union
+from typing import Literal, Union
 
 import pandas as pd
 
@@ -21,7 +21,7 @@ def auth_npubs_retrieve_insert(auth_id: int, year: int, conn: Connection) -> int
 
 
 def insert_data(
-    data: Union[pd.DataFrame, Tuple],
+    data: Union[pd.DataFrame, tuple],
     conn: Connection,
     table: Literal[
         "authors",
@@ -96,7 +96,7 @@ def insert_data(
 
 def insert_temporary_table(df: pd.DataFrame,
                            conn: Connection,
-                           merge_cols: List[str]) -> None:
+                           merge_cols: list[str]) -> None:
     """Temporarily create a table in SQL database in order to prepare a
     merge with `merge_cols`.
 

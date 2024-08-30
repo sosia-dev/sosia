@@ -1,9 +1,9 @@
 """Main module of `sosia` containing the `Original` class."""
 
-from __future__ import annotations
-from collections.abc import Iterable, Set
-from typing import List, Optional, Tuple ,Union
+from typing import Iterable, Optional, Union
 from warnings import warn
+
+from typing_extensions import Self
 
 from sosia.classes import Scientist
 from sosia.processing import find_matches, inform_matches, \
@@ -14,7 +14,7 @@ from sosia.utils import accepts, custom_print
 class Original(Scientist):
     """Representation of a scientist for whom to find a control scientist."""
     @property
-    def matches(self) -> Optional[List]:
+    def matches(self) -> Optional[list]:
         """List of Scopus IDs or list of namedtuples representing matches
         of the original scientist in the treatment year.
 
@@ -25,7 +25,7 @@ class Original(Scientist):
         return self._matches
 
     @property
-    def search_group(self) -> Optional[List[int]]:
+    def search_group(self) -> Optional[list[int]]:
         """The set of authors that might be matches to the scientist.  The
         set contains the intersection of all authors publishing in the
         treatment year as well as authors publishing around the year of first
@@ -39,7 +39,7 @@ class Original(Scientist):
         return self._search_group
 
     @property
-    def search_sources(self) -> Optional[Union[Set, List, Tuple]]:
+    def search_sources(self) -> Optional[Union[set, list, tuple]]:
         """The set of sources (journals, books) comparable to the sources
         the scientist published in until the treatment year.
         A source is comparable if it belongs to the scientist's main field
@@ -55,21 +55,21 @@ class Original(Scientist):
 
     @search_sources.setter
     @accepts((set, list, tuple))
-    def search_sources(self, val: Union[Set, List, Tuple]) -> None:
+    def search_sources(self, val: Union[set, list, tuple]) -> None:
         self._search_sources = maybe_add_source_names(val, self.source_names)
 
     def __init__(
         self,
-        scientist: Union[str, int, List[Union[str, int]]],
+        scientist: Union[str, int, list[Union[str, int]]],
         treatment_year: Union[str, int],
         first_year_margin: int = 2,
         pub_margin: float = 0.2,
         cits_margin: float = 0.2,
         coauth_margin: float = 0.2,
-        affiliations: Optional[List] = None,
+        affiliations: Optional[list] = None,
         period: Optional[int] = None,
         first_year_search: str = "ID",
-        eids: Optional[List] = None,
+        eids: Optional[list] = None,
         refresh: bool = False,
         sql_fname: Optional[str] = None,
     ) -> None:
@@ -193,7 +193,7 @@ class Original(Scientist):
         stacked: bool = False,
         verbose: bool = False,
         refresh: bool = False,
-    ) -> Original:
+    ) -> Self:
         """Define search_group.
 
         Parameters
@@ -230,7 +230,7 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def define_search_sources(self, verbose: bool = False) -> Original:
+    def define_search_sources(self, verbose: bool = False) -> Self:
         """Define .search_sources.
 
         Within the list of search sources sosia will search for matching

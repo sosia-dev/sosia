@@ -1,8 +1,8 @@
 """This module provides functions for connecting to and creating a SQLite database."""
 
+import sqlite3
 
 from pathlib import Path
-import sqlite3
 from typing import Optional
 
 from numpy import int32, int64

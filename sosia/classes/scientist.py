@@ -1,10 +1,10 @@
 """Module with super class to represent a `Scientist`."""
 
-from __future__ import annotations
-from collections.abc import Set
 from pathlib import Path
-from typing import NamedTuple, List, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Union
 from warnings import warn
+
+from typing_extensions import Self
 
 from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
@@ -74,7 +74,7 @@ class Scientist(object):
         self.affiliation_type = val
 
     @property
-    def citations(self) -> Optional[Union[int, List[NamedTuple]]]:
+    def citations(self) -> Optional[Union[int, list[NamedTuple]]]:
         """The citation count of the scientist until the provided year."""
         return self._citations
 
@@ -84,7 +84,7 @@ class Scientist(object):
         self._citations = val
 
     @property
-    def citations_period(self) -> Optional[Union[int, List[NamedTuple]]]:
+    def citations_period(self) -> Optional[Union[int, list[NamedTuple]]]:
         """The citation count of the scientist during the given period."""
         return self._citations_period
 
@@ -94,7 +94,7 @@ class Scientist(object):
         self._citations_period = val
 
     @property
-    def coauthors(self) -> Union[Set, List, Tuple]:
+    def coauthors(self) -> Union[set, list, tuple]:
         """Set of coauthors of the scientist on all publications until the
         comparison year.
         """
@@ -102,11 +102,11 @@ class Scientist(object):
 
     @coauthors.setter
     @accepts((set, list, tuple))
-    def coauthors(self, val: Union[Set, List, Tuple]) -> None:
+    def coauthors(self, val: Union[set, list, tuple]) -> None:
         self._coauthors = val
 
     @property
-    def coauthors_period(self) -> Optional[Union[Set, List, Tuple]]:
+    def coauthors_period(self) -> Optional[Union[set, list, tuple]]:
         """Set of coauthors of the scientist on all publications during the
         given period.
         """
@@ -114,11 +114,11 @@ class Scientist(object):
 
     @coauthors_period.setter
     @accepts((set, list, tuple))
-    def coauthors_period(self, val: Union[Set, List, Tuple]) -> None:
+    def coauthors_period(self, val: Union[set, list, tuple]) -> None:
         self._coauthors_period = val
 
     @property
-    def fields(self) -> Union[Set, List, Tuple]:
+    def fields(self) -> Union[set, list, tuple]:
         """The fields of the scientist until the provided year, estimated from
         the sources (journals, books, etc.) she published in.
         """
@@ -126,7 +126,7 @@ class Scientist(object):
 
     @fields.setter
     @accepts((set, list, tuple))
-    def fields(self, val: Union[Set, List, Tuple]) -> None:
+    def fields(self, val: Union[set, list, tuple]) -> None:
         self._fields = val
 
     @property
@@ -150,7 +150,7 @@ class Scientist(object):
         self._name = val
 
     @property
-    def main_field(self) -> Tuple:
+    def main_field(self) -> tuple:
         """The scientist's main field of research, as tuple in
         the form (ASJC code, general category).
 
@@ -188,17 +188,17 @@ class Scientist(object):
         self._language = val
 
     @property
-    def publications(self) -> Union[Set, List, Tuple]:
+    def publications(self) -> Union[set, list, tuple]:
         """List of the scientists' publications."""
         return self._publications
 
     @publications.setter
     @accepts((set, list, tuple))
-    def publications(self, val: Union[Set, List, Tuple]) -> None:
+    def publications(self, val: Union[set, list, tuple]) -> None:
         self._publications = val
 
     @property
-    def publications_period(self) -> Optional[Union[Set, List, Tuple]]:
+    def publications_period(self) -> Optional[Union[set, list, tuple]]:
         """The publications of the scientist published during
         the given period.
         """
@@ -206,7 +206,7 @@ class Scientist(object):
 
     @publications_period.setter
     @accepts((set, list, tuple))
-    def publications_period(self, val: Union[Set, List, Tuple]) -> None:
+    def publications_period(self, val: Union[set, list, tuple]) -> None:
         self._publications_period = val
 
     @property
@@ -232,18 +232,18 @@ class Scientist(object):
         self._name = val
 
     @property
-    def subjects(self) -> Union[Set, List, Tuple]:
+    def subjects(self) -> Union[set, list, tuple]:
         """The subject areas of the scientist's publications."""
         return self._subjects
 
     @subjects.setter
     @accepts((set, list, tuple))
-    def subjects(self, val: Union[Set, List, Tuple]) -> None:
+    def subjects(self, val: Union[set, list, tuple]) -> None:
         self._subjects = val
 
     def __init__(
         self,
-        identifier: List[int],
+        identifier: list[int],
         year: Union[str, int],
         refresh: bool = False,
         period: Optional[int] = None,
@@ -385,7 +385,7 @@ class Scientist(object):
             name = None
         self._name = name
 
-    def get_publication_languages(self, refresh: bool = False) -> Scientist:
+    def get_publication_languages(self, refresh: bool = False) -> Self:
         """Parse languages of published documents."""
         langs = set()
         for eid in self._eids:
