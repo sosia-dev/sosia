@@ -1,5 +1,5 @@
-"""Module with a function for filtering authors based on restrictions in the number of 
-publications in different periods.
+"""Module with a function for filtering authors based on restrictions in the
+number of  publications in different periods.
 """
 
 from itertools import product
@@ -12,10 +12,9 @@ from sosia.processing.caching import auth_npubs_retrieve_insert, \
 from sosia.utils import custom_print
 
 
-def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
-                      verbose=False):
+def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
     """Filter authors based on restrictions in the number of
-    publications in different periods, searched by query_size.
+    publications in different years, searched by query_size.
 
     Parameters
     ----------
@@ -35,10 +34,6 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
     npapers : list
         List of count of publications, minimum and maximum.
 
-    yfrom : int (optional, default=None)
-        If provided, publications are counted only after this year.
-        Publications are still set to 0 before ybefore.
-
     verbose : bool (optional, default=False)
         Whether to print information on the search progress.
 
@@ -48,16 +43,13 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         Scopus IDs filtered.
 
     pubs_counts : list of int
-        List of count of publications within the period provided for authors
-        in group.
+        List of count of publications for authors in group.
 
     older_authors : list of str
         Scopus IDs filtered out because have publications before ybefore.
     """
     group = [int(x) for x in group]
     years_check = [ybefore, yupto]
-    if yfrom:
-        years_check.extend([yfrom - 1])
     authors = DataFrame(product(group, years_check), dtype="uint64",
                         columns=["auth_id", "year"])
     auth_npubs, _ = retrieve_author_info(authors, conn, "author_pubs")
@@ -78,18 +70,6 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         # Authors with no pubs before min year
         mask = (auth_npubs["year"] == ybefore) & (auth_npubs["n_pubs"] == 0)
         au_ok_miny = set(auth_npubs.loc[mask, "auth_id"].unique())
-        # Check publications in range
-        if yfrom:
-            # Keep authors where subtracting publications from before period
-            # from publication count is possible
-            mask = auth_npubs["year"] == yfrom-1
-            rename = {"n_pubs": "n_pubs_bef"}
-            auth_npubs_bef = auth_npubs[mask].copy().rename(columns=rename)
-            auth_npubs_bef["year"] = yupto
-            auth_npubs = (auth_npubs.merge(auth_npubs_bef, "inner",
-                                           on=["auth_id", "year"])
-                                    .fillna(0))
-            auth_npubs["n_pubs"] -= auth_npubs["n_pubs_bef"]
         # Remove authors because of their publication count
         mask = (((auth_npubs["year"] >= yupto) &
                  (auth_npubs["n_pubs"] < min(npapers))) |
@@ -137,9 +117,6 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, yfrom=None,
         for au in tqdm(group_tocheck, disable=not verbose):
             n_pubs_yupto = auth_npubs_retrieve_insert(au, yupto, conn)
             # Eventually decrease publication count
-            if yfrom and n_pubs_yupto >= min(npapers):
-                n_pubs_yfrom = auth_npubs_retrieve_insert(au, yfrom-1, conn)
-                n_pubs_yupto -= n_pubs_yfrom
             if n_pubs_yupto < min(npapers) or n_pubs_yupto > max(npapers):
                 group.remove(au)
             else:
@@ -153,7 +130,6 @@ def same_affiliation(original, new, refresh=False):
     """
     from sosia.classes import Scientist
 
-    period = original.year + 1 - original._period_year
-    m = Scientist([new], original.year, period=period, refresh=refresh,
+    m = Scientist([new], original.year, refresh=refresh,
                   sql_fname=original.sql_fname)
     return any(str(a) in m.affiliation_id for a in original.search_affiliations)

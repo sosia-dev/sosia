@@ -80,16 +80,6 @@ class Scientist(object):
         self._citations = val
 
     @property
-    def citations_period(self):
-        """The citation count of the scientist during the given period."""
-        return self._citations_period
-
-    @citations_period.setter
-    @accepts(int)
-    def citations_period(self, val):
-        self._citations_period = val
-
-    @property
     def coauthors(self):
         """Set of coauthors of the scientist on all publications until the
         comparison year.
@@ -100,18 +90,6 @@ class Scientist(object):
     @accepts((set, list, tuple))
     def coauthors(self, val):
         self._coauthors = val
-
-    @property
-    def coauthors_period(self):
-        """Set of coauthors of the scientist on all publications during the
-        given period.
-        """
-        return self._coauthors_period
-
-    @coauthors_period.setter
-    @accepts((set, list, tuple))
-    def coauthors_period(self, val):
-        self._coauthors_period = val
 
     @property
     def fields(self):
@@ -194,18 +172,6 @@ class Scientist(object):
         self._publications = val
 
     @property
-    def publications_period(self):
-        """The publications of the scientist published during
-        the given period.
-        """
-        return self._publications_period
-
-    @publications_period.setter
-    @accepts((set, list, tuple))
-    def publications_period(self, val):
-        self._publications_period = val
-
-    @property
     def sources(self):
         """The Scopus IDs of sources (journals, books, etc.) in which the
         scientist published in.
@@ -237,7 +203,7 @@ class Scientist(object):
     def subjects(self, val):
         self._subjects = val
 
-    def __init__(self, identifier, year, refresh=False, period=None, eids=None,
+    def __init__(self, identifier, year, refresh=False, eids=None,
                  sql_fname=None):
         """Class to represent a scientist.
 
@@ -259,10 +225,6 @@ class Scientist(object):
             provided, the scientist's properties are inferred from these
             publications, instead of the list of publications obtained from
             the Scopus Author ID(s).
-
-        period: int (optional, default=None)
-            An additional point in time to match characteristics on.  Will
-            fe interpreted as number years prior to the comparison year.
 
         sql_fname : str (optional or pathlib.Path(), default=None)
             The path of the local SQLite database to connect to.  If None,
@@ -304,9 +266,6 @@ class Scientist(object):
         # First year of publication
         pub_years = [p.coverDate[:4] for p in self._publications]
         self._first_year = int(min(pub_years))
-        self._period_year = self.year - (period or (self.year+1)) + 1
-        if self._period_year < self._first_year:
-            self._period_year = 0
 
         # Count of citations
         search_ids = eids or identifier
@@ -314,26 +273,6 @@ class Scientist(object):
 
         # Coauthors
         self._coauthors = set(extract_authors(self._publications)) - set(identifier)
-
-        # Period counts simply set to total if period is or goes back to None
-        if self._period_year:
-            pubs = [p for p in self._publications if
-                    self._period_year <= int(p.coverDate[:4]) <= year]
-            self._publications_period = pubs
-            if not self._publications_period:
-                text = "No publications found for author "\
-                       f"{'-'.join([str(i) for i in identifier])} until "\
-                       f"{year} in a {self._period_year}-years period"
-                raise ValueError(text)
-            eids_period = [p.eid for p in self._publications_period]
-            n_cits = count_citations(eids_period, self.year+1, identifier)
-            self._citations_period = n_cits
-            self._coauthors_period = set(extract_authors(self._publications_period))
-            self._coauthors_period -= set(identifier)
-        else:
-            self._coauthors_period = None
-            self._publications_period = None
-            self._citations_period = None
 
         # Author search information
         source_ids = set([int(p.source_id) for p in self._publications

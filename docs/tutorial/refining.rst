@@ -15,17 +15,6 @@ First, you should always verify the correctness of the profile for which you wan
                 '2-s2.0-84961390052', '2-s2.0-84866317084']
     >>> scientist1_eids = sosia.Original(55208373700, 2017, eids=eids)
 
-
-While above options deal with problematic focal scientists, the same issues may apply to potential matches. That is, there might be good matches in reality but they are not found because the profiles are incomplete. `sosia` offers two ways to deal with this. First, use the parameter "period" to base the search on a shorter period. For example, setting the value to 3 will match characteristics from up to 3 years before the comparison year (with the same margins applied). This increases the likelihood of finding a valid Author ID for the "hypothetical author" within that period. Second, set the "first_year_search" parameter equal to "name".
-
-.. code-block:: python
-
-    >>> scientist_name = sosia.Original(55208373700, 2017, cits_margin=1,
-            pub_margin=1, coauth_margin=1, period=3, first_year_search="name")
-    >>> scientist_name.define_search_group()
-
-This approach allows you to disregard whether the same Author ID remains valid throughout the entire period, down to the target scientist's first year of publication. `sosia` will still filter out Author IDs with a first year of publication that is significantly later, but it will retain those whose first year of publication falls within the provided year margin. In other words, the first year of publication for these Author IDs may be later than the target scientist's upper margin for the first publication year. It is then up to the user to complete the profiles of the identified authors and to reevaluate in a second stage whether they are indeed good matches.
-
 Restricting to affiliations
 ---------------------------
 

@@ -21,10 +21,6 @@ test_params = {"refresh": refresh, "sql_fname": test_cache}
 # Normal values
 scientist1 = Original(55208373700, 2017, cits_margin=200, first_year_margin=1,
                       pub_margin=0.1, coauth_margin=0.1, **test_params)
-# Using period and name search mode
-scientist2 = Original(55208373700, 2017, cits_margin=1, pub_margin=1,
-                      coauth_margin=1, first_year_margin=1, period=3,
-                      first_year_search="name", **test_params)
 # Using affiliations
 affs = [60010348, 60022109, 60017317, 60071236]
 scientist3 = Original(55208373700, 2017, cits_margin=200, first_year_margin=1,
@@ -48,7 +44,7 @@ MATCHES = [
 
 
 def test_search_sources():
-    scientists_list = [scientist1, scientist2, scientist3]
+    scientists_list = [scientist1, scientist3]
     for s in scientists_list:
         s.define_search_sources()
         search_sources = s.search_sources
@@ -78,20 +74,6 @@ def test_search_group_stacked():
     recieved = scientist1.search_group
     assert isinstance(recieved, list)
     assert 500 <= len(recieved) <= 680
-
-
-def test_search_group_ignore():
-    scientist2.define_search_group(refresh=refresh)
-    recieved = scientist2.search_group
-    assert isinstance(recieved, list)
-    assert 4000 <= len(recieved) <= 4500
-
-
-def test_search_group_ignore_stacked():
-    scientist2.define_search_group(stacked=True, refresh=refresh)
-    recieved = scientist2.search_group
-    assert isinstance(recieved, list)
-    assert 4200 <= len(recieved) <= 4300
 
 
 def test_search_group_affiliations_stacked():

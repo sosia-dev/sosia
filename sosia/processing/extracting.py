@@ -143,9 +143,6 @@ def inform_match(profile, keywords, refresh):
         "num_coauthors": len(profile.coauthors),
         "num_publications": len(profile.publications),
         "num_citations": profile.citations,
-        "num_coauthors_period": len(profile.coauthors_period or "") or None,
-        "num_publications_period": len(profile.publications_period or "") or None,
-        "num_citations_period": profile.citations_period,
         "subjects": profile.subjects,
         "affiliation_country": profile.affiliation_country,
         "affiliation_id": profile.affiliation_id,
@@ -199,8 +196,7 @@ def inform_matches(self, keywords, verbose, refresh):
     out = []
     completeness = {}
     for auth_id in tqdm(self.matches, disable=~verbose):
-        period = self.year + 1 - self._period_year
-        p = Scientist([auth_id], self.year, period=period, refresh=refresh,
+        p = Scientist([auth_id], self.year, refresh=refresh,
                       sql_fname=self.sql_fname)
         match_info = inform_match(p, keywords, refresh=refresh)
         # Abstract and reference similarity is performed jointly

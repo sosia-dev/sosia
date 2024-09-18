@@ -60,8 +60,7 @@ class Original(Scientist):
 
     def __init__(self, scientist, treatment_year, first_year_margin=2,
                  pub_margin=0.2, cits_margin=0.2, coauth_margin=0.2,
-                 affiliations=None, period=None, first_year_search="ID",
-                 eids=None, refresh=False, sql_fname=None):
+                 affiliations=None, eids=None, refresh=False, sql_fname=None):
         """Representation of a scientist for whom to find a control scientist.
 
         Parameters
@@ -105,20 +104,6 @@ class Original(Scientist):
             the match procedure on affiliation with these IDs in the
             year of comparison.
 
-        period: int (optional, default=None)
-            An additional period prior to the publication year on which to
-            match scientists.
-            Note: If the value is larger than the publication range, period
-            sets back to None.
-
-        first_year_search: str (optional, default="ID")
-            How to determine characteristics of possible control scientists
-            in the first year of publication.  Mode "ID" uses Scopus Author
-            IDs only.  Mode "name" will select relevant profiles based on
-            their surname and first name but only when "period" is not None.
-            Select this mode to counter potential incompleteness of
-            author profiles.
-
         eids : list (optional, default=None)
             A list of scopus EIDs of the publications of the scientist you
             want to find a control for.  If it is provided, the scientist
@@ -142,13 +127,6 @@ class Original(Scientist):
             raise TypeError("Argument pub_margin must be float or integer.")
         if not isinstance(coauth_margin, (int, float)):
             raise TypeError("Argument coauth_margin must be float or integer.")
-        if first_year_search not in ("ID", "name"):
-            raise ValueError("Argument first_year_search must be either ID or name.")
-        if first_year_search == "name" and not period:
-            first_year_search = "ID"
-            text = "Argument first_year_search set to ID: Argument period "\
-                   "must not be None"
-            warn(text)
 
         # Variables
         if not isinstance(scientist, list):
@@ -159,8 +137,6 @@ class Original(Scientist):
         self.pub_margin = pub_margin
         self.cits_margin = cits_margin
         self.coauth_margin = coauth_margin
-        self.period = period
-        self.first_year_name_search = first_year_search == "name"
         self.eids = eids
         if isinstance(affiliations, (int, str)):
             affiliations = [affiliations]
@@ -174,7 +150,7 @@ class Original(Scientist):
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, treatment_year, refresh=refresh,
-                           period=period, sql_fname=self.sql_fname)
+                           sql_fname=self.sql_fname)
 
     def define_search_group(self, stacked=False, verbose=False, refresh=False):
         """Define search_group.
@@ -309,8 +285,7 @@ class Original(Scientist):
         fields : iterable (optional, default=None)
             Which information to provide.  Allowed values are "first_name",
             "surname", "first_year", "num_coauthors", "num_publications",
-            "num_citations", "num_coauthors_period", "num_publications_period",
-            "num_citations_period", "subjects", "affiliation_country",
+            "num_citations", "subjects", "affiliation_country",
             "affiliation_id", "affiliation_name", "affiliation_type",
             "language", "num_cited_refs".  If None, will use all
             available fields.
@@ -339,9 +314,7 @@ class Original(Scientist):
             raise RuntimeError(text)
         allowed_fields = ["first_name", "surname", "first_year",
                           "num_coauthors", "num_publications", "num_citations",
-                          "num_coauthors_period", "num_publications_period",
-                          "num_citations_period", "subjects",
-                          "affiliation_country", "affiliation_id",
+                          "subjects", "affiliation_country", "affiliation_id",
                           "affiliation_name", "affiliation_type", "language",
                           "num_cited_refs"]
         if fields:
