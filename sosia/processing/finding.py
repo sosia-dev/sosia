@@ -9,10 +9,9 @@ import pandas as pd
 from tqdm import tqdm
 
 from sosia.processing.caching import insert_data, retrieve_author_info
-from sosia.processing.extracting import extract_authors
 from sosia.processing.filtering import filter_pub_counts, same_affiliation
 from sosia.processing.getting import get_authors_from_sourceyear, get_authors
-from sosia.processing.querying import base_query, count_citations, stacked_query
+from sosia.processing.querying import count_citations, stacked_query
 from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
 from sosia.utils import custom_print
 

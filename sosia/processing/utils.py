@@ -3,6 +3,7 @@
 from collections import defaultdict
 from math import ceil, inf
 
+
 def build_dict(results, chunk):
     """Create dictionary assigning publication information to authors we
     are looking for.

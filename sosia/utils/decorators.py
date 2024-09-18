@@ -1,5 +1,6 @@
 """Module with decorator to check types of property."""
 
+
 def accepts(*classinfo_args):
     """Decorator to check types of property."""
     def isinstance_decorator_wrapper(old_fn):
