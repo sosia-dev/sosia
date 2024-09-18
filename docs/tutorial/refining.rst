@@ -12,13 +12,13 @@ First, you should always verify the correctness of the profile for which you wan
 .. code-block:: python
    
     >>> eids = ['2-s2.0-84959420483', '2-s2.0-84949113230',
-                '2-s2.0-84961390052', '2-s2.0-84866317084']
+    >>>         '2-s2.0-84961390052', '2-s2.0-84866317084']
     >>> scientist1_eids = sosia.Original(55208373700, 2017, eids=eids)
 
 Restricting to affiliations
 ---------------------------
 
-Additional search options are available to the user.  First, the user can restrict the search of potential matches to authors affiliated to given institutions.  Provide a list of Scopus Affiliation IDs with parameter `affiliations`:
+You can also restrict the search of potential matches to authors affiliated to given institutions.  Provide a list of Scopus Affiliation IDs with parameter `affiliations`, and `sosia` will find matches only among authors affiliated to these institutions:
 
 .. code-block:: python
 

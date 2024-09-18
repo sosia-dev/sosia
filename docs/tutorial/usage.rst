@@ -175,12 +175,12 @@ You may need additional information to both assess match quality and select matc
 
     >>> stefano.inform_matches(verbose=True)
     Found 4 author(s) matching all criteria
-	Providing information for 4 matches...
-	Match 55022752500: No reference list of 5 documents missing
-	Match 55567912500: No reference list of 6 documents missing
-	Match 55810688700: No reference list of 6 documents missing
-	Match 55824607400: No reference list of 7 documents missing
-	Original 55208373700: 1 reference list out  of 7 documents missing
+    Providing information for 4 matches...
+    Match 55022752500: No reference list of 5 documents missing
+    Match 55567912500: No reference list of 6 documents missing
+    Match 55810688700: No reference list of 6 documents missing
+    Match 55824607400: No reference list of 7 documents missing
+    Original 55208373700: 1 reference list out  of 7 documents missing
 
 By default, `sosia` provides the following information:
 
@@ -201,11 +201,11 @@ Alternatively, you can provide a list of the desired keywords to obtain informat
 .. code-block:: python
 
     >>> print(stefano.matches[0])
-	Match(ID=55022752500, name='Van der Borgh, Michel', first_name='Michel',
-		  surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
-		  num_citations=36, subjects=['BUSI', 'SOCI', 'COMP'], affiliation_country='Netherlands',
-		  affiliation_id='60032882', affiliation_name='Technische Universiteit Eindhoven',
-		  affiliation_type='univ', language='eng', num_cited_refs=0)
+    Match(ID=55022752500, name='Van der Borgh, Michel', first_name='Michel',
+          surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
+          num_citations=36, subjects=['BUSI', 'SOCI', 'COMP'], affiliation_country='Netherlands',
+          affiliation_id='60032882', affiliation_name='Technische Universiteit Eindhoven',
+          affiliation_type='univ', language='eng', num_cited_refs=0)
 
 It is easy to work with namedtuples.  For example, using `pandas <https://pandas.pydata.org/>`_ you easily turn the list into a pandas DataFrame:
 
