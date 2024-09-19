@@ -197,7 +197,7 @@ def inform_matches(self, keywords, verbose, refresh):
     completeness = {}
     for auth_id in tqdm(self.matches, disable=~verbose):
         p = Scientist([auth_id], self.year, refresh=refresh,
-                      sql_fname=self.sql_fname)
+                      db_path=self.sql_fname)
         match_info = inform_match(p, keywords, refresh=refresh)
         # Abstract and reference similarity is performed jointly
         if doc_parse:

@@ -23,5 +23,5 @@ def test_filter_pub_counts():
 
 def test_same_affiliation():
     original = Original(55208373700, 2019, affiliations=[60105007],
-                        sql_fname=test_cache)
+                        db_path=test_cache)
     assert same_affiliation(original, 57209617104)

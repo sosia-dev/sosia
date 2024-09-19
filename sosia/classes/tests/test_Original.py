@@ -11,11 +11,11 @@ from sosia.establishing import make_database
 
 warnings.filterwarnings("ignore")
 
-test_cache = Path.home()/".cache/sosia/test.sqlite"
+test_cache = Path.home() / ".cache" / "sosia" / "test.sqlite"
 test_cache.unlink(missing_ok=True)
 make_database(test_cache)
 refresh = False
-test_params = {"refresh": refresh, "sql_fname": test_cache}
+test_params = {"refresh": refresh, "db_path": test_cache}
 
 # Test objects
 # Normal values

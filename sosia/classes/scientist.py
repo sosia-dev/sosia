@@ -214,7 +214,7 @@ class Scientist(object):
         year: Union[str, int],
         refresh: bool = False,
         eids: Optional[list] = None,
-        sql_fname: Optional[Union[str, Path]] = None,
+        db_path: Optional[Union[str, Path]] = None,
     ) -> None:
         """Class to represent a scientist.
 
@@ -237,7 +237,7 @@ class Scientist(object):
             publications, instead of the list of publications obtained from
             the Scopus Author ID(s).
 
-        sql_fname : str (optional or pathlib.Path(), default=None)
+        db_path : str (optional or pathlib.Path(), default=None)
             The path of the local SQLite database to connect to.  If None,
             will default to `~/.cache/sosia/main.sqlite`.
 
@@ -249,9 +249,9 @@ class Scientist(object):
         """
         self.identifier = identifier
         self.year = int(year)
-        if not sql_fname:
-            sql_fname = DEFAULT_DATABASE
-        self.sql_conn = connect_database(sql_fname)
+        if not db_path:
+            db_path = DEFAULT_DATABASE
+        self.sql_conn = connect_database(db_path)
 
         # Read mapping of fields to sources
         fields, info = read_fields_sources_list()

@@ -4,9 +4,9 @@ from pathlib import Path
 
 from sosia.classes import Scientist
 
-test_cache = Path.home()/".cache/sosia/test.sqlite"
+test_cache = Path.home() / ".cache" / "sosia" / "test.sqlite"
 refresh = 2
-test_params = {"refresh": refresh, "sql_fname": test_cache}
+test_params = {"refresh": refresh, "db_path": test_cache}
 
 scientist1 = Scientist([6701809842], 2001, **test_params)
 scientist2 = Scientist([55208373700, 55208373700], 2017, **test_params)

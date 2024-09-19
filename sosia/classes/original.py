@@ -69,7 +69,7 @@ class Original(Scientist):
         affiliations: Optional[list] = None,
         eids: Optional[list] = None,
         refresh: bool = False,
-        sql_fname: Optional[str] = None,
+        db_path: Optional[str] = None,
     ) -> None:
         """Representation of a scientist for whom to find a control scientist.
 
@@ -126,7 +126,7 @@ class Original(Scientist):
             is passed, results will be refreshed if they are older than
             that value in number of days.
 
-        sql_fname : str (optional, default=None)
+        db_path : str (optional, default=None)
             The path of the SQLite database to connect to.  If None, will use
             the path specified in config.ini.
         """
@@ -154,14 +154,14 @@ class Original(Scientist):
             affiliations = [int(a) for a in affiliations]
         self.search_affiliations = affiliations
         self.refresh = refresh
-        self.sql_fname = sql_fname
+        self.sql_fname = db_path
         self._search_sources = None
         self._search_group = None
         self._matches = None
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, match_year, refresh=refresh,
-                           sql_fname=self.sql_fname)
+                           db_path=self.sql_fname)
 
     def define_search_group(
         self,

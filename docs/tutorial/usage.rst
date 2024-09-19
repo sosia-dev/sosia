@@ -10,7 +10,7 @@ The primary class to interact with is :doc:Original() <../reference/sosia.Origin
 .. code-block:: python
    
     >>> from sosia import Original
-    >>> stefano = Original(55208373700, 2017, sql_fname=DB_NAME)
+    >>> stefano = Original(55208373700, 2017, db_path=DB_NAME)
 
 Upon initiation, pybliometrics performs queries on the Scopus database in the background.
 
@@ -59,7 +59,7 @@ By default (i.e., if not specified), the margin for the first year of publicatio
    
     >>> stefano = Original(55208373700, 2017, first_year_margin=2,
     >>>                    coauth_margin=0.2, pub_margin=0.2,
-    >>>                    cits_margin=0.2, sql_fname=DB_NAME)
+    >>>                    cits_margin=0.2, db_path=DB_NAME)
 
 With this configuration, sosia will identify matches who began publishing within ±2 years of the scientist's first publication. In the comparison year, the matches will have a similar number of co-authors, within a range of ±20% of the original number (with a minimum of 1), and a similar number of publications, also within a range of ±20% (with a minimum of 1).
 

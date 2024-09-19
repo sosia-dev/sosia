@@ -12,7 +12,7 @@ from sosia.processing.initializing import add_source_names,\
 test_cache = Path.home() / ".cache" / "sosia" / "test.sqlite"
 
 def test_add_source_names():
-    s = Scientist([55208373700], 2017, sql_fname=test_cache)
+    s = Scientist([55208373700], 2017, db_path=test_cache)
     expected = [(14351, "Brain Research Reviews"),
                 (18632, "Progress in Brain Research")]
     ids, names = zip(*expected)
