@@ -21,14 +21,21 @@ def connect_database(fname: str) -> sqlite3.Connection:
     return sqlite3.connect(fname)
 
 
-def make_database(fname: Optional[Path] = None, drop: bool = False) -> None:
+def make_database(
+        fname: Optional[Path] = None,
+        verbose: bool = False,
+        drop: bool = False
+) -> None:
     """Make SQLite database with predefined tables and keys.
 
     Parameters
     ----------
-    fname : Path (optional, default=None)
-        The path of the SQLite database to connect to.  If None will default
+    fname : pathlib.Path (optional, default=None)
+        The path of the SQLite database to connect to.  If None, will default
         to `~/.cache/sosia/main.sqlite`.
+
+    verbose : boolean (optional, default=False)
+        Whether to report on the progess of the process.
 
     drop : boolean (optional, default=False)
         If True, deletes and recreates all tables in cache (irreversible).
@@ -38,8 +45,12 @@ def make_database(fname: Optional[Path] = None, drop: bool = False) -> None:
     if not fname:
         fname = DEFAULT_DATABASE
 
+    # Create database
+    existed = fname.exists()
     fname.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(fname)
+
+    # Create tables
     cursor = conn.cursor()
     for table, variables in DB_TABLES.items():
         if drop:
@@ -48,3 +59,17 @@ def make_database(fname: Optional[Path] = None, drop: bool = False) -> None:
         q = f"CREATE TABLE IF NOT EXISTS {table} "\
             f"({columns}, PRIMARY KEY({', '.join(variables['primary'])}))"
         cursor.execute(q)
+
+    # Report progress
+    if fname.exists():
+        if existed:
+            if drop:
+                msg = f"Local database '{fname}' re-created successfully"
+            else:
+                msg = f"Local database '{fname}' not changed"
+        else:
+            msg = f"Local database '{fname}' created successfully"
+    else:
+        msg = f"Failed to create the local database '{fname}'"
+    if verbose:
+        print(msg)

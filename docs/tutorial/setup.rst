@@ -19,20 +19,15 @@ We provide two files via a companion repository on GitHub, [sosia-dev/sosia-data
 Local SQLite Database
 ---------------------
 
-To speed up the process, `sosia` utilizes an SQLite database. The database gets filled automatically, and values in the database take precedence. `sosia` does not automatically update values in the database. To do so, simply use the `refresh` parameter described below.
-
-Create the database like so:
-
-.. code-block:: python
-
-    >>> sosia.make_database()
-
-If you do not specify a path, `sosia` will default to `~/.cache/sosia/main.sqlite`, where ~ refers to your user directory.
-
-The database can be located anywhere; for small projects, we recommend placing it in the project folder, while for larger projects, it's better to store it in a location such as ~/.cache/sosia/<project_name>.sqlite. 
+To speed up the process, `sosia` utilizes an SQLite database. Create the database like so:
 
 .. code-block:: python
    
     >>> from pathlib import Path
     >>> DB_NAME = Path("./sosia/project.sqlite")
-    >>> sosia.make_database(DB_NAME)
+    >>> sosia.make_database(DB_NAME, verbose=True)
+    Local database './sosia/project.sqlite' created successfully
+
+If you do not specify a path, `sosia` will default to `~/.cache/sosia/main.sqlite`, where ~ refers to your user directory. The database can be located anywhere; for multiple small and distinct projects, we recommend utilizing separate databases in the project folder.
+
+The database gets filled automatically, and values in the database take precedence. `sosia` does not automatically update values in the database. To do so, simply use the `refresh` parameter described below.
