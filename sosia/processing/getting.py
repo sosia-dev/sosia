@@ -4,7 +4,7 @@ from string import Template
 
 import pandas as pd
 
-from sosia.processing.caching import insert_data, retrieve_authors,\
+from sosia.processing.caching import insert_data, retrieve_authors, \
     retrieve_authors_from_sourceyear
 from sosia.processing.querying import query_pubs_by_sourceyear, stacked_query
 

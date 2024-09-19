@@ -9,10 +9,9 @@ import pandas as pd
 from tqdm import tqdm
 
 from sosia.processing.caching import insert_data, retrieve_author_info
-from sosia.processing.extracting import extract_authors
 from sosia.processing.filtering import filter_pub_counts, same_affiliation
 from sosia.processing.getting import get_authors_from_sourceyear, get_authors
-from sosia.processing.querying import base_query, count_citations, stacked_query
+from sosia.processing.querying import count_citations, stacked_query
 from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
 from sosia.utils import custom_print
 
@@ -48,10 +47,6 @@ def find_matches(original, stacked, verbose, refresh):
     _max_cits = max(_ncits)
     _ncoauth = margin_range(len(original.coauthors), original.coauth_margin)
     _max_coauth = max(_ncoauth)
-    if original.period:
-        _npapers = margin_range(len(original.publications_period), original.pub_margin)
-        _ncits = margin_range(original.citations_period, original.cits_margin)
-        _ncoauth = margin_range(len(original.coauthors_period), original.coauth_margin)
     text = "Searching through characteristics of "\
            f"{len(original.search_group):,} authors..."
     custom_print(text, verbose)
@@ -68,21 +63,19 @@ def find_matches(original, stacked, verbose, refresh):
     custom_print(text, verbose)
 
     # Second round of filtering:
-    # Check having no publications before minimum year, and if 0, the
-    # number of publications in the relevant period.
-    params = {"group": group, "ybefore": min(_years)-1,
-              "yupto": original.year, "npapers": _npapers,
-              "yfrom": original._period_year, "verbose": verbose, "conn": conn}
-    group, _, _ = filter_pub_counts(**params)
-    # Screen out profiles with too many publications over the full period
-    if original.period:
-        params.update({"npapers": [1, _max_papers], "yfrom": None,
-                       "group": group})
-        group, _, _ = filter_pub_counts(**params)
+    # Check having no publications before minimum year
+    group, _, _ = filter_pub_counts(
+        group=group,
+        ybefore=min(_years)-1,
+        yupto=original.year,
+        npapers=_npapers,
+        verbose=verbose,
+        conn=conn
+    )
     text = f"Left with {len(group):,} researchers"
     custom_print(text, verbose)
 
-    # Third round of filtering: citations (in the FULL period)
+    # Third round of filtering: citations
     authors = pd.DataFrame({"auth_id": group, "year": original.year})
     auth_cits, missing = retrieve_author_info(authors, conn, "author_ncits")
     if not missing.empty:
@@ -105,7 +98,7 @@ def find_matches(original, stacked, verbose, refresh):
     group = auth_cits.loc[mask, 'auth_id'].tolist()
 
     # Fourth round of filtering: Download publications, verify coauthors
-    # (in the FULL period) and first year
+    # and first year
     text = f"Left with {len(group):,} authors\nFiltering based on "\
            "coauthor count..."
     custom_print(text, verbose)
@@ -131,34 +124,15 @@ def find_matches(original, stacked, verbose, refresh):
             insert_data(res, original.sql_conn, table="author_year")
     authors_year, _ = retrieve_author_info(authors, conn, "author_year")
     # Check for number of coauthors within margin
-    mask = authors_year["n_coauth"].between(min(_ncoauth), _max_coauth)
+    same_authcount = authors_year["n_coauth"].between(min(_ncoauth), _max_coauth)
     # Check for year of first publication within range
-    if not original.first_year_name_search:
-        same_start = authors_year["first_year"].between(min(_years), max(_years))
-        mask = mask & same_start
+    same_start = authors_year["first_year"].between(min(_years), max(_years))
     # Filter
+    mask = same_authcount & same_start
     matches = sorted(authors_year[mask]["auth_id"].tolist())
 
     text = f"Left with {len(matches)} authors"
     custom_print(text, verbose)
-    if original.period:
-        text = "Filtering based on citations and coauthor count during period..."
-        custom_print(text, verbose)
-        # Further screen matches based on period cits and coauths
-        to_loop = [m for m in matches]  # temporary copy
-        for m in to_loop:
-            res = base_query("docs", f"AU-ID({m})", refresh=refresh,
-                             fields=["eid", "author_ids", "coverDate"])
-            pubs = [p for p in res if
-                    original._period_year <= int(p.coverDate[:4]) <= original.year]
-            coauths = set(extract_authors(pubs)) - {str(m)}
-            if not min(_ncoauth) <= len(coauths) <= max(_ncoauth):
-                matches.remove(m)
-                continue
-            eids_period = [p.eid for p in pubs]
-            n_cits = count_citations(eids_period, original.year+1, [str(m)])
-            if not min(_ncits) <= n_cits <= max(_ncits):
-                matches.remove(m)
 
     # Eventually filter on affiliations
     if original.search_affiliations:
@@ -191,7 +165,7 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     -------
     group : set
         Set of authors publishing in year of treatment, in years around
-        first publication, and not before the latter period.
+        first publication, and not before them.
     """
     # Define variables
     search_sources, _ = zip(*original.search_sources)
@@ -212,8 +186,7 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     min_year = original.first_year - original.first_year_margin
     max_year = original.first_year + original.first_year_margin
     then_years = [min_year-1]
-    if not original.first_year_name_search:
-        then_years.extend(range(min_year, max_year+1))
+    then_years.extend(range(min_year, max_year+1))
     sources_then = pd.DataFrame(product(search_sources, then_years),
                                 columns=["source_id", "year"])
     auth_then = get_authors_from_sourceyear(sources_then, original.sql_conn,
@@ -227,7 +200,5 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     today -= before
 
     # Compile group
-    group = today
-    if not original.first_year_name_search:
-        group = today.intersection(then)
+    group = today.intersection(then)
     return {int(a) for a in group}

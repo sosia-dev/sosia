@@ -5,7 +5,7 @@ from pathlib import Path
 from sosia.classes import Scientist
 
 test_cache = Path.home()/".cache/sosia/test.sqlite"
-refresh = False
+refresh = 2
 test_params = {"refresh": refresh, "sql_fname": test_cache}
 
 scientist1 = Scientist([6701809842], 2001, **test_params)
@@ -13,7 +13,6 @@ scientist2 = Scientist([55208373700, 55208373700], 2017, **test_params)
 eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
 scientist3 = Scientist([55208373700], 2017, eids=eids, **test_params)
 scientist4 = Scientist([55208373700], 2015, **test_params)
-scientist5 = Scientist([55208373700], 2018, period=2, **test_params)
 
 
 def test_active_year():
@@ -21,7 +20,6 @@ def test_active_year():
     assert scientist2.active_year == 2017
     assert scientist3.active_year == 2016
     assert scientist4.active_year == 2012
-    assert scientist5.active_year == 2018
 
 
 def test_affiliation_country():
@@ -29,7 +27,6 @@ def test_affiliation_country():
     assert scientist2.affiliation_country == "Switzerland"
     assert scientist3.affiliation_country == "Switzerland"
     assert scientist4.affiliation_country == "Switzerland"
-    assert scientist5.affiliation_country == "Germany"
 
 
 def test_affiliation_id():
@@ -37,7 +34,6 @@ def test_affiliation_id():
     assert scientist2.affiliation_id == '60028186'
     assert scientist3.affiliation_id == '60028186'
     assert scientist4.affiliation_id == '60028186'
-    assert scientist5.affiliation_id == '60105007'
 
 
 def test_affiliation_name():
@@ -47,8 +43,6 @@ def test_affiliation_name():
     assert scientist2.affiliation_name == epfl
     assert scientist3.affiliation_name == epfl
     assert scientist4.affiliation_name == epfl
-    mpi = 'Max Planck Institute for Innovation and Competition'
-    assert scientist5.affiliation_name == mpi
 
 
 def test_affiliation_type():
@@ -56,7 +50,6 @@ def test_affiliation_type():
     assert scientist2.affiliation_type == 'univ'
     assert scientist3.affiliation_type == 'univ'
     assert scientist4.affiliation_type == 'univ'
-    assert scientist5.affiliation_type == 'resi'
 
 
 def test_citations():
@@ -64,12 +57,6 @@ def test_citations():
     assert scientist2.citations >= 28
     assert scientist3.citations >= 2
     assert scientist4.citations >= 19
-    assert scientist5.citations >= 44
-
-
-def test_citations_period():
-    assert scientist2.citations_period is None
-    assert scientist5.citations_period == 3
 
 
 def test_coauthors():
@@ -93,22 +80,6 @@ def test_coauthors():
         assert coauth in scientist3.coauthors
     expected = {36617057700, 54929867200, 54930777900, 55875219200}
     assert len(scientist3.coauthors) == len(expected)
-    for coauth in expected:
-        assert coauth in scientist5.coauthors
-    expected = {24464562500, 24781156100, 36617057700, 54929867200,
-                54930777900, 55875219200, 57131011400, 57217825601}
-    assert len(scientist5.coauthors) == len(expected)
-    for coauth in expected:
-        assert coauth in scientist5.coauthors
-
-
-def test_coauthors_period():
-    assert scientist3.coauthors_period is None
-    expected = {24464562500, 24781156100, 54930777900,
-                55875219200, 57131011400, 57217825601}
-    assert len(scientist5.coauthors_period) == len(expected)
-    for coauth in expected:
-        assert coauth in scientist5.coauthors_period
 
 
 def test_fields():
@@ -211,8 +182,3 @@ def test_publication_languages():
     assert scientist1.language == "eng"
     scientist3.get_publication_languages()
     assert scientist3.language == "eng"
-
-
-def test_publications_period():
-    assert scientist1.publications_period is None
-    assert len(scientist5.publications_period) == 4

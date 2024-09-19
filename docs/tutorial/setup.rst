@@ -35,4 +35,4 @@ The database can be located anywhere; for small projects, we recommend placing i
    
     >>> from pathlib import Path
     >>> DB_NAME = Path("./sosia/project.sqlite")
-	>>> sosia.make_database(DB_NAME)
+    >>> sosia.make_database(DB_NAME)

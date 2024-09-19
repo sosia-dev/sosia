@@ -175,12 +175,12 @@ You may need additional information to both assess match quality and select matc
 
     >>> stefano.inform_matches(verbose=True)
     Found 4 author(s) matching all criteria
-	Providing information for 4 matches...
-	Match 55022752500: No reference list of 5 documents missing
-	Match 55567912500: No reference list of 6 documents missing
-	Match 55810688700: No reference list of 6 documents missing
-	Match 55824607400: No reference list of 7 documents missing
-	Original 55208373700: 1 reference list out  of 7 documents missing
+    Providing information for 4 matches...
+    Match 55022752500: No reference list of 5 documents missing
+    Match 55567912500: No reference list of 6 documents missing
+    Match 55810688700: No reference list of 6 documents missing
+    Match 55824607400: No reference list of 7 documents missing
+    Original 55208373700: 1 reference list out  of 7 documents missing
 
 By default, `sosia` provides the following information:
 
@@ -188,9 +188,6 @@ By default, `sosia` provides the following information:
 * `num_coauthors`: The number of coauthors (Scopus Author profiles) up to the comparison year
 * `num_publications`: The number of indexed publications up to the comparison year
 * `num_citations`: The number of citations up to the comparison year
-* `num_coauthors_period`: The number of coauthors (Scopus Author profiles) within the desired `period` (if not provided, equal to num_coauthors)
-* `num_publications_period`: The number of indexed publications within the desired `period` (if not provided, equal to num_publications)
-* `num_citations_period`: The number of citations within the `period` desired  (if not provided, equal to num_citations)
 * `subjects`: List of research subjects in which the matched author has published up to the comparison year
 * `affiliation_country`: The current country of the affiliation belonging to "affiliation_id"
 * `affiliation_id`: The most frequent Scopus Affiliation ID of all affiliations listed on publications most recent to the comparison year
@@ -204,12 +201,11 @@ Alternatively, you can provide a list of the desired keywords to obtain informat
 .. code-block:: python
 
     >>> print(stefano.matches[0])
-	Match(ID=55022752500, name='Van der Borgh, Michel', first_name='Michel',
-		  surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
-		  num_citations=36, num_coauthors_period=None, num_publications_period=None,
-		  num_citations_period=None, subjects=['BUSI', 'SOCI', 'COMP'], affiliation_country='Netherlands',
-		  affiliation_id='60032882', affiliation_name='Technische Universiteit Eindhoven',
-		  affiliation_type='univ', language='eng', num_cited_refs=0)
+    Match(ID=55022752500, name='Van der Borgh, Michel', first_name='Michel',
+          surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
+          num_citations=36, subjects=['BUSI', 'SOCI', 'COMP'], affiliation_country='Netherlands',
+          affiliation_id='60032882', affiliation_name='Technische Universiteit Eindhoven',
+          affiliation_type='univ', language='eng', num_cited_refs=0)
 
 It is easy to work with namedtuples.  For example, using `pandas <https://pandas.pydata.org/>`_ you easily turn the list into a pandas DataFrame:
 
@@ -233,13 +229,6 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     55567912500              5                 6             37   
     55810688700              8                 6             33   
     55824607400              5                 7             34   
-
-                num_coauthors_period num_publications_period num_citations_period  \
-    ID                                                                              
-    55022752500                 None                    None                 None   
-    55567912500                 None                    None                 None   
-    55810688700                 None                    None                 None   
-    55824607400                 None                    None                 None   
 
                            subjects affiliation_country affiliation_id  \
     ID                                                                   
