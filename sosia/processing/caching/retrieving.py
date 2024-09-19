@@ -1,12 +1,14 @@
 """Module that contains functions for retrieving data from a SQLite3 database cache."""
 
+from sqlite3 import Connection
+
 import pandas as pd
 
 from sosia.processing.caching.inserting import insert_temporary_table
 from sosia.processing.caching.utils import temporary_merge
 
 
-def retrieve_authors(df, conn):
+def retrieve_authors(df: pd.DataFrame, conn: Connection) -> tuple[pd.DataFrame, list]:
     """Search authors in cache.
 
     Parameters
@@ -35,7 +37,9 @@ def retrieve_authors(df, conn):
     return incache, tosearch
 
 
-def retrieve_author_info(df, conn, table):
+def retrieve_author_info(df: pd.DataFrame,
+                         conn: Connection,
+                         table) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Retrieve information by author and year from specific table of
     SQLite3 database.
 
@@ -69,7 +73,9 @@ def retrieve_author_info(df, conn, table):
     return incache, tosearch
 
 
-def retrieve_authors_from_sourceyear(tosearch, conn, refresh=False):
+def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
+                                     conn: Connection,
+                                     refresh: bool = False):
     """Search through sources by year for authors in SQL database.
 
     Parameters
