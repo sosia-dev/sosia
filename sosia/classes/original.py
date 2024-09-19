@@ -61,7 +61,7 @@ class Original(Scientist):
     def __init__(
         self,
         scientist: Union[str, int, list[Union[str, int]]],
-        treatment_year: Union[str, int],
+        match_year: Union[str, int],
         first_year_margin: int = 2,
         pub_margin: float = 0.2,
         cits_margin: float = 0.2,
@@ -79,7 +79,7 @@ class Original(Scientist):
             Scopus Author ID, or list of Scopus Author IDs, of the scientist
             to find a control scientist for.
 
-        treatment_year : str or numeric
+        match_year : str or numeric
             Year in which the comparison takes place.  Control scientist will
             be matched on trends and characteristics of the original
             scientist up to this year.
@@ -142,7 +142,7 @@ class Original(Scientist):
         if not isinstance(scientist, list):
             scientist = [scientist]
         self.identifier = [int(auth_id) for auth_id in scientist]
-        self.treatment_year = int(treatment_year)
+        self.match_year = int(match_year)
         self.first_year_margin = first_year_margin
         self.pub_margin = pub_margin
         self.cits_margin = cits_margin
@@ -160,7 +160,7 @@ class Original(Scientist):
         self._matches = None
 
         # Instantiate superclass to load private variables
-        Scientist.__init__(self, self.identifier, treatment_year, refresh=refresh,
+        Scientist.__init__(self, self.identifier, match_year, refresh=refresh,
                            sql_fname=self.sql_fname)
 
     def define_search_group(

@@ -5,12 +5,12 @@ Functioning
 
 1. Publishes in sources (journals, book series, etc.) the scientist publishes too
 2. Publishes in sources associated with the scientist's main field
-3. Publishes in the year of treatment
-4. Is not a co-author in the pre-treatment phase
-5. In the year of treatment, has about the same number of publications
+3. Publishes in the latest year the scientist did as well
+4. Is not a co-author in the pre-phase
+5. In the year of comparison, has about the same number of publications
 6. Started publishing around the same year as the scientist
-7. In the year of treatment, has about the same number of co-authors
-8. In the year of treatment, has about the same number of citations (excluding self-ciations)
+7. In the year of comparison, has about the same number of co-authors
+8. In the year of comparison, has about the same number of citations (excluding self-ciations)
 9. Optional: is affiliated to a similar institution (from a user-provided list of affiliations)
 
 You obtain results after only four steps:
