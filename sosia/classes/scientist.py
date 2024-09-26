@@ -84,7 +84,6 @@ class Scientist(object):
         self._citations = val
 
     @property
-    @property
     def coauthors(self) -> Union[set, list, tuple]:
         """Set of coauthors of the scientist on all publications until the
         comparison year.
