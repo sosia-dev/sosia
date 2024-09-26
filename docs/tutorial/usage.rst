@@ -176,6 +176,7 @@ You may need additional information to both assess match quality and select matc
     >>> stefano.inform_matches(verbose=True)
     Found 4 author(s) matching all criteria
     Providing information for 4 matches...
+    100%|████████████████████████████████████████████████████████████████████████████████████| 4/4 [00:09<00:00,  2.33s/it]
     Match 55022752500: No reference list of 5 documents missing
     Match 55567912500: No reference list of 6 documents missing
     Match 55810688700: No reference list of 6 documents missing

@@ -195,7 +195,7 @@ def inform_matches(self, keywords, verbose, refresh):
     # Add selected information match-by-match
     out = []
     completeness = {}
-    for auth_id in tqdm(self.matches, disable=~verbose):
+    for auth_id in tqdm(self.matches, disable=not verbose):
         p = Scientist([auth_id], self.year, refresh=refresh,
                       db_path=self.sql_fname)
         match_info = inform_match(p, keywords, refresh=refresh)
