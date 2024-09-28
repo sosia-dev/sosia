@@ -258,7 +258,7 @@ def _print_missing_docs(auth_id, n_valid_refs, total, res_type="Match"):
     missing = total-n_valid_refs
     if missing:
         plural = "s" if missing > 1 else ""
-        middle = f"{missing} reference list{plural} out "
+        middle = f"{missing} reference list{plural} out"
     else:
         middle = "No reference list"
     suffix = f"of {total} documents missing"

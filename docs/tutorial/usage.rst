@@ -181,7 +181,7 @@ You may need additional information to both assess match quality and select matc
     Match 55567912500: No reference list of 6 documents missing
     Match 55810688700: No reference list of 6 documents missing
     Match 55824607400: No reference list of 7 documents missing
-    Original 55208373700: 1 reference list out  of 7 documents missing
+    Original 55208373700: 1 reference list out of 7 documents missing
 
 By default, `sosia` provides the following information:
 
@@ -216,7 +216,7 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     >>> pd.set_option('display.max_columns', None)  # this is just for full display
     >>> df = pd.DataFrame(stefano.matches)
     >>> df = df.set_index('ID')
-    >>> df
+    >>> print(df)
                                   name  first_name        surname  first_year  \
     ID                                                                          
     55022752500  Van der Borgh, Michel      Michel  Van der Borgh        2012   
