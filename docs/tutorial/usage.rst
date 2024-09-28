@@ -5,7 +5,7 @@ Using sosia step-by-step
 Characteristics of the scientist
 --------------------------------
 
-The primary class to interact with is :doc:Original() <../reference/sosia.Original>. This class represents the scientist for whom you want to find matches. To initiate it, provide the Scopus Author ID, the year of comparison, as well as the path to the local database:
+The primary class to interact with is :ref:`Original() <class_original>`. This class represents the scientist for whom you want to find matches. To initiate it, provide the Scopus Author ID, the year of comparison, as well as the path to the local database:
 
 .. code-block:: python
    
@@ -169,7 +169,7 @@ The final step is to search within this search group for authors who meet criter
 Adding information to matches
 -----------------------------
 
-You may need additional information to both assess match quality and select matches. The .inform_matches() method adds specified details to each match. After this, the stefano.matches attribute becomes a list of namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>_:
+You may need additional information to both assess match quality and select matches. The .inform_matches() method adds specified details to each match. After this, the stefano.matches attribute becomes a list of `namedtuples <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_:
 
 .. code-block:: python
 
