@@ -64,7 +64,7 @@ def find_matches(original, stacked, verbose, refresh):
 
     # Second round of filtering:
     # Check having no publications before minimum year
-    group, _, _ = filter_pub_counts(
+    group = filter_pub_counts(
         group=group,
         ybefore=min(_years)-1,
         yupto=original.year,

@@ -40,13 +40,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
     Returns
     -------
     group : list of str
-        Scopus IDs filtered.
-
-    pubs_counts : list of int
-        List of count of publications for authors in group.
-
-    older_authors : list of str
-        Scopus IDs filtered out because have publications before ybefore.
+        Scopus IDs of authors passing the publication count requirements.
     """
     group = [int(x) for x in group]
     years_check = [ybefore, yupto]
@@ -55,14 +49,11 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
     auth_npubs, _ = retrieve_author_info(authors, conn, "author_pubs")
     au_skip = []
     group_tocheck = set(group)
-    older_authors = []
-    pubs_counts = []
     # Use information in database
     if not auth_npubs.empty:
         # Remove authors based on age
         mask = (auth_npubs["year"] <= ybefore) & (auth_npubs["n_pubs"] > 0)
         au_remove = set(auth_npubs[mask]["auth_id"].unique())
-        older_authors.extend(au_remove)
         # Remove if number of pubs in year is in any case too small
         mask = ((auth_npubs["year"] >= yupto) &
                 (auth_npubs["n_pubs"] < min(npapers)))
@@ -84,8 +75,6 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
         au_ok_year = auth_npubs[mask][["auth_id", "n_pubs"]].drop_duplicates()
         # Keep authors that match both conditions
         au_ok = au_ok_miny.intersection(au_ok_year["auth_id"].unique())
-        mask = au_ok_year["auth_id"].isin(au_ok)
-        pubs_counts = au_ok_year.loc[mask, "n_pubs"].tolist()
         # Skip citation check for authors that match only the first condition,
         # with the second being unknown
         au_skip = set([x for x in au_ok_miny if x not in au_remove | au_ok])
@@ -97,13 +86,11 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
         text = f"Obtaining information for {len(group_tocheck):,} authors "\
                "without sufficient information in database..."
         custom_print(text, verbose)
-        to_loop = [x for x in group_tocheck]  # Temporary copy
-        for auth_id in tqdm(to_loop, disable=not verbose):
+        for auth_id in tqdm(group_tocheck.copy(), disable=not verbose):
             npubs_ybefore = auth_npubs_retrieve_insert(auth_id, ybefore, conn)
             if npubs_ybefore:
                 group.remove(auth_id)
                 group_tocheck.remove(auth_id)
-                older_authors.append(auth_id)
         text = f"Left with {len(group):,} authors based on publication "\
                f"information before {ybefore}"
         custom_print(text, verbose)
@@ -119,9 +106,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
             # Eventually decrease publication count
             if n_pubs_yupto < min(npapers) or n_pubs_yupto > max(npapers):
                 group.remove(au)
-            else:
-                pubs_counts.append(n_pubs_yupto)
-    return group, pubs_counts, older_authors
+    return group
 
 
 def same_affiliation(original, new, refresh=False):

@@ -15,10 +15,8 @@ def test_filter_pub_counts():
     group = [6701809842, 16319073600, 54984906100, 56148489300, 57131011400,
              57194816659, 35097480000, 56055501900, 20434039300, 6602070937]
     npapers = range(2, 60)
-    g, pubs, older = filter_pub_counts(group, test_conn, 1993, 2005, npapers)
-    assert sorted(g) == [6602070937, 6701809842, 35097480000]
-    assert sorted(pubs) == [3, 15, 17]
-    assert sorted(older) == [20434039300, 54984906100, 56148489300]
+    group = filter_pub_counts(group, test_conn, 1993, 2005, npapers)
+    assert sorted(group) == [6602070937, 6701809842, 35097480000]
 
 
 def test_same_affiliation():
