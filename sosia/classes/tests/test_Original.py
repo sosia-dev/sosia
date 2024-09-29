@@ -48,7 +48,7 @@ def test_search_sources():
     for s in scientists_list:
         s.define_search_sources()
         search_sources = s.search_sources
-        assert len(search_sources) == 61
+        assert len(search_sources) == 63
         assert (20206, "Academy of Management Review") in search_sources
         assert (15143, "Regional Studies") in search_sources
 

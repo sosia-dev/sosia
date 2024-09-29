@@ -11,7 +11,7 @@ sosia infers the scientist's main field of research from the field associations 
    
     >>> import sosia
     >>> sosia.get_field_source_information(verbose=True)
-    Stored information for 97,292 sources as well as 234,384 field-source
+    Stored information for 99,210 sources as well as 241,648 field-source
     assignments in /home/merose/.cache/sosia/
 
 We provide two files via a companion repository on GitHub, [sosia-dev/sosia-data](https://github.com/sosia-dev/sosia-data). This data is updated in the spring and fall when Scopus revises its list of included source definitions. Since source types and associated fields may change, the results may also change after updates. We recommend keeping the source definitions constant or, at the very least, carefully checking for changes in the results after updates.

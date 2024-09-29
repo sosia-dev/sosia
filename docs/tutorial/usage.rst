@@ -70,11 +70,11 @@ The first step in this process is to define a list of sources that are similar i
 .. code-block:: python
 
     >>> stefano.define_search_sources()
-    >>> stefano.search_sources
-    [(15143, 'Regional Studies'), (16680, 'Engineering Science and Education
-     Journal'), (17047, 'Chronicle of Higher Education')
-    # 56 more sources omitted
-    (21100898637, 'Research Policy: X')]
+    >>> print(stefano.search_sources)
+    [(15143, 'Regional Studies'), (16680, 'Engineering Science and Education Journal'),
+    (17047, 'Chronicle of Higher Education'), (18769, 'Applied Economics Letters'),
+    # 58 more sources omitted
+    (21101212779, 'Technological Sustainability')]
 
 Property `search_sources` is a list of tuples storing source ID and source title. As before, you can override (or predefine) your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the sources the scientist publishes in: `stefano.search_sources = stefano.sources`. Then only authors publishing in these sources will be considered for a match.
 
@@ -94,7 +94,7 @@ Defining the search group
 .. code-block:: python
 
     >>> stefano.define_search_group(verbose=True)
-    Defining 'search_group' using up to 61 sources...
+    Defining 'search_group' using up to 65 sources...
 	... parsing Scopus information for 2017...
 	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 176.76it/s]
 	... parsing Scopus information for 2009...
@@ -109,7 +109,7 @@ Defining the search group
 	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 133.42it/s]
 	... parsing Scopus information for 2014...
 	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 144.00it/s]
-	Found 784 authors for search_group
+	Found 795 authors for search_group
 
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
@@ -134,7 +134,7 @@ An alternative search process that minimizes the number of queries can be activa
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     ... parsing Scopus information for 2014...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 787 authors for search_group
+    Found 795 authors for search_group
 
 
 Finding matches
@@ -145,20 +145,20 @@ The final step is to search within this search group for authors who meet criter
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Searching through characteristics of 784 authors...
+    Searching through characteristics of 795 authors...
 	Pre-filtering...
 	100%|████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00<00:00, 38.40it/s]
-	Left with 475 authors with sufficient number of publications and same main field
-	Obtaining information for 475 authors without sufficient information in database...
-	100%|████████████████████████████████████████████████████████████████████████████████| 475/475 [00:10<00:00, 43.98it/s]
+	Left with 433 authors with sufficient number of publications and same main field
+	Obtaining information for 433 authors without sufficient information in database...
+	100%|████████████████████████████████████████████████████████████████████████████████| 433/433 [00:10<00:00, 43.98it/s]
 	Left with 80 authors based on publication information before 2009
-	Counting publications of 80 authors before 2018...
-	100%|██████████████████████████████████████████████████████████████████████████████████| 80/80 [00:00<00:00, 83.53it/s]
-	Left with 28 researchers
-	Counting citations of 28 authors...
-	100%|██████████████████████████████████████████████████████████████████████████████████| 28/28 [00:31<00:00,  1.11s/it]
+	Counting publications of 83 authors before 2018...
+	100%|██████████████████████████████████████████████████████████████████████████████████| 83/83 [00:00<00:00, 83.53it/s]
+	Left with 29 researchers
+	Counting citations of 29 authors...
+	100%|██████████████████████████████████████████████████████████████████████████████████| 29/29 [00:31<00:00,  1.11s/it]
 	Filtering based on count of citations...
-	Left with 6 authors
+	Left with 4 authors
 	Filtering based on coauthor count...
 	100%|████████████████████████████████████████████████████████████████████████████████████| 6/6 [00:00<00:00, 95.53it/s]
 	Left with 4 authors
