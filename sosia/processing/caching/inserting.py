@@ -14,14 +14,23 @@ def auth_npubs_retrieve_insert(auth_id: int, year: int, conn: Connection) -> int
     from sosia.processing.querying import base_query
 
     docs = base_query("docs", f"AU-ID({auth_id})")
-    npubs = len([x for x in docs if int(x.coverDate[:4]) <= year])
-    tp = (auth_id, year, npubs)
-    insert_data(tp, conn, table="author_pubs")
-    return npubs
+    data = pd.DataFrame(docs)[["eid", "coverDate"]]
+    data["coverDate"] = data["coverDate"].str[:4].astype("uint16")
+    min_year = data["coverDate"].min()
+    if year < min_year:
+        return 0
+    data = (data.rename(columns={"coverDate": "year", "eid": "n_pubs"})
+                .groupby("year")["n_pubs"].nunique().reset_index())
+    all_years = pd.DataFrame({"year": range(min_year, data["year"].max() + 1)})
+    data = pd.merge(all_years, data, on="year", how="left").fillna(0)
+    data["n_pubs"] = data["n_pubs"].cumsum().astype(int)
+    data["auth_id"] = int(auth_id)
+    insert_data(data[["auth_id", "year", "n_pubs"]], conn, table="author_pubs")
+    return data.loc[data["year"] == year, "n_pubs"].iloc[0]
 
 
 def insert_data(
-    data: Union[pd.DataFrame, tuple],
+    data: pd.DataFrame,
     conn: Connection,
     table: Literal[
         "authors",
@@ -37,8 +46,7 @@ def insert_data(
     Parameters
     ----------
     data : DataFrame or 3-tuple
-        Dataframe with authors information or (when table="sources") a
-        3-element tuple.
+        Dataframe with author information.
 
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
@@ -61,12 +69,7 @@ def insert_data(
 
     # Build query
     cols, _ = zip(*DB_TABLES[table]["columns"])
-    wildcard_tables = {"authors", "author_ncits", "author_year", "sources",
-                       "sources_afids"}
-    if table in wildcard_tables:
-        values = ["?"] * len(cols)
-    else:
-        values = (str(d) for d in data)
+    values = ["?"] * len(cols)
     q = f"INSERT OR IGNORE INTO {table} ({','.join(cols)}) "\
         f"VALUES ({','.join(values)})"
 
@@ -87,10 +90,7 @@ def insert_data(
 
     # Execute queries
     cursor = conn.cursor()
-    if table in wildcard_tables:
-        cursor.executemany(q, data.to_records(index=False))
-    else:
-        cursor.execute(q)
+    cursor.executemany(q, data.to_records(index=False))
     conn.commit()
 
 

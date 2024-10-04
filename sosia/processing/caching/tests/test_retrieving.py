@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from pybliometrics.scopus import ScopusSearch, AuthorSearch
+from pybliometrics.scopus import init, AuthorSearch, ScopusSearch
 
 from sosia.establishing import connect_database, make_database
 from sosia.processing import build_dict, insert_data, retrieve_authors,\
@@ -15,6 +15,7 @@ from sosia.processing import build_dict, insert_data, retrieve_authors,\
 
 test_cache = Path.home()/".cache/sosia/test.sqlite"
 refresh = 30
+init()
 
 
 def test_retrieve_authors():
@@ -66,8 +67,7 @@ def test_retrieve_author_info_authorpubs():
             "year": [2010, 2017], "n_pubs": [0, 6]}
     expected = pd.DataFrame(data, dtype="int64")
     # Insert data
-    insert_data(expected.iloc[0].values, conn, table=table)
-    insert_data(expected.iloc[1].values, conn, table=table)
+    insert_data(expected, conn, table=table)
     # Retrieve data
     cols = ["auth_id", "year"]
     incache, tosearch = retrieve_author_info(expected[cols], conn, table)
