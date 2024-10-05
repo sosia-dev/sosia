@@ -11,7 +11,7 @@ from pybliometrics.scopus.exception import Scopus404Error
 
 from sosia.establishing import connect_database, DEFAULT_DATABASE
 from sosia.processing import add_source_names, base_query, count_citations, \
-    extract_authors, find_main_affiliation, get_authors, get_main_field, \
+    extract_authors, find_main_affiliation, get_author_info, get_main_field, \
     maybe_add_source_names, read_fields_sources_list
 from sosia.utils import accepts
 
@@ -312,8 +312,8 @@ class Scientist(object):
         self._language = None
 
         # Author name from profile with most documents
-        df = get_authors(self.identifier, self.sql_conn,
-                         refresh=refresh, verbose=False)
+        df = get_author_info(self.identifier, self.sql_conn,
+                             refresh=refresh, verbose=False)
         au = df.sort_values("documents", ascending=False).iloc[0]
         self._subjects = [a.split(" ")[0] for a in au.areas.split("; ")]
         self._surname = au.surname or None

@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from sosia.processing.caching import insert_data, retrieve_author_info
 from sosia.processing.filtering import filter_pub_counts, same_affiliation
-from sosia.processing.getting import get_authors_from_sourceyear, get_authors
+from sosia.processing.getting import get_authors_from_sourceyear, get_author_info
 from sosia.processing.querying import count_citations, stacked_query
 from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
 from sosia.utils import custom_print
@@ -53,8 +53,7 @@ def find_matches(original, stacked, verbose, refresh):
     conn = original.sql_conn
 
     # First round of filtering: minimum publications and main field
-    # create df of authors
-    authors = get_authors(original.search_group, original.sql_conn, verbose=verbose)
+    authors = get_author_info(original.search_group, original.sql_conn, verbose=verbose)
     same_field = authors['areas'].str.startswith(original.main_field[1])
     enough_pubs = authors['documents'].astype(int) >= int(min(_npapers))
     group = sorted(authors.loc[same_field & enough_pubs, "auth_id"].tolist())
@@ -115,7 +114,7 @@ def find_matches(original, stacked, verbose, refresh):
         res = stacked_query(**params)
         res = build_dict(res, auth_year_group)
         if res:
-            # res can become empty after build_dict if an au_id is old
+            # Note: res can become empty after build_dict if an au_id is old
             res = pd.DataFrame.from_dict(res, orient="index")
             res["year"] = original.year
             res = res[["year", "first_year", "n_pubs", "n_coauth"]]
@@ -123,11 +122,8 @@ def find_matches(original, stacked, verbose, refresh):
             res = res.reset_index()
             insert_data(res, original.sql_conn, table="author_year")
     authors_year, _ = retrieve_author_info(authors, conn, table="author_year")
-    # Check for number of coauthors within margin
     same_authcount = authors_year["n_coauth"].between(min(_ncoauth), _max_coauth)
-    # Check for year of first publication within range
     same_start = authors_year["first_year"].between(min(_years), max(_years))
-    # Filter
     mask = same_authcount & same_start
     matches = sorted(authors_year[mask]["auth_id"].tolist())
 

@@ -9,9 +9,9 @@ from sosia.processing.caching import insert_data, retrieve_authors, \
 from sosia.processing.querying import query_pubs_by_sourceyear, stacked_query
 
 
-def get_authors(authors, conn, refresh=False, verbose=False):
-    """Wrapper function to search author data for a list of authors, searching
-    first in the SQL database and then via stacked search.
+def get_author_info(authors, conn, refresh=False, verbose=False):
+    """Get author information from authors table and add missing information
+    via Scopus Author Search API.
 
     Parameters
     ----------
