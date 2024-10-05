@@ -37,7 +37,6 @@ def insert_data(
         "author_ncits",
         "author_pubs",
         "author_year",
-        "sources",
         "sources_afids",
     ],
 ) -> None:
@@ -55,7 +54,7 @@ def insert_data(
         The database table to insert into.  The query will be adjusted
         accordingly.
         Allowed values: "authors", "author_ncits", "author_pubs",
-        "author_year", "sources", "sources_afids".
+        "author_year", "sources_afids".
 
     Raises
     ------
@@ -74,17 +73,12 @@ def insert_data(
         f"VALUES ({','.join(values)})"
 
     # Eventually tweak data
-    if table in ('authors', 'sources', 'sources_afids'):
+    if table in ('authors', 'sources_afids'):
         if data.empty:
             return None
         if table == 'authors':
             data["auth_id"] = data['eid'].str.split('-').str[-1]
-        elif table in ('sources', 'sources_afids'):
-            if table == 'sources' and "afid" in data.columns:
-                data = (data.groupby(["source_id", "year"])[["auids"]]
-                            .apply(lambda x: list(flat_set_from_df(x, "auids")))
-                            .rename("auids")
-                            .reset_index())
+        elif table == 'sources_afids':
             data["auids"] = data["auids"].apply(robust_join)
         data = data[list(cols)]
 

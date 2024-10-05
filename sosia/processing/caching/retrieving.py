@@ -101,10 +101,9 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
     # Preparation
     cursor = conn.cursor()
     if not isinstance(refresh, bool) or refresh:
-        for table in ("sources", "sources_afids"):
-            q = f"DELETE FROM {table} WHERE source_id=? AND year=?"
-            cursor.executemany(q, tosearch.to_records(index=False))
-            conn.commit()
+        q = "DELETE FROM sources_afids WHERE source_id=? AND year=?"
+        cursor.executemany(q, tosearch.to_records(index=False))
+        conn.commit()
 
     # Query selected data using left join
     cols = ["source_id", "year"]

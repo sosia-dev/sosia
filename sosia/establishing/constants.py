@@ -10,26 +10,23 @@ DEFAULT_DATABASE = _cache_folder/'main.sqlite'
 
 DB_TABLES = {
     "author_ncits":
-        {"columns": (("auth_id", "int"), ("year", "int"), ("n_cits", "int")),
+        {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"), ("n_cits", "INTEGER")),
          "primary": ("auth_id", "year")},
     "author_pubs":
-        {"columns": (("auth_id", "int"), ("year", "int"), ("n_pubs", "int")),
+        {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"), ("n_pubs", "INTEGER")),
          "primary": ("auth_id", "year")},
     "author_year":
-        {"columns": (("auth_id", "int"), ("year", "int"), ("first_year", "int"),
-                     ("n_pubs", "int"), ("n_coauth", "int")),
+        {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"), ("first_year", "INTEGER"),
+                     ("n_pubs", "INTEGER"), ("n_coauth", "INTEGER")),
          "primary": ("auth_id", "year")},
     "authors":
-        {"columns": (("auth_id", "int"), ("eid", "text"), ("surname", "text"),
+        {"columns": (("auth_id", "INTEGER"), ("eid", "text"), ("surname", "text"),
                      ("initials", "text"), ("givenname", "text"),
                      ("affiliation", "text"), ("documents", "text"),
                      ("affiliation_id", "text"), ("city", "text"),
                      ("country", "text"), ("areas", "text")),
          "primary": ("auth_id",)},
-    "sources":
-        {"columns": (("source_id", "int"), ("year", "int"), ("auids", "text")),
-         "primary": ("source_id", "year")},
     "sources_afids":
-        {"columns": (("source_id", "int"), ("year", "int"), ("afid", "int"),
+        {"columns": (("source_id", "INTEGER"), ("year", "INTEGER"), ("afid", "INTEGER"),
                      ("auids", "text")),
          "primary": ("source_id", "year", "afid")}}
