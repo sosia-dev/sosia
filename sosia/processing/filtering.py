@@ -46,7 +46,7 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
     years_check = [ybefore, yupto]
     authors = DataFrame(product(group, years_check), dtype="uint64",
                         columns=["auth_id", "year"])
-    auth_npubs, _ = retrieve_author_info(authors, conn, "author_pubs")
+    auth_npubs, _ = retrieve_author_info(authors, conn, table="author_pubs")
     au_skip = []
     group_tocheck = set(group)
     # Use information in database

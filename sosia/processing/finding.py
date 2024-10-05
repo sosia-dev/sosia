@@ -77,7 +77,7 @@ def find_matches(original, stacked, verbose, refresh):
 
     # Third round of filtering: citations
     authors = pd.DataFrame({"auth_id": group, "year": original.year})
-    auth_cits, missing = retrieve_author_info(authors, conn, "author_ncits")
+    auth_cits, missing = retrieve_author_info(authors, conn, table="author_ncits")
     if not missing.empty:
         total = missing.shape[0]
         text = f"Counting citations of {total:,} authors..."
@@ -104,7 +104,7 @@ def find_matches(original, stacked, verbose, refresh):
     custom_print(text, verbose)
     authors = pd.DataFrame({"auth_id": group, "year": original.year},
                            dtype="uint64")
-    _, author_year_search = retrieve_author_info(authors, conn, "author_year")
+    _, author_year_search = retrieve_author_info(authors, conn, table="author_year")
 
     if not author_year_search.empty:
         q = Template(f"AU-ID($fill) AND PUBYEAR BEF {original.year + 1}")
@@ -122,7 +122,7 @@ def find_matches(original, stacked, verbose, refresh):
             res.index.name = "auth_id"
             res = res.reset_index()
             insert_data(res, original.sql_conn, table="author_year")
-    authors_year, _ = retrieve_author_info(authors, conn, "author_year")
+    authors_year, _ = retrieve_author_info(authors, conn, table="author_year")
     # Check for number of coauthors within margin
     same_authcount = authors_year["n_coauth"].between(min(_ncoauth), _max_coauth)
     # Check for year of first publication within range

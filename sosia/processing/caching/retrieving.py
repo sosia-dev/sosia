@@ -29,7 +29,7 @@ def retrieve_authors(df: pd.DataFrame, conn: Connection) -> tuple[pd.DataFrame, 
     """
     cols = ["auth_id"]
     insert_temporary_table(df, merge_cols=cols, conn=conn)
-    incache = temporary_merge(conn, "authors", merge_cols=cols)
+    incache = temporary_merge(conn, table="authors", merge_cols=cols)
     tosearch = df['auth_id'].tolist()
     if not incache.empty:
         incache_list = incache["auth_id"].tolist()
