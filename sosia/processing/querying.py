@@ -267,11 +267,3 @@ def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
         res.extend(long_query(q, q_type, template, refresh))
     return res
 
-
-def valid_results(res):
-    """Verify that each element ScopusSearch in `res` contains year info."""
-    try:
-        _ = [p for p in res if p.subtype == "ar" and int(p.coverDate[:4])]
-        return True
-    except (AttributeError, TypeError, ValueError):
-        return False
