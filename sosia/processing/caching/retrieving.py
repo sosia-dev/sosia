@@ -105,7 +105,7 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
         cursor.executemany(q, tosearch.to_records(index=False))
         conn.commit()
 
-    # Query selected data using left join
+    # Query authors for relevant journal-years
     cols = ["source_id", "year"]
     insert_temporary_table(tosearch.copy(), conn, merge_cols=cols)
     q = "SELECT a.source_id, a.year, b.auids, b.afid FROM temp AS a "\
