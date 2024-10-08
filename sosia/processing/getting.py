@@ -13,8 +13,8 @@ from sosia.utils import custom_print
 
 
 def get_author_info(authors, conn, refresh=False, verbose=False):
-    """Get author information from authors table and add missing information
-    via Scopus Author Search API.
+    """Get author information from author_info table and add missing
+    information via Author Search API.
 
     Parameters
     ----------
@@ -47,13 +47,13 @@ def get_author_info(authors, conn, refresh=False, verbose=False):
             print("Pre-filtering...")
         res = stacked_query(**params)
         res = pd.DataFrame(res)
-        insert_data(res, conn, table="authors")
+        insert_data(res, conn, table="author_info")
         data, _ = retrieve_authors(authors, conn)
     return data
 
 
-def get_author_yearly_data(group, conn, verbose=False):
-    """Get author information from author_year table and add missing
+def get_author_data(group, conn, verbose=False):
+    """Get author information from author_data table and add missing
     information via Scopus Search API.
 
     Parameters
@@ -73,7 +73,7 @@ def get_author_yearly_data(group, conn, verbose=False):
         Scopus IDs of authors passing the publication count requirements.
     """
     authors = pd.DataFrame({"auth_id": group})
-    auth_data, missing = retrieve_authors(authors, conn, table="author_year")
+    auth_data, missing = retrieve_authors(authors, conn, table="author_data")
 
     # Add to database
     if missing:
@@ -85,10 +85,10 @@ def get_author_yearly_data(group, conn, verbose=False):
             new = extract_yearly_author_data(auth_id)
             to_add.append(new)
         to_add = pd.concat(to_add)
-        insert_data(to_add, conn, table="author_year")
+        insert_data(to_add, conn, table="author_data")
 
     # Retrieve again
-    auth_data, missing = retrieve_authors(authors, conn, table="author_year")
+    auth_data, missing = retrieve_authors(authors, conn, table="author_data")
     return auth_data
 
 

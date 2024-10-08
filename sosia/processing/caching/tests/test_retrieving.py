@@ -49,7 +49,7 @@ def test_retrieve_authors_insert():
     res["auth_id"] = res["eid"].str.split("-").str[-1].astype("uint64")
     res["affiliation_id"] = res["affiliation_id"].astype(float)
     res = res[expected_cols]
-    insert_data(res, conn, table="authors")
+    insert_data(res, conn, table="author_info")
     # Retrieve data
     df = pd.DataFrame(expected_auth + search_auth, columns=["auth_id"],
                       dtype="uint64")
@@ -58,11 +58,11 @@ def test_retrieve_authors_insert():
     assert missing == [55317901900]
 
 
-def test_retrieve_author_info_authorncits():
+def test_retrieve_author_info_author_citations():
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
-    table = "author_ncits"
+    table = "author_citations"
     data = {"auth_id": [53164702100, 53164702100],
             "year": [2010, 2017], "n_cits": [0, 6]}
     expected = pd.DataFrame(data, dtype="int64")

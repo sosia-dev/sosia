@@ -6,16 +6,16 @@ from typing import Literal
 import pandas as pd
 
 from sosia.establishing import DB_TABLES
-from sosia.processing.utils import flat_set_from_df, robust_join
+from sosia.processing.utils import robust_join
 
 
 def insert_data(
     data: pd.DataFrame,
     conn: Connection,
     table: Literal[
-        "authors",
-        "author_ncits",
-        "author_year",
+        "author_citations",
+        "author_data",
+        "author_info",
         "sources_afids",
     ],
 ) -> None:
@@ -32,8 +32,6 @@ def insert_data(
     table : string
         The database table to insert into.  The query will be adjusted
         accordingly.
-        Allowed values: "authors", "author_ncits", "author_pubs",
-        "author_year", "sources_afids".
 
     Raises
     ------
@@ -52,10 +50,10 @@ def insert_data(
         f"VALUES ({','.join(values)})"
 
     # Eventually tweak data
-    if table in ('authors', 'sources_afids'):
+    if table in ('author_info', 'sources_afids'):
         if data.empty:
             return None
-        if table == 'authors':
+        if table == 'author_info':
             data["auth_id"] = data['eid'].str.split('-').str[-1]
         elif table == 'sources_afids':
             data["auids"] = data["auids"].apply(robust_join)

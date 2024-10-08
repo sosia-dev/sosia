@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from sosia.processing.caching import insert_data, retrieve_author_info
 from sosia.processing.filtering import same_affiliation
-from sosia.processing.getting import get_author_info, get_author_yearly_data, \
+from sosia.processing.getting import get_author_data, get_author_info, \
     get_authors_from_sourceyear
 from sosia.processing.querying import count_citations
 from sosia.processing.utils import flat_set_from_df, margin_range
@@ -55,7 +55,7 @@ def find_matches(original, verbose, refresh):
     custom_print(text, verbose)
 
     # Second round of filtering: first year, publication count, coauthor count
-    data = get_author_yearly_data(group=group, verbose=verbose, conn=conn)
+    data = get_author_data(group=group, verbose=verbose, conn=conn)
     similar_start = data["first_year"].between(_years[0], _years[1])
     data = data[similar_start].drop(columns="first_year")
     data = data[data["year"] <= original.match_year]
@@ -69,7 +69,7 @@ def find_matches(original, verbose, refresh):
 
     # Third round of filtering: citations
     authors = pd.DataFrame({"auth_id": group, "year": original.year})
-    auth_cits, missing = retrieve_author_info(authors, conn, table="author_ncits")
+    auth_cits, missing = retrieve_author_info(authors, conn, table="author_citations")
     if not missing.empty:
         total = missing.shape[0]
         text = f"Counting citations of {total:,} authors..."
@@ -80,7 +80,7 @@ def find_matches(original, verbose, refresh):
             n_cits = count_citations([str(au['auth_id'])], original.year+1)
             missing.at[i, 'n_cits'] = n_cits
             if i % 100 == 0 or i == len(missing) - 1:
-                insert_data(missing.iloc[start:i+1], conn, table="author_ncits")
+                insert_data(missing.iloc[start:i+1], conn, table="author_citations")
                 start = i
     auth_cits = pd.concat([auth_cits, missing])
     auth_cits['auth_id'] = auth_cits['auth_id'].astype("uint64")

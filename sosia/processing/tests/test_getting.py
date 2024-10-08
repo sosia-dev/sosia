@@ -5,7 +5,7 @@ from pathlib import Path
 from pandas import DataFrame
 
 from sosia.establishing import connect_database, make_database
-from sosia.processing import get_author_yearly_data
+from sosia.processing import get_author_data
 from sosia.processing.getting import get_author_info
 from sosia.processing.tests.test_filtering import test_cache
 
@@ -13,12 +13,12 @@ test_cache = Path.home()/".cache/sosia/test.sqlite"
 refresh = 30
 
 
-def test_get_author_yearly_data():
+def test_get_author_data():
     make_database(test_cache, drop=True)
     test_conn = connect_database(test_cache)
     group = [6701809842, 16319073600, 54984906100, 56148489300, 57131011400,
              57194816659, 35097480000, 56055501900, 20434039300, 6602070937]
-    data = get_author_yearly_data(group, test_conn)
+    data = get_author_data(group, test_conn)
     assert isinstance(data, DataFrame)
     expected_cols = ['auth_id', 'year', 'first_year', 'n_pubs', 'n_coauth']
     assert list(data.columns) == expected_cols

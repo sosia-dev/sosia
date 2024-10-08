@@ -10,7 +10,7 @@ from sosia.processing.caching.inserting import insert_temporary_table
 
 def retrieve_authors(df: pd.DataFrame,
                      conn: Connection,
-                     table: str = "authors") -> tuple[pd.DataFrame, list]:
+                     table: str = "author_info") -> tuple[pd.DataFrame, list]:
     """Search authors in cache.
 
     Parameters
