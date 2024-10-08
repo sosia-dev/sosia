@@ -2,12 +2,14 @@
 
 from collections import defaultdict, Counter, namedtuple
 
+import pandas as pd
 from pybliometrics.scopus import AbstractRetrieval
 from pybliometrics.scopus.exception import Scopus404Error
 from tqdm import tqdm
 
 from sosia.processing.constants import ASJC_2D
 from sosia.processing.utils import compute_overlap
+from sosia.processing.querying import base_query
 
 
 def extract_authors(pubs):
@@ -16,6 +18,46 @@ def extract_authors(pubs):
     """
     auths = [x.author_ids.split(";") for x in pubs if isinstance(x.author_ids, str)]
     return [int(au) for sl in auths for au in sl]
+
+
+def extract_yearly_author_data(auth_id: int) -> pd.DataFrame:
+    """Extract relevant information from an author's yearly publication list:
+    - first year of publication
+    - yearly publication stock
+    - yearly coauthor stock
+    """
+    # Get data
+    docs = base_query("docs", f"AU-ID({auth_id})")
+    cols = ["eid", "coverDate", "author_ids"]
+    df = pd.DataFrame(docs)[cols].rename(columns={"coverDate": "year"})
+    df["year"] = df["year"].str[:4].astype("uint16")
+    # First year
+    first_year = df["year"].min()
+    # Publications
+    pub_counts = df['year'].value_counts()
+    # Coauthors
+    authors = (df.set_index(["eid", "year"])
+                 ['author_ids'].str.split(';', expand=True)
+                 .melt(ignore_index=False, value_name='author_id')
+                 .dropna()
+                 .reset_index().drop(columns=['variable', "eid"])
+                 .sort_values("year", ascending=True)
+                 .drop_duplicates())
+    unique_authors = set()
+    coauth_counts = defaultdict(int)
+    for year, subset in authors.groupby('year'):
+        unique_authors.update(subset['author_id'].unique())
+        coauth_counts[year] = len(unique_authors)
+    # Combine
+    data = {"auth_id": auth_id, "year": range(first_year, df["year"].max() + 1)}
+    out = pd.DataFrame(data)
+    out.index = out["year"]
+    out["first_year"] = int(first_year)
+    out["n_pubs"] = pub_counts
+    out["n_pubs"] = out["n_pubs"].fillna(0).cumsum().astype(int)
+    out["n_coauth"] = coauth_counts
+    out["n_coauth"] = out["n_coauth"].ffill().astype(int)
+    return out.reset_index(drop=True)
 
 
 def find_main_affiliation(auth_ids, pubs, year):

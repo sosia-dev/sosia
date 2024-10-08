@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 test_cache = Path.home() / ".cache" / "sosia" / "test.sqlite"
 test_cache.unlink(missing_ok=True)
 make_database(test_cache)
-refresh = False
+refresh = 30
 test_params = {"refresh": refresh, "db_path": test_cache}
 
 # Test objects
@@ -40,7 +40,28 @@ MATCHES = [
         num_citations=190,
         affiliation_country='Norway',
         language='eng',
-        num_cited_refs=4)]
+        num_cited_refs=4),
+    Match(
+        ID=55212317400,
+        name='Lopes-Bento, Cindy',
+        first_year=2013,
+        num_coauthors=5,
+        num_publications=7,
+        num_citations=77,
+        affiliation_country='Belgium',
+        language='eng',
+        num_cited_refs=3),
+    Match(
+        ID=55567912500,
+        name='Eling, Katrin',
+        first_year=2013,
+        num_coauthors=5,
+        num_publications=6,
+        num_citations=37,
+        affiliation_country='Netherlands',
+        language='eng',
+        num_cited_refs=0)
+]
 
 
 def test_search_sources():
@@ -89,15 +110,9 @@ def test_find_matches():
     assert scientist1.matches == expected
 
 
-def test_find_matches_stacked():
-    scientist1.find_matches(stacked=True, refresh=refresh)
-    expected = [m.ID for m in MATCHES]
-    assert scientist1.matches == expected
-
-
-def test_find_matches_stacked_affiliations():
-    scientist3.find_matches(stacked=True, refresh=refresh)
-    expected = [m.ID for m in MATCHES]
+def test_find_matches_affiliations():
+    scientist3.find_matches(refresh=refresh)
+    expected = [MATCHES[0].ID]
     assert scientist3.matches == expected
 
 

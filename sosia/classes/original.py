@@ -250,23 +250,16 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def find_matches(
-        self, stacked: bool = False, verbose: bool = False, refresh: bool = False
-    ) -> None:
+    def find_matches(self, verbose: bool = False, refresh: bool = False) -> None:
         """Find matches within search_group based on four criteria:
-        1. Started publishing in about the same year
-        2. Has about the same number of publications in the treatment year
-        3. Has about the same number of coauthors in the treatment year
-        4. Has about the same number of citations in the treatment year
-        5. Works in the same field as the scientist's main field
+        1. Works in the same field as the scientist's main field
+        2. Started publishing in about the same year
+        3. Has about the same number of publications in the treatment year
+        4. Has about the same number of coauthors in the treatment year
+        5. Has about the same number of citations in the treatment year
 
         Parameters
         ----------
-        stacked : bool (optional, default=False)
-            Whether to combine searches in few queries or not.  Cached
-            files will most likely not be reusable.  Set to True if you
-            query in distinct fields or you want to minimize API key usage.
-
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
 
@@ -284,13 +277,9 @@ class Original(Scientist):
             text = "No search group defined.  Please run "\
                    ".define_search_group() first."
             raise RuntimeError(text)
-        if not isinstance(refresh, bool) and stacked:
-            refresh = False
-            warn("refresh parameter must be boolean when stacked=True.  "
-                 "Continuing with refresh=False.")
 
         # Find matches
-        matches = find_matches(self, stacked, verbose, refresh)
+        matches = find_matches(self, verbose, refresh)
         text = f"Found {len(matches):,} author(s) matching all criteria"
         custom_print(text, verbose)
         self._matches = sorted([auth_id for auth_id in matches])

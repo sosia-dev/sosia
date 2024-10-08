@@ -1,13 +1,24 @@
 """Tests for processing.extracting module."""
 
+import pandas as pd
 from pybliometrics.scopus import ScopusSearch, init
 
-from sosia.processing import find_main_affiliation, get_main_field, parse_docs
+from sosia.processing import extract_yearly_author_data, \
+    find_main_affiliation, get_main_field, parse_docs
 
 init()
 
 refresh = 30
 test_id = 6701809842
+
+
+def test_extract_yearly_author_data():
+    received = extract_yearly_author_data(test_id)
+    assert isinstance(received, pd.DataFrame)
+    assert received.shape[0] > 20
+    assert received["year"].nunique() == received.shape[0]
+    expected_cols = ['auth_id', 'year', 'first_year', 'n_pubs', 'n_coauth']
+    assert list(received.columns) == expected_cols
 
 
 def test_find_main_affiliation():

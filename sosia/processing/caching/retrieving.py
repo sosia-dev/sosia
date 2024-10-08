@@ -8,7 +8,9 @@ from sosia.processing.caching.inserting import insert_temporary_table
 from sosia.processing.caching.utils import temporary_merge
 
 
-def retrieve_authors(df: pd.DataFrame, conn: Connection) -> tuple[pd.DataFrame, list]:
+def retrieve_authors(df: pd.DataFrame,
+                     conn: Connection,
+                     table: str = "authors") -> tuple[pd.DataFrame, list]:
     """Search authors in cache.
 
     Parameters
@@ -18,6 +20,9 @@ def retrieve_authors(df: pd.DataFrame, conn: Connection) -> tuple[pd.DataFrame, 
 
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
+
+    table : str
+        The table of the SQLite3 database on which to perform the merge.
 
     Returns
     -------
@@ -29,7 +34,7 @@ def retrieve_authors(df: pd.DataFrame, conn: Connection) -> tuple[pd.DataFrame, 
     """
     cols = ["auth_id"]
     insert_temporary_table(df, merge_cols=cols, conn=conn)
-    incache = temporary_merge(conn, table="authors", merge_cols=cols)
+    incache = temporary_merge(conn, table=table, merge_cols=cols)
     tosearch = df['auth_id'].tolist()
     if not incache.empty:
         incache_list = incache["auth_id"].tolist()
@@ -39,7 +44,7 @@ def retrieve_authors(df: pd.DataFrame, conn: Connection) -> tuple[pd.DataFrame, 
 
 def retrieve_author_info(df: pd.DataFrame,
                          conn: Connection,
-                         table) -> tuple[pd.DataFrame, pd.DataFrame]:
+                         table: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Retrieve information by author and year from specific table of
     SQLite3 database.
 

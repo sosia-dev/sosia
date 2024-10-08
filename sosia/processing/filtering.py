@@ -2,37 +2,25 @@
 number of  publications in different periods.
 """
 
-from itertools import product
-
-from pandas import DataFrame
+import pandas as pd
 from tqdm import tqdm
 
-from sosia.processing.caching import auth_npubs_retrieve_insert, \
-    retrieve_author_info
+from sosia.processing.caching import insert_data, retrieve_authors
+from sosia.processing import extract_yearly_author_data
 from sosia.utils import custom_print
 
 
-def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
+def get_author_yearly_data(group, conn, verbose=False):
     """Filter authors based on restrictions in the number of
     publications in different years, searched by query_size.
 
     Parameters
     ----------
-    conn : sqlite3 connection
-        Standing connection to a SQLite3 database.
-
     group : list of str
         Scopus IDs of authors to be filtered.
 
-    ybefore : int
-        Year to be used as first year. Publications on this year and before
-        need to be 0.
-
-    yupto : int
-        Year up to which to count publications.
-
-    npapers : list
-        List of count of publications, minimum and maximum.
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
 
     verbose : bool (optional, default=False)
         Whether to print information on the search progress.
@@ -42,71 +30,24 @@ def filter_pub_counts(group, conn, ybefore, yupto, npapers, verbose=False):
     group : list of str
         Scopus IDs of authors passing the publication count requirements.
     """
-    group = [int(x) for x in group]
-    years_check = [ybefore, yupto]
-    authors = DataFrame(product(group, years_check), dtype="uint64",
-                        columns=["auth_id", "year"])
-    auth_npubs, _ = retrieve_author_info(authors, conn, table="author_pubs")
-    au_skip = []
-    group_tocheck = set(group)
-    # Use information in database
-    if not auth_npubs.empty:
-        # Remove authors based on age
-        mask = (auth_npubs["year"] <= ybefore) & (auth_npubs["n_pubs"] > 0)
-        au_remove = set(auth_npubs[mask]["auth_id"].unique())
-        # Remove if number of pubs in year is in any case too small
-        mask = ((auth_npubs["year"] >= yupto) &
-                (auth_npubs["n_pubs"] < min(npapers)))
-        au_remove.update(auth_npubs[mask]["auth_id"])
-        # Authors with no pubs before min year
-        mask = (auth_npubs["year"] == ybefore) & (auth_npubs["n_pubs"] == 0)
-        au_ok_miny = set(auth_npubs.loc[mask, "auth_id"].unique())
-        # Remove authors because of their publication count
-        mask = (((auth_npubs["year"] >= yupto) &
-                 (auth_npubs["n_pubs"] < min(npapers))) |
-                ((auth_npubs["year"] <= yupto) &
-                 (auth_npubs["n_pubs"] > max(npapers))))
-        remove = auth_npubs.loc[mask, "auth_id"]
-        au_remove.update(remove)
-        # Authors with pubs count within the range before the given year
-        mask = (((auth_npubs["year"] == yupto) &
-                 (auth_npubs["n_pubs"] >= min(npapers))) &
-                (auth_npubs["n_pubs"] <= max(npapers)))
-        au_ok_year = auth_npubs[mask][["auth_id", "n_pubs"]].drop_duplicates()
-        # Keep authors that match both conditions
-        au_ok = au_ok_miny.intersection(au_ok_year["auth_id"].unique())
-        # Skip citation check for authors that match only the first condition,
-        # with the second being unknown
-        au_skip = set([x for x in au_ok_miny if x not in au_remove | au_ok])
-        group = [x for x in group if x not in au_remove]
-        group_tocheck = set([x for x in group if x not in au_skip | au_ok])
+    authors = pd.DataFrame({"auth_id": group})
+    auth_data, missing = retrieve_authors(authors, conn, table="author_year")
 
-    # Verify that publications before minimum year are 0
-    if group_tocheck:
-        text = f"Obtaining information for {len(group_tocheck):,} authors "\
-               "without sufficient information in database..."
+    # Add to database
+    if missing:
+        text = f"Querying Scopus for information for {len(missing):,} " \
+               "authors..."
         custom_print(text, verbose)
-        for auth_id in tqdm(group_tocheck.copy(), disable=not verbose):
-            npubs_ybefore = auth_npubs_retrieve_insert(auth_id, ybefore, conn)
-            if npubs_ybefore:
-                group.remove(auth_id)
-                group_tocheck.remove(auth_id)
-        text = f"Left with {len(group):,} authors based on publication "\
-               f"information before {ybefore}"
-        custom_print(text, verbose)
+        to_add = []
+        for auth_id in tqdm(missing, disable=not verbose):
+            new = extract_yearly_author_data(auth_id)
+            to_add.append(new)
+        to_add = pd.concat(to_add)
+        insert_data(to_add, conn, table="author_year")
 
-    # Verify that publications before the given year fall in range
-    group_tocheck.update(au_skip)
-    if group_tocheck:
-        text = f"Counting publications of {len(group_tocheck):,} authors "\
-               f"before {yupto+1}..."
-        custom_print(text, verbose)
-        for au in tqdm(group_tocheck, disable=not verbose):
-            n_pubs_yupto = auth_npubs_retrieve_insert(au, yupto, conn)
-            # Eventually decrease publication count
-            if n_pubs_yupto < min(npapers) or n_pubs_yupto > max(npapers):
-                group.remove(au)
-    return group
+    # Retrieve again
+    auth_data, missing = retrieve_authors(authors, conn, table="author_year")
+    return auth_data
 
 
 def same_affiliation(original, new, refresh=False):

@@ -1,32 +1,12 @@
 """Module with functions for inserting data into a SQL database."""
 
 from sqlite3 import Connection
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
 
 from sosia.establishing import DB_TABLES
 from sosia.processing.utils import flat_set_from_df, robust_join
-
-
-def auth_npubs_retrieve_insert(auth_id: int, year: int, conn: Connection) -> int:
-    """Retrieve an author's publication count until a given year, and insert."""
-    from sosia.processing.querying import base_query
-
-    docs = base_query("docs", f"AU-ID({auth_id})")
-    data = pd.DataFrame(docs)[["eid", "coverDate"]]
-    data["coverDate"] = data["coverDate"].str[:4].astype("uint16")
-    min_year = data["coverDate"].min()
-    if year < min_year:
-        return 0
-    data = (data.rename(columns={"coverDate": "year", "eid": "n_pubs"})
-                .groupby("year")["n_pubs"].nunique().reset_index())
-    all_years = pd.DataFrame({"year": range(min_year, data["year"].max() + 1)})
-    data = pd.merge(all_years, data, on="year", how="left").fillna(0)
-    data["n_pubs"] = data["n_pubs"].cumsum().astype(int)
-    data["auth_id"] = int(auth_id)
-    insert_data(data[["auth_id", "year", "n_pubs"]], conn, table="author_pubs")
-    return data.loc[data["year"] == year, "n_pubs"].iloc[0]
 
 
 def insert_data(
@@ -35,7 +15,6 @@ def insert_data(
     table: Literal[
         "authors",
         "author_ncits",
-        "author_pubs",
         "author_year",
         "sources_afids",
     ],

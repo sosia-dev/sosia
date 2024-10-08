@@ -3,20 +3,19 @@ such as publications, citations, coauthors, and affiliations.
 """
 
 from itertools import product
-from string import Template
 
 import pandas as pd
 from tqdm import tqdm
 
 from sosia.processing.caching import insert_data, retrieve_author_info
-from sosia.processing.filtering import filter_pub_counts, same_affiliation
+from sosia.processing.filtering import get_author_yearly_data, same_affiliation
 from sosia.processing.getting import get_authors_from_sourceyear, get_author_info
-from sosia.processing.querying import count_citations, stacked_query
-from sosia.processing.utils import build_dict, flat_set_from_df, margin_range
+from sosia.processing.querying import count_citations
+from sosia.processing.utils import flat_set_from_df, margin_range
 from sosia.utils import custom_print
 
 
-def find_matches(original, stacked, verbose, refresh):
+def find_matches(original, verbose, refresh):
     """Find matches within the search group.
 
     Parameters
@@ -24,11 +23,6 @@ def find_matches(original, stacked, verbose, refresh):
     original : sosia.Original()
         The object containing information for the original scientist to
         search for.  Attribute search_group needs to exist.
-    
-    stacked : bool (optional, default=False)
-        Whether to combine searches in few queries or not.  Cached
-        files will most likely not be reusable.  Set to True if you
-        query in distinct fields or you want to minimize API key usage.
 
     verbose : bool (optional, default=False)
         Whether to report on the progress of the process.
@@ -39,14 +33,12 @@ def find_matches(original, stacked, verbose, refresh):
         older than that value in number of days.
     """
     # Variables
-    _years = range(original.first_year-original.first_year_margin,
-                   original.first_year+original.first_year_margin+1)
+    _years = (original.first_year-original.first_year_margin,
+              original.first_year+original.first_year_margin)
     _npapers = margin_range(len(original.publications), original.pub_margin)
-    _max_papers = max(_npapers)
     _ncits = margin_range(original.citations, original.cits_margin)
     _max_cits = max(_ncits)
     _ncoauth = margin_range(len(original.coauthors), original.coauth_margin)
-    _max_coauth = max(_ncoauth)
     text = "Searching through characteristics of "\
            f"{len(original.search_group):,} authors..."
     custom_print(text, verbose)
@@ -61,17 +53,17 @@ def find_matches(original, stacked, verbose, refresh):
            "number of publications and same main field"
     custom_print(text, verbose)
 
-    # Second round of filtering:
-    # Check having no publications before minimum year
-    group = filter_pub_counts(
-        group=group,
-        ybefore=min(_years)-1,
-        yupto=original.year,
-        npapers=_npapers,
-        verbose=verbose,
-        conn=conn
-    )
-    text = f"Left with {len(group):,} researchers"
+    # Second round of filtering: first year, publication count, coauthor count
+    data = get_author_yearly_data(group=group, verbose=verbose, conn=conn)
+    similar_start = data["first_year"].between(_years[0], _years[1])
+    data = data[similar_start].drop(columns="first_year")
+    data = data[data["year"] <= original.match_year]
+    data = data.drop_duplicates("auth_id", keep="last")
+    similar_pubcount = data["n_pubs"].between(min(_npapers), max(_npapers))
+    similar_coauthcount = data["n_coauth"].between(min(_ncoauth), max(_ncoauth))
+    group = sorted(data.loc[similar_pubcount & similar_coauthcount, "auth_id"].unique())
+    text = f"Left with {len(group):,} authors with similar start year, "\
+           "similar number of authors and similar number of publications"
     custom_print(text, verbose)
 
     # Third round of filtering: citations
@@ -96,46 +88,15 @@ def find_matches(original, stacked, verbose, refresh):
     mask = auth_cits["n_cits"].between(min(_ncits), _max_cits)
     group = auth_cits.loc[mask, 'auth_id'].tolist()
 
-    # Fourth round of filtering: Download publications, verify coauthors
-    # and first year
-    text = f"Left with {len(group):,} authors\nFiltering based on "\
-           "coauthor count..."
-    custom_print(text, verbose)
-    authors = pd.DataFrame({"auth_id": group, "year": original.year},
-                           dtype="uint64")
-    _, author_year_search = retrieve_author_info(authors, conn, table="author_year")
-
-    if not author_year_search.empty:
-        q = Template(f"AU-ID($fill) AND PUBYEAR BEF {original.year + 1}")
-        auth_year_group = author_year_search["auth_id"].tolist()
-        params = {"group": auth_year_group, "template": q, "refresh": refresh,
-                  "joiner": ") OR AU-ID(", "q_type": "docs",
-                  "verbose": verbose, "stacked": stacked}
-        res = stacked_query(**params)
-        res = build_dict(res, auth_year_group)
-        if res:
-            # Note: res can become empty after build_dict if an au_id is old
-            res = pd.DataFrame.from_dict(res, orient="index")
-            res["year"] = original.year
-            res = res[["year", "first_year", "n_pubs", "n_coauth"]]
-            res.index.name = "auth_id"
-            res = res.reset_index()
-            insert_data(res, original.sql_conn, table="author_year")
-    authors_year, _ = retrieve_author_info(authors, conn, table="author_year")
-    same_authcount = authors_year["n_coauth"].between(min(_ncoauth), _max_coauth)
-    same_start = authors_year["first_year"].between(min(_years), max(_years))
-    mask = same_authcount & same_start
-    matches = sorted(authors_year[mask]["auth_id"].tolist())
-
-    text = f"Left with {len(matches)} authors"
-    custom_print(text, verbose)
-
     # Eventually filter on affiliations
     if original.search_affiliations:
         text = "Filtering based on affiliations..."
         custom_print(text, verbose)
-        matches[:] = [m for m in matches if same_affiliation(original, m, refresh)]
-    return matches
+        group[:] = [m for m in group if same_affiliation(original, m, refresh)]
+
+    text = f"Left with {len(group)} authors"
+    custom_print(text, verbose)
+    return group
 
 
 def search_group_from_sources(original, stacked=False, verbose=False,

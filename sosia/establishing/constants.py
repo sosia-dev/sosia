@@ -12,9 +12,6 @@ DB_TABLES = {
     "author_ncits":
         {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"), ("n_cits", "INTEGER")),
          "primary": ("auth_id", "year")},
-    "author_pubs":
-        {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"), ("n_pubs", "INTEGER")),
-         "primary": ("auth_id", "year")},
     "author_year":
         {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"),
                      ("first_year", "INTEGER"), ("n_pubs", "INTEGER"),

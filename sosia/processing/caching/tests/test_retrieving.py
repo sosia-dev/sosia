@@ -6,11 +6,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from pybliometrics.scopus import init, AuthorSearch, ScopusSearch
+from pybliometrics.scopus import init, AuthorSearch
 
 from sosia.establishing import connect_database, make_database
-from sosia.processing import build_dict, insert_data, retrieve_authors,\
-    retrieve_author_info, retrieve_authors_from_sourceyear, robust_join,\
+from sosia.processing import insert_data, retrieve_authors, \
+    retrieve_author_info, retrieve_authors_from_sourceyear, robust_join, \
     query_pubs_by_sourceyear
 
 test_cache = Path.home()/".cache/sosia/test.sqlite"
@@ -58,23 +58,6 @@ def test_retrieve_authors_insert():
     assert missing == [55317901900]
 
 
-def test_retrieve_author_info_authorpubs():
-    make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
-    # Variables
-    table = "author_pubs"
-    data = {"auth_id": [53164702100, 53164702100],
-            "year": [2010, 2017], "n_pubs": [0, 6]}
-    expected = pd.DataFrame(data, dtype="int64")
-    # Insert data
-    insert_data(expected, conn, table=table)
-    # Retrieve data
-    cols = ["auth_id", "year"]
-    incache, tosearch = retrieve_author_info(expected[cols], conn, table)
-    assert_frame_equal(incache, expected)
-    assert tosearch.empty
-
-
 def test_retrieve_author_info_authorncits():
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
@@ -90,33 +73,6 @@ def test_retrieve_author_info_authorncits():
     incache, tosearch = retrieve_author_info(expected[cols], conn, table)
     assert_frame_equal(incache, expected)
     assert tosearch.empty
-
-
-def test_retrieve_author_info_authoryear():
-    make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
-    # Variables
-    table = "author_year"
-    expected_auth = [53164702100, 57197093438]
-    search_auth = [55317901900]
-    year = 2016
-    df2 = pd.DataFrame(expected_auth + search_auth,
-                       columns=["auth_id"], dtype="int64")
-    df2["year"] = year
-    # Insert data
-    fill = robust_join(expected_auth, sep=') OR AU-ID(')
-    q = f"(AU-ID({fill})) AND PUBYEAR BEF {year+1}"
-    d = build_dict(ScopusSearch(q, refresh=refresh).results, expected_auth)
-    expected = pd.DataFrame.from_dict(d, orient="index")
-    expected = expected.sort_index().rename_axis('auth_id').reset_index()
-    expected["year"] = year
-    expected = expected[['auth_id', 'year', 'first_year', 'n_pubs', 'n_coauth']]
-    insert_data(expected, conn, table=table)
-    # Retrieve data
-    incache, missing = retrieve_author_info(df2, conn, table)
-    assert_frame_equal(incache, expected)
-    assert missing['auth_id'].tolist() == search_auth
-    assert missing['year'].tolist() == [year]
 
 
 def test_retrieve_authors_from_sourceyear():
