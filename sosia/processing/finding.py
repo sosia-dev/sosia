@@ -37,41 +37,52 @@ def find_matches(original, verbose, refresh):
               original.first_year+original.first_year_margin)
     _npapers = margin_range(len(original.publications), original.pub_margin)
     _ncits = margin_range(original.citations, original.cits_margin)
-    _max_cits = max(_ncits)
     _ncoauth = margin_range(len(original.coauthors), original.coauth_margin)
-    text = "Searching through characteristics of "\
-           f"{len(original.search_group):,} authors..."
+    text = f"Filtering {len(original.search_group):,} candidates..."
     custom_print(text, verbose)
     conn = original.sql_conn
 
     # First round of filtering: minimum publications and main field
-    authors = get_author_info(original.search_group, original.sql_conn, verbose=verbose)
-    same_field = authors['areas'].str.startswith(original.main_field[1])
-    enough_pubs = authors['documents'].astype(int) >= int(min(_npapers))
-    group = sorted(authors.loc[same_field & enough_pubs, "auth_id"].tolist())
-    text = f"Left with {len(group):,} authors with sufficient "\
-           "number of publications and same main field"
+    info = get_author_info(original.search_group, original.sql_conn, verbose=verbose)
+    same_field = info['areas'].str.startswith(original.main_field[1])
+    info = info[same_field]
+    text = (f"... left with {info.shape[0]:,} candidates in main "
+            f"field ({original.main_field[1]})")
+    custom_print(text, verbose)
+    enough_pubs = info['documents'].astype(int) >= int(min(_npapers))
+    info = info[enough_pubs]
+    text = (f"... left with {info.shape[0]:,} candidates with sufficient total "
+            f"publications ({min(_npapers):,})")
     custom_print(text, verbose)
 
     # Second round of filtering: first year, publication count, coauthor count
-    data = get_author_data(group=group, verbose=verbose, conn=conn)
+    data = get_author_data(group=sorted(info["auth_id"].unique()),
+                           verbose=verbose, conn=conn)
     similar_start = data["first_year"].between(_years[0], _years[1])
     data = data[similar_start].drop(columns="first_year")
     data = data[data["year"] <= original.match_year]
     data = data.drop_duplicates("auth_id", keep="last")
+    text = (f"... left with {data.shape[0]:,} candidates with similar "
+            f"year of first publication ({_years[0]} to {_years[1]})")
+    custom_print(text, verbose)
     similar_pubcount = data["n_pubs"].between(min(_npapers), max(_npapers))
+    data = data[similar_pubcount]
+    text = (f"... left with {data.shape[0]:,} candidates with similar "
+            f"number of publications ({min(_npapers):,} to {max(_npapers):,})")
+    custom_print(text, verbose)
     similar_coauthcount = data["n_coauth"].between(min(_ncoauth), max(_ncoauth))
-    group = sorted(data.loc[similar_pubcount & similar_coauthcount, "auth_id"].unique())
-    text = f"Left with {len(group):,} authors with similar start year, "\
-           "similar number of authors and similar number of publications"
+    data = data[similar_coauthcount]
+    text = (f"... left with {data.shape[0]:,} candidates with similar "
+            f"number of coauthors ({min(_ncoauth):,} to {max(_ncoauth):,})")
     custom_print(text, verbose)
 
     # Third round of filtering: citations
-    authors = pd.DataFrame({"auth_id": group, "year": original.year})
-    auth_cits, missing = retrieve_author_info(authors, conn, table="author_citations")
+    authors = pd.DataFrame({"auth_id": sorted(data["auth_id"].unique()),
+                            "year": original.year})
+    citations, missing = retrieve_author_info(authors, conn, table="author_citations")
     if not missing.empty:
         total = missing.shape[0]
-        text = f"Counting citations of {total:,} authors..."
+        text = f"Counting citations of {total:,} candidates..."
         custom_print(text, verbose)
         missing['n_cits'] = 0
         start = 0
@@ -81,21 +92,24 @@ def find_matches(original, verbose, refresh):
             if i % 100 == 0 or i == len(missing) - 1:
                 insert_data(missing.iloc[start:i+1], conn, table="author_citations")
                 start = i
-    auth_cits = pd.concat([auth_cits, missing])
-    auth_cits['auth_id'] = auth_cits['auth_id'].astype("uint64")
-    # Keep if citations are in range
-    custom_print("Filtering based on count of citations...", verbose)
-    mask = auth_cits["n_cits"].between(min(_ncits), _max_cits)
-    group = auth_cits.loc[mask, 'auth_id'].tolist()
+    citations = pd.concat([citations, missing])
+    citations['auth_id'] = citations['auth_id'].astype("uint64")
+    similar_citcount = citations["n_cits"].between(min(_ncits), max(_ncits))
+    citations = citations[similar_citcount]
+    text = (f"... left with {citations.shape[0]:,} candidates with similar "
+            f"number of citations ({min(_ncits):,} to {max(_ncits):,})")
+    custom_print(text, verbose)
+    group = sorted(citations['auth_id'].unique())
 
-    # Eventually filter on affiliations
+    # Fourth round of filtering: affiliations
     if original.search_affiliations:
         text = "Filtering based on affiliations..."
         custom_print(text, verbose)
         group[:] = [m for m in group if same_affiliation(original, m, refresh)]
+        text = (f"... left with {len(group):,} candidates from same "
+                f"affiliation ({'-'.join(original.affiliation_id)})")
+        custom_print(text, verbose)
 
-    text = f"Left with {len(group)} authors"
-    custom_print(text, verbose)
     return group
 
 

@@ -43,8 +43,8 @@ def get_author_info(authors, conn, refresh=False, verbose=False):
         params = {"group": missing, "refresh": refresh, "joiner": ") OR AU-ID(",
                   "q_type": "author", "template": Template("AU-ID($fill)"),
                   "stacked": True, "verbose": verbose}
-        if verbose:
-            print("Pre-filtering...")
+        text = f"Downloading information for {len(missing):,} candidates..."
+        custom_print(text, verbose)
         res = stacked_query(**params)
         res = pd.DataFrame(res)
         insert_data(res, conn, table="author_info")

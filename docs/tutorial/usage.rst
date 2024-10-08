@@ -109,7 +109,7 @@ Defining the search group
 	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 133.42it/s]
 	... parsing Scopus information for 2014...
 	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 144.00it/s]
-	Found 795 authors for search_group
+	Found 796 candidates
 
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
@@ -134,7 +134,7 @@ An alternative search process that minimizes the number of queries can be activa
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     ... parsing Scopus information for 2014...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 795 authors for search_group
+    Found 796 candidates
 
 
 Finding matches
@@ -145,17 +145,22 @@ The final step is to search within this search group for authors who meet criter
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Searching through characteristics of 795 authors...
-    Pre-filtering...
-    100%|████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00<00:00, 38.40it/s]
-    Left with 433 authors with sufficient number of publications and same main field
-    Querying Scopus for information for 433 authors...
-    100%|████████████████████████████████████████████████████████████████████████████████| 433/433 [00:08<00:00, 49.29it/s]
-    Left with 17 authors with similar start year, similar number of authors and similar number of publications
-    Counting citations of 17 authors...
-    100%|██████████████████████████████████████████████████████████████████████████████████| 17/17 [00:35<00:00,  2.06s/it]
-    Filtering based on count of citations...
-    Left with 4 authors
+    Filtering 796 candidates...
+    Downloading information for 796 candidates...
+    100%|███████████████████████████████████████████████████████████████████████████████████| 9/9 [16:16<00:00, 108.53s/it]
+    ... left with 490 candidates in main field (BUSI)
+    ... left with 483 candidates with sufficient total publications (5)
+    Querying Scopus for information for 483 authors...
+    100%|████████████████████████████████████████████████████████████████████████████████| 483/483 [00:09<00:00, 49.19it/s]
+    ... left with 83 candidates with similar year of first publication (2010 to 2014)
+    ... left with 29 candidates with similar number of publications (5 to 9)
+    ... left with 17 candidates with similar number of coauthors (5 to 9)
+    Counting citations of 17 candidates...
+    100%|██████████████████████████████████████████████████████████████████████████████████| 17/17 [00:30<00:00,  1.81s/it]
+    ... left with 4 candidates with similar number of citations (24 to 38)
+    Found 4 matches
+    [55022752500, 55567912500, 55810688700, 55824607400]
+    Providing information for 4 matches...
     >>> print(stefano.matches)
     [55022752500, 55567912500, 55810688700, 55824607400]
 

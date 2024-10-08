@@ -201,7 +201,7 @@ class Original(Scientist):
 
         # Finalize
         self._search_group = sorted(search_group)
-        text = f"Found {len(search_group):,} authors for search_group"
+        text = f"Found {len(search_group):,} candidates"
         custom_print(text, verbose)
         return self
 
@@ -280,7 +280,11 @@ class Original(Scientist):
 
         # Find matches
         matches = find_matches(self, verbose, refresh)
-        text = f"Found {len(matches):,} author(s) matching all criteria"
+        if len(matches) == 1:
+            ending = ""
+        else:
+            ending = "es"
+        text = f"Found {len(matches):,} match{ending}"
         custom_print(text, verbose)
         self._matches = sorted([auth_id for auth_id in matches])
 
