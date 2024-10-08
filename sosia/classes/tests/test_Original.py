@@ -13,16 +13,6 @@ fields = "ID name first_year num_coauthors num_publications num_citations "\
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(
-        ID=53164702100,
-        name='Sapprasert, Koson',
-        first_year=2011,
-        num_coauthors=7,
-        num_publications=6,
-        num_citations=190,
-        affiliation_country='Norway',
-        language='eng',
-        num_cited_refs=4),
-    Match(
         ID=55212317400,
         name='Lopes-Bento, Cindy',
         first_year=2013,
@@ -31,17 +21,7 @@ MATCHES = [
         num_citations=77,
         affiliation_country='Belgium',
         language='eng',
-        num_cited_refs=3),
-    Match(
-        ID=55567912500,
-        name='Eling, Katrin',
-        first_year=2013,
-        num_coauthors=5,
-        num_publications=6,
-        num_citations=37,
-        affiliation_country='Netherlands',
-        language='eng',
-        num_cited_refs=0)
+        num_cited_refs=3)
 ]
 
 
@@ -92,7 +72,7 @@ def test_find_matches(original1, refresh_interval):
 
 def test_find_matches_affiliations(original2, refresh_interval):
     original2.find_matches(refresh=refresh_interval)
-    expected = [MATCHES[0].ID]
+    expected = []
     assert original2.matches == expected
 
 
@@ -107,5 +87,6 @@ def test_inform_matches(original1, refresh_interval):
     df_r["num_cited_refs"] = df_r["num_cited_refs"].round(3)
     df_m = pd.DataFrame(MATCHES)
     df_m["num_cited_refs"] = df_m["num_cited_refs"].round(3)
+    df_m["ID"] = df_m["ID"].astype("uint64")
     pd.testing.assert_frame_equal(df_r[cols], df_m[cols])
 

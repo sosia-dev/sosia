@@ -14,7 +14,9 @@ The primary class to interact with is :ref:`Original() <class_original>`. This c
 
 Upon initiation, pybliometrics performs queries on the Scopus database in the background.
 
-All properties and the control group are derived from the publications associated with the profile, specifically those published before the comparison year. They represent the state of the profile in this year. 
+All properties and the control group are derived from the publications associated with the profile, specifically those published before the comparison year. They represent the state of the profile in this year.
+
+sosia considers only research-type articles as defined by Scopus; these are articles (ar), books (bk), book chapter (ch), conference proceeding (cp), conference review (cr), notes (no), reviews (re), and short articles (sh). With the exception of notes, books and book chapters, these types are the ones Scopus uses for journal metrics. Notably, sosia excludes letters, editorials, errata and retracted papers.
 
 .. code-block:: python
 
@@ -109,7 +111,7 @@ Defining the search group
 	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 133.42it/s]
 	... parsing Scopus information for 2014...
 	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 144.00it/s]
-	Found 796 candidates
+	Found 783 candidates
 
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
@@ -134,7 +136,7 @@ An alternative search process that minimizes the number of queries can be activa
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     ... parsing Scopus information for 2014...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 796 candidates
+    Found 783 candidates
 
 
 Finding matches
@@ -145,24 +147,22 @@ The final step is to search within this search group for authors who meet criter
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Filtering 796 candidates...
-    Downloading information for 796 candidates...
-    100%|███████████████████████████████████████████████████████████████████████████████████| 9/9 [16:16<00:00, 108.53s/it]
-    ... left with 490 candidates in main field (BUSI)
-    ... left with 483 candidates with sufficient total publications (5)
-    Querying Scopus for information for 483 authors...
-    100%|████████████████████████████████████████████████████████████████████████████████| 483/483 [00:09<00:00, 49.19it/s]
-    ... left with 83 candidates with similar year of first publication (2010 to 2014)
-    ... left with 29 candidates with similar number of publications (5 to 9)
-    ... left with 17 candidates with similar number of coauthors (5 to 9)
-    Counting citations of 17 candidates...
-    100%|██████████████████████████████████████████████████████████████████████████████████| 17/17 [00:30<00:00,  1.81s/it]
-    ... left with 4 candidates with similar number of citations (24 to 38)
-    Found 4 matches
-    [55022752500, 55567912500, 55810688700, 55824607400]
-    Providing information for 4 matches...
+    Filtering 783 candidates...
+    Downloading information for 783 candidates...
+    100%|████████████████████████████████████████████████████████████████████████████████████| 9/9 [04:51<00:00, 32.39s/it]
+    ... left with 479 candidates in main field (BUSI)
+    ... left with 472 candidates with sufficient total publications (5)
+    Querying Scopus for information for 472 authors...
+    100%|████████████████████████████████████████████████████████████████████████████████| 472/472 [00:08<00:00, 55.19it/s]
+    ... left with 79 candidates with similar year of first publication (2010 to 2014)
+    ... left with 27 candidates with similar number of publications (5 to 9)
+    ... left with 15 candidates with similar number of coauthors (5 to 9)
+    Counting citations of 15 candidates...
+    100%|██████████████████████████████████████████████████████████████████████████████████| 15/15 [00:16<00:00,  1.12s/it]
+    ... left with 3 candidates with similar number of citations (24 to 38)
+    Found 3 matches
     >>> print(stefano.matches)
-    [55022752500, 55567912500, 55810688700, 55824607400]
+    [55022752500, 55810688700, 55824607400]
 
 
 Adding information to matches
@@ -173,11 +173,9 @@ You may need additional information to both assess match quality and select matc
 .. code-block:: python
 
     >>> stefano.inform_matches(verbose=True)
-    Found 4 author(s) matching all criteria
-    Providing information for 4 matches...
-    100%|████████████████████████████████████████████████████████████████████████████████████| 4/4 [00:09<00:00,  2.33s/it]
+    Providing information for 3 matches...
+    100%|████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:09<00:00,  2.33s/it]
     Match 55022752500: No reference list of 5 documents missing
-    Match 55567912500: No reference list of 6 documents missing
     Match 55810688700: No reference list of 6 documents missing
     Match 55824607400: No reference list of 7 documents missing
     Original 55208373700: 1 reference list out of 7 documents missing
@@ -219,35 +217,30 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
                                   name  first_name        surname  first_year  \
     ID                                                                          
     55022752500  Van der Borgh, Michel      Michel  Van der Borgh        2012   
-    55567912500          Eling, Katrin      Katrin          Eling        2013   
     55810688700     Zapkau, Florian B.  Florian B.         Zapkau        2014   
     55824607400   Pellegrino, Gabriele    Gabriele     Pellegrino        2011   
 
                  num_coauthors  num_publications  num_citations  \
     ID                                                            
     55022752500              6                 5             36   
-    55567912500              5                 6             37   
     55810688700              8                 6             33   
     55824607400              5                 7             34   
 
                            subjects affiliation_country affiliation_id  \
     ID                                                                   
     55022752500  [BUSI, ECON, COMP]         Netherlands       60032882   
-    55567912500  [BUSI, COMP, ENGI]         Netherlands       60032882   
     55810688700  [BUSI, ECON, MEDI]             Germany       60025310   
     55824607400  [BUSI, ECON, DECI]         Switzerland       60028186   
 
                                          affiliation_name affiliation_type  \
     ID                                                                       
     55022752500         Technische Universiteit Eindhoven             univ   
-    55567912500         Technische Universiteit Eindhoven             univ   
     55810688700     Heinrich-Heine-Universität Düsseldorf             univ   
     55824607400  Ecole Polytechnique Fédérale de Lausanne             univ   
 
                 language  num_cited_refs  
     ID                                    
     55022752500      eng               0  
-    55567912500      eng               0  
     55810688700      eng               0  
     55824607400      eng               5  
 

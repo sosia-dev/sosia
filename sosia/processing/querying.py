@@ -6,6 +6,7 @@ import pandas as pd
 from pybliometrics.scopus.exception import Scopus400Error
 from tqdm import tqdm
 
+from sosia.processing.constants import RESEARCH_TYPES
 from sosia.processing.utils import expand_affiliation
 from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN
 from sosia.utils import custom_print
@@ -67,7 +68,9 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
         if size_only:
             return ScopusSearch(**params).get_results_size()
         try:
-            return ScopusSearch(**params).results or []
+            docs = ScopusSearch(**params).results or []
+            docs = [d for d in docs if d.subtype in RESEARCH_TYPES]
+            return docs
         except AttributeError:
             params.pop("integrity_fields")
             params["refresh"] = True

@@ -110,7 +110,7 @@ def test_query_sources_by_year_stacked(refresh_interval):
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_pubs_by_sourceyear(source_ids, 1984, refresh=refresh_interval, stacked=True)
-    assert 3380 < res.dropna(subset=["auids"]).shape[0] < 3500
+    assert 3300 < res.dropna(subset=["auids"]).shape[0] < 3500
     assert res.columns.tolist() == ['source_id', 'year', 'afid', 'auids']
     assert isinstance(res["auids"][0], str)
     assert len(res["auids"][0]) > 0
@@ -122,4 +122,4 @@ def test_stacked_query():
     template = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year+1}")
     res = stacked_query(group, template, joiner=" OR ", q_type="docs",
                         refresh=False, stacked=True, verbose=False)
-    assert len(res) == 798
+    assert len(res) == 791

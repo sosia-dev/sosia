@@ -9,3 +9,5 @@ ASJC_2D = {10: "MULT", 11: "AGRI", 12: "ARTS", 13: "BIOC", 14: "BUSI",
 
 QUERY_MAX_LEN = 2000
 AUTHOR_SEARCH_MAX_COUNT = 200
+
+RESEARCH_TYPES = {"ar", "bk", "ch", "cp", "cr", "no", "re", "sh"}
