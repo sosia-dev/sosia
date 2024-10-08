@@ -3,10 +3,13 @@
 from string import Template
 
 import pandas as pd
+from tqdm import tqdm
 
+from sosia.processing.extracting import extract_yearly_author_data
 from sosia.processing.caching import insert_data, retrieve_authors, \
     retrieve_authors_from_sourceyear
 from sosia.processing.querying import query_pubs_by_sourceyear, stacked_query
+from sosia.utils import custom_print
 
 
 def get_author_info(authors, conn, refresh=False, verbose=False):
@@ -47,6 +50,46 @@ def get_author_info(authors, conn, refresh=False, verbose=False):
         insert_data(res, conn, table="authors")
         data, _ = retrieve_authors(authors, conn)
     return data
+
+
+def get_author_yearly_data(group, conn, verbose=False):
+    """Get author information from author_year table and add missing
+    information via Scopus Search API.
+
+    Parameters
+    ----------
+    group : list of str
+        Scopus IDs of authors to be filtered.
+
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
+
+    verbose : bool (optional, default=False)
+        Whether to print information on the search progress.
+
+    Returns
+    -------
+    group : list of str
+        Scopus IDs of authors passing the publication count requirements.
+    """
+    authors = pd.DataFrame({"auth_id": group})
+    auth_data, missing = retrieve_authors(authors, conn, table="author_year")
+
+    # Add to database
+    if missing:
+        text = f"Querying Scopus for information for {len(missing):,} " \
+               "authors..."
+        custom_print(text, verbose)
+        to_add = []
+        for auth_id in tqdm(missing, disable=not verbose):
+            new = extract_yearly_author_data(auth_id)
+            to_add.append(new)
+        to_add = pd.concat(to_add)
+        insert_data(to_add, conn, table="author_year")
+
+    # Retrieve again
+    auth_data, missing = retrieve_authors(authors, conn, table="author_year")
+    return auth_data
 
 
 def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,

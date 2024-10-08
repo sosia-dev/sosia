@@ -8,8 +8,9 @@ import pandas as pd
 from tqdm import tqdm
 
 from sosia.processing.caching import insert_data, retrieve_author_info
-from sosia.processing.filtering import get_author_yearly_data, same_affiliation
-from sosia.processing.getting import get_authors_from_sourceyear, get_author_info
+from sosia.processing.filtering import same_affiliation
+from sosia.processing.getting import get_author_info, get_author_yearly_data, \
+    get_authors_from_sourceyear
 from sosia.processing.querying import count_citations
 from sosia.processing.utils import flat_set_from_df, margin_range
 from sosia.utils import custom_print
