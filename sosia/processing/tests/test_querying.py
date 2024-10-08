@@ -86,7 +86,7 @@ def test_query_sources_by_year(refresh_interval):
     # Test a journal and year that are not in Scopus
     res = query_pubs_by_sourceyear([22900], 1969, refresh=refresh_interval)
     assert res.empty
-        # Test a large query (>5000 results)
+    # Test a large query (>5000 results)
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_pubs_by_sourceyear(source_ids, 1984, refresh=refresh_interval)

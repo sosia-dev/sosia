@@ -53,6 +53,7 @@ def test_search_sources(original1, original2):
         assert (20206, "Academy of Management Review") in search_sources
         assert (15143, "Regional Studies") in search_sources
 
+
 def test_search_sources_change(original1):
     backup = original1.search_sources
     expected = [(14351, "Brain Research Reviews"),
@@ -60,6 +61,7 @@ def test_search_sources_change(original1):
     original1.search_sources, _ = zip(*expected)
     assert original1.search_sources == expected
     original1.search_sources = backup
+
 
 def test_search_group(original1, refresh_interval):
     original1.define_search_group(refresh=refresh_interval)
