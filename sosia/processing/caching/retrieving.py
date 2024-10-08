@@ -1,11 +1,11 @@
 """Module that contains functions for retrieving data from a SQLite3 database cache."""
 
 from sqlite3 import Connection
+from typing import Iterable
 
 import pandas as pd
 
 from sosia.processing.caching.inserting import insert_temporary_table
-from sosia.processing.caching.utils import temporary_merge
 
 
 def retrieve_authors(df: pd.DataFrame,
@@ -124,3 +124,12 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
     incache = data[~mask_missing].reset_index(drop=True)
     missing = data.loc[mask_missing, cols].drop_duplicates().reset_index(drop=True)
     return incache, missing
+
+
+def temporary_merge(conn: Connection,
+                    table: pd.DataFrame,
+                    merge_cols: Iterable[str]) -> pd.DataFrame:
+    """Perform merge with temp table and `table` and retrieve all columns."""
+    conditions = " and ".join(["a.{0}=b.{0}".format(c) for c in merge_cols])
+    q = f"SELECT b.* FROM temp AS a INNER JOIN {table} AS b ON {conditions};"
+    return pd.read_sql_query(q, conn)
