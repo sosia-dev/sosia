@@ -8,7 +8,6 @@ import pandas as pd
 from tqdm import tqdm
 
 from sosia.processing.caching import insert_data, retrieve_author_info
-from sosia.processing.filtering import same_affiliation
 from sosia.processing.getting import get_author_data, get_author_info, \
     get_authors_from_sourceyear
 from sosia.processing.querying import count_citations
@@ -98,6 +97,17 @@ def find_matches(original, verbose, refresh):
     text = f"Left with {len(group)} authors"
     custom_print(text, verbose)
     return group
+
+
+def same_affiliation(original, new, refresh=False):
+    """Whether a new scientist shares affiliation(s) with the
+    original scientist.
+    """
+    from sosia.classes import Scientist
+
+    m = Scientist([new], original.year, refresh=refresh,
+                  db_path=original.sql_fname)
+    return any(str(a) in m.affiliation_id for a in original.search_affiliations)
 
 
 def search_group_from_sources(original, stacked=False, verbose=False,

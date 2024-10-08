@@ -7,7 +7,6 @@ from pandas import DataFrame
 from sosia.establishing import connect_database, make_database
 from sosia.processing import get_author_data
 from sosia.processing.getting import get_author_info
-from sosia.processing.tests.test_filtering import test_cache
 
 test_cache = Path.home()/".cache/sosia/test.sqlite"
 refresh = 30

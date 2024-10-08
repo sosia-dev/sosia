@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from sosia.classes import Original
-from sosia.processing.filtering import same_affiliation
+from sosia.processing.finding import same_affiliation
 
 test_cache = Path.home() / ".cache" / "sosia" / "test.sqlite"
 refresh = 30
