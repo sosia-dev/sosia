@@ -1,24 +1,19 @@
 """Tests for processing.caching.retrieving module."""
 
 from itertools import product
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from pybliometrics.scopus import init, AuthorSearch
+from pybliometrics.scopus import AuthorSearch
 
 from sosia.establishing import connect_database, make_database
 from sosia.processing import insert_data, retrieve_authors, \
     retrieve_author_info, retrieve_authors_from_sourceyear, robust_join, \
     query_pubs_by_sourceyear
 
-test_cache = Path.home()/".cache/sosia/test.sqlite"
-refresh = 30
-init()
 
-
-def test_retrieve_authors():
+def test_retrieve_authors(test_cache):
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
@@ -34,7 +29,7 @@ def test_retrieve_authors():
     assert missing == expected_auth
 
 
-def test_retrieve_authors_insert():
+def test_retrieve_authors_insert(test_cache, refresh_interval):
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
@@ -45,7 +40,7 @@ def test_retrieve_authors_insert():
                      'country', 'areas']
     # Insert data
     q = f"AU-ID({robust_join(expected_auth, sep=') OR AU-ID(')})"
-    res = pd.DataFrame(AuthorSearch(q, refresh=refresh).authors)
+    res = pd.DataFrame(AuthorSearch(q, refresh=refresh_interval).authors)
     res["auth_id"] = res["eid"].str.split("-").str[-1].astype("uint64")
     res["affiliation_id"] = res["affiliation_id"].astype(float)
     res = res[expected_cols]
@@ -58,7 +53,7 @@ def test_retrieve_authors_insert():
     assert missing == [55317901900]
 
 
-def test_retrieve_author_info_author_citations():
+def test_retrieve_author_info_author_citations(test_cache):
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
@@ -75,7 +70,7 @@ def test_retrieve_author_info_author_citations():
     assert tosearch.empty
 
 
-def test_retrieve_authors_from_sourceyear():
+def test_retrieve_authors_from_sourceyear(test_cache, refresh_interval):
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
@@ -85,7 +80,7 @@ def test_retrieve_authors_from_sourceyear():
                       columns=["source_id", "year"], dtype="int64")
     # Populate cache
     expected = query_pubs_by_sourceyear(expected_sources, expected_years[0],
-                                        refresh=refresh)
+                                        refresh=refresh_interval)
     expected["source_id"] = expected["source_id"].astype(np.int64)
     expected["afid"] = expected["afid"].astype(int).astype(str)
     expected = expected.sort_values(["auids", "afid"]).reset_index(drop=True)

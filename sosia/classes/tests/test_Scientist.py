@@ -1,42 +1,30 @@
 """Tests for class `Scientist`."""
 
-from pathlib import Path
-
 from sosia.classes import Scientist
 
-test_cache = Path.home() / ".cache" / "sosia" / "test.sqlite"
-refresh = 2
-test_params = {"refresh": refresh, "db_path": test_cache}
 
-scientist1 = Scientist([6701809842], 2001, **test_params)
-scientist2 = Scientist([55208373700, 55208373700], 2017, **test_params)
-eids = ["2-s2.0-84959420483", "2-s2.0-84949113230"]
-scientist3 = Scientist([55208373700], 2017, eids=eids, **test_params)
-scientist4 = Scientist([55208373700], 2015, **test_params)
-
-
-def test_active_year():
+def test_active_year(scientist1, scientist2, scientist3, scientist4):
     assert scientist1.active_year == 2001
     assert scientist2.active_year == 2017
     assert scientist3.active_year == 2016
     assert scientist4.active_year == 2012
 
 
-def test_affiliation_country():
+def test_affiliation_country(scientist1, scientist2, scientist3, scientist4):
     assert scientist1.affiliation_country == "Germany"
     assert scientist2.affiliation_country == "Switzerland"
     assert scientist3.affiliation_country == "Switzerland"
     assert scientist4.affiliation_country == "Switzerland"
 
 
-def test_affiliation_id():
+def test_affiliation_id(scientist1, scientist2, scientist3, scientist4):
     assert scientist1.affiliation_id == '60028717'
     assert scientist2.affiliation_id == '60028186'
     assert scientist3.affiliation_id == '60028186'
     assert scientist4.affiliation_id == '60028186'
 
 
-def test_affiliation_name():
+def test_affiliation_name(scientist1, scientist2, scientist3, scientist4):
     lmu = 'Ludwig-Maximilians-Universität München'
     assert scientist1.affiliation_name == lmu
     epfl = 'École Polytechnique Fédérale de Lausanne'
@@ -45,21 +33,21 @@ def test_affiliation_name():
     assert scientist4.affiliation_name == epfl
 
 
-def test_affiliation_type():
+def test_affiliation_type(scientist1, scientist2, scientist3, scientist4):
     assert scientist1.affiliation_type == 'univ'
     assert scientist2.affiliation_type == 'univ'
     assert scientist3.affiliation_type == 'univ'
     assert scientist4.affiliation_type == 'univ'
 
 
-def test_citations():
+def test_citations(scientist1, scientist2, scientist3, scientist4):
     assert scientist1.citations >= 47
     assert scientist2.citations >= 28
     assert scientist3.citations >= 2
     assert scientist4.citations >= 19
 
 
-def test_coauthors():
+def test_coauthors(scientist1, scientist2, scientist3):
     assert isinstance(scientist1.coauthors, set)
     expected = {7005044638, 6602701792, 35838036900, 6506756510,
                 24364642400, 6506571902, 6506426539, 6701494844,
@@ -82,7 +70,7 @@ def test_coauthors():
     assert len(scientist3.coauthors) == len(expected)
 
 
-def test_fields():
+def test_fields(scientist1, scientist2, scientist3):
     expected = [2002, 2003, 2002, 2308, 1408, 1803, 1405, 1408, 1803, 2002,
                 3301, 1400, 1402, 2002, 2002, 3317, 1400, 2002, 1405, 2000]
     assert set(scientist1.fields) == set(expected)
@@ -92,13 +80,13 @@ def test_fields():
     assert set(scientist3.fields) == set(expected)
 
 
-def test_first_year():
+def test_first_year(scientist1, scientist2, scientist3):
     assert scientist1.first_year == 1996
     assert scientist2.first_year == 2012
     assert scientist3.first_year == 2016
 
 
-def test_sources():
+def test_sources(scientist1, scientist2, scientist3):
     received = scientist1.sources
     expected = [(17472, 'Journal of Banking and Finance'),
                 (20022, 'Economic Policy'),
@@ -129,7 +117,7 @@ def test_sources():
         assert e in received
 
 
-def test_sources_change():
+def test_sources_change(scientist1):
     backup = scientist1.sources
     expected = [(14351, "Brain Research Reviews"),
                 (18632, "Progress in Brain Research")]
@@ -138,19 +126,19 @@ def test_sources_change():
     scientist1.sources = backup
 
 
-def test_main_field():
+def test_main_field(scientist1, scientist2, scientist3):
     assert scientist1.main_field == (2002, "ECON")
     assert scientist2.main_field == (1405, "BUSI")
     assert scientist3.main_field == (2002, "BUSI")
 
 
-def test_name():
+def test_name(scientist1, scientist2, scientist3):
     assert scientist1.name == "Harhoff, Dietmar"
     assert scientist2.name == "Baruffaldi, Stefano Horst"
     assert scientist3.name == "Baruffaldi, Stefano Horst"
 
 
-def test_publications():
+def test_publications(scientist1, scientist2, scientist3):
     cols = ["eid", "affiliation_country", "author_names", "author_ids",
             "author_afids", "coverDate", "authkeywords",
             "citedby_count", "description"]
@@ -176,7 +164,7 @@ def test_publications():
         assert all(c in p._fields for c in cols)
 
 
-def test_publication_languages():
+def test_publication_languages(scientist1, scientist2, scientist3):
     assert scientist1.language is None
     scientist1.get_publication_languages()
     assert scientist1.language == "eng"

@@ -6,8 +6,6 @@ from pybliometrics.scopus import ScopusSearch
 from sosia.processing import compute_overlap, expand_affiliation,\
     flat_set_from_df, margin_range
 
-refresh = 30
-
 
 def test_compute_overlap():
     set1 = set("abc")
@@ -15,8 +13,8 @@ def test_compute_overlap():
     assert compute_overlap(set1, set2) == 1
 
 
-def test_expand_affiliation():
-    pubs = ScopusSearch(f"AU-ID(6701809842)", refresh=refresh).results
+def test_expand_affiliation(refresh_interval):
+    pubs = ScopusSearch(f"AU-ID(6701809842)", refresh=refresh_interval).results
     res = pd.DataFrame(pubs)
     res = expand_affiliation(res)
     assert len(res) >= 180

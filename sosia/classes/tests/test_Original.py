@@ -2,29 +2,10 @@
 
 import warnings
 from collections import namedtuple
-from pathlib import Path
 
 import pandas as pd
 
-from sosia.classes import Original
-from sosia.establishing import make_database
-
 warnings.filterwarnings("ignore")
-
-test_cache = Path.home() / ".cache" / "sosia" / "test.sqlite"
-test_cache.unlink(missing_ok=True)
-make_database(test_cache)
-refresh = 30
-test_params = {"refresh": refresh, "db_path": test_cache}
-
-# Test objects
-# Normal values
-scientist1 = Original(55208373700, 2017, cits_margin=200, first_year_margin=1,
-                      pub_margin=0.1, coauth_margin=0.1, **test_params)
-# Using affiliations
-affs = [60010348, 60022109, 60017317, 60071236]
-scientist3 = Original(55208373700, 2017, cits_margin=200, first_year_margin=1,
-                      pub_margin=0.1, affiliations=affs, **test_params)
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\
@@ -64,61 +45,58 @@ MATCHES = [
 ]
 
 
-def test_search_sources():
-    scientists_list = [scientist1, scientist3]
-    for s in scientists_list:
-        s.define_search_sources()
-        search_sources = s.search_sources
+def test_search_sources(original1, original2):
+    for o in [original1, original2]:
+        o.define_search_sources()
+        search_sources = o.search_sources
         assert len(search_sources) == 63
         assert (20206, "Academy of Management Review") in search_sources
         assert (15143, "Regional Studies") in search_sources
 
-
-def test_search_sources_change():
-    backup = scientist1.search_sources
+def test_search_sources_change(original1):
+    backup = original1.search_sources
     expected = [(14351, "Brain Research Reviews"),
                 (18632, "Progress in Brain Research")]
-    scientist1.search_sources, _ = zip(*expected)
-    assert scientist1.search_sources == expected
-    scientist1.search_sources = backup
+    original1.search_sources, _ = zip(*expected)
+    assert original1.search_sources == expected
+    original1.search_sources = backup
 
-
-def test_search_group():
-    scientist1.define_search_group(refresh=refresh)
-    recieved = scientist1.search_group
+def test_search_group(original1, refresh_interval):
+    original1.define_search_group(refresh=refresh_interval)
+    recieved = original1.search_group
     assert isinstance(recieved, list)
     assert 500 <= len(recieved) <= 680
 
 
-def test_search_group_stacked():
-    scientist1.define_search_group(stacked=True, refresh=refresh)
-    recieved = scientist1.search_group
+def test_search_group_stacked(original1, refresh_interval):
+    original1.define_search_group(stacked=True, refresh=refresh_interval)
+    recieved = original1.search_group
     assert isinstance(recieved, list)
     assert 500 <= len(recieved) <= 680
 
 
-def test_search_group_affiliations_stacked():
-    scientist3.define_search_group(stacked=True, refresh=refresh)
-    recieved = scientist3.search_group
+def test_search_group_affiliations_stacked(original2, refresh_interval):
+    original2.define_search_group(stacked=True, refresh=refresh_interval)
+    recieved = original2.search_group
     assert isinstance(recieved, list)
     assert 15 <= len(recieved) <= 25
 
 
-def test_find_matches():
-    scientist1.find_matches(refresh=refresh)
+def test_find_matches(original1, refresh_interval):
+    original1.find_matches(refresh=refresh_interval)
     expected = [m.ID for m in MATCHES]
-    assert scientist1.matches == expected
+    assert original1.matches == expected
 
 
-def test_find_matches_affiliations():
-    scientist3.find_matches(refresh=refresh)
+def test_find_matches_affiliations(original2, refresh_interval):
+    original2.find_matches(refresh=refresh_interval)
     expected = [MATCHES[0].ID]
-    assert scientist3.matches == expected
+    assert original2.matches == expected
 
 
-def test_inform_matches():
-    scientist1.inform_matches(refresh=refresh)
-    recieved = scientist1.matches
+def test_inform_matches(original1, refresh_interval):
+    original1.inform_matches(refresh=refresh_interval)
+    recieved = original1.matches
     assert len(recieved) == len(MATCHES)
     assert isinstance(recieved, list)
     cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",

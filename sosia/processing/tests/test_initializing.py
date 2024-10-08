@@ -1,17 +1,14 @@
 """Tests for processing.initializing module."""
 
-from pathlib import Path
-
-import pandas as pd
+from pandas import DataFrame
 
 from sosia.classes import Scientist
 from sosia.establishing import make_database
-from sosia.processing.initializing import add_source_names,\
+from sosia.processing.initializing import add_source_names, \
     read_fields_sources_list
 
-test_cache = Path.home() / ".cache" / "sosia" / "test.sqlite"
 
-def test_add_source_names():
+def test_add_source_names(test_cache):
     s = Scientist([55208373700], 2017, db_path=test_cache)
     expected = [(14351, "Brain Research Reviews"),
                 (18632, "Progress in Brain Research")]
@@ -22,5 +19,5 @@ def test_add_source_names():
 
 def test_read_fields_sources_list():
     sources, names = read_fields_sources_list()
-    assert str(type(sources)) == "<class 'pandas.core.frame.DataFrame'>"
-    assert str(type(names)) == "<class 'pandas.core.frame.DataFrame'>"
+    assert isinstance(sources, DataFrame)
+    assert isinstance(sources, DataFrame)

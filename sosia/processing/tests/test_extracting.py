@@ -1,14 +1,11 @@
 """Tests for processing.extracting module."""
 
 import pandas as pd
-from pybliometrics.scopus import ScopusSearch, init
+from pybliometrics.scopus import ScopusSearch
 
 from sosia.processing import extract_yearly_author_data, \
     find_main_affiliation, get_main_field, parse_docs
 
-init()
-
-refresh = 30
 test_id = 6701809842
 
 
@@ -21,8 +18,8 @@ def test_extract_yearly_author_data():
     assert list(received.columns) == expected_cols
 
 
-def test_find_main_affiliation():
-    pubs = ScopusSearch(f"AU-ID({test_id})", refresh=refresh).results
+def test_find_main_affiliation(refresh_interval):
+    pubs = ScopusSearch(f"AU-ID({test_id})", refresh=refresh_interval).results
     aff_id = find_main_affiliation([test_id], pubs, 2000)
     assert aff_id == "60028717"
 
@@ -34,9 +31,9 @@ def test_get_main_field():
     assert received == expected
 
 
-def test_parse_docs():
+def test_parse_docs(refresh_interval):
     eids = ["2-s2.0-84866317084"]
-    received = parse_docs(eids, refresh=refresh)
+    received = parse_docs(eids, refresh=refresh_interval)
     expected_refs = set(['67650248718', '57849112238', '51249091642',
         '70449099678', '84865231386', '8744256776', '0004256525', '0035654590',
         '84866333650', '78650692566', '0002969912', '0007622058', '0000169440',
