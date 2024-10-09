@@ -5,12 +5,9 @@ such as publications, citations, coauthors, and affiliations.
 from itertools import product
 
 import pandas as pd
-from tqdm import tqdm
 
-from sosia.processing.caching import insert_data, retrieve_from_author_table
 from sosia.processing.getting import get_author_data, get_author_info, \
-    get_authors_from_sourceyear
-from sosia.processing.querying import count_citations
+    get_authors_from_sourceyear, get_citations
 from sosia.processing.utils import flat_set_from_df, margin_range
 from sosia.utils import custom_print
 
@@ -77,25 +74,8 @@ def find_matches(original, verbose, refresh):
     custom_print(text, verbose)
 
     # Third round of filtering: citations
-    authors = pd.DataFrame({"auth_id": sorted(data["auth_id"].unique()),
-                            "year": original.year})
-    citations, missing = retrieve_from_author_table(authors, conn, table="author_citations")
-    missing = pd.DataFrame({"auth_id": missing, "year": original.year})
-    # cut citations
-    if not missing.empty:
-        total = missing.shape[0]
-        text = f"Counting citations of {total:,} candidates..."
-        custom_print(text, verbose)
-        missing['n_cits'] = 0
-        start = 0
-        for i, row in tqdm(missing.iterrows(), disable=not verbose, total=total):
-            n_cits = count_citations([str(row['auth_id'])], original.year+1)
-            missing.at[i, 'n_cits'] = n_cits
-            if i % 100 == 0 or i == len(missing) - 1:
-                insert_data(missing.iloc[start:i+1], conn, table="author_citations")
-                start = i
-    citations = pd.concat([citations, missing])
-    citations['auth_id'] = citations['auth_id'].astype("uint64")
+    citations = get_citations(sorted(data["auth_id"].unique()), original.year,
+                              verbose=verbose, conn=conn)
     similar_citcount = citations["n_cits"].between(min(_ncits), max(_ncits))
     citations = citations[similar_citcount]
     text = (f"... left with {citations.shape[0]:,} candidates with similar "

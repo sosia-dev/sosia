@@ -2,7 +2,7 @@
 
 from pandas import DataFrame
 
-from sosia.processing import get_author_data
+from sosia.processing import get_author_data, get_citations
 from sosia.processing.getting import get_author_info
 
 
@@ -15,6 +15,17 @@ def test_get_author_data(test_conn):
     assert list(data.columns) == expected_cols
     assert data.shape[0] > 200
     assert data["auth_id"].nunique() == len(group)
+
+
+def test_get_citations(test_conn):
+    group = [6701809842, 16319073600, 6602070937]
+    data = get_citations(group, year=2023, conn=test_conn)
+    assert isinstance(data, DataFrame)
+    expected_cols = ['auth_id', 'n_cits']
+    assert list(data.columns) == expected_cols
+    assert data["auth_id"].nunique() == len(group)
+    assert data.shape[0] == len(group)
+    assert data.loc[0, "n_cits"] > 4000
 
 
 def test_query_authors(test_conn, refresh_interval):

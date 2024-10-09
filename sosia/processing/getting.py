@@ -8,7 +8,8 @@ from tqdm import tqdm
 from sosia.processing.extracting import extract_yearly_author_data
 from sosia.processing.caching import insert_data, retrieve_from_author_table, \
     retrieve_authors_from_sourceyear
-from sosia.processing.querying import query_pubs_by_sourceyear, stacked_query
+from sosia.processing.querying import count_citations, stacked_query, \
+    query_pubs_by_sourceyear
 from sosia.utils import custom_print
 
 
@@ -156,3 +157,44 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
         to_add["auids"] = to_add["auids"].str.replace(";", ",").str.split(",")
         insert_data(to_add, conn, table="sources_afids")
     return data
+
+
+def get_citations(authors, year, conn, verbose=False):
+    """Get citations net of self-citations in particular `year` for
+    a group of `authors`.
+
+    Parameters
+    ----------
+    authors : list
+       List of Scopus Author IDs for whom to return citation information.
+
+    year : int
+        The year in which citations must be counted.
+
+    conn : sqlite3 connection
+        Standing connection to a SQLite3 database.
+
+    verbose : bool (optional, default=False)
+        Whether to print information on the search progress.
+
+    Returns
+    -------
+    citations : DataFrame
+        Data on the provided authors.
+    """
+    df = pd.DataFrame({"auth_id": authors, "year": year})
+    citations, missing = retrieve_from_author_table(df, conn, table="author_citations")
+    # Add citations
+    if missing:
+        text = f"Counting citations of {len(missing):,} candidates..."
+        custom_print(text, verbose)
+        to_add = []
+        for auth_id in tqdm(missing, disable=not verbose):
+            n_cits = count_citations([auth_id], year + 1)
+            to_add.append(n_cits)
+        to_add = pd.DataFrame({"auth_id": missing, "year": year, "n_cits": to_add})
+        insert_data(to_add, conn, table="author_citations")
+        citations = pd.concat([citations, to_add])
+    # Filter on year
+    citations = citations[citations["year"] == year].drop(columns="year")
+    return citations.astype("uint64")
