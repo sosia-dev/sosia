@@ -211,8 +211,8 @@ class Scientist(object):
         self,
         identifier: list[int],
         year: Union[str, int],
-        refresh: bool = False,
-        eids: Optional[list] = None,
+        refresh: Union[bool, int] = False,
+        eids: Optional[list[str]] = None,
         db_path: Optional[Union[str, Path]] = None,
     ) -> None:
         """Class to represent a scientist.

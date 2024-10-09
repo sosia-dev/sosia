@@ -1,7 +1,7 @@
 """Main module of `sosia` containing the `Original` class."""
 
+from pathlib import Path
 from typing import Iterable, Optional, Union
-from warnings import warn
 
 from typing_extensions import Self
 
@@ -63,13 +63,13 @@ class Original(Scientist):
         scientist: Union[str, int, list[Union[str, int]]],
         match_year: Union[str, int],
         first_year_margin: int = 2,
-        pub_margin: float = 0.2,
-        cits_margin: float = 0.2,
-        coauth_margin: float = 0.2,
+        pub_margin: Union[float, int] = 0.2,
+        cits_margin: Union[float, int] = 0.2,
+        coauth_margin: Union[float, int] = 0.2,
         affiliations: Optional[list] = None,
-        eids: Optional[list] = None,
-        refresh: bool = False,
-        db_path: Optional[str] = None,
+        eids: Optional[list[Union[str, int]]] = None,
+        refresh: Union[bool, int] = False,
+        db_path: Optional[Union[str, Path]] = None,
     ) -> None:
         """Representation of a scientist for whom to find a control scientist.
 
