@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from sosia.processing.extracting import extract_yearly_author_data
-from sosia.processing.caching import insert_data, retrieve_authors, \
+from sosia.processing.caching import insert_data, retrieve_from_author_table, \
     retrieve_authors_from_sourceyear
 from sosia.processing.querying import query_pubs_by_sourceyear, stacked_query
 from sosia.utils import custom_print
@@ -37,7 +37,7 @@ def get_author_info(authors, conn, refresh=False, verbose=False):
     """
     # Retrieve existing data from SQL cache
     authors = pd.DataFrame(authors, columns=["auth_id"], dtype="uint64")
-    data, missing = retrieve_authors(authors, conn)
+    data, missing = retrieve_from_author_table(authors, conn, table="author_info")
     # Query missing records and insert at the same time
     if missing:
         params = {"group": missing, "refresh": refresh, "joiner": ") OR AU-ID(",
@@ -48,7 +48,7 @@ def get_author_info(authors, conn, refresh=False, verbose=False):
         res = stacked_query(**params)
         res = pd.DataFrame(res)
         insert_data(res, conn, table="author_info")
-        data, _ = retrieve_authors(authors, conn)
+        data, _ = retrieve_from_author_table(authors, conn, table="author_info")
     return data
 
 
@@ -73,7 +73,7 @@ def get_author_data(group, conn, verbose=False):
         Scopus IDs of authors passing the publication count requirements.
     """
     authors = pd.DataFrame({"auth_id": group})
-    auth_data, missing = retrieve_authors(authors, conn, table="author_data")
+    auth_data, missing = retrieve_from_author_table(authors, conn, table="author_data")
 
     # Add to database
     if missing:
@@ -88,7 +88,7 @@ def get_author_data(group, conn, verbose=False):
         insert_data(to_add, conn, table="author_data")
 
     # Retrieve again
-    auth_data, missing = retrieve_authors(authors, conn, table="author_data")
+    auth_data, missing = retrieve_from_author_table(authors, conn, table="author_data")
     return auth_data
 
 

@@ -8,12 +8,11 @@ from pandas.testing import assert_frame_equal
 from pybliometrics.scopus import AuthorSearch
 
 from sosia.establishing import connect_database, make_database
-from sosia.processing import insert_data, retrieve_authors, \
-    retrieve_author_info, retrieve_authors_from_sourceyear, robust_join, \
-    query_pubs_by_sourceyear
+from sosia.processing import insert_data, retrieve_from_author_table, \
+    retrieve_authors_from_sourceyear, robust_join, query_pubs_by_sourceyear
 
 
-def test_retrieve_authors(test_cache):
+def test_retrieve_from_author_table(test_cache):
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
@@ -23,13 +22,13 @@ def test_retrieve_authors(test_cache):
                      'affiliation', 'documents', 'affiliation_id', 'city',
                      'country', 'areas']
     # Retrieve data
-    incache, missing = retrieve_authors(df, conn)
+    incache, missing = retrieve_from_author_table(df, conn, table="author_info")
     assert incache.shape[0] == 0
     assert incache.columns.to_list() == expected_cols
     assert missing == expected_auth
 
 
-def test_retrieve_authors_insert(test_cache, refresh_interval):
+def test_retrieve_from_author_table_insert(test_cache, refresh_interval):
     make_database(test_cache, drop=True)
     conn = connect_database(test_cache)
     # Variables
@@ -48,26 +47,9 @@ def test_retrieve_authors_insert(test_cache, refresh_interval):
     # Retrieve data
     df = pd.DataFrame(expected_auth + search_auth, columns=["auth_id"],
                       dtype="uint64")
-    incache, missing = retrieve_authors(df, conn)
+    incache, missing = retrieve_from_author_table(df, conn, table="author_info")
     assert incache.shape[0] == 2
     assert missing == [55317901900]
-
-
-def test_retrieve_author_info_author_citations(test_cache):
-    make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
-    # Variables
-    table = "author_citations"
-    data = {"auth_id": [53164702100, 53164702100],
-            "year": [2010, 2017], "n_cits": [0, 6]}
-    expected = pd.DataFrame(data, dtype="int64")
-    # Insert data
-    insert_data(expected, conn, table=table)
-    # Retrieve data
-    cols = ["auth_id", "year"]
-    incache, tosearch = retrieve_author_info(expected[cols], conn, table)
-    assert_frame_equal(incache, expected)
-    assert tosearch.empty
 
 
 def test_retrieve_authors_from_sourceyear(test_cache, refresh_interval):

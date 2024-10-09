@@ -7,7 +7,7 @@ from itertools import product
 import pandas as pd
 from tqdm import tqdm
 
-from sosia.processing.caching import insert_data, retrieve_author_info
+from sosia.processing.caching import insert_data, retrieve_from_author_table
 from sosia.processing.getting import get_author_data, get_author_info, \
     get_authors_from_sourceyear
 from sosia.processing.querying import count_citations
@@ -79,15 +79,17 @@ def find_matches(original, verbose, refresh):
     # Third round of filtering: citations
     authors = pd.DataFrame({"auth_id": sorted(data["auth_id"].unique()),
                             "year": original.year})
-    citations, missing = retrieve_author_info(authors, conn, table="author_citations")
+    citations, missing = retrieve_from_author_table(authors, conn, table="author_citations")
+    missing = pd.DataFrame({"auth_id": missing, "year": original.year})
+    # cut citations
     if not missing.empty:
         total = missing.shape[0]
         text = f"Counting citations of {total:,} candidates..."
         custom_print(text, verbose)
         missing['n_cits'] = 0
         start = 0
-        for i, au in tqdm(missing.iterrows(), disable=not verbose, total=total):
-            n_cits = count_citations([str(au['auth_id'])], original.year+1)
+        for i, row in tqdm(missing.iterrows(), disable=not verbose, total=total):
+            n_cits = count_citations([str(row['auth_id'])], original.year+1)
             missing.at[i, 'n_cits'] = n_cits
             if i % 100 == 0 or i == len(missing) - 1:
                 insert_data(missing.iloc[start:i+1], conn, table="author_citations")

@@ -8,10 +8,12 @@ import pandas as pd
 from sosia.processing.caching.inserting import insert_temporary_table
 
 
-def retrieve_authors(df: pd.DataFrame,
-                     conn: Connection,
-                     table: str = "author_info") -> tuple[pd.DataFrame, list]:
-    """Search authors in cache.
+def retrieve_from_author_table(
+        df: pd.DataFrame,
+        conn: Connection,
+        table: str
+) -> tuple[pd.DataFrame, list]:
+    """Retrieve data on authors from specific `table` in SQL cache.
 
     Parameters
     ----------
@@ -27,55 +29,19 @@ def retrieve_authors(df: pd.DataFrame,
     Returns
     -------
     incache : DataFrame
-        DataFrame of results found in cache.
+        Results found in cache.
 
     tosearch: list
-        List of authors not in cache.
+        Results not found in cache.
     """
-    cols = ["auth_id"]
+    if table == "author_citations":
+        cols = ["auth_id", "year"]
+    else:
+        cols = ["auth_id"]
     insert_temporary_table(df, merge_cols=cols, conn=conn)
     incache = temporary_merge(conn, table=table, merge_cols=cols)
-    tosearch = df['auth_id'].tolist()
-    if not incache.empty:
-        incache_list = incache["auth_id"].tolist()
-        tosearch = [au for au in tosearch if au not in incache_list]
-    return incache, tosearch
-
-
-def retrieve_author_info(df: pd.DataFrame,
-                         conn: Connection,
-                         table: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Retrieve information by author and year from specific table of
-    SQLite3 database.
-
-    Parameters
-    ----------
-    df : DataFrame
-        DataFrame of authors to search with year of the event as second column.
-
-    conn : sqlite3 connection
-        Standing connection to a SQLite3 database.
-
-    table : str
-        The table of the SQLite3 database on which to perform the merge.
-
-    Returns
-    -------
-    incache : DataFrame()
-        DataFrame of results found in `conn`.
-
-    tosearch : DataFrame()
-        DataFrame of results not found in `conn`.
-    """
-    cols = ["auth_id", "year"]
-    insert_temporary_table(df, conn, merge_cols=cols)
-    incache = temporary_merge(conn, table, merge_cols=cols)
-    if not incache.empty:
-        merged = df.merge(incache, on=cols, how='left', indicator=True)
-        tosearch = merged[merged['_merge'] == 'left_only'].drop(columns='_merge')
-    else:
-        tosearch = df
-    return incache, tosearch
+    tosearch = set(df["auth_id"].unique()) - set(incache["auth_id"].unique())
+    return incache, sorted(tosearch)
 
 
 def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
