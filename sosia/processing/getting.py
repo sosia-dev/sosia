@@ -13,7 +13,7 @@ from sosia.processing.querying import count_citations, stacked_query, \
 from sosia.utils import custom_print
 
 
-def get_author_info(authors, conn, verbose=False, refresh=False):
+def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame:
     """Get author information from author_info table and add missing
     information via Author Search API.
 
@@ -37,12 +37,12 @@ def get_author_info(authors, conn, verbose=False, refresh=False):
 
     Returns
     -------
-    data : DataFrame
-        Data on the provided authors.
+    info : DataFrame
+        DataFrame with general information on requested authors.
     """
     # Retrieve existing data from SQL cache
     authors = pd.DataFrame(authors, columns=["auth_id"], dtype="uint64")
-    data, missing = retrieve_from_author_table(authors, conn,
+    info, missing = retrieve_from_author_table(authors, conn,
         table="author_info", refresh=refresh)
     # Query missing records and insert at the same time
     if missing:
@@ -54,13 +54,13 @@ def get_author_info(authors, conn, verbose=False, refresh=False):
         res = stacked_query(**params)
         res = pd.DataFrame(res)
         res["auth_id"] = res['eid'].str.split('-').str[-1].astype("int64")
-        res = res[data.columns]
+        res = res[info.columns]
         insert_data(res, conn, table="author_info")
-        data, _ = retrieve_from_author_table(authors, conn, table="author_info")
-    return data
+        info = pd.concat([info, res])
+    return info
 
 
-def get_author_data(group, conn, verbose=False, refresh=False):
+def get_author_data(group, conn, verbose=False, refresh=False) -> pd.DataFrame:
     """Get author information from author_data table and add missing
     information via Scopus Search API.
 
@@ -81,13 +81,12 @@ def get_author_data(group, conn, verbose=False, refresh=False):
 
     Returns
     -------
-    group : list of str
-        Scopus IDs of authors passing the publication count requirements.
+    data : DataFrame
+        DataFrame with yearly information on requested authors.
     """
     authors = pd.DataFrame({"auth_id": group})
-    auth_data, missing = retrieve_from_author_table(authors, conn,
+    data, missing = retrieve_from_author_table(authors, conn,
         table="author_data", refresh=refresh)
-
     # Add to database
     if missing:
         text = f"Querying Scopus for information for {len(missing):,} " \
@@ -99,8 +98,8 @@ def get_author_data(group, conn, verbose=False, refresh=False):
             to_add.append(new)
         to_add = pd.concat(to_add)
         insert_data(to_add, conn, table="author_data")
-        auth_data, missing = retrieve_from_author_table(authors, conn, table="author_data")
-    return auth_data
+        data = pd.concat([data, to_add])
+    return data
 
 
 def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
