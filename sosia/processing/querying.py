@@ -6,9 +6,9 @@ import pandas as pd
 from pybliometrics.scopus.exception import Scopus400Error
 from tqdm import tqdm
 
-from sosia.processing.constants import RESEARCH_TYPES
 from sosia.processing.utils import expand_affiliation
-from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN
+from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN, \
+    RESEARCH_TYPES
 from sosia.utils import custom_print
 
 

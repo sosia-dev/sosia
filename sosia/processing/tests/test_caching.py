@@ -8,8 +8,9 @@ from pandas.testing import assert_frame_equal
 from pybliometrics.scopus import AuthorSearch
 
 from sosia.establishing import connect_database, make_database
-from sosia.processing import insert_data, retrieve_from_author_table, \
+from sosia.processing import retrieve_from_author_table, \
     retrieve_authors_from_sourceyear, robust_join, query_pubs_by_sourceyear
+from sosia.processing.caching import insert_data
 
 
 def test_retrieve_from_author_table(test_cache):
