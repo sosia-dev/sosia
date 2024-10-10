@@ -46,18 +46,15 @@ def insert_data(
     # Build query
     cols, _ = zip(*DB_TABLES[table]["columns"])
     values = ["?"] * len(cols)
-    q = f"INSERT OR IGNORE INTO {table} ({','.join(cols)}) "\
-        f"VALUES ({','.join(values)})"
+    q = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
 
     # Eventually tweak data
     if table in ('author_info', 'sources_afids'):
         if data.empty:
             return None
-        if table == 'author_info':
-            data["auth_id"] = data['eid'].str.split('-').str[-1]
-        elif table == 'sources_afids':
+        if table == 'sources_afids':
             data["auids"] = data["auids"].apply(robust_join)
-        data = data[list(cols)]
+    data = data[list(cols)]
 
     # Execute queries
     cursor = conn.cursor()

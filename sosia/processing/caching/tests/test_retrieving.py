@@ -38,7 +38,7 @@ def test_retrieve_from_author_table_insert(test_cache, refresh_interval):
     # Insert data
     q = f"AU-ID({robust_join(expected_auth, sep=') OR AU-ID(')})"
     res = pd.DataFrame(AuthorSearch(q, refresh=refresh_interval).authors)
-    res["auth_id"] = res["eid"].str.split("-").str[-1].astype("uint64")
+    res["auth_id"] = res["eid"].str.split("-").str[-1].astype("int64")
     res["affiliation_id"] = res["affiliation_id"].astype(float)
     res = res[expected_cols]
     insert_data(res, conn, table="author_info")
