@@ -10,7 +10,8 @@ DEFAULT_DATABASE = _cache_folder / 'main.sqlite'
 
 DB_TABLES = {
     "author_citations":
-        {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"), ("n_cits", "INTEGER")),
+        {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"),
+                     ("n_cits", "INTEGER")),
          "primary": ("auth_id", "year")},
     "author_data":
         {"columns": (("auth_id", "INTEGER"), ("year", "INTEGER"),
@@ -18,11 +19,9 @@ DB_TABLES = {
                      ("n_coauth", "INTEGER")),
          "primary": ("auth_id", "year")},
     "author_info":
-        {"columns": (("auth_id", "INTEGER"), ("eid", "TEXT"), ("surname", "TEXT"),
-                     ("initials", "TEXT"), ("givenname", "TEXT"),
-                     ("affiliation", "TEXT"), ("documents", "INTEGER"),
-                     ("affiliation_id", "INTEGER"), ("city", "TEXT"),
-                     ("country", "TEXT"), ("areas", "TEXT")),
+        {"columns": (("auth_id", "INTEGER"), ("surname", "TEXT"),
+                     ("givenname", "TEXT"), ("documents", "INTEGER"),
+                     ("areas", "TEXT")),
          "primary": ("auth_id",)},
     "sources_afids":
         {"columns": (("source_id", "INTEGER"), ("year", "INTEGER"),

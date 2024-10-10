@@ -21,9 +21,7 @@ def test_get_author_info(test_conn, refresh_interval):
     auth_list = [6701809842, 55208373700]
     auth_data = get_author_info(auth_list, test_conn, refresh=refresh_interval)
     assert isinstance(auth_data,  DataFrame)
-    expected_cols = ["auth_id", "eid", "surname", "initials", "givenname",
-                     "affiliation", "documents", "affiliation_id", "city",
-                     "country", "areas"]
+    expected_cols = ["auth_id", "surname", "givenname", "documents", "areas"]
     assert auth_data.columns.tolist() == expected_cols
     assert auth_data["auth_id"].tolist() == auth_list
     assert auth_data["surname"].tolist() == ["Harhoff", "Baruffaldi"]

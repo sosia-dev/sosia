@@ -18,9 +18,7 @@ def test_retrieve_from_author_table(test_cache):
     # Variables
     expected_auth = [53164702100, 57197093438]
     df = pd.DataFrame(expected_auth, columns=["auth_id"], dtype="int64")
-    expected_cols = ['auth_id', 'eid', 'surname', 'initials', 'givenname',
-                     'affiliation', 'documents', 'affiliation_id', 'city',
-                     'country', 'areas']
+    expected_cols = ['auth_id', 'surname', 'givenname', 'documents', 'areas']
     # Retrieve data
     incache, missing = retrieve_from_author_table(df, conn, table="author_info")
     assert incache.shape[0] == 0
