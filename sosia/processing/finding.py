@@ -24,10 +24,9 @@ def find_matches(original, verbose, refresh):
     verbose : bool (optional, default=False)
         Whether to report on the progress of the process.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh cached results (if they exist) or not. If int
-        is passed and stacked=False, results will be refreshed if they are
-        older than that value in number of days.
+    refresh : bool, int (optional, default=False)
+        Whether to refresh cached results (if they exist) or not, with
+        Scopus data that is at most `refrsh` days old (True = 0).
     """
     # Variables
     _years = (original.first_year-original.first_year_margin,
@@ -40,7 +39,8 @@ def find_matches(original, verbose, refresh):
     conn = original.sql_conn
 
     # First round of filtering: minimum publications and main field
-    info = get_author_info(original.search_group, original.sql_conn, verbose=verbose)
+    info = get_author_info(original.search_group, original.sql_conn,
+                           verbose=verbose, refresh=refresh)
     same_field = info['areas'].str.startswith(original.main_field[1])
     info = info[same_field]
     text = (f"... left with {info.shape[0]:,} candidates in main "
@@ -54,7 +54,7 @@ def find_matches(original, verbose, refresh):
 
     # Second round of filtering: first year, publication count, coauthor count
     data = get_author_data(group=sorted(info["auth_id"].unique()),
-                           verbose=verbose, conn=conn)
+                           verbose=verbose, conn=conn, refresh=refresh)
     similar_start = data["first_year"].between(_years[0], _years[1])
     data = data[similar_start].drop(columns="first_year")
     data = data[data["year"] <= original.match_year]

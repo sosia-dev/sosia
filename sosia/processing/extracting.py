@@ -20,14 +20,14 @@ def extract_authors(pubs):
     return [int(au) for sl in auths for au in sl]
 
 
-def extract_yearly_author_data(auth_id: int) -> pd.DataFrame:
+def extract_yearly_author_data(auth_id: int, refresh: bool = False) -> pd.DataFrame:
     """Extract relevant information from an author's yearly publication list:
     - first year of publication
     - yearly publication stock
     - yearly coauthor stock
     """
     # Get data
-    docs = base_query("docs", f"AU-ID({auth_id})")
+    docs = base_query("docs", f"AU-ID({auth_id})", refresh=refresh)
     cols = ["eid", "coverDate", "author_ids"]
     df = pd.DataFrame(docs)[cols].rename(columns={"coverDate": "year"})
     df["year"] = df["year"].str[:4].astype("uint16")

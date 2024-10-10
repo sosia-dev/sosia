@@ -13,7 +13,7 @@ from sosia.processing.querying import count_citations, stacked_query, \
 from sosia.utils import custom_print
 
 
-def get_author_info(authors, conn, refresh=False, verbose=False):
+def get_author_info(authors, conn, verbose=False, refresh=False):
     """Get author information from author_info table and add missing
     information via Author Search API.
 
@@ -31,6 +31,10 @@ def get_author_info(authors, conn, refresh=False, verbose=False):
     verbose : bool (optional, default=False)
         Whether to print information on the search progress.
 
+    refresh : bool, int (optional, default=False)
+        Whether to refresh cached results (if they exist) or not, with
+        Scopus data that is at most `refresh` days old (True = 0).
+
     Returns
     -------
     data : DataFrame
@@ -38,7 +42,8 @@ def get_author_info(authors, conn, refresh=False, verbose=False):
     """
     # Retrieve existing data from SQL cache
     authors = pd.DataFrame(authors, columns=["auth_id"], dtype="uint64")
-    data, missing = retrieve_from_author_table(authors, conn, table="author_info")
+    data, missing = retrieve_from_author_table(authors, conn,
+        table="author_info", refresh=refresh)
     # Query missing records and insert at the same time
     if missing:
         params = {"group": missing, "refresh": refresh, "joiner": ") OR AU-ID(",
@@ -53,7 +58,7 @@ def get_author_info(authors, conn, refresh=False, verbose=False):
     return data
 
 
-def get_author_data(group, conn, verbose=False):
+def get_author_data(group, conn, verbose=False, refresh=False):
     """Get author information from author_data table and add missing
     information via Scopus Search API.
 
@@ -68,13 +73,18 @@ def get_author_data(group, conn, verbose=False):
     verbose : bool (optional, default=False)
         Whether to print information on the search progress.
 
+    refresh : bool, int (optional, default=False)
+        Whether to refresh cached results (if they exist) or not, with
+        Scopus data that is at most `refresh` days old (True = 0).
+
     Returns
     -------
     group : list of str
         Scopus IDs of authors passing the publication count requirements.
     """
     authors = pd.DataFrame({"auth_id": group})
-    auth_data, missing = retrieve_from_author_table(authors, conn, table="author_data")
+    auth_data, missing = retrieve_from_author_table(authors, conn,
+        table="author_data", refresh=refresh)
 
     # Add to database
     if missing:
@@ -83,13 +93,11 @@ def get_author_data(group, conn, verbose=False):
         custom_print(text, verbose)
         to_add = []
         for auth_id in tqdm(missing, disable=not verbose):
-            new = extract_yearly_author_data(auth_id)
+            new = extract_yearly_author_data(auth_id, refresh=refresh)
             to_add.append(new)
         to_add = pd.concat(to_add)
         insert_data(to_add, conn, table="author_data")
-
-    # Retrieve again
-    auth_data, missing = retrieve_from_author_table(authors, conn, table="author_data")
+        auth_data, missing = retrieve_from_author_table(authors, conn, table="author_data")
     return auth_data
 
 
@@ -108,8 +116,9 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
     conn : sqlite3 connection
         Standing connection to an SQLite3 database.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh cached search files.
+    refresh : bool, int (optional, default=False)
+        Whether to refresh cached results (if they exist) or not, with
+        Scopus data that is at most `refresh` days old (True = 0).
 
     stacked : bool (optional, default=False)
         Whether to use fewer queries that are not reusable, or to use modular
@@ -159,7 +168,7 @@ def get_authors_from_sourceyear(df, conn, refresh=False, stacked=False,
     return data
 
 
-def get_citations(authors, year, conn, verbose=False):
+def get_citations(authors, year, conn, verbose=False, refresh=False):
     """Get citations net of self-citations in particular `year` for
     a group of `authors`.
 
@@ -177,13 +186,18 @@ def get_citations(authors, year, conn, verbose=False):
     verbose : bool (optional, default=False)
         Whether to print information on the search progress.
 
+    refresh : bool, int (optional, default=False)
+        Whether to refresh cached results (if they exist) or not, with
+        Scopus data that is at most `refresh` days old (True = 0).
+
     Returns
     -------
     citations : DataFrame
         Data on the provided authors.
     """
     df = pd.DataFrame({"auth_id": authors, "year": year})
-    citations, missing = retrieve_from_author_table(df, conn, table="author_citations")
+    citations, missing = retrieve_from_author_table(df, conn,
+        table="author_citations", refresh=refresh)
     # Add citations
     if missing:
         text = f"Counting citations of {len(missing):,} candidates..."

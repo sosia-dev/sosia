@@ -1,17 +1,37 @@
 """Module that contains functions for retrieving data from a SQLite3 database cache."""
 
 from sqlite3 import Connection
-from typing import Iterable
+from typing import Iterable, Union
 
 import pandas as pd
 
 from sosia.processing.caching.inserting import insert_temporary_table
 
 
+def drop_values(data: pd.DataFrame, conn: Connection, table: str) -> None:
+    """Drop values from a database `table`."""
+    if table == "sources_afids":
+        fields = ("source_id", "year")
+    elif table == "author_citations":
+        fields = ("auth_id", "year")
+    else:
+        fields = ("auth_id",)
+    cursor = conn.cursor()
+    if len(fields) == 1:
+        values = data[fields[0]]
+        q = f"DELETE FROM {table} WHERE {fields[0]} IN ({','.join(['?'] * len(values))})"
+        cursor.execute(q, tuple(values))
+    else:
+        q = f"DELETE FROM {table} WHERE " + "=? AND ".join(fields) + "=?"
+        cursor.executemany(q, data.to_records(index=False))
+    conn.commit()
+
+
 def retrieve_from_author_table(
         df: pd.DataFrame,
         conn: Connection,
-        table: str
+        table: str,
+        refresh: Union[bool, int] = False
 ) -> tuple[pd.DataFrame, list]:
     """Retrieve data on authors from specific `table` in SQL cache.
 
@@ -26,6 +46,10 @@ def retrieve_from_author_table(
     table : str
         The table of the SQLite3 database on which to perform the merge.
 
+    refresh : bool, int (optional, default=False)
+        Whether to refresh cached results (if they exist) or not, with
+        Scopus data that is at most `refresh` days old (True = 0).
+
     Returns
     -------
     incache : DataFrame
@@ -34,10 +58,16 @@ def retrieve_from_author_table(
     tosearch: list
         Results not found in cache.
     """
+    # Set columns
     if table == "author_citations":
         cols = ["auth_id", "year"]
     else:
         cols = ["auth_id"]
+
+    # Drop values if to be refreshed
+    if not isinstance(refresh, bool) or refresh:
+        drop_values(df, conn, table=table)
+
     insert_temporary_table(df, merge_cols=cols, conn=conn)
     incache = temporary_merge(conn, table=table, merge_cols=cols)
     tosearch = set(df["auth_id"].unique()) - set(incache["auth_id"].unique())
@@ -46,7 +76,7 @@ def retrieve_from_author_table(
 
 def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
                                      conn: Connection,
-                                     refresh: bool = False):
+                                     refresh: Union[bool, int] = False):
     """Search through sources by year for authors in SQL database.
 
     Parameters
@@ -57,8 +87,9 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh cached search files.
+    refresh : bool, int (optional, default=False)
+        Whether to refresh cached results (if they exist) or not, with
+        Scopus data that is at most `refresh` days old (True = 0).
 
     Returns
     -------
@@ -69,12 +100,9 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
     missing: DataFrame
         DataFrame of source-year-combinations not in SQL database.
     """
-    # Preparation
-    cursor = conn.cursor()
+    # Drop values if to be refreshed
     if not isinstance(refresh, bool) or refresh:
-        q = "DELETE FROM sources_afids WHERE source_id=? AND year=?"
-        cursor.executemany(q, tosearch.to_records(index=False))
-        conn.commit()
+        drop_values(tosearch, conn, table="sources_afids")
 
     # Query authors for relevant journal-years
     cols = ["source_id", "year"]
