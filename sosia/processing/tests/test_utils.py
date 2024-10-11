@@ -32,15 +32,6 @@ def test_flat_set_from_df():
     assert received == expected
 
 
-def test_flat_set_from_df_condition():
-    d = {'col1': [[1, 2], [10, 20]], "col2": ["a", "b"]}
-    df = pd.DataFrame(d)
-    condition = df["col2"] == "b"
-    expected = [10, 20]
-    received = sorted(list(flat_set_from_df(df, "col1", condition)))
-    assert received == expected
-
-
 def test_margin_range():
     assert margin_range(5, 1) == range(4, 7)
     assert margin_range(10, 0.09) == range(9, 12)

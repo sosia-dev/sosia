@@ -141,27 +141,29 @@ def search_group_from_sources(original, stacked=False, verbose=False,
                                  columns=["source_id", "year"])
     auth_today = get_authors_from_sourceyear(sources_today, original.sql_conn,
         refresh=refresh, stacked=stacked, verbose=verbose)
-    mask = None
     if original.search_affiliations:
-        mask = auth_today["afid"].isin(original.search_affiliations)
-    today = flat_set_from_df(auth_today, "auids", condition=mask)
+        same_affs = auth_today["afid"].isin(original.search_affiliations)
+        auth_today = auth_today[same_affs]
+    today = flat_set_from_df(auth_today, "auids")
 
     # Authors active around year of first publication
     min_year = original.first_year - original.first_year_margin
     max_year = original.first_year + original.first_year_margin
-    then_years = [min_year-1]
-    then_years.extend(range(min_year, max_year+1))
+    then_years = list(range(min_year, max_year+1))
     sources_then = pd.DataFrame(product(search_sources, then_years),
                                 columns=["source_id", "year"])
     auth_then = get_authors_from_sourceyear(sources_then, original.sql_conn,
         refresh=refresh, stacked=stacked, verbose=verbose)
-    mask = auth_then["year"].between(min_year, max_year)
-    then = flat_set_from_df(auth_then, "auids", condition=mask)
+    then = flat_set_from_df(auth_then, "auids")
 
     # Remove authors active before
-    mask = auth_then["year"] < min_year
-    before = flat_set_from_df(auth_then, "auids", condition=mask)
-    today -= before
+    sources_before = pd.DataFrame(product(search_sources, [min_year - 1]),
+                                  columns=["source_id", "year"])
+    auth_before = get_authors_from_sourceyear(sources_before, original.sql_conn,
+                                              refresh=refresh, stacked=stacked,
+                                              verbose=verbose)
+    before = flat_set_from_df(auth_before, "auids")
+    then -= before
 
     # Compile group
     group = today.intersection(then)
