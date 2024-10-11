@@ -26,8 +26,7 @@ sosia considers only research-type articles as defined by Scopus; these are arti
     [24464562500, 24781156100, 36617057700, 54929867200, 54930777900,
      55875219200, 57217825601]
     >>> stefano.fields
-    [2300, 3300, 2002, 1405, 1400, 1405, 1408, 1803, 2200, 2002, 1405, 1400,
-     3300, 2300, 1405, 1803, 1408]
+    [2300, 3300, 2002, 1405, 1408, 1803, 1400, 1405]
     >>> stefano.first_year
     2012
     >>> stefano.sources
@@ -142,7 +141,7 @@ An alternative search process that minimizes the number of queries can be activa
 Finding matches
 ---------------
 
-The final step is to search within this search group for authors who meet criteria 5 and 6. The matches can be accessed through the .matches property.
+The final step is to search within this search group for authors who are mainly active in the same field, started around the same time, have a similar number of publications, have a similar number of coauthors, and have been cited about equally often.  The matches can be accessed through the .matches property.
 
 .. code-block:: python
 
