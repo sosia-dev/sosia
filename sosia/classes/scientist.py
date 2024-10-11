@@ -84,16 +84,16 @@ class Scientist(object):
         self._citations = val
 
     @property
-    def coauthors(self) -> Union[set, list, tuple]:
-        """Set of coauthors of the scientist on all publications until the
-        comparison year.
+    def coauthors(self) -> list:
+        """Sorted list of coauthors of the scientist on all publications
+        until the comparison year.
         """
         return self._coauthors
 
     @coauthors.setter
     @accepts((set, list, tuple))
-    def coauthors(self, val: Union[set, list, tuple]) -> None:
-        self._coauthors = val
+    def coauthors(self, val: list) -> None:
+        self._coauthors = sorted(val)
 
     @property
     def fields(self) -> Union[set, list, tuple]:
@@ -282,7 +282,7 @@ class Scientist(object):
         self._citations = count_citations(search_ids, self.year+1, identifier)
 
         # Coauthors
-        self._coauthors = set(extract_authors(self._publications)) - set(identifier)
+        self._coauthors = sorted(set(extract_authors(self._publications)) - set(identifier))
 
         # Author search information
         source_ids = set([int(p.source_id) for p in self._publications

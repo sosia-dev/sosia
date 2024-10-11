@@ -197,7 +197,7 @@ class Original(Scientist):
 
         # Remove own IDs and coauthors
         search_group -= set(self.identifier)
-        search_group -= self.coauthors
+        search_group -= set(self.coauthors)
 
         # Finalize
         self._search_group = sorted(search_group)

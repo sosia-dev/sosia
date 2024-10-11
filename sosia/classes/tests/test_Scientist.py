@@ -1,7 +1,5 @@
 """Tests for class `Scientist`."""
 
-from sosia.classes import Scientist
-
 
 def test_active_year(scientist1, scientist2, scientist3, scientist4):
     assert scientist1.active_year == 2001
@@ -48,25 +46,25 @@ def test_citations(scientist1, scientist2, scientist3, scientist4):
 
 
 def test_coauthors(scientist1, scientist2, scientist3):
-    assert isinstance(scientist1.coauthors, set)
-    expected = {7005044638, 6602701792, 35838036900, 6506756510,
-                24364642400, 6506571902, 6506426539, 6701494844,
-                11042582400, 7004064836, 7101829476}
+    assert isinstance(scientist1.coauthors, list)
+    expected = [6506426539, 6506571902, 6506756510, 6602701792, 6701494844,
+                7004064836, 7005044638, 7101829476, 11042582400, 24364642400,
+                35838036900]
     assert len(scientist1.coauthors) == len(expected)
     for coauth in expected:
         assert coauth in scientist1.coauthors
-    assert isinstance(scientist2.coauthors, set)
-    expected = {24464562500, 24781156100, 36617057700, 54929867200,
-                54930777900, 55875219200, 57217825601}
+    assert isinstance(scientist2.coauthors, list)
+    expected = [24464562500, 24781156100, 36617057700, 54929867200,
+                54930777900, 55875219200, 57217825601]
     assert len(scientist2.coauthors) == len(expected)
     for coauth in expected:
         assert coauth in scientist2.coauthors
-    assert isinstance(scientist3.coauthors, set)
-    expected = {36617057700, 55875219200, 54930777900, 54929867200}
+    assert isinstance(scientist3.coauthors, list)
+    expected = [36617057700, 54929867200, 54930777900, 55875219200]
     assert len(scientist3.coauthors) == len(expected)
     for coauth in expected:
         assert coauth in scientist3.coauthors
-    expected = {36617057700, 54929867200, 54930777900, 55875219200}
+    expected = [36617057700, 54929867200, 54930777900, 55875219200]
     assert len(scientist3.coauthors) == len(expected)
 
 
@@ -106,7 +104,7 @@ def test_sources(scientist1, scientist2, scientist3):
                 (15143, 'Regional Studies'),
                 (18769, 'Applied Economics Letters'),
                 (22900, 'Research Policy')]
-    assert len(received)== len(expected)
+    assert len(received) == len(expected)
     for e in expected:
         assert e in received
     received = scientist3.sources

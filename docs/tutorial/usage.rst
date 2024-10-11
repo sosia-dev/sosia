@@ -23,8 +23,8 @@ sosia considers only research-type articles as defined by Scopus; these are arti
     >>> stefano.affiliation_country
     'Switzerland'
     >>> stefano.coauthors
-    {57217825601, 54930777900, 36617057700, 54929867200, 55875219200,
-     24464562500, 24781156100}
+    [24464562500, 24781156100, 36617057700, 54929867200, 54930777900,
+     55875219200, 57217825601]
     >>> stefano.fields
     [2300, 3300, 2002, 1405, 1400, 1405, 1408, 1803, 2200, 2002, 1405, 1400,
      3300, 2300, 1405, 1803, 1408]
