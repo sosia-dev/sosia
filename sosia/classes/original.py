@@ -1,7 +1,7 @@
 """Main module of `sosia` containing the `Original` class."""
 
 from pathlib import Path
-from typing import Iterable, Optional, Union
+from typing import Iterable, Literal, Optional, Union
 
 from typing_extensions import Self
 
@@ -220,20 +220,36 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def define_search_sources(self, verbose: bool = False) -> Self:
+    def define_search_sources(
+            self,
+            verbose: bool = False,
+            mode: Literal["narrow", "wide"] = "narrow"
+    ) -> Self:
         """Define .search_sources.
 
-        Within the list of search sources sosia will search for matching
-        scientists.  A search source is of the same main field as
-        the original scientist, the same types (journal, conference
-        proceeding, etc.), and must not be related to fields alien to the
-        original scientist.
+        Search sources are the set of sources where sosia will search for
+        possible candidates.  Search source are of the same types (journal,
+        conference proceeding, etc.) the Original published in, and is
+        related to the main field (ASCJ-4) of the Original.
 
         Parameters
         ----------
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
+
+        mode : str (optional, default="narrow")
+            Accepted values: "narrow", "wide".
+            A "narrow" definition of search sources excludes search sources
+            that are also associated to fields (ASJC-4) not among the fields
+            of the Original.  A "wide" defintion includes all those sources.
+
+        Notes
+        -----
+        Search sources are available through property `.search_sources`.
         """
+        if mode not in {"narrow", "wide"}:
+            raise TypeError("Argument mode must be 'narrow' or 'wide'.")
+
         field_df = self.field_source
         info_df = self.source_info
         # Sources in scientist's main field
@@ -250,9 +266,11 @@ class Original(Scientist):
         selected = field_df[field_df["source_id"].isin(selected_ids)].copy()
         grouped = selected.groupby("source_id")["asjc"].unique().to_frame()
         # Deselect sources with alien fields
-        fields = set(self.fields)
-        no_alien_field = grouped["asjc"].apply(lambda s: len(set(s) - fields) == 0)
-        grouped = grouped[no_alien_field].drop(columns="asjc")
+        if mode == "narrow":
+            fields = set(self.fields)
+            no_alien_field = grouped["asjc"].apply(lambda s: len(set(s) - fields) == 0)
+            grouped = grouped[no_alien_field]
+        grouped = grouped.drop(columns="asjc")
         # Add source names
         sources = grouped.join(info_df.set_index("source_id")["title"])
         sources = set(sources.reset_index().itertuples(index=False, name=None))
@@ -260,8 +278,10 @@ class Original(Scientist):
         sources.update(self.sources)
         # Finalize
         self._search_sources = sorted(sources, key=lambda x: x[0])
-        text = f"Found {len(sources):,} sources matching main field "\
-               f"{self.main_field[0]} and source type(s) {'; '.join(main_types)}"
+        suffix = "" if len(main_types) == 1 else "s"
+        text = f"Found {len(sources):,} sources of type{suffix} " \
+               f"{', '.join(main_types)} matching main field "\
+               f"{self.main_field[0]} {mode}ly"
         custom_print(text, verbose)
         return self
 

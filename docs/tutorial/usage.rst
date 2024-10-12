@@ -68,7 +68,7 @@ With this configuration, sosia will identify matches who began publishing within
 
 Defining search sources
 -----------------------
-The first step in this process is to define a list of sources that are similar in type and area to those the scientist published in up to the comparison year. A source is considered similar if it (i) is associated with the scientist's main field, (ii) matches the type(s) of sources the scientist has used, and (iii) is not linked to fields unrelated to the scientist's expertise. Here, the type of source refers to categories such as journals, conference proceedings, books, etc. You define the list of search sources using a method within the class and access the results via a property.
+The first step in this process is to define a list of sources that are similar in type and area to those the scientist published in up to the comparison year. A source is considered similar if it (i) is associated with the scientist's main field and (ii) matches the type(s) of sources the scientist has used. Here, the type of source refers to categories such as journals, conference proceedings, books, etc. Using parameter "mode", users can (iii) choose between a wide and a narrow defintion of sources. In the narrow defintion, the default, a source may not be linked to fields that are alien to the Original; in the wide defintion, those sources are included.
 
 .. code-block:: python
 
@@ -79,14 +79,14 @@ The first step in this process is to define a list of sources that are similar i
     # 200 more sources omitted
      (21101212779, 'Technological Sustainability')]
 
-Property `search_sources` is a list of tuples storing source ID and source title. As before, you can override (or predefine) your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the sources the scientist publishes in: `stefano.search_sources = stefano.sources`. Then only authors publishing in these sources will be considered for a match.
+Property `search_sources` is a list of tuples storing source ID and source title. You can override (or predefine) your own set of `search_sources`.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the sources the scientist publishes in: `stefano.search_sources = stefano.sources`. Then only authors publishing in these sources will be considered for a match.
 
 Using `verbose=True` you receive additional information on this operation:
 
 .. code-block:: python
 
-    >>> stefano.define_search_sources(verbose=True)
-    Found 206 sources matching main field 1405 and source type(s) jr; cp
+    >>> stefano.define_search_sources(verbose=True, mode="narrow")
+    Found 206 sources of types jr, cp matching main field 1405 narrowly
 
 
 Defining the search group
