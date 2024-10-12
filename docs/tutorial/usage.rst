@@ -10,7 +10,7 @@ The primary class to interact with is :ref:`Original() <class_original>`. This c
 .. code-block:: python
    
     >>> from sosia import Original
-    >>> stefano = Original(55208373700, 2017, db_path=DB_NAME)
+    >>> stefano = Original(55208373700, 2018, db_path=DB_NAME)
 
 Upon initiation, pybliometrics performs queries on the Scopus database in the background.
 
@@ -24,14 +24,15 @@ sosia considers only research-type articles as defined by Scopus; these are arti
     'Switzerland'
     >>> stefano.coauthors
     [24464562500, 24781156100, 36617057700, 54929867200, 54930777900,
-     55875219200, 57217825601]
+     55875219200, 57131011400, 57217825601]
     >>> stefano.fields
-    [2300, 3300, 2002, 1405, 1408, 1803, 1400, 1405]
+    [2300, 3300, 2002, 1405, 1408, 1803, 1400, 1405, 1404, 1405, 1410]
     >>> stefano.first_year
     2012
     >>> stefano.sources
-    [(15143, 'Regional Studies'), (18769, 'Applied Economics Letters'),
-     (22900, 'Research Policy'), (23013, 'Industry and Innovation'), (21100858668, None)]
+    [(15143, 'Regional Studies'), (18769, 'Applied Economics Letters'), (22900, 'Research Policy'),
+     (23013, 'Industry and Innovation'), (21100858668, None),
+     (21100880192, '78th Annual Meeting of the Academy of Management, AOM 2018')]
     >>> stefano.main_field
     (1405, 'BUSI')
 
@@ -52,17 +53,18 @@ You can override each property manually, for instance when you are certain that 
 Similarity parameters
 ---------------------
 
-`sosia` aims to identify researchers who are similar to the Original in the comparison year. Currently, `sosia` defines similarity based on four criteria: the start of the academic career, the number of co-authors, the number of publications, and the total citation count. Another researcher (i.e., Scopus profile) is considered similar if their characteristics fall within a defined margin around those of the Original. If all characteristics are similar and the other researcher is not a co-author, they are considered a match.
+`sosia` aims to identify researchers who are similar to the Original in the comparison year. `sosia` can define similarity based on six criteria: the same main field (ASJC2), the start of the academic career, the number of co-authors, the number of publications, the total citation count, being affiliated to a specific (set of) affiliations. Another researcher (i.e., Scopus profile) is considered similar if their characteristics fall within a defined margin around those of the Original. However, only researchers that are not co-authors (until the comparison year) and that published in topically similar sources in the year the Original's career began.
 
-By default (i.e., if not specified), the margin for the first year of publication is set to 2 years, while the margins for the number of co-authors, publications, and citations are set to 20%. These margins apply in both directions. You can override these parameters. sosia interprets integer values as absolute deviations and float values as percentages for relative deviations.
+By default none of the six criteria is active; i.e., you can switch them on and off like they were modules. We recommend to use the first five criteria with rather low values (e.g., , the margin for the first year of publication equal to 1 year, and the margins for the number of co-authors, publications, and citations equal to something between 10% and 20%). Margins apply in both directions. `sosia` interprets integer values as absolute deviations and float values as percentages for relative deviations.
 
 .. code-block:: python
    
-    >>> stefano = Original(55208373700, 2017, first_year_margin=2,
+    >>> stefano = Original(55208373700, 2018, db_path=DB_NAME,
+    >>>                    same_year=True, first_year_margin=1,
     >>>                    coauth_margin=0.2, pub_margin=0.2,
-    >>>                    cits_margin=0.2, db_path=DB_NAME)
+    >>>                    cits_margin=0.15)
 
-With this configuration, sosia will identify matches who began publishing within ±2 years of the scientist's first publication. In the comparison year, the matches will have a similar number of co-authors, within a range of ±20% of the original number (with a minimum of 1), and a similar number of publications, also within a range of ±20% (with a minimum of 1).
+With this configuration, sosia will identify matches who began publishing within ±1 years of the scientist's first publication. In the comparison year, the matches will have a similar number of co-authors, within a range of ±20% of the original number (with a minimum of 1), and a similar number of publications, also within a range of ±15% (with a minimum of 1).
 
 Defining search sources
 -----------------------
@@ -73,9 +75,9 @@ The first step in this process is to define a list of sources that are similar i
     >>> stefano.define_search_sources()
     >>> print(stefano.search_sources)
     [(15143, 'Regional Studies'), (16680, 'Engineering Science and Education Journal'),
-    (17047, 'Chronicle of Higher Education'), (18769, 'Applied Economics Letters'),
-    # 58 more sources omitted
-    (21101212779, 'Technological Sustainability')]
+     (17047, 'Chronicle of Higher Education'), (18769, 'Applied Economics Letters'),
+    # 200 more sources omitted
+     (21101212779, 'Technological Sustainability')]
 
 Property `search_sources` is a list of tuples storing source ID and source title. As before, you can override (or predefine) your own set of search_sources.  This can be a list of tuples as well or a list of source IDs only.  For example, you can set the search sources equal to the sources the scientist publishes in: `stefano.search_sources = stefano.sources`. Then only authors publishing in these sources will be considered for a match.
 
@@ -84,33 +86,29 @@ Using `verbose=True` you receive additional information on this operation:
 .. code-block:: python
 
     >>> stefano.define_search_sources(verbose=True)
-    Found 61 sources matching main field 1405 and source type(s) jr
+    Found 206 sources matching main field 1405 and source type(s) jr; cp
 
 
 Defining the search group
 -------------------------
 
-`sosia` uses these sources to create an initial search group of authors. This group publishes in the same kind of sources associated to the same main field last year the Original was active in (in this case: 2017) as well as around the year of the first publiscation (in this case: between 2010 and 2014). `sosia` also removes authors that published before (in this case: 2009).
+`sosia` uses these sources to create an initial search group of authors. This group publishes in the same kind of sources associated to the same main field last year the Original was active in (in this case: 2018) as well as around the year of the first publiscation (in this case: between 2010 and 2014). `sosia` also removes authors that published before (in this case: 2010).
 
 .. code-block:: python
 
     >>> stefano.define_search_group(verbose=True)
-    Defining 'search_group' using up to 65 sources...
-	... parsing Scopus information for 2017...
-	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 176.76it/s]
-	... parsing Scopus information for 2010...
-	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 168.01it/s]
-	... parsing Scopus information for 2011...
-	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 161.92it/s]
-	... parsing Scopus information for 2012...
-	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 137.80it/s]
-	... parsing Scopus information for 2013...
-	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 133.42it/s]
-	... parsing Scopus information for 2014...
-	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 144.00it/s]
-	... parsing Scopus information for 2009...
-	100%|█████████████████████████████████████████████████████████████████████████████████| 61/61 [00:00<00:00, 161.04it/s]
-	Found 783 candidates
+    Defining 'search_group' using up to 206 sources...
+    ... parsing Scopus information for 2018...
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 97.58it/s]
+    ... parsing Scopus information for 2011...
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 88.28it/s]
+    ... parsing Scopus information for 2012...
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 86.75it/s]
+    ... parsing Scopus information for 2013...
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 95.60it/s]
+    ... parsing Scopus information for 2010...
+    100%|███████████████████████████████████████████████████████████████████████████████| 206/206 [00:01<00:00, 104.46it/s]
+    Found 675 candidates
 
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
@@ -135,33 +133,38 @@ An alternative search process that minimizes the number of queries can be activa
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     ... parsing Scopus information for 2009...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 783 candidates
+    Found 675 candidates
 
 
 Finding matches
 ---------------
 
-The final step is to search within this search group for authors who are mainly active in the same field, started around the same time, have a similar number of publications, have a similar number of coauthors, and have been cited about equally often.  The matches can be accessed through the .matches property.
+The final step is to filter the candidates from the search group. Depending on the search paratmers, `sosia` searches for authors who are mainly active in the same field, started around the same time, have a similar number of publications, have a similar number of coauthors, and have been cited about equally often.
 
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Filtering 783 candidates...
-    Downloading information for 783 candidates...
-    100%|████████████████████████████████████████████████████████████████████████████████████| 9/9 [04:51<00:00, 32.39s/it]
-    ... left with 479 candidates in main field (BUSI)
-    ... left with 472 candidates with sufficient total publications (5)
-    Querying Scopus for information for 472 authors...
-    100%|████████████████████████████████████████████████████████████████████████████████| 472/472 [00:08<00:00, 55.19it/s]
-    ... left with 79 candidates with similar year of first publication (2010 to 2014)
-    ... left with 27 candidates with similar number of publications (5 to 9)
-    ... left with 15 candidates with similar number of coauthors (5 to 9)
-    Counting citations of 15 candidates...
-    100%|██████████████████████████████████████████████████████████████████████████████████| 15/15 [00:16<00:00,  1.12s/it]
-    ... left with 3 candidates with similar number of citations (24 to 38)
-    Found 3 matches
+    Filtering 675 candidates...
+    Downloading information for 391 candidates...
+    100%|████████████████████████████████████████████████████████████████████████████████████| 5/5 [04:24<00:00, 52.93s/it]
+    ... left with 501 candidates in main field (BUSI)
+    ... left with 489 candidates with sufficient total publications (6)
+    Querying Scopus for information for 489 authors...
+    100%|████████████████████████████████████████████████████████████████████████████████| 489/489 [00:15<00:00, 32.28it/s]
+    ... left with 86 candidates with similar year of first publication (2011 to 2013)
+    ... left with 33 candidates with similar number of publications (6 to 10)
+    ... left with 11 candidates with similar number of coauthors (6 to 10)
+    Counting citations of 11 candidates...
+    100%|██████████████████████████████████████████████████████████████████████████████████| 11/11 [00:08<00:00,  1.27it/s]
+    ... left with 2 candidates with similar number of citations (42 to 58)
+    Found 2 matches
+    
+The matches are a list available through the .matches property.
+
+.. code-block:: python
+
     >>> print(stefano.matches)
-    [55022752500, 55810688700, 55824607400]
+    [55100158000, 55567912500]
 
 
 Adding information to matches
@@ -172,12 +175,11 @@ You may need additional information to both assess match quality and select matc
 .. code-block:: python
 
     >>> stefano.inform_matches(verbose=True)
-    Providing information for 3 matches...
-    100%|████████████████████████████████████████████████████████████████████████████████████| 3/3 [00:09<00:00,  2.33s/it]
-    Match 55022752500: No reference list of 5 documents missing
-    Match 55810688700: No reference list of 6 documents missing
-    Match 55824607400: No reference list of 7 documents missing
-    Original 55208373700: 1 reference list out of 7 documents missing
+    Providing information for 2 matches...
+    100%|████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:13<00:00,  4.47s/it]
+    Match 55100158000: 1 reference list out of 7 documents missing
+    Match 55567912500: No reference list of 8 documents missing
+    Original 55208373700: 1 reference list out of 8 documents missing
 
 By default, `sosia` provides the following information:
 
@@ -193,16 +195,16 @@ By default, `sosia` provides the following information:
 * `language`: The language(s) of the published documents of an author up until the comparison year
 * `num_cited_refs`: The number of jointly cited references as per publications up until the comparison year (reference lists may be missing on Scopus, which is what the text in the output is telling you)
 
-Alternatively, you can provide a list of the desired keywords to obtain information only on those specific keywords. This approach is useful because certain information takes longer to gather.
+Alternatively, you can provide a list of the desired keywords to obtain information only on those specific keywords. This approach is useful because certain information takes longer to gather (for instance, language and num_cited_refs).
 
 .. code-block:: python
 
     >>> print(stefano.matches[0])
-    Match(ID=55022752500, name='Van der Borgh, Michel', first_name='Michel',
-          surname='Van der Borgh', first_year=2012, num_coauthors=6, num_publications=5,
-          num_citations=36, subjects=['BUSI', 'SOCI', 'COMP'], affiliation_country='Netherlands',
-          affiliation_id='60032882', affiliation_name='Technische Universiteit Eindhoven',
-          affiliation_type='univ', language='eng', num_cited_refs=0)
+    Match(ID=55100158000, name='Sears, Joshua B.', first_name='Joshua B.',
+          surname='Sears', first_year=2011, num_coauthors=7, num_publications=7,
+          num_citations=50, subjects=['BUSI', 'ECON', 'SOCI'], affiliation_country='United States',
+          affiliation_id='60123664', affiliation_name='Rawls College of Business',
+          affiliation_type='coll', language='eng', num_cited_refs=1)
 
 It is easy to work with namedtuples.  For example, using `pandas <https://pandas.pydata.org/>`_ you easily turn the list into a pandas DataFrame:
 
@@ -213,33 +215,27 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     >>> df = pd.DataFrame(stefano.matches)
     >>> df = df.set_index('ID')
     >>> print(df)
-                                  name  first_name        surname  first_year  \
-    ID                                                                          
-    55022752500  Van der Borgh, Michel      Michel  Van der Borgh        2012   
-    55810688700     Zapkau, Florian B.  Florian B.         Zapkau        2014   
-    55824607400   Pellegrino, Gabriele    Gabriele     Pellegrino        2011   
+                             name first_name  surname  first_year  num_coauthors  \
+    ID
+    55100158000  Sears, Joshua B.  Joshua B.    Sears        2011              7
+    55567912500     Eling, Katrin     Katrin    Eling        2013              9
 
-                 num_coauthors  num_publications  num_citations  \
-    ID                                                            
-    55022752500              6                 5             36   
-    55810688700              8                 6             33   
-    55824607400              5                 7             34   
+                 num_publications  num_citations            subjects  \
+    ID
+    55100158000                 7             50  [BUSI, ECON, SOCI]
+    55567912500                 8             56  [BUSI, COMP, ENGI]
 
-                           subjects affiliation_country affiliation_id  \
-    ID                                                                   
-    55022752500  [BUSI, ECON, COMP]         Netherlands       60032882   
-    55810688700  [BUSI, ECON, MEDI]             Germany       60025310   
-    55824607400  [BUSI, ECON, DECI]         Switzerland       60028186   
+                affiliation_country affiliation_id  \
+    ID
+    55100158000       United States       60123664
+    55567912500         Netherlands       60032882
 
-                                         affiliation_name affiliation_type  \
-    ID                                                                       
-    55022752500         Technische Universiteit Eindhoven             univ   
-    55810688700     Heinrich-Heine-Universität Düsseldorf             univ   
-    55824607400  Ecole Polytechnique Fédérale de Lausanne             univ   
+                                  affiliation_name affiliation_type language  \
+    ID
+    55100158000          Rawls College of Business             coll      eng
+    55567912500  Technische Universiteit Eindhoven             univ      eng
 
-                language  num_cited_refs  
-    ID                                    
-    55022752500      eng               0  
-    55810688700      eng               0  
-    55824607400      eng               5  
-
+                 num_cited_refs
+    ID
+    55100158000               1
+    55567912500               0

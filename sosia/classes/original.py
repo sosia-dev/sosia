@@ -62,10 +62,11 @@ class Original(Scientist):
         self,
         scientist: Union[str, int, list[Union[str, int]]],
         match_year: Union[str, int],
-        first_year_margin: int = 2,
-        pub_margin: Union[float, int] = 0.2,
-        cits_margin: Union[float, int] = 0.2,
-        coauth_margin: Union[float, int] = 0.2,
+        first_year_margin: Optional[int] = None,
+        pub_margin: Optional[Union[float, int]] = None,
+        coauth_margin: Optional[Union[float, int]] = None,
+        cits_margin: Optional[Union[float, int]] = None,
+        same_field: Optional[bool] = False,
         affiliations: Optional[list] = None,
         eids: Optional[list[Union[str, int]]] = None,
         refresh: Union[bool, int] = False,
@@ -84,30 +85,41 @@ class Original(Scientist):
             be matched on trends and characteristics of the original
             scientist up to this year.
 
-        first_year_margin : numeric (optional, default=2)
+        first_year_margin : numeric (optional, default=None)
             The left and right margin for year of first publication to match
-            possible matches and the scientist on.
+            possible matches and the scientist on. If the value is not given,
+            sosia will not filter on the first year of publication.
 
-        pub_margin : numeric (optional, default=0.2)
+        pub_margin : numeric (optional, default=None)
             The left and right margin for the number of publications to match
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientist's number of
             publications and the resulting value is rounded up.  If the value
             is an integer, it is interpreted as fixed number of publications.
+            If the value is not given, sosia will not filter on the number
+            of publications.
 
-        cits_margin : numeric (optional, default=0.2)
-            The left and right margin for the number of citations to match
-            possible matches and the scientist on.  If the value is a float,
-            it is interpreted as percentage of the scientists number of
-            publications and the resulting value is rounded up.  If the value
-            is an integer, it is interpreted as fixed number of citations.
-
-        coauth_margin : numeric (optional, default=0.2)
+        coauth_margin : numeric (optional, default=None)
             The left and right margin for the number of coauthors to match
             possible matches and the scientist on.  If the value is a float,
             it is interpreted as percentage of the scientists number of
             coauthors and the resulting value is rounded up.  If the value
             is an integer, it is interpreted as fixed number of coauthors.
+            If the value is not given, sosia will not filter on the number
+            of coauthors.
+
+        cits_margin : numeric (optional, default=None)
+            The left and right margin for the number of citations to match
+            possible matches and the scientist on.  If the value is a float,
+            it is interpreted as percentage of the scientists number of
+            publications and the resulting value is rounded up.  If the value
+            is an integer, it is interpreted as fixed number of citations.
+            If the value is not given, sosia will not filter on the number
+            of citations.
+
+        same_field : boolean (optional, default=False)
+            Whether to restrict candidates to the same main field (ASJC2)
+            as the original scientist or not.
 
         affiliations : list (optional, default=None)
             A list of Scopus affiliation IDs.  If provided, sosia conditions
@@ -131,12 +143,14 @@ class Original(Scientist):
             the path specified in config.ini.
         """
         # Internal checks
-        if not isinstance(first_year_margin, (int, float)):
+        if first_year_margin is not None and not isinstance(first_year_margin, (int, float)):
             raise TypeError("Argument first_year_margin must be float or integer.")
-        if not isinstance(pub_margin, (int, float)):
+        if pub_margin is not None and not isinstance(pub_margin, (int, float)):
             raise TypeError("Argument pub_margin must be float or integer.")
-        if not isinstance(coauth_margin, (int, float)):
+        if coauth_margin is not None and not isinstance(coauth_margin, (int, float)):
             raise TypeError("Argument coauth_margin must be float or integer.")
+        if cits_margin is not None and not isinstance(cits_margin, (int, float)):
+            raise TypeError("Argument cits_margin must be float or integer.")
 
         # Variables
         if not isinstance(scientist, list):
@@ -145,8 +159,9 @@ class Original(Scientist):
         self.match_year = int(match_year)
         self.first_year_margin = first_year_margin
         self.pub_margin = pub_margin
-        self.cits_margin = cits_margin
         self.coauth_margin = coauth_margin
+        self.cits_margin = cits_margin
+        self.same_field = same_field
         self.eids = eids
         if isinstance(affiliations, (int, str)):
             affiliations = [affiliations]
@@ -251,7 +266,7 @@ class Original(Scientist):
         return self
 
     def find_matches(self, verbose: bool = False, refresh: bool = False) -> None:
-        """Find matches within search_group based on four criteria:
+        """Find matches within search_group based on up to five criteria:
         1. Works in the same field as the scientist's main field
         2. Started publishing in about the same year
         3. Has about the same number of publications in the treatment year

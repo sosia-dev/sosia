@@ -7,11 +7,14 @@ Functioning
 2. Publishes in sources associated with the scientist's main field
 3. Publishes in the latest year the scientist did as well
 4. Is not a co-author in the pre-phase
-5. In the year of comparison, has about the same number of publications
-6. Started publishing around the same year as the scientist
-7. In the year of comparison, has about the same number of co-authors
-8. In the year of comparison, has about the same number of citations (excluding self-ciations)
-9. Optional: is affiliated to a similar institution (from a user-provided list of affiliations)
+5. Optional: The main field (ASJC2) is the same as that of the scientist
+6. Optional: Started publishing around the same year as the scientist
+7. Optional: In the year of comparison, has about the same number of publications
+8. Optional: In the year of comparison, has about the same number of co-authors
+9. Optional: In the year of comparison, has about the same number of citations (excluding self-ciations)
+10. Optional: is affiliated to a similar institution (from a user-provided list of affiliations)
+
+That steps 5 through 10 are optional means that there are no default values, and that you may want to choose to not use a particular filter.  Of course, it would not make sense to not use any of these filters.  Most authors will want to use steps 5 through 9, as this aligns most closely with the literature.
 
 You obtain results after only four steps:
 
