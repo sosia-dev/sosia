@@ -53,6 +53,7 @@ def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame
         custom_print(text, verbose)
         res = stacked_query(**params)
         res = pd.DataFrame(res)
+        res = res.drop_duplicates(subset="eid")
         res["auth_id"] = res['eid'].str.split('-').str[-1].astype("int64")
         res = res[info.columns]
         insert_data(res, conn, table="author_info")

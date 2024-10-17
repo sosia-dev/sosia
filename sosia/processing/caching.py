@@ -65,7 +65,7 @@ def insert_data(
     # Build query
     cols, _ = zip(*DB_TABLES[table]["columns"])
     values = ["?"] * len(cols)
-    q = f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
+    q = f"INSERT OR REPLACE INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
 
     # Eventually tweak data
     if table in ('author_info', 'sources_afids'):
