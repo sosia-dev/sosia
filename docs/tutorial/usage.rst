@@ -55,7 +55,7 @@ Similarity parameters
 
 `sosia` aims to identify researchers who are similar to the Original in the comparison year. `sosia` can define similarity based on six criteria: the same main field (ASJC2), the start of the academic career, the number of co-authors, the number of publications, the total citation count, being affiliated to a specific (set of) affiliations. Another researcher (i.e., Scopus profile) is considered similar if their characteristics fall within a defined margin around those of the Original. However, only researchers that are not co-authors (until the comparison year) and that published in topically similar sources in the year the Original's career began.
 
-By default none of the six criteria is active; i.e., you can switch them on and off like they were modules. We recommend to use the first five criteria with rather low values (e.g., , the margin for the first year of publication equal to 1 year, and the margins for the number of co-authors, publications, and citations equal to something between 10% and 20%). Margins apply in both directions. `sosia` interprets integer values as absolute deviations and float values as percentages for relative deviations.
+By default none of the six criteria is active; i.e., you can switch them on and off like they were modules. We recommend to use the first five criteria with rather low values (e.g., , the margin for the first year of publication equal to 1 year, and the margins for the number of co-authors, publications, and citations equal to something between 10% and 20%). Margins apply in both directions. `sosia` interprets integer values as absolute deviations and float values as percentages for relative deviations. To match on the characteristic precisely, use the value 0.
 
 .. code-block:: python
    
@@ -92,23 +92,29 @@ Using `verbose=True` you receive additional information on this operation:
 Defining the search group
 -------------------------
 
-`sosia` uses these sources to create an initial search group of authors. This group publishes in the same kind of sources associated to the same main field last year the Original was active in (in this case: 2018) as well as around the year of the first publiscation (in this case: between 2010 and 2014). `sosia` also removes authors that published before (in this case: 2010).
+`sosia` uses these sources to create an initial search group of authors. This group publishes in the same kind of sources associated to the same main field. We require candidates to publish twice in these sources: Around the year of first publication, and again afterwards. In the example, a candidate must publish 2011 and 2013, and again between 2014 and 2017. `sosia` also removes authors that published before (in this case: 2010) if matches are conditioned on the first year.
 
 .. code-block:: python
 
     >>> stefano.define_search_group(verbose=True)
     Defining 'search_group' using up to 206 sources...
-    ... parsing Scopus information for 2018...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 97.58it/s]
     ... parsing Scopus information for 2011...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 88.28it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 82.28it/s]
     ... parsing Scopus information for 2012...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 86.75it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 90.40it/s]
     ... parsing Scopus information for 2013...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 95.60it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 86.61it/s]
+    ... parsing Scopus information for 2014...
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 83.77it/s]
+    ... parsing Scopus information for 2015...
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 89.15it/s]
+    ... parsing Scopus information for 2016...
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 82.50it/s]
+    ... parsing Scopus information for 2017...
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 94.29it/s]
     ... parsing Scopus information for 2010...
-    100%|███████████████████████████████████████████████████████████████████████████████| 206/206 [00:01<00:00, 104.46it/s]
-    Found 675 candidates
+    100%|███████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 100.34it/s]
+    Found 2,633 candidates
 
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
@@ -119,10 +125,6 @@ An alternative search process that minimizes the number of queries can be activa
 
     >>> stefano.define_search_group(verbose=True, stacked=True)
     Defining 'search_group' using up to 65 sources...
-    ... parsing Scopus information for 2017...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2010...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
     ... parsing Scopus information for 2011...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     ... parsing Scopus information for 2012...
@@ -131,7 +133,13 @@ An alternative search process that minimizes the number of queries can be activa
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     ... parsing Scopus information for 2014...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2009...
+    ... parsing Scopus information for 2015...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2016...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2017...
+    Progress: |██████████████████████████████████████████████████| 100.00% complete
+    ... parsing Scopus information for 2010...
     Progress: |██████████████████████████████████████████████████| 100.00% complete
     Found 675 candidates
 

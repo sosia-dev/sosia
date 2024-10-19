@@ -8,7 +8,8 @@ import pandas as pd
 
 from sosia.processing.getting import get_author_data, get_author_info, \
     get_authors_from_sourceyear, get_citations
-from sosia.processing.utils import flat_set_from_df, margin_range
+from sosia.processing.utils import flat_set_from_df, generate_filter_message, \
+    margin_range
 from sosia.utils import custom_print
 
 
@@ -32,10 +33,9 @@ def find_matches(original, verbose, refresh):
     text = f"Filtering {len(original.search_group):,} candidates..."
     custom_print(text, verbose)
     conn = original.sql_conn
-    _npapers = margin_range(len(original.publications), original.pub_margin)
 
     # First round of filtering: minimum publications and main field
-    if original.same_field or original.pub_margin:
+    if original.same_field or original.pub_margin is not None:
         info = get_author_info(original.search_group, original.sql_conn,
                                verbose=verbose, refresh=refresh)
         if original.same_field:
@@ -44,56 +44,61 @@ def find_matches(original, verbose, refresh):
             text = (f"... left with {info.shape[0]:,} candidates in main "
                     f"field ({original.main_field[1]})")
             custom_print(text, verbose)
-        if original.pub_margin:
-            enough_pubs = info['documents'].astype(int) >= int(min(_npapers))
+        if original.pub_margin is not None:
+            min_papers = len(original.publications) - original.pub_margin
+            enough_pubs = info['documents'].astype(int) >= min_papers
             info = info[enough_pubs]
             text = (f"... left with {info.shape[0]:,} candidates with "
-                    f"sufficient total publications ({min(_npapers):,})")
+                    f"sufficient total publications ({min_papers:,})")
             custom_print(text, verbose)
         group = sorted(info["auth_id"].unique())
     else:
         group = original.search_group
 
     # Second round of filtering: first year, publication count, coauthor count
-    if original.first_year_margin or original.pub_margin or original.coauth_margin:
+    second_round = (
+        (original.first_year_margin is not None) or
+        (original.pub_margin is not None) or
+        (original.coauth_margin is not None)
+    )
+    if second_round:
         data = get_author_data(group=group, verbose=verbose, conn=conn,
                                refresh=refresh)
-        if original.first_year_margin:
-            _years = (original.first_year - original.first_year_margin,
-                      original.first_year + original.first_year_margin)
-            similar_start = data["first_year"].between(_years[0], _years[1])
-        else:
-            similar_start = data["first_year"].notna()
-        data = data[similar_start].drop(columns="first_year")
         data = data[data["year"] <= original.match_year]
-        data = data.drop_duplicates("auth_id", keep="last")
-        text = (f"... left with {data.shape[0]:,} candidates with similar "
-                f"year of first publication ({_years[0]} to {_years[1]})")
-        custom_print(text, verbose and original.first_year_margin)
-        if original.pub_margin:
+        if original.first_year_margin is not None:
+            _years = margin_range(original.first_year, original.first_year_margin)
+            similar_start = data["first_year"].between(min(_years), max(_years))
+            data = data[similar_start]
+            text = generate_filter_message(data['auth_id'].nunique(), _years,
+                                           "year of first publication")
+            custom_print(text, verbose)
+        data = (data.drop(columns="first_year")
+                    .drop_duplicates("auth_id", keep="last"))
+        if original.pub_margin is not None:
+            _npapers = margin_range(len(original.publications), original.pub_margin)
             similar_pubcount = data["n_pubs"].between(min(_npapers), max(_npapers))
             data = data[similar_pubcount]
-            text = (f"... left with {data.shape[0]:,} candidates with similar "
-                    f"number of publications ({min(_npapers):,} to {max(_npapers):,})")
+            text = generate_filter_message(data.shape[0], _npapers,
+                                           "number of publications")
             custom_print(text, verbose)
-        if original.coauth_margin:
+        if original.coauth_margin is not None:
             _ncoauth = margin_range(len(original.coauthors), original.coauth_margin)
             similar_coauthcount = data["n_coauth"].between(min(_ncoauth), max(_ncoauth))
             data = data[similar_coauthcount]
-            text = (f"... left with {data.shape[0]:,} candidates with similar "
-                    f"number of coauthors ({min(_ncoauth):,} to {max(_ncoauth):,})")
+            text = generate_filter_message(data.shape[0], _ncoauth,
+                                           "number of coauthors")
             custom_print(text, verbose)
         group = sorted(data["auth_id"].unique())
 
     # Third round of filtering: citations
-    if original.cits_margin:
+    if original.cits_margin is not None:
         citations = get_citations(group, original.year,
                                   verbose=verbose, conn=conn)
         _ncits = margin_range(original.citations, original.cits_margin)
         similar_citcount = citations["n_cits"].between(min(_ncits), max(_ncits))
         citations = citations[similar_citcount]
-        text = (f"... left with {citations.shape[0]:,} candidates with similar "
-                f"number of citations ({min(_ncits):,} to {max(_ncits):,})")
+        text = generate_filter_message(citations.shape[0], _ncits,
+                                       "number of citations")
         custom_print(text, verbose)
         group = sorted(citations['auth_id'].unique())
 
@@ -161,10 +166,8 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     today = flat_set_from_df(auth_today, "auids")
 
     # Authors active around year of first publication
-    if original.first_year_margin:
-        min_year = original.first_year - original.first_year_margin
-        max_year = original.first_year + original.first_year_margin
-        then_years = list(range(min_year, max_year+1))
+    if original.first_year_margin is not None:
+        then_years = margin_range(original.first_year, original.first_year_margin)
     else:
         then_years = [original.first_year]
     sources_then = pd.DataFrame(product(search_sources, then_years),
@@ -174,8 +177,8 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     then = flat_set_from_df(auth_then, "auids")
 
     # Remove authors active before
-    if original.first_year_margin:
-        sources_before = pd.DataFrame(product(search_sources, [min_year - 1]),
+    if original.first_year_margin is not None:
+        sources_before = pd.DataFrame(product(search_sources, [min(then_years) - 1]),
                                       columns=["source_id", "year"])
         auth_before = get_authors_from_sourceyear(sources_before, original.sql_conn,
                                                   refresh=refresh, stacked=stacked,

@@ -31,9 +31,21 @@ def flat_set_from_df(df, col):
     return set([item for sublist in lists for item in sublist])
 
 
-def robust_join(s, sep=','):
-    """Join an iterable converting each element to str first."""
-    return sep.join([str(e) for e in s])
+def generate_filter_message(number: int, condition: range, label: str):
+    """Generate filter progress message."""
+    if number == 1:
+        plural = ""
+    else:
+        plural = "s"
+    if len(condition) == 1:
+        qualifier = "same"
+        suffix = condition[0]
+    else:
+        qualifier = "similar"
+        suffix = f"{min(condition)} to {max(condition)}"
+    text = (f"... left with {number:,} candidate{plural} with "
+            f"{qualifier} {label} ({suffix})")
+    return text
 
 
 def margin_range(base, val):
@@ -60,3 +72,8 @@ def margin_range(base, val):
     else:
         raise TypeError("Value must be either float or int.")
     return r
+
+
+def robust_join(s, sep=','):
+    """Join an iterable converting each element to str first."""
+    return sep.join([str(e) for e in s])
