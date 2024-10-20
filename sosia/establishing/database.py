@@ -2,21 +2,28 @@
 
 import sqlite3
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from numpy import int32, int64
 
 
-def connect_database(fname: Union[str, Path]) -> sqlite3.Connection:
+def connect_database(fname: Path, **kwds) -> sqlite3.Connection:
     """Connect to local SQLite3 database to be used as cache.
 
     Parameters
     ----------
-    fname : str
+    fname : pathlib.Path
         The path of the SQLite3 database to connect to.
+
+    kwds : keyword arguments
+        Additional arguments to pass to the make_database function.
     """
     for val in (int32, int64):
         sqlite3.register_adapter(val, int)
+
+    if not fname.exists():
+        make_database(fname, **kwds)
+
     return sqlite3.connect(fname)
 
 

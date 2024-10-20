@@ -71,6 +71,7 @@ class Original(Scientist):
         eids: Optional[list[Union[str, int]]] = None,
         refresh: Union[bool, int] = False,
         db_path: Optional[Union[str, Path]] = None,
+        **kwds
     ) -> None:
         """Representation of a scientist for whom to find a control scientist.
 
@@ -138,9 +139,13 @@ class Original(Scientist):
             is passed, results will be refreshed if they are older than
             that value in number of days.
 
-        db_path : str (optional, default=None)
-            The path of the SQLite database to connect to.  If None, will use
-            the path specified in config.ini.
+        db_path : str or pathlib.Path (optional, default=None)
+            The path of the SQLite database to connect to.  If None,
+            will default to `~/.cache/sosia/main.sqlite`.  Will be created
+            if the database doesn't exist.
+
+        kwds : keyword arguments
+            Additional arguments to pass to the make_database function.
         """
         # Internal checks
         if first_year_margin is not None and not isinstance(first_year_margin, (int, float)):
@@ -176,7 +181,7 @@ class Original(Scientist):
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, match_year, refresh=refresh,
-                           db_path=self.sql_fname)
+                           db_path=self.sql_fname, **kwds)
 
     def define_search_group(
         self,

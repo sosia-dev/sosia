@@ -214,6 +214,7 @@ class Scientist(object):
         refresh: Union[bool, int] = False,
         eids: Optional[list[str]] = None,
         db_path: Optional[Union[str, Path]] = None,
+        **kwds
     ) -> None:
         """Class to represent a scientist.
 
@@ -236,9 +237,13 @@ class Scientist(object):
             publications, instead of the list of publications obtained from
             the Scopus Author ID(s).
 
-        db_path : str (optional or pathlib.Path(), default=None)
+        db_path : str or pathlib.Path (optional, default=None)
             The path of the local SQLite database to connect to.  If None,
-            will default to `~/.cache/sosia/main.sqlite`.
+            will default to `~/.cache/sosia/main.sqlite`.  Will be created
+            if the database doesn't exist.
+
+        kwds : keyword arguments
+            Additional arguments to pass to the make_database function.
 
         Raises
         ------
@@ -248,9 +253,12 @@ class Scientist(object):
         """
         self.identifier = identifier
         self.year = int(year)
+
+        # Local database (cache)
         if not db_path:
             db_path = DEFAULT_DATABASE
-        self.sql_conn = connect_database(db_path)
+        db_path = Path(db_path)
+        self.sql_conn = connect_database(db_path, **kwds)
 
         # Read mapping of fields to sources
         fields, info = read_fields_sources_list()
