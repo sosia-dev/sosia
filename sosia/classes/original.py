@@ -6,8 +6,8 @@ from typing import Iterable, Literal, Optional, Union
 from typing_extensions import Self
 
 from sosia.classes import Scientist
-from sosia.processing import find_matches, inform_matches, \
-    maybe_add_source_names, search_group_from_sources
+from sosia.processing import add_source_names, find_matches, inform_matches, \
+    search_group_from_sources
 from sosia.utils import accepts, custom_print
 
 
@@ -56,7 +56,7 @@ class Original(Scientist):
     @search_sources.setter
     @accepts((set, list, tuple))
     def search_sources(self, val: Union[set, list, tuple]) -> None:
-        self._search_sources = maybe_add_source_names(val, self.source_names)
+        self._search_sources = add_source_names(val, self.source_names)
 
     def __init__(
         self,

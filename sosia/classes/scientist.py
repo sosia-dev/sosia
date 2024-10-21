@@ -12,7 +12,7 @@ from pybliometrics.scopus.exception import Scopus404Error
 from sosia.establishing import connect_database, DEFAULT_DATABASE
 from sosia.processing import add_source_names, base_query, count_citations, \
     extract_authors, find_main_affiliation, get_author_info, get_main_field, \
-    maybe_add_source_names, read_fields_sources_list
+    read_fields_sources_list
 from sosia.utils import accepts
 
 
@@ -185,7 +185,7 @@ class Scientist(object):
     @sources.setter
     @accepts((list, tuple))
     def sources(self, val: Union[list, tuple]) -> None:
-        self._sources = maybe_add_source_names(val, self.source_names)
+        self._sources = add_source_names(val, self.source_names)
 
     @property
     def surname(self) -> Optional[str]:
@@ -295,7 +295,7 @@ class Scientist(object):
         # Author search information
         source_ids = set([int(p.source_id) for p in self._publications
                           if p.source_id])
-        self._sources = add_source_names(source_ids, self.source_names)
+        self._sources = add_source_names(sorted(source_ids), self.source_names)
         self._active_year = int(max(pub_years))
         mask = fields["source_id"].isin(source_ids)
         self._fields = fields[mask]["asjc"].astype(int).tolist()

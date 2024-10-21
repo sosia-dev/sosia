@@ -3,7 +3,6 @@
 from pandas import DataFrame
 
 from sosia.classes import Scientist
-from sosia.establishing import make_database
 from sosia.processing.initializing import add_source_names, \
     read_fields_sources_list
 
