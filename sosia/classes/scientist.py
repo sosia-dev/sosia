@@ -214,7 +214,7 @@ class Scientist(object):
         refresh: Union[bool, int] = False,
         eids: Optional[list[str]] = None,
         db_path: Optional[Union[str, Path]] = None,
-        **kwds
+        verbose: Optional[bool] = False
     ) -> None:
         """Class to represent a scientist.
 
@@ -242,8 +242,8 @@ class Scientist(object):
             will default to `~/.cache/sosia/main.sqlite`.  Will be created
             if the database doesn't exist.
 
-        kwds : keyword arguments
-            Additional arguments to pass to the make_database function.
+        verbose : bool (optional, default=False)
+            Whether to report on the initialization process.
 
         Raises
         ------
@@ -258,10 +258,10 @@ class Scientist(object):
         if not db_path:
             db_path = DEFAULT_DATABASE
         db_path = Path(db_path)
-        self.sql_conn = connect_database(db_path, **kwds)
+        self.sql_conn = connect_database(db_path, verbose=verbose)
 
         # Read mapping of fields to sources
-        fields, info = read_fields_sources_list()
+        fields, info = read_fields_sources_list(verbose=verbose)
         self.field_source = fields
         self.source_info = info
         source_names = self.source_info.set_index("source_id")["title"].to_dict()

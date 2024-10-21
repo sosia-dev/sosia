@@ -6,8 +6,10 @@ from typing import Optional
 
 from numpy import int32, int64
 
+from sosia.utils import custom_print
 
-def connect_database(fname: Path, **kwds) -> sqlite3.Connection:
+
+def connect_database(fname: Path, verbose) -> sqlite3.Connection:
     """Connect to local SQLite3 database to be used as cache.
 
     Parameters
@@ -15,14 +17,16 @@ def connect_database(fname: Path, **kwds) -> sqlite3.Connection:
     fname : pathlib.Path
         The path of the SQLite3 database to connect to.
 
-    kwds : keyword arguments
-        Additional arguments to pass to the make_database function.
+    verbose : bool (optional, default=False)
+        Whether to report on the status of the database.
     """
     for val in (int32, int64):
         sqlite3.register_adapter(val, int)
 
     if not fname.exists():
-        make_database(fname, **kwds)
+        make_database(fname, verbose=verbose)
+    text = f"Connection to local database '{fname}' established"
+    custom_print(text, verbose)
 
     return sqlite3.connect(fname)
 
@@ -77,5 +81,4 @@ def make_database(
             msg = f"Local database '{fname}' created successfully"
     else:
         msg = f"Failed to create the local database '{fname}'"
-    if verbose:
-        print(msg)
+    custom_print(msg, verbose)

@@ -48,8 +48,6 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
 
     >>> import sosia
     >>> 
-    >>> sosia.get_field_source_information()  # Necessary only once
-    >>> 
     >>> # You need the Scopus ID and the year, set the similarity parameters
     >>> stefano = sosia.Original(55208373700, 2019, same_year=True, first_year_margin=2,
     >>>                          pub_margin=0.2, cits_margin=0.2, coauth_margin=0.2)

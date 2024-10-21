@@ -6,6 +6,7 @@ from pandas import read_csv
 
 from sosia.establishing.constants import FIELD_SOURCE_MAP, SOURCE_INFO
 from sosia.establishing.fields_sources import get_field_source_information
+from sosia.utils import custom_print
 
 
 def add_source_names(
@@ -21,15 +22,18 @@ def add_source_names(
         return [(s_id, names.get(int(s_id))) for s_id in sorted(set(source_ids))]
 
 
-def read_fields_sources_list():
+def read_fields_sources_list(verbose: bool = False):
     """Auxiliary function to read FIELD_SOURCE_MAP and create it before,
     if necessary.
     """
     try:
         field = read_csv(FIELD_SOURCE_MAP)
         info = read_csv(SOURCE_INFO)
+        text = f"Using information for {info.shape[0]:,} sources as well as "\
+               f"{field.shape[0]:,} field-source assignments from '{SOURCE_INFO.parent}'"
+        custom_print(text, verbose)
     except FileNotFoundError:
-        get_field_source_information()
+        get_field_source_information(verbose=verbose)
         field = read_csv(FIELD_SOURCE_MAP)
         info = read_csv(SOURCE_INFO)
     return field, info

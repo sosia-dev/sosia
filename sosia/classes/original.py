@@ -71,7 +71,7 @@ class Original(Scientist):
         eids: Optional[list[Union[str, int]]] = None,
         refresh: Union[bool, int] = False,
         db_path: Optional[Union[str, Path]] = None,
-        **kwds
+        verbose: Optional[bool] = False
     ) -> None:
         """Representation of a scientist for whom to find a control scientist.
 
@@ -144,8 +144,8 @@ class Original(Scientist):
             will default to `~/.cache/sosia/main.sqlite`.  Will be created
             if the database doesn't exist.
 
-        kwds : keyword arguments
-            Additional arguments to pass to the make_database function.
+        verbose : bool (optional, default=False)
+            Whether to report on the initialization process.
         """
         # Internal checks
         if first_year_margin is not None and not isinstance(first_year_margin, (int, float)):
@@ -181,7 +181,7 @@ class Original(Scientist):
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, match_year, refresh=refresh,
-                           db_path=self.sql_fname, **kwds)
+                           db_path=self.sql_fname, verbose=verbose)
 
     def define_search_group(
         self,
