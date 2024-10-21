@@ -54,6 +54,8 @@ def find_matches(original, verbose, refresh):
         group = sorted(info["auth_id"].unique())
     else:
         group = original.search_group
+    if not group:
+        return group
 
     # Second round of filtering: first year, publication count, coauthor count
     second_round = (
@@ -74,6 +76,8 @@ def find_matches(original, verbose, refresh):
             custom_print(text, verbose)
         data = (data.drop(columns="first_year")
                     .drop_duplicates("auth_id", keep="last"))
+        if data.empty:
+            return set()
         if original.pub_margin is not None:
             _npapers = margin_range(len(original.publications), original.pub_margin)
             similar_pubcount = data["n_pubs"].between(min(_npapers), max(_npapers))
@@ -81,6 +85,8 @@ def find_matches(original, verbose, refresh):
             text = generate_filter_message(data.shape[0], _npapers,
                                            "number of publications")
             custom_print(text, verbose)
+        if data.empty:
+            return set()
         if original.coauth_margin is not None:
             _ncoauth = margin_range(len(original.coauthors), original.coauth_margin)
             similar_coauthcount = data["n_coauth"].between(min(_ncoauth), max(_ncoauth))
@@ -89,6 +95,8 @@ def find_matches(original, verbose, refresh):
                                            "number of coauthors")
             custom_print(text, verbose)
         group = sorted(data["auth_id"].unique())
+    if not group:
+        return group
 
     # Third round of filtering: citations
     if original.cits_margin is not None:
@@ -101,6 +109,8 @@ def find_matches(original, verbose, refresh):
                                        "number of citations")
         custom_print(text, verbose)
         group = sorted(citations['auth_id'].unique())
+    if not group:
+        return group
 
     # Fourth round of filtering: affiliations
     if original.search_affiliations:
