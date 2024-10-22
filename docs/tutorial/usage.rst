@@ -53,14 +53,14 @@ You can override each property manually, for instance when you are certain that 
 Similarity parameters
 ---------------------
 
-`sosia` aims to identify researchers who are similar to the Original in the comparison year. `sosia` can define similarity based on six criteria: the same main field (ASJC2), the start of the academic career, the number of co-authors, the number of publications, the total citation count, being affiliated to a specific (set of) affiliations. Another researcher (i.e., Scopus profile) is considered similar if their characteristics fall within a defined margin around those of the Original. However, only researchers that are not co-authors (until the comparison year) and that published in topically similar sources in the year the Original's career began.
+`sosia` aims to identify researchers who are similar to the Original in the comparison year. `sosia` can define similarity based on six criteria: the same main field (ASJC2), the start of the academic career, the number of co-authors, the number of publications, the total citation count, being affiliated to a specific (set of) affiliations. Another researcher (i.e., Scopus profile) is considered similar if their characteristics fall within a defined margin around those of the Original. However, keep in mind that `sosia` discards coauthors of the Original.
 
 By default none of the six criteria is active; i.e., you can switch them on and off like they were modules. We recommend to use the first five criteria with rather low values (e.g., , the margin for the first year of publication equal to 1 year, and the margins for the number of co-authors, publications, and citations equal to something between 10% and 20%). Margins apply in both directions. `sosia` interprets integer values as absolute deviations and float values as percentages for relative deviations. To match on the characteristic precisely, use the value 0.
 
 .. code-block:: python
    
     >>> stefano = Original(55208373700, 2018, db_path=DB_NAME,
-    >>>                    same_year=True, first_year_margin=1,
+    >>>                    same_field=True, first_year_margin=1,
     >>>                    coauth_margin=0.2, pub_margin=0.2,
     >>>                    cits_margin=0.15)
 
