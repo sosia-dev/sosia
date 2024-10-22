@@ -119,29 +119,7 @@ Defining the search group
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
 
-An alternative search process that minimizes the number of queries can be activated by setting stacked=True. The downside of this method is that the resulting queries cannot be reused for other searches involving different scientists.
-
-.. code-block:: python
-
-    >>> stefano.define_search_group(verbose=True, stacked=True)
-    Defining 'search_group' using up to 65 sources...
-    ... parsing Scopus information for 2011...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2012...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2013...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2014...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2015...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2016...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2017...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    ... parsing Scopus information for 2010...
-    Progress: |██████████████████████████████████████████████████| 100.00% complete
-    Found 675 candidates
+An alternative search process that minimizes the number of queries can be activated by setting stacked=True. The downside of this method is that the resulting queries cannot be reused for anything else (for instance, you may maintain a separate Scopus database fuelled by `pybliometrics`). Use `stacked=True` to invoke this option.
 
 
 Finding matches
