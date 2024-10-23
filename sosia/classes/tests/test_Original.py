@@ -13,15 +13,25 @@ fields = "ID name first_year num_coauthors num_publications num_citations "\
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(
-        ID=55212317400,
-        name='Lopes-Bento, Cindy',
-        first_year=2013,
-        num_coauthors=5,
+        ID=55100158000,
+        name='Sears, Joshua B.',
+        first_year=2011,
+        num_coauthors=7,
         num_publications=7,
-        num_citations=77,
-        affiliation_country='Belgium',
+        num_citations=50,
+        affiliation_country='United States',
         language='eng',
-        num_cited_refs=3)
+        num_cited_refs=1),
+    Match(
+        ID=55567912500,
+        name='Eling, Katrin',
+        first_year=2013,
+        num_coauthors=9,
+        num_publications=8,
+        num_citations=56,
+        affiliation_country='Netherlands',
+        language='eng',
+        num_cited_refs=0)
 ]
 
 
@@ -29,7 +39,7 @@ def test_search_sources(original1, original2):
     for o in [original1, original2]:
         o.define_search_sources()
         search_sources = o.search_sources
-        assert len(search_sources) == 63
+        assert len(search_sources) == 206
         assert (20206, "Academy of Management Review") in search_sources
         assert (15143, "Regional Studies") in search_sources
 
@@ -47,21 +57,21 @@ def test_search_group(original1, refresh_interval):
     original1.define_search_group(refresh=refresh_interval)
     recieved = original1.search_group
     assert isinstance(recieved, list)
-    assert 500 <= len(recieved) <= 680
+    assert 600 <= len(recieved) <= 700
 
 
 def test_search_group_stacked(original1, refresh_interval):
     original1.define_search_group(stacked=True, refresh=refresh_interval)
     recieved = original1.search_group
     assert isinstance(recieved, list)
-    assert 500 <= len(recieved) <= 680
+    assert 600 <= len(recieved) <= 700
 
 
 def test_search_group_affiliations_stacked(original2, refresh_interval):
     original2.define_search_group(stacked=True, refresh=refresh_interval)
     recieved = original2.search_group
     assert isinstance(recieved, list)
-    assert 15 <= len(recieved) <= 25
+    assert 10 <= len(recieved) <= 20
 
 
 def test_find_matches(original1, refresh_interval):

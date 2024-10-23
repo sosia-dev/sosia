@@ -15,7 +15,7 @@ from sosia.processing.caching import insert_data
 
 def test_retrieve_from_author_table(test_cache):
     make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
+    conn = connect_database(test_cache, verbose=False)
     # Variables
     expected_auth = [53164702100, 57197093438]
     df = pd.DataFrame(expected_auth, columns=["auth_id"], dtype="int64")
@@ -29,7 +29,7 @@ def test_retrieve_from_author_table(test_cache):
 
 def test_retrieve_from_author_table_insert(test_cache, refresh_interval):
     make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
+    conn = connect_database(test_cache, verbose=False)
     # Variables
     expected_auth = [53164702100, 57197093438]
     search_auth = [55317901900]
@@ -53,7 +53,7 @@ def test_retrieve_from_author_table_insert(test_cache, refresh_interval):
 
 def test_retrieve_authors_from_sourceyear(test_cache, refresh_interval):
     make_database(test_cache, drop=True)
-    conn = connect_database(test_cache)
+    conn = connect_database(test_cache, verbose=False)
     # Variables
     expected_sources = [22900]
     expected_years = [2005, 2010]
