@@ -45,7 +45,7 @@ def find_matches(original, verbose, refresh):
                     f"field ({original.main_field[1]})")
             custom_print(text, verbose)
         if original.pub_margin is not None:
-            min_papers = len(original.publications) - original.pub_margin
+            min_papers = margin_range(len(original.publications), original.pub_margin)[0]
             enough_pubs = info['documents'].astype(int) >= min_papers
             info = info[enough_pubs]
             text = (f"... left with {info.shape[0]:,} candidates with "

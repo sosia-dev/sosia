@@ -134,11 +134,11 @@ The final step is to filter the candidates from the search group. Depending on t
     Downloading information for 391 candidates...
     100%|████████████████████████████████████████████████████████████████████████████████████| 5/5 [04:24<00:00, 52.93s/it]
     ... left with 406 candidates in main field (BUSI)
-    ... left with 399 candidates with sufficient total publications (7.8)
-    Querying Scopus for information for 399 authors...
-    100%|████████████████████████████████████████████████████████████████████████████████| 399/399 [00:15<00:00, 32.28it/s]
-    ... left with 56 candidates with similar year of first publication (2011 to 2013)
-    ... left with 21 candidates with similar number of publications (6 to 10)
+    ... left with 403 candidates with sufficient total publications (6)
+    Querying Scopus for information for 403 authors...
+    100%|████████████████████████████████████████████████████████████████████████████████| 403/403 [00:15<00:00, 32.28it/s]
+    ... left with 57 candidates with similar year of first publication (2011 to 2013)
+    ... left with 22 candidates with similar number of publications (6 to 10)
     ... left with 8 candidates with similar number of coauthors (6 to 10)
     Counting citations of 8 candidates...
     100%|██████████████████████████████████████████████████████████████████████████████████| 11/11 [00:08<00:00,  1.27it/s]
