@@ -41,18 +41,18 @@ Functioning
 ===========
 
 sosia performs a series of queries in the Scopus database using the `pybliometrics package 
-<http://pybliometrics.readthedocs.io/>`_.  After configuring your local pybliometrics (providing access credentials and eventually setting cache directories), you can use sosia:
+<http://pybliometrics.readthedocs.io/>`_.  After configuring your local pybliometrics (providing access credentials and eventually setting cache directories), you are ready to use sosia:
 
 .. inclusion-marker-start
 .. code-block:: python
 
     >>> import sosia
     >>> 
-    >>> # You need the Scopus ID and the year, set the similarity parameters
+    >>> # You need the Scopus ID and the year, then set the similarity parameters
     >>> stefano = sosia.Original(55208373700, 2019, same_field=True, first_year_margin=2,
     >>>                          pub_margin=0.2, cits_margin=0.2, coauth_margin=0.2)
     >>> stefano.define_search_sources()  # Sources similiar to scientist
-    >>> stefano.define_search_group()  # Authors publishing in similar sources
+    >>> stefano.define_search_group(chunk_size=2)  # Authors publishing in similar sources every 2 years
     >>> stefano.find_matches()  # Find matches satisfying all criteria
     >>> print(stefano.matches)
     >>> [55320703900, 55817553500, 56113324000, 56276429200]

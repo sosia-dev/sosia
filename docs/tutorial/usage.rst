@@ -99,22 +99,22 @@ Defining the search group
     >>> stefano.define_search_group(verbose=True, chunk_size=2)
     Defining 'search_group' using up to 206 sources...
     ... parsing Scopus information for 2010...
-    100%|███████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 100.34it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:27<00:00,  1.01s/it]
     ... parsing Scopus information for 2011...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 82.28it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [05:10<00:00,  1.51s/it]
     ... parsing Scopus information for 2012...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 90.40it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [04:38<00:00,  1.35s/it]
     ... parsing Scopus information for 2013...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 86.61it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [04:23<00:00,  1.28s/it]
     ... parsing Scopus information for 2014...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 83.77it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [04:01<00:00,  1.17s/it]
     ... parsing Scopus information for 2015...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 89.15it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:26<00:00,  1.00s/it]
     ... parsing Scopus information for 2016...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 82.50it/s]
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:57<00:00,  1.15s/it]
     ... parsing Scopus information for 2017...
-    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 94.29it/s]
-    Found 564 candidates
+    100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:32<00:00,  1.03s/it]
+    Found 566 candidates
 
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
@@ -130,18 +130,16 @@ The final step is to filter the candidates from the search group. Depending on t
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Filtering 564 candidates...
-    Downloading information for 391 candidates...
-    100%|████████████████████████████████████████████████████████████████████████████████████| 5/5 [04:24<00:00, 52.93s/it]
-    ... left with 406 candidates in main field (BUSI)
-    ... left with 403 candidates with sufficient total publications (6)
-    Querying Scopus for information for 403 authors...
-    100%|████████████████████████████████████████████████████████████████████████████████| 403/403 [00:15<00:00, 32.28it/s]
+    Filtering 566 candidates...
+    Downloading information for 566 candidates...
+    100%|████████████████████████████████████████████████████████████████████████████████████| 7/7 [01:07<00:00,  9.58s/it]
+    ... left with 407 candidates in main field (BUSI)
+    ... left with 404 candidates with sufficient total publications (6)
+    Querying Scopus for information for 404 authors...
+    100%|████████████████████████████████████████████████████████████████████████████████| 404/404 [25:55<00:00,  3.85s/it]
     ... left with 57 candidates with similar year of first publication (2011 to 2013)
     ... left with 22 candidates with similar number of publications (6 to 10)
     ... left with 8 candidates with similar number of coauthors (6 to 10)
-    Counting citations of 8 candidates...
-    100%|██████████████████████████████████████████████████████████████████████████████████| 11/11 [00:08<00:00,  1.27it/s]
     ... left with 2 candidates with similar number of citations (42 to 58)
     Found 2 matches
     
@@ -162,8 +160,8 @@ You may need additional information to both assess match quality and select matc
 
     >>> stefano.inform_matches(verbose=True)
     Providing information for 2 matches...
-    100%|████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:13<00:00,  4.47s/it]
-    Match 37080157400: 2 reference list out of 7 documents missing
+    100%|████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:20<00:00, 10.21s/it]
+    Match 37080157400: 2 reference list out of 6 documents missing
     Match 55567912500: No reference list of 8 documents missing
     Original 55208373700: 1 reference list out of 8 documents missing
 

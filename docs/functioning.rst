@@ -4,7 +4,7 @@ Functioning
 `sosia` (Italian for `doppelgänger <https://en.wikipedia.org/wiki/Doppelg%C3%A4nger>`_) is intended to create control groups for Diff-in-Diff analysis of scientists:  Some treatment happens to a scientist, and you need "similar" scientists to whom nothing happened.  Similiar means:
 
 1. Publishes in sources (journals, book series, etc.) the scientist publishes too
-2. Publishes in sources associated with the scientist's main field
+2. Publishes in sources associated with the scientist's main field at least every X years
 3. Publishes in the latest year the scientist did as well
 4. Is not a co-author in the pre-phase
 5. Optional: The main field (ASJC2) is the same as that of the scientist
@@ -23,4 +23,6 @@ You obtain results after only four steps:
 3. Define a first search group
 4. Filter the search group to obtain a matching group
 
-Depending on the number of search sources and the first search group, one query may take up to 6 hours.  Each query on the Scopus database will make use of your API Key, which allows 5000 requests per week. `sosia` and `pybliometrics` makes sure that all information are cached, so that subsequent queries will take less than a minute.  The main classes and all methods have a boolean `refresh` parameter, which steers whether to refresh the cached queries (default is `False`).
+Depending on the number of search sources and the first search group, one search may easily take several hours. The :doc:`tutorial` takes nearly an hour. Users should start with small margins and a small chunk size and gradually increase the most binding margins.
+
+Each query on the Scopus database will make use of your API Key, which allows several thousant requests per week per API. `sosia` and `pybliometrics` make sure that all information are cached, so that subsequent queries will take less than a minute.  As cached data will deprecate, the main classes and all methods have `refresh` parameters, which steer whether and when to refresh the cached queries (default is `False`, maybe be an integer as well).
