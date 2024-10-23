@@ -13,13 +13,13 @@ fields = "ID name first_year num_coauthors num_publications num_citations "\
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(
-        ID=55100158000,
-        name='Sears, Joshua B.',
+        ID=37080157400,
+        name='Buchanan, Sean',
         first_year=2011,
-        num_coauthors=7,
-        num_publications=7,
-        num_citations=50,
-        affiliation_country='United States',
+        num_coauthors=5,
+        num_publications=6,
+        num_citations=45,
+        affiliation_country='Canada',
         language='eng',
         num_cited_refs=1),
     Match(
@@ -54,24 +54,26 @@ def test_search_sources_change(original1):
 
 
 def test_search_group(original1, refresh_interval):
-    original1.define_search_group(refresh=refresh_interval)
+    original1.define_search_group(chunk_size=2, refresh=refresh_interval)
     recieved = original1.search_group
     assert isinstance(recieved, list)
-    assert 600 <= len(recieved) <= 700
+    assert 500 <= len(recieved) <= 600
 
 
 def test_search_group_stacked(original1, refresh_interval):
-    original1.define_search_group(stacked=True, refresh=refresh_interval)
+    original1.define_search_group(chunk_size=2, stacked=True,
+                                  refresh=refresh_interval)
     recieved = original1.search_group
     assert isinstance(recieved, list)
-    assert 600 <= len(recieved) <= 700
+    assert 500 <= len(recieved) <= 600
 
 
 def test_search_group_affiliations_stacked(original2, refresh_interval):
-    original2.define_search_group(stacked=True, refresh=refresh_interval)
+    original2.define_search_group(chunk_size=2, stacked=True,
+                                  refresh=refresh_interval)
     recieved = original2.search_group
     assert isinstance(recieved, list)
-    assert 10 <= len(recieved) <= 20
+    assert 2 <= len(recieved) <= 10
 
 
 def test_find_matches(original1, refresh_interval):

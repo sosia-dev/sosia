@@ -92,12 +92,14 @@ Using `verbose=True` you receive additional information on this operation:
 Defining the search group
 -------------------------
 
-`sosia` uses these sources to create an initial search group of authors. This group publishes in the same kind of sources associated to the same main field. We require candidates to publish twice in these sources: Around the year of first publication, and again afterwards. In the example, a candidate must publish 2011 and 2013, and again between 2014 and 2017. `sosia` also removes authors that published before (in this case: 2010) if matches are conditioned on the first year.
+`sosia` uses these sources to create an initial search group of authors. `sosia` takes all the years between the Original's first year and the comparison year (including these two) and splits them into chunks. The number of years of each chunk is determined by the user, and it must not be smaller than the first year margin. The first chunk may be larger as the left margin of the first year is included. The last chunk will be merged into the next-to-last margin if it is smaller than half the target size. Suitable candidates then have to publish in all these chunks. Technically, the search group is hence the intersection of authors publishing in these chunks. In the example, `sosia` will look at all publications in the search sources between 2011 (the first year 2012 minus the first_year_margin) and 2017 (the year before the comparison year). With a chunk_size equal to 2, the following chunks emerge: {2011, 2012, 2013}, {2014, 2015}, {2016, 2017}. `sosia` also removes authors that published before (in this case: 2010) if matches are conditioned on the first year, in this case in 2010.
 
 .. code-block:: python
 
-    >>> stefano.define_search_group(verbose=True)
+    >>> stefano.define_search_group(verbose=True, chunk_size=2)
     Defining 'search_group' using up to 206 sources...
+    ... parsing Scopus information for 2010...
+    100%|███████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 100.34it/s]
     ... parsing Scopus information for 2011...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 82.28it/s]
     ... parsing Scopus information for 2012...
@@ -112,9 +114,7 @@ Defining the search group
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 82.50it/s]
     ... parsing Scopus information for 2017...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 94.29it/s]
-    ... parsing Scopus information for 2010...
-    100%|███████████████████████████████████████████████████████████████████████████████| 206/206 [00:02<00:00, 100.34it/s]
-    Found 2,633 candidates
+    Found 564 candidates
 
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
@@ -130,17 +130,17 @@ The final step is to filter the candidates from the search group. Depending on t
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Filtering 675 candidates...
+    Filtering 564 candidates...
     Downloading information for 391 candidates...
     100%|████████████████████████████████████████████████████████████████████████████████████| 5/5 [04:24<00:00, 52.93s/it]
-    ... left with 501 candidates in main field (BUSI)
-    ... left with 489 candidates with sufficient total publications (6)
-    Querying Scopus for information for 489 authors...
-    100%|████████████████████████████████████████████████████████████████████████████████| 489/489 [00:15<00:00, 32.28it/s]
-    ... left with 86 candidates with similar year of first publication (2011 to 2013)
-    ... left with 33 candidates with similar number of publications (6 to 10)
-    ... left with 11 candidates with similar number of coauthors (6 to 10)
-    Counting citations of 11 candidates...
+    ... left with 406 candidates in main field (BUSI)
+    ... left with 399 candidates with sufficient total publications (7.8)
+    Querying Scopus for information for 399 authors...
+    100%|████████████████████████████████████████████████████████████████████████████████| 399/399 [00:15<00:00, 32.28it/s]
+    ... left with 56 candidates with similar year of first publication (2011 to 2013)
+    ... left with 21 candidates with similar number of publications (6 to 10)
+    ... left with 8 candidates with similar number of coauthors (6 to 10)
+    Counting citations of 8 candidates...
     100%|██████████████████████████████████████████████████████████████████████████████████| 11/11 [00:08<00:00,  1.27it/s]
     ... left with 2 candidates with similar number of citations (42 to 58)
     Found 2 matches
@@ -150,7 +150,7 @@ The matches are a list available through the .matches property.
 .. code-block:: python
 
     >>> print(stefano.matches)
-    [55100158000, 55567912500]
+    [37080157400, 55567912500]
 
 
 Adding information to matches
@@ -163,7 +163,7 @@ You may need additional information to both assess match quality and select matc
     >>> stefano.inform_matches(verbose=True)
     Providing information for 2 matches...
     100%|████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:13<00:00,  4.47s/it]
-    Match 55100158000: 1 reference list out of 7 documents missing
+    Match 37080157400: 2 reference list out of 7 documents missing
     Match 55567912500: No reference list of 8 documents missing
     Original 55208373700: 1 reference list out of 8 documents missing
 
@@ -186,11 +186,11 @@ Alternatively, you can provide a list of the desired keywords to obtain informat
 .. code-block:: python
 
     >>> print(stefano.matches[0])
-    Match(ID=55100158000, name='Sears, Joshua B.', first_name='Joshua B.',
-          surname='Sears', first_year=2011, num_coauthors=7, num_publications=7,
-          num_citations=50, subjects=['BUSI', 'ECON', 'SOCI'], affiliation_country='United States',
-          affiliation_id='60123664', affiliation_name='Rawls College of Business',
-          affiliation_type='coll', language='eng', num_cited_refs=1)
+    Match(ID=37080157400, name='Buchanan, Sean', first_name='Sean', surname='Buchanan',
+          first_year=2011, num_coauthors=5, num_publications=6, num_citations=45,
+          subjects=['BUSI', 'ECON', 'SOCI'], affiliation_country='Canada',
+          affiliation_id='60009697', affiliation_name='University of Manitoba',
+          affiliation_type='univ', language='eng', num_cited_refs=1)
 
 It is easy to work with namedtuples.  For example, using `pandas <https://pandas.pydata.org/>`_ you easily turn the list into a pandas DataFrame:
 
@@ -201,27 +201,27 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     >>> df = pd.DataFrame(stefano.matches)
     >>> df = df.set_index('ID')
     >>> print(df)
-                             name first_name  surname  first_year  num_coauthors  \
+                           name first_name   surname  first_year  num_coauthors  \
     ID
-    55100158000  Sears, Joshua B.  Joshua B.    Sears        2011              7
-    55567912500     Eling, Katrin     Katrin    Eling        2013              9
+    37080157400  Buchanan, Sean       Sean  Buchanan        2011              5
+    55567912500   Eling, Katrin     Katrin     Eling        2013              9
 
                  num_publications  num_citations            subjects  \
     ID
-    55100158000                 7             50  [BUSI, ECON, SOCI]
+    37080157400                 6             45  [BUSI, ECON, SOCI]
     55567912500                 8             56  [BUSI, COMP, ENGI]
 
                 affiliation_country affiliation_id  \
     ID
-    55100158000       United States       60123664
+    37080157400              Canada       60009697
     55567912500         Netherlands       60032882
 
                                   affiliation_name affiliation_type language  \
     ID
-    55100158000          Rawls College of Business             coll      eng
+    37080157400             University of Manitoba             univ      eng
     55567912500  Technische Universiteit Eindhoven             univ      eng
 
                  num_cited_refs
     ID
-    55100158000               1
+    37080157400               1
     55567912500               0

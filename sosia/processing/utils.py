@@ -1,6 +1,19 @@
 """Module with utility functions for processing data in sosia."""
 
+from itertools import islice
 from math import ceil
+
+
+def chunk_list(data: list, size: int) -> list[list]:
+    """Chunk a list into bins of a given size and merge the last if necessary."""
+    data_iter = iter(data)
+    chunks = list(iter(lambda: list(islice(data_iter, size)), []))
+
+    # Merge last chunk into previous if smaller than half the chunk size
+    if len(chunks[-1]) <= size // 2 and len(chunks) > 1:
+        chunks[-2].extend(chunks.pop())
+
+    return chunks
 
 
 def compute_overlap(left, right):

@@ -8,8 +8,8 @@ import pandas as pd
 
 from sosia.processing.getting import get_author_data, get_author_info, \
     get_authors_from_sourceyear, get_citations
-from sosia.processing.utils import flat_set_from_df, generate_filter_message, \
-    margin_range
+from sosia.processing.utils import chunk_list, flat_set_from_df, \
+    generate_filter_message, margin_range
 from sosia.utils import custom_print
 
 
@@ -135,14 +135,18 @@ def same_affiliation(original, new, refresh=False):
     return any(str(a) in m.affiliation_id for a in original.search_affiliations)
 
 
-def search_group_from_sources(original, stacked=False, verbose=False,
-                              refresh=False):
-    """Define groups of authors based on publications from a set of sources.
+def search_group_from_sources(original, chunk_size, stacked=False,
+                              verbose=False, refresh=False):
+    """
 
     Parameters
     ----------
     original : sosia.Original
         The object of the Scientist to search information for.
+
+    chunk_size : int
+        How many years each set of source-years includes, in which eauch
+        author has to publish.
 
     stacked : bool (optional, default=False)
         Whether to use fewer queries that are not reusable, or to use modular
@@ -165,37 +169,45 @@ def search_group_from_sources(original, stacked=False, verbose=False,
     text = f"Defining 'search_group' using up to {len(search_sources):,} sources..."
     custom_print(text, verbose)
 
-    # Retrieve author list for today
-    sources_today = pd.DataFrame(product(search_sources, [original.active_year]),
-                                 columns=["source_id", "year"])
-    auth_today = get_authors_from_sourceyear(sources_today, original.sql_conn,
-        refresh=refresh, stacked=stacked, verbose=verbose)
-    if original.search_affiliations:
-        same_affs = auth_today["afid"].isin(original.search_affiliations)
-        auth_today = auth_today[same_affs]
-    today = flat_set_from_df(auth_today, "auids")
-
-    # Authors active around year of first publication
+    # Get authors publishing before start
     if original.first_year_margin is not None:
-        then_years = margin_range(original.first_year, original.first_year_margin)
-    else:
-        then_years = [original.first_year]
-    sources_then = pd.DataFrame(product(search_sources, then_years),
-                                columns=["source_id", "year"])
-    auth_then = get_authors_from_sourceyear(sources_then, original.sql_conn,
-        refresh=refresh, stacked=stacked, verbose=verbose)
-    then = flat_set_from_df(auth_then, "auids")
-
-    # Remove authors active before
-    if original.first_year_margin is not None:
-        sources_before = pd.DataFrame(product(search_sources, [min(then_years) - 1]),
-                                      columns=["source_id", "year"])
-        auth_before = get_authors_from_sourceyear(sources_before, original.sql_conn,
-                                                  refresh=refresh, stacked=stacked,
-                                                  verbose=verbose)
+        before_year = original.first_year - original.first_year_margin - 1
+        volumes_bef = pd.DataFrame(product(search_sources, [before_year]),
+                                   columns=["source_id", "year"])
+        auth_before = get_authors_from_sourceyear(
+            volumes_bef,
+            original.sql_conn,
+            refresh=refresh,
+            stacked=stacked,
+            verbose=verbose
+        )
         before = flat_set_from_df(auth_before, "auids")
-        then -= before
+    else:
+        before = set()
+
+    # Get years to look through
+    years = range(original.first_year, original.match_year)
+    chunks = chunk_list(years, chunk_size)
+    chunks[0] = range(original.first_year - original.first_year_margin,
+                      max(chunks[0]) + 1)
+
+    # Get authors
+    groups = []
+    for years in chunks:
+        volumes = pd.DataFrame(product(search_sources, years),
+                               columns=["source_id", "year"])
+        authors = get_authors_from_sourceyear(
+            volumes,
+            original.sql_conn,
+            refresh=refresh,
+            stacked=stacked,
+            verbose=verbose
+        )
+        if original.search_affiliations:
+            same_affs = authors["afid"].isin(original.search_affiliations)
+            authors = authors[same_affs]
+        groups.append(flat_set_from_df(authors, "auids"))
 
     # Compile group
-    group = today.intersection(then)
-    return {int(a) for a in group}
+    group = set.intersection(*groups) - before
+    return set(map(int, group))

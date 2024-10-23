@@ -185,14 +185,29 @@ class Original(Scientist):
 
     def define_search_group(
         self,
+        chunk_size: int = 2,
         stacked: bool = False,
         verbose: bool = False,
         refresh: bool = False,
     ) -> Self:
-        """Define search_group.
+        """Define a search group of authors based on their publication
+        activity in the Orginal's search sources between the first year
+        and the match year.  To find candidates, the method considers
+        chunks of consecutive volumes, and requires candidates to publish
+        at least once in each (!) of these chunks.  That is, it generates
+        sets of authors publishing in the search sources during specific
+        years, and considers only the intersection of these.
 
         Parameters
         ----------
+        chunk_size : int (optional, default=2)
+            The size of each set in terms of years, i.e. how many years
+            each chunk will contain.  Must not be smaller than the
+            first_year_margin.  If the last chunk is smaller than half the
+            target chunk size, it will be merged with the previous chunk.
+            Put differently: candidates need to appear in the search sources
+            on average at least every `chunk_size` years.
+
         stacked : bool (optional, default=False)
             Whether to combine searches in few queries or not.  Cached
             files will most likely not be reusable.  Set to True if you
@@ -203,17 +218,30 @@ class Original(Scientist):
 
         refresh : bool (optional, default=False)
             Whether to refresh cached results (if they exist) or not.
+
+        Raises
+        ------
+        ValueError
+            If the chunk_size is smaller than the first_year_margin.
         """
         # Checks
         if not self.search_sources:
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise RuntimeError(text)
+        if chunk_size < self.first_year_margin:
+            msg = f"Parameter 'chunk_size' must not be smaller " \
+                  f"than {self.first_year_margin} ('first_year_margin')."
+            raise ValueError(msg)
 
         # Query journals
-        params = {"original": self, "stacked": stacked,
-                  "refresh": refresh, "verbose": verbose}
-        search_group = search_group_from_sources(**params)
+        search_group = search_group_from_sources(
+            original=self,
+            chunk_size=chunk_size,
+            stacked=stacked,
+            refresh=refresh,
+            verbose=verbose
+        )
 
         # Remove own IDs and coauthors
         search_group -= set(self.identifier)

@@ -3,8 +3,20 @@
 import pandas as pd
 from pybliometrics.scopus import ScopusSearch
 
-from sosia.processing import compute_overlap, expand_affiliation,\
+from sosia.processing import chunk_list, compute_overlap, expand_affiliation, \
     flat_set_from_df, margin_range
+
+
+def test_chunk_list():
+    result1 = chunk_list(range(1999, 2007 + 1), 3)
+    expected1 = [[1999, 2000, 2001], [2002, 2003, 2004], [2005, 2006, 2007]]
+    assert result1 == expected1
+    result2 = chunk_list(range(1999, 2006 + 1), 3)
+    expected2 = [[1999, 2000, 2001], [2002, 2003, 2004], [2005, 2006]]
+    assert result2 == expected2
+    result3 = chunk_list(range(1999, 2005 + 1), 3)
+    expected3 = [[1999, 2000, 2001], [2002, 2003, 2004, 2005]]
+    assert result3 == expected3
 
 
 def test_compute_overlap():
