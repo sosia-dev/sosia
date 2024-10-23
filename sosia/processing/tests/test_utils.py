@@ -47,3 +47,4 @@ def test_flat_set_from_df():
 def test_margin_range():
     assert margin_range(5, 1) == range(4, 7)
     assert margin_range(10, 0.09) == range(9, 12)
+    assert margin_range(150, 200) == range(0, 351)

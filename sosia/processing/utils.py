@@ -2,6 +2,7 @@
 
 from itertools import islice
 from math import ceil
+from typing import Union
 
 
 def chunk_list(data: list, size: int) -> list[list]:
@@ -61,7 +62,7 @@ def generate_filter_message(number: int, condition: range, label: str):
     return text
 
 
-def margin_range(base, val):
+def margin_range(base: int, val: Union[float, int]):
     """Create a range of margins around a base value.
 
     Parameters
@@ -79,9 +80,9 @@ def margin_range(base, val):
     """
     if isinstance(val, float):
         margin = ceil(val * base)
-        r = range(base - margin, base + margin + 1)
+        r = range(max(base - margin, 0), base + margin + 1)
     elif isinstance(val, int):
-        r = range(base - val, base + val + 1)
+        r = range(max(base - val, 0), base + val + 1)
     else:
         raise TypeError("Value must be either float or int.")
     return r
