@@ -1,7 +1,7 @@
 """Module with super class to represent a `Scientist`."""
 
 from pathlib import Path
-from typing import NamedTuple, Optional, Union
+from typing import Optional, Union
 from warnings import warn
 
 from typing_extensions import Self
@@ -74,7 +74,7 @@ class Scientist(object):
         self.affiliation_type = val
 
     @property
-    def citations(self) -> Optional[Union[int, list[NamedTuple]]]:
+    def citations(self) -> Optional[int]:
         """The citation count of the scientist until the provided year."""
         return self._citations
 
