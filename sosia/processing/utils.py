@@ -53,10 +53,16 @@ def generate_filter_message(number: int, condition: range, label: str):
         plural = "s"
     if len(condition) == 1:
         qualifier = "same"
-        suffix = condition[0]
+        if "year" in label:
+            suffix = condition[0]
+        else:
+            suffix = f"{condition[0]:,}"
     else:
         qualifier = "similar"
-        suffix = f"{min(condition)} to {max(condition)}"
+        if "year" in label:
+            suffix = f"{min(condition)} to {max(condition)}"
+        else:
+            suffix = f"{min(condition):,} to {max(condition):,}"
     text = (f"... left with {number:,} candidate{plural} with "
             f"{qualifier} {label} ({suffix})")
     return text
