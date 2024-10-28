@@ -7,7 +7,7 @@ Functioning
 2. Publishes in sources associated with the scientist's main field at least every X years
 3. Publishes in the latest year the scientist did as well
 4. Is not a co-author in the pre-phase
-5. Optional: The main field (ASJC2) is the same as that of the scientist
+5. Optional: The main discpline is the same as that of the scientist
 6. Optional: Started publishing around the same year as the scientist
 7. Optional: In the year of comparison, has about the same number of publications
 8. Optional: In the year of comparison, has about the same number of co-authors

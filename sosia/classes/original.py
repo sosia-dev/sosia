@@ -68,7 +68,7 @@ class Original(Scientist):
         pub_margin: Optional[Union[float, int]] = None,
         coauth_margin: Optional[Union[float, int]] = None,
         cits_margin: Optional[Union[float, int]] = None,
-        same_field: Optional[bool] = False,
+        same_discipline: Optional[bool] = False,
         affiliations: Optional[list] = None,
         eids: Optional[list[Union[str, int]]] = None,
         refresh: Union[bool, int] = False,
@@ -120,8 +120,8 @@ class Original(Scientist):
             If the value is not given, sosia will not filter on the number
             of citations.
 
-        same_field : boolean (optional, default=False)
-            Whether to restrict candidates to the same main field (ASJC2)
+        same_discipline : boolean (optional, default=False)
+            Whether to restrict candidates to the same main discipline (ASJC2)
             as the original scientist or not.
 
         affiliations : list (optional, default=None)
@@ -168,7 +168,7 @@ class Original(Scientist):
         self.pub_margin = pub_margin
         self.coauth_margin = coauth_margin
         self.cits_margin = cits_margin
-        self.same_field = same_field
+        self.same_discipline = same_discipline
         self.eids = eids
         if isinstance(affiliations, (int, str)):
             affiliations = [affiliations]
@@ -355,11 +355,11 @@ class Original(Scientist):
             refresh: Union[bool, int] = False
     ) -> None:
         """Find matches within candidates based on up to five criteria:
-        1. Works in the same field as the scientist's main field
+        1. Work mainly in the same discipline
         2. Started publishing in about the same year
-        3. Has about the same number of publications in the treatment year
-        4. Has about the same number of coauthors in the treatment year
-        5. Has about the same number of citations in the treatment year
+        3. Have about the same number of publications in the match year
+        4. Have about the same number of coauthors in the match year
+        5. Have about the same number of citations in the match year
 
         Parameters
         ----------

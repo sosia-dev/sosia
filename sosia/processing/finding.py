@@ -28,14 +28,14 @@ def find_matches(original, verbose, refresh):
     conn = original.sql_conn
 
     # First round of filtering: minimum publications and main field
-    if original.same_field or original.pub_margin is not None:
+    if original.same_discipline or original.pub_margin is not None:
         info = get_author_info(original.candidates, original.sql_conn,
                                verbose=verbose, refresh=refresh)
-        if original.same_field:
-            same_field = info['areas'].str.startswith(original.main_field[1])
-            info = info[same_field]
-            text = (f"... left with {info.shape[0]:,} candidates in main "
-                    f"field ({original.main_field[1]})")
+        if original.same_discipline:
+            same_discipline = info['areas'].str.startswith(original.main_field[1])
+            info = info[same_discipline]
+            text = (f"... left with {info.shape[0]:,} candidates with same "
+                    f"main discipline ({original.main_field[1]})")
             custom_print(text, verbose)
         if original.pub_margin is not None:
             min_papers = margin_range(len(original.publications), original.pub_margin)[0]

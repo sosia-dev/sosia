@@ -49,7 +49,7 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>> import sosia
     >>> 
     >>> # You need the Scopus ID and the year, then set the similarity parameters
-    >>> stefano = sosia.Original(55208373700, 2019, same_field=True, first_year_margin=2,
+    >>> stefano = sosia.Original(55208373700, 2019, same_discipline=True, first_year_margin=2,
     >>>                          pub_margin=0.2, cits_margin=0.2, coauth_margin=0.2)
     >>> stefano.define_search_sources()  # Sources similiar to scientist
     >>> stefano.identify_candidates_from_sources(chunk_size=2)  # Authors publishing in similar sources every 2 years
