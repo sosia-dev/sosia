@@ -367,7 +367,7 @@ class Original(Scientist):
         self,
         fields: Optional[Iterable] = None,
         verbose: bool = False,
-        refresh: bool = False,
+        refresh: Union[bool, int] = False,
     ) -> None:
         """Add information to matches to aid in selection process.
 
@@ -384,10 +384,10 @@ class Original(Scientist):
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
 
-        refresh : bool (optional, default=False)
-            Whether to refresh cached results (if they exist) or not. If int
-            is passed and stacked=False, results will be refreshed if they are
-            older than that value in number of days.
+        refresh : bool or int (optional, default=False)
+            Whether to refresh cached results (if they exist) or not. If
+            int is passed, results will be refreshed if they are older
+            than that value in number of days.
 
         Notes
         -----

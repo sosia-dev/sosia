@@ -225,7 +225,9 @@ def inform_matches(self, keywords, verbose, refresh):
         of document information.
 
     refresh : bool
-        Whether to refresh all cached files or not.
+        Whether to refresh cached results (if they exist) or not. If
+            int is passed, results will be refreshed if they are older
+            than that value in number of days.
 
     Returns
     -------
@@ -255,7 +257,7 @@ def inform_matches(self, keywords, verbose, refresh):
         # Abstract and reference similarity is performed jointly
         if doc_parse:
             eids = [d.eid for d in p.publications]
-            refs, refs_n = parse_docs(eids, refresh)
+            refs, refs_n = parse_docs(eids, refresh=refresh)
             completeness[auth_id] = (refs_n, len(eids))
             if "num_cited_refs" in keywords:
                 ref_cos = compute_overlap(refs, focal_refs)
@@ -272,7 +274,7 @@ def inform_matches(self, keywords, verbose, refresh):
     return out
 
 
-def parse_docs(eids, refresh):
+def parse_docs(eids, *args, **kwargs):
     """Find the set of references of provided articles.
 
     Parameters
@@ -280,8 +282,8 @@ def parse_docs(eids, refresh):
     eids : list of str
         Scopus Document EIDs representing documents to be considered.
 
-    refresh : bool
-        Whether to refresh the cached files if they exist, or not.
+    *args, **kwargs : tuple or dict (optional)
+        Additional options passed on to `AbstractRetrieval()`: `refresh`.
 
     Returns
     -------
@@ -294,7 +296,7 @@ def parse_docs(eids, refresh):
     docs = []
     for eid in eids:
         try:
-            docs.append(AbstractRetrieval(eid, view="FULL", refresh=refresh))
+            docs.append(AbstractRetrieval(eid, view="FULL", *args, **kwargs))
         except Scopus404Error:
             continue
     ref_lst = [ab.references for ab in docs if ab.references]
