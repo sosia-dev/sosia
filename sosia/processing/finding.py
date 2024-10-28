@@ -2,14 +2,9 @@
 such as publications, citations, coauthors, and affiliations.
 """
 
-from itertools import product
-
-import pandas as pd
-
 from sosia.processing.getting import get_author_data, get_author_info, \
-    get_authors_from_sourceyear, get_citations
-from sosia.processing.utils import chunk_list, flat_set_from_df, \
-    generate_filter_message, margin_range
+    get_citations
+from sosia.processing.utils import generate_filter_message, margin_range
 from sosia.utils import custom_print
 
 
@@ -133,63 +128,3 @@ def same_affiliation(original, new, refresh=False):
     m = Scientist([new], original.year, refresh=refresh,
                   db_path=original.sql_fname)
     return any(str(a) in m.affiliation_id for a in original.search_affiliations)
-
-
-def search_group_from_sources(original, chunk_size, verbose=False,
-                              *args, **kwargs):
-    """
-    Retrieves the initial search as intersection of authors publishing
-    in different chunks of the Original's search sources.
-
-    Parameters
-    ----------
-    original : sosia.Original
-        The object of the Scientist to search information for.
-
-    chunk_size : int
-        How many years each set of source-years includes, in which eauch
-        author has to publish.
-
-    verbose : bool (optional, default=False)
-        Whether to report on the progress of the process.
-
-    *args, **kwargs : tuple or dict (optional)
-        Additional options passed on to `get_authors_from_sourceyear()`:
-        `stacked`, and `refresh`.
-
-    Returns
-    -------
-    group : set
-        Set of authors publishing in year of treatment, in years around
-        first publication, and not before them.
-    """
-    # Define variables
-    search_sources, _ = zip(*original.search_sources)
-    text = f"Defining 'search_group' using up to {len(search_sources):,} sources..."
-    custom_print(text, verbose)
-
-    # Get years to look through
-    years = range(original.first_year, original.match_year)
-    chunks = chunk_list(years, chunk_size)
-    chunks[0] = range(original.first_year - original.first_year_margin,
-                      max(chunks[0]) + 1)
-
-    # Get authors
-    groups = []
-    for years in chunks:
-        volumes = pd.DataFrame(product(search_sources, years),
-                               columns=["source_id", "year"])
-        authors = get_authors_from_sourceyear(
-            volumes,
-            original.sql_conn,
-            verbose=verbose,
-            *args, **kwargs
-        )
-        if original.search_affiliations:
-            same_affs = authors["afid"].isin(original.search_affiliations)
-            authors = authors[same_affs]
-        groups.append(flat_set_from_df(authors, "auids"))
-
-    # Compile group
-    group = set.intersection(*groups)
-    return set(map(int, group))
