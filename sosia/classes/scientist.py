@@ -11,7 +11,7 @@ from pybliometrics.scopus.exception import Scopus404Error
 
 from sosia.establishing import connect_database, DEFAULT_DATABASE
 from sosia.processing import add_source_names, base_query, count_citations, \
-    extract_authors, find_main_affiliation, get_author_info, get_main_field, \
+    extract_authors, find_main_affiliation, get_author_info, determine_main_field, \
     read_fields_sources_list
 from sosia.utils import accepts
 
@@ -299,7 +299,7 @@ class Scientist(object):
         self._active_year = int(max(pub_years))
         mask = fields["source_id"].isin(source_ids)
         self._fields = fields[mask]["asjc"].astype(int).tolist()
-        self._main_field = get_main_field(self._fields)
+        self._main_field = determine_main_field(self._fields)
         if not self._main_field[0]:
             text = "Not possible to determine research field(s) of "\
                    "researcher.  Functionality is reduced."

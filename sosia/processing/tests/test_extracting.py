@@ -4,7 +4,7 @@ import pandas as pd
 from pybliometrics.scopus import ScopusSearch
 
 from sosia.processing import extract_yearly_author_data, \
-    find_main_affiliation, get_main_field, parse_docs
+    find_main_affiliation, determine_main_field, parse_docs
 
 test_id = 6701809842
 
@@ -24,9 +24,9 @@ def test_find_main_affiliation(refresh_interval):
     assert aff_id == "60028717"
 
 
-def test_get_main_field():
+def test_determine_main_field():
     fields = [1000, 1000, 2000, 2000, 2020, 2020]
-    received = get_main_field(fields)
+    received = determine_main_field(fields)
     expected = (2020, "ECON")
     assert received == expected
 

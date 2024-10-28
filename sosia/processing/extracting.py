@@ -1,6 +1,7 @@
 """Module with functions for extracting information from publications and matching scientists."""
 
 from collections import defaultdict, Counter, namedtuple
+from typing import Optional
 
 import pandas as pd
 from pybliometrics.scopus import AbstractRetrieval
@@ -120,8 +121,8 @@ def find_main_affiliation(auth_ids, pubs, year):
     return main_aff
 
 
-def get_main_field(fields):
-    """Get main 4-digit ASJC field (code) and main 2-digit ASJC field (name).
+def determine_main_field(fields) -> tuple[Optional[int], Optional[str]]:
+    """Determine the most common field (4-digit ASJC) and most common discipline.
 
     Parameters
     ----------
@@ -134,7 +135,7 @@ def get_main_field(fields):
         The most common 4-digit ASJC field.
 
     name : str
-        The name of the most common 2-digit ASJC field.
+        The discipline of the main field.
 
     Note
     ----
