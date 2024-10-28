@@ -14,7 +14,7 @@ The primary class to interact with is :ref:`Original() <class_original>`. This c
 
 Upon initiation, pybliometrics performs queries on the Scopus database in the background.
 
-All properties and the control group are derived from the publications associated with the profile, specifically those published before the comparison year. They represent the state of the profile in this year.
+All properties and the matches are derived from the publications associated with the profile, specifically those published before the comparison year. They represent the state of the profile in this year.
 
 sosia considers only research-type articles as defined by Scopus; these are articles (ar), books (bk), book chapter (ch), conference proceeding (cp), conference review (cr), notes (no), reviews (re), and short articles (sh). With the exception of notes, books and book chapters, these types are the ones Scopus uses for journal metrics. Notably, sosia excludes letters, editorials, errata and retracted papers.
 
@@ -89,15 +89,15 @@ Using `verbose=True` you receive additional information on this operation:
     Found 206 sources of types jr, cp matching main field 1405 narrowly
 
 
-Defining the search group
--------------------------
+Identifying candidates
+----------------------
 
-`sosia` uses these sources to create an initial search group of authors. `sosia` takes all the years between the Original's first year and the comparison year (including these two) and splits them into chunks. The number of years of each chunk is determined by the user, and it must not be smaller than the first year margin. The first chunk may be larger as the left margin of the first year is included. The last chunk will be merged into the next-to-last margin if it is smaller than half the target size. Suitable candidates then have to publish in all these chunks. Technically, the search group is hence the intersection of authors publishing in these chunks. In the example, `sosia` will look at all publications in the search sources between 2011 (the first year 2012 minus the first_year_margin) and 2017 (the year before the comparison year). With a chunk_size equal to 2, the following chunks emerge: {2011, 2012, 2013}, {2014, 2015}, {2016, 2017}.
+`sosia` uses these sources to create the initial set of candidates. `sosia` takes all the years between the Original's first year and the comparison year (including these two) and splits them into chunks. The number of years of each chunk is determined by the user, and it must not be smaller than the first year margin. The first chunk may be larger as the left margin of the first year is included. The last chunk will be merged into the next-to-last margin if it is smaller than half the target size. Suitable candidates then have to publish in all these chunks. Technically, the set of candidates is hence the intersection of authors publishing in these chunks. In the example, `sosia` will look at all publications in the search sources between 2011 (the first year 2012 minus the first_year_margin) and 2017 (the year before the comparison year). With a chunk_size equal to 2, the following chunks emerge: {2011, 2012, 2013}, {2014, 2015}, {2016, 2017}.
 
 .. code-block:: python
 
-    >>> stefano.define_search_group_from_sources(verbose=True, chunk_size=2)
-    Defining 'search_group' using up to 206 sources...
+    >>> stefano.identify_candidates_from_sources(verbose=True, chunk_size=2)
+    Identifying candidates using up to 206 sources...
     ... parsing Scopus information for 2010...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:27<00:00,  1.01s/it]
     ... parsing Scopus information for 2011...
@@ -117,7 +117,7 @@ Defining the search group
     Found 772 candidates
 
 
-You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
+You can inspect the candidates using `stefano.candidates`, which you can also override or pre-define.
 
 An alternative search process that minimizes the number of queries can be activated by setting stacked=True. The downside of this method is that the resulting queries cannot be reused for anything else (for instance, you may maintain a separate Scopus database fuelled by `pybliometrics`). Use `stacked=True` to invoke this option.
 
@@ -125,11 +125,11 @@ An alternative search process that minimizes the number of queries can be activa
 Finding matches
 ---------------
 
-The final step is to filter the candidates from the search group. Depending on the search paratmers, `sosia` searches for authors who are mainly active in the same field, started around the same time, have a similar number of publications, have a similar number of coauthors, and have been cited about equally often.
+The next step is to filter the candidates. Depending on the search paratmers, `sosia` searches for authors who are mainly active in the same field, started around the same time, have a similar number of publications, have a similar number of coauthors, and have been cited about equally often.
 
 .. code-block:: python
 
-    >>> stefano.find_matches(verbose=True)
+    >>> stefano.filter_candidates(verbose=True)
     Filtering 772 candidates...
     Downloading information for 772 candidates...
     100%|████████████████████████████████████████████████████████████████████████████████████| 8/8 [02:07<00:00,  9.58s/it]

@@ -20,9 +20,9 @@ You obtain results after only four steps:
 
 1. Initiate the class
 2. Define search sources
-3. Define a first search group
-4. Filter the search group to obtain a matching group
+3. Identify candidates
+4. Filter the candidates to obtain a matching group
 
-Depending on the number of search sources and the first search group, one search may easily take several hours. The :doc:`tutorial` takes nearly an hour. Users should start with small margins and a small chunk size and gradually increase the most binding margins.
+Depending on the number of search sources and of candidates, one search may easily take several hours. The :doc:`tutorial` takes nearly an hour. Users should start with small margins and a small chunk size and gradually increase the most binding margins.
 
 Each query on the Scopus database will make use of your API Key, which allows several thousant requests per week per API. `sosia` and `pybliometrics` make sure that all information are cached, so that subsequent queries will take less than a minute.  As cached data will deprecate, the main classes and all methods have `refresh` parameters, which steer whether and when to refresh the cached queries (default is `False`, maybe be an integer as well).

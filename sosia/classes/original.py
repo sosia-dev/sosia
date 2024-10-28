@@ -16,6 +16,20 @@ from sosia.utils import accepts, custom_print
 class Original(Scientist):
     """Representation of a scientist for whom to find a control scientist."""
     @property
+    def candidates(self) -> Optional[list[int]]:
+        """The set of authors that might be matches to the scientist.  The
+        set contains the intersection of all authors publishing in the
+        treatment year as well as authors publishing around the year of first
+        publication.  Some authors with too many publications in the
+        treatment year and authors having published too early are removed.
+
+        Notes
+        -----
+        Property is initiated via .identify_candidates_from_sources().
+        """
+        return self._candidates
+
+    @property
     def matches(self) -> Optional[list]:
         """List of Scopus IDs or list of namedtuples representing matches
         of the original scientist in the treatment year.
@@ -25,20 +39,6 @@ class Original(Scientist):
         Property is initiated via .find_matches().
         """
         return self._matches
-
-    @property
-    def search_group(self) -> Optional[list[int]]:
-        """The set of authors that might be matches to the scientist.  The
-        set contains the intersection of all authors publishing in the
-        treatment year as well as authors publishing around the year of first
-        publication.  Some authors with too many publications in the
-        treatment year and authors having published too early are removed.
-
-        Notes
-        -----
-        Property is initiated via .define_search_group_from_sources().
-        """
-        return self._search_group
 
     @property
     def search_sources(self) -> Optional[Union[set, list, tuple]]:
@@ -75,7 +75,7 @@ class Original(Scientist):
         db_path: Optional[Union[str, Path]] = None,
         verbose: Optional[bool] = False
     ) -> None:
-        """Representation of a scientist for whom to find a control scientist.
+        """Representation of a scientist for whom to find matches.
 
         Parameters
         ----------
@@ -178,14 +178,14 @@ class Original(Scientist):
         self.refresh = refresh
         self.sql_fname = db_path
         self._search_sources = None
-        self._search_group = None
+        self._candidates = None
         self._matches = None
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, match_year, refresh=refresh,
                            db_path=self.sql_fname, verbose=verbose)
 
-    def define_search_group_from_sources(
+    def identify_candidates_from_sources(
         self,
         chunk_size: int = 2,
         stacked: bool = False,
@@ -228,6 +228,11 @@ class Original(Scientist):
         ------
         ValueError
             If the chunk_size is smaller than the first_year_margin.
+
+        Notes
+        -----
+        If candidates have been identified, they are accessible through
+        property .candidates.
         """
         # Checks
         if not self.search_sources:
@@ -241,7 +246,7 @@ class Original(Scientist):
 
         # Define variables
         search_sources, _ = zip(*self.search_sources)
-        text = f"Defining 'search_group' using up to {len(search_sources):,} sources..."
+        text = f"Identifying candidates using up to {len(search_sources):,} sources..."
         custom_print(text, verbose)
 
         # Get years to look through
@@ -268,14 +273,14 @@ class Original(Scientist):
             groups.append(flat_set_from_df(authors, "auids"))
 
         # Compile group
-        search_group = set.intersection(*groups)
-        search_group = set(map(int, search_group))
-        search_group -= set(self.identifier)
-        search_group -= set(self.coauthors)
+        candidates = set.intersection(*groups)
+        candidates = set(map(int, candidates))
+        candidates -= set(self.identifier)
+        candidates -= set(self.coauthors)
 
         # Finalize
-        self._search_group = sorted(search_group)
-        text = f"Found {len(search_group):,} candidates"
+        self._candidates = sorted(candidates)
+        text = f"Found {len(candidates):,} candidates"
         custom_print(text, verbose)
         return self
 
@@ -344,12 +349,12 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def find_matches(
+    def filter_candidates(
             self,
             verbose: bool = False,
             refresh: Union[bool, int] = False
     ) -> None:
-        """Find matches within search_group based on up to five criteria:
+        """Find matches within candidates based on up to five criteria:
         1. Works in the same field as the scientist's main field
         2. Started publishing in about the same year
         3. Has about the same number of publications in the treatment year
@@ -371,9 +376,8 @@ class Original(Scientist):
         Matches are available through property `.matches`.
         """
         # Checks
-        if not self.search_group:
-            text = "No search group defined.  Please define a "\
-                   "search group first."
+        if not self.candidates:
+            text = "No candidates defined.  Please define candidates first."
             raise RuntimeError(text)
 
         # Find matches

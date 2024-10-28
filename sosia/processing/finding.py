@@ -1,6 +1,4 @@
-"""Module with functions for finding matches within a search group based on various criteria
-such as publications, citations, coauthors, and affiliations.
-"""
+"""Module with functions for finding matches within the set of candidates."""
 
 from sosia.processing.getting import get_author_data, get_author_info, \
     get_citations
@@ -9,13 +7,13 @@ from sosia.utils import custom_print
 
 
 def find_matches(original, verbose, refresh):
-    """Find matches within the search group.
+    """Find matches within the set of candidates.
 
     Parameters
     ----------
     original : sosia.Original()
         The object containing information for the original scientist to
-        search for.  Attribute search_group needs to exist.
+        search for.  Attribute .candidates needs to exist.
 
     verbose : bool (optional, default=False)
         Whether to report on the progress of the process.
@@ -25,13 +23,13 @@ def find_matches(original, verbose, refresh):
         Scopus data that is at most `refresh` days old (True = 0).
     """
     # Variables
-    text = f"Filtering {len(original.search_group):,} candidates..."
+    text = f"Filtering {len(original.candidates):,} candidates..."
     custom_print(text, verbose)
     conn = original.sql_conn
 
     # First round of filtering: minimum publications and main field
     if original.same_field or original.pub_margin is not None:
-        info = get_author_info(original.search_group, original.sql_conn,
+        info = get_author_info(original.candidates, original.sql_conn,
                                verbose=verbose, refresh=refresh)
         if original.same_field:
             same_field = info['areas'].str.startswith(original.main_field[1])
@@ -48,7 +46,7 @@ def find_matches(original, verbose, refresh):
             custom_print(text, verbose)
         group = sorted(info["auth_id"].unique())
     else:
-        group = original.search_group
+        group = original.candidates
     if not group:
         return group
 

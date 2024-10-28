@@ -52,8 +52,8 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>> stefano = sosia.Original(55208373700, 2019, same_field=True, first_year_margin=2,
     >>>                          pub_margin=0.2, cits_margin=0.2, coauth_margin=0.2)
     >>> stefano.define_search_sources()  # Sources similiar to scientist
-    >>> stefano.define_search_group_from_sources(chunk_size=2)  # Authors publishing in similar sources every 2 years
-    >>> stefano.find_matches()  # Find matches satisfying all criteria
+    >>> stefano.identify_candidates_from_sources(chunk_size=2)  # Authors publishing in similar sources every 2 years
+    >>> stefano.filter_candidates()  # Find matches satisfying all criteria
     >>> print(stefano.matches)
     >>> [55320703900, 55817553500, 56113324000, 56276429200]
     >>> stefano.inform_matches()  # Optional step to provide additional information

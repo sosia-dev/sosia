@@ -53,37 +53,37 @@ def test_search_sources_change(original1):
     original1.search_sources = backup
 
 
-def test_search_group(original1, refresh_interval):
-    original1.define_search_group_from_sources(chunk_size=2, refresh=refresh_interval)
-    recieved = original1.search_group
+def test_candidates(original1, refresh_interval):
+    original1.identify_candidates_from_sources(chunk_size=2, refresh=refresh_interval)
+    recieved = original1.candidates
     assert isinstance(recieved, list)
     assert 700 <= len(recieved) <= 800
 
 
-def test_search_group_stacked(original1, refresh_interval):
-    original1.define_search_group_from_sources(chunk_size=2, stacked=True,
+def test_candidates_stacked(original1, refresh_interval):
+    original1.identify_candidates_from_sources(chunk_size=2, stacked=True,
                                                refresh=refresh_interval)
-    recieved = original1.search_group
+    recieved = original1.candidates
     assert isinstance(recieved, list)
     assert 700 <= len(recieved) <= 800
 
 
-def test_search_group_affiliations_stacked(original2, refresh_interval):
-    original2.define_search_group_from_sources(chunk_size=2, stacked=True,
+def test_candidates_affiliations_stacked(original2, refresh_interval):
+    original2.identify_candidates_from_sources(chunk_size=2, stacked=True,
                                                refresh=refresh_interval)
-    recieved = original2.search_group
+    recieved = original2.candidates
     assert isinstance(recieved, list)
     assert 2 <= len(recieved) <= 10
 
 
-def test_find_matches(original1, refresh_interval):
-    original1.find_matches(refresh=refresh_interval)
+def test_filter_candidates(original1, refresh_interval):
+    original1.filter_candidates(refresh=refresh_interval)
     expected = [m.ID for m in MATCHES]
     assert original1.matches == expected
 
 
-def test_find_matches_affiliations(original2, refresh_interval):
-    original2.find_matches(refresh=refresh_interval)
+def test_filter_candidates_affiliations(original2, refresh_interval):
+    original2.filter_candidates(refresh=refresh_interval)
     expected = []
     assert original2.matches == expected
 
