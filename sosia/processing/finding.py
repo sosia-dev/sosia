@@ -168,21 +168,6 @@ def search_group_from_sources(original, chunk_size, verbose=False,
     text = f"Defining 'search_group' using up to {len(search_sources):,} sources..."
     custom_print(text, verbose)
 
-    # Get authors publishing before start
-    if original.first_year_margin is not None:
-        before_year = original.first_year - original.first_year_margin - 1
-        volumes_bef = pd.DataFrame(product(search_sources, [before_year]),
-                                   columns=["source_id", "year"])
-        auth_before = get_authors_from_sourceyear(
-            volumes_bef,
-            original.sql_conn,
-            verbose=verbose,
-            *args, **kwargs
-        )
-        before = flat_set_from_df(auth_before, "auids")
-    else:
-        before = set()
-
     # Get years to look through
     years = range(original.first_year, original.match_year)
     chunks = chunk_list(years, chunk_size)
@@ -206,5 +191,5 @@ def search_group_from_sources(original, chunk_size, verbose=False,
         groups.append(flat_set_from_df(authors, "auids"))
 
     # Compile group
-    group = set.intersection(*groups) - before
+    group = set.intersection(*groups)
     return set(map(int, group))

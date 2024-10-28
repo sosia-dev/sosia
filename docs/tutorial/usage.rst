@@ -92,7 +92,7 @@ Using `verbose=True` you receive additional information on this operation:
 Defining the search group
 -------------------------
 
-`sosia` uses these sources to create an initial search group of authors. `sosia` takes all the years between the Original's first year and the comparison year (including these two) and splits them into chunks. The number of years of each chunk is determined by the user, and it must not be smaller than the first year margin. The first chunk may be larger as the left margin of the first year is included. The last chunk will be merged into the next-to-last margin if it is smaller than half the target size. Suitable candidates then have to publish in all these chunks. Technically, the search group is hence the intersection of authors publishing in these chunks. In the example, `sosia` will look at all publications in the search sources between 2011 (the first year 2012 minus the first_year_margin) and 2017 (the year before the comparison year). With a chunk_size equal to 2, the following chunks emerge: {2011, 2012, 2013}, {2014, 2015}, {2016, 2017}. `sosia` also removes authors that published before (in this case: 2010) if matches are conditioned on the first year, in this case in 2010.
+`sosia` uses these sources to create an initial search group of authors. `sosia` takes all the years between the Original's first year and the comparison year (including these two) and splits them into chunks. The number of years of each chunk is determined by the user, and it must not be smaller than the first year margin. The first chunk may be larger as the left margin of the first year is included. The last chunk will be merged into the next-to-last margin if it is smaller than half the target size. Suitable candidates then have to publish in all these chunks. Technically, the search group is hence the intersection of authors publishing in these chunks. In the example, `sosia` will look at all publications in the search sources between 2011 (the first year 2012 minus the first_year_margin) and 2017 (the year before the comparison year). With a chunk_size equal to 2, the following chunks emerge: {2011, 2012, 2013}, {2014, 2015}, {2016, 2017}.
 
 .. code-block:: python
 
@@ -114,7 +114,7 @@ Defining the search group
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:57<00:00,  1.15s/it]
     ... parsing Scopus information for 2017...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:32<00:00,  1.03s/it]
-    Found 566 candidates
+    Found 772 candidates
 
 
 You can inspect the search group using `stefano.search_group`, which you can also override or pre-define.
@@ -130,13 +130,13 @@ The final step is to filter the candidates from the search group. Depending on t
 .. code-block:: python
 
     >>> stefano.find_matches(verbose=True)
-    Filtering 566 candidates...
-    Downloading information for 566 candidates...
-    100%|████████████████████████████████████████████████████████████████████████████████████| 7/7 [01:07<00:00,  9.58s/it]
-    ... left with 407 candidates in main field (BUSI)
-    ... left with 404 candidates with sufficient total publications (6)
-    Querying Scopus for information for 404 authors...
-    100%|████████████████████████████████████████████████████████████████████████████████| 404/404 [25:55<00:00,  3.85s/it]
+    Filtering 772 candidates...
+    Downloading information for 772 candidates...
+    100%|████████████████████████████████████████████████████████████████████████████████████| 8/8 [02:07<00:00,  9.58s/it]
+    ... left with 560 candidates in main field (BUSI)
+    ... left with 557 candidates with sufficient total publications (6)
+    Querying Scopus for information for 557 authors...
+    100%|████████████████████████████████████████████████████████████████████████████████| 557/557 [35:46<00:00,  3.85s/it]
     ... left with 57 candidates with similar year of first publication (2011 to 2013)
     ... left with 22 candidates with similar number of publications (6 to 10)
     ... left with 8 candidates with similar number of coauthors (6 to 10)

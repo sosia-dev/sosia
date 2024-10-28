@@ -57,7 +57,7 @@ def test_search_group(original1, refresh_interval):
     original1.define_search_group(chunk_size=2, refresh=refresh_interval)
     recieved = original1.search_group
     assert isinstance(recieved, list)
-    assert 500 <= len(recieved) <= 600
+    assert 700 <= len(recieved) <= 800
 
 
 def test_search_group_stacked(original1, refresh_interval):
@@ -65,7 +65,7 @@ def test_search_group_stacked(original1, refresh_interval):
                                   refresh=refresh_interval)
     recieved = original1.search_group
     assert isinstance(recieved, list)
-    assert 500 <= len(recieved) <= 600
+    assert 700 <= len(recieved) <= 800
 
 
 def test_search_group_affiliations_stacked(original2, refresh_interval):
