@@ -1,13 +1,15 @@
 """Main module of `sosia` containing the `Original` class."""
 
 from pathlib import Path
+from itertools import product
 from typing import Iterable, Literal, Optional, Union
 
+from pandas import DataFrame
 from typing_extensions import Self
 
 from sosia.classes import Scientist
-from sosia.processing import add_source_names, find_matches, inform_matches, \
-    search_group_from_sources
+from sosia.processing import add_source_names, chunk_list, find_matches, \
+    flat_set_from_df, get_authors_from_sourceyear, inform_matches
 from sosia.utils import accepts, custom_print
 
 
@@ -34,7 +36,7 @@ class Original(Scientist):
 
         Notes
         -----
-        Property is initiated via .define_search_group().
+        Property is initiated via .define_search_group_from_sources().
         """
         return self._search_group
 
@@ -183,7 +185,7 @@ class Original(Scientist):
         Scientist.__init__(self, self.identifier, match_year, refresh=refresh,
                            db_path=self.sql_fname, verbose=verbose)
 
-    def define_search_group(
+    def define_search_group_from_sources(
         self,
         chunk_size: int = 2,
         stacked: bool = False,
@@ -237,16 +239,37 @@ class Original(Scientist):
                   f"than {self.first_year_margin} ('first_year_margin')."
             raise ValueError(msg)
 
-        # Query journals
-        search_group = search_group_from_sources(
-            original=self,
-            chunk_size=chunk_size,
-            stacked=stacked,
-            refresh=refresh,
-            verbose=verbose
-        )
+        # Define variables
+        search_sources, _ = zip(*self.search_sources)
+        text = f"Defining 'search_group' using up to {len(search_sources):,} sources..."
+        custom_print(text, verbose)
 
-        # Remove own IDs and coauthors
+        # Get years to look through
+        years = range(self.first_year, self.match_year)
+        chunks = chunk_list(years, chunk_size)
+        chunks[0] = range(self.first_year - self.first_year_margin,
+                          max(chunks[0]) + 1)
+
+        # Get authors
+        groups = []
+        for years in chunks:
+            volumes = DataFrame(product(search_sources, years),
+                                columns=["source_id", "year"])
+            authors = get_authors_from_sourceyear(
+                volumes,
+                self.sql_conn,
+                stacked=stacked,
+                refresh=refresh,
+                verbose=verbose
+            )
+            if self.search_affiliations:
+                same_affs = authors["afid"].isin(self.search_affiliations)
+                authors = authors[same_affs]
+            groups.append(flat_set_from_df(authors, "auids"))
+
+        # Compile group
+        search_group = set.intersection(*groups)
+        search_group = set(map(int, search_group))
         search_group -= set(self.identifier)
         search_group -= set(self.coauthors)
 
@@ -349,8 +372,8 @@ class Original(Scientist):
         """
         # Checks
         if not self.search_group:
-            text = "No search group defined.  Please run "\
-                   ".define_search_group() first."
+            text = "No search group defined.  Please define a "\
+                   "search group first."
             raise RuntimeError(text)
 
         # Find matches

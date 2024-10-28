@@ -96,7 +96,7 @@ Defining the search group
 
 .. code-block:: python
 
-    >>> stefano.define_search_group(verbose=True, chunk_size=2)
+    >>> stefano.define_search_group_from_sources(verbose=True, chunk_size=2)
     Defining 'search_group' using up to 206 sources...
     ... parsing Scopus information for 2010...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:27<00:00,  1.01s/it]
