@@ -9,7 +9,7 @@ from tqdm import tqdm
 from sosia.processing.utils import expand_affiliation
 from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN, \
     RESEARCH_TYPES
-from sosia.utils import custom_print
+from sosia.utils import custom_print, logger
 
 
 def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
@@ -192,6 +192,7 @@ def query_pubs_by_sourceyear(source_ids, year, verbose=False, *args, **kwargs):
     # Search authors
     msg = f"... parsing Scopus information for {year}..."
     custom_print(msg, verbose)
+    logger.info(msg)
     q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
     res = stacked_query(
         group=[str(x) for x in sorted(source_ids)],

@@ -6,8 +6,7 @@ from typing import Optional
 
 from numpy import int32, int64
 
-from sosia.utils import custom_print
-
+from sosia.utils import custom_print, logger
 
 def connect_database(fname: Path, verbose) -> sqlite3.Connection:
     """Connect to local SQLite3 database to be used as cache.
@@ -27,6 +26,7 @@ def connect_database(fname: Path, verbose) -> sqlite3.Connection:
         make_database(fname, verbose=verbose)
     text = f"Connection to local database '{fname}' established"
     custom_print(text, verbose)
+    logger.info(text)
 
     return sqlite3.connect(fname)
 
@@ -82,3 +82,4 @@ def make_database(
     else:
         msg = f"Failed to create the local database '{fname}'"
     custom_print(msg, verbose)
+    logger.info(msg)

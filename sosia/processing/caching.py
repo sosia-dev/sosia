@@ -6,7 +6,7 @@ from typing import Iterable, Literal, Optional, Union
 import pandas as pd
 
 from sosia.establishing import DB_TABLES
-from sosia.processing.utils import robust_join
+from sosia.processing.utils import logger, robust_join
 
 
 def drop_values(data: pd.DataFrame, conn: Connection, table: str) -> None:
@@ -60,6 +60,7 @@ def insert_data(
     # Checks
     if table not in DB_TABLES:
         msg = f"table parameter must be one of {', '.join(DB_TABLES.keys())}"
+        logger.critical(msg)
         raise ValueError(msg)
 
     # Build query

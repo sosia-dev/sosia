@@ -4,6 +4,7 @@ from itertools import islice
 from math import ceil
 from typing import Union
 
+from sosia.utils import logger
 
 def chunk_list(data: list, size: int) -> list[list]:
     """Chunk a list into bins of a given size and merge the last if necessary."""
@@ -90,6 +91,8 @@ def margin_range(base: int, val: Union[float, int]):
     elif isinstance(val, int):
         r = range(max(base - val, 0), base + val + 1)
     else:
+        msg = "Value must be either float or int."
+        logger.critical(msg)
         raise TypeError("Value must be either float or int.")
     return r
 

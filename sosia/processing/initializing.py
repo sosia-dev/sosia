@@ -6,7 +6,7 @@ from pandas import read_csv
 
 from sosia.establishing.constants import FIELD_SOURCE_MAP, SOURCE_INFO
 from sosia.establishing.fields_sources import get_field_source_information
-from sosia.utils import custom_print
+from sosia.utils import custom_print, logger
 
 
 def add_source_names(
@@ -32,6 +32,7 @@ def read_fields_sources_list(verbose: bool = False):
         text = f"Using information for {info.shape[0]:,} sources as well as "\
                f"{field.shape[0]:,} field-source assignments from '{SOURCE_INFO.parent}'"
         custom_print(text, verbose)
+        logger.info(text)
     except FileNotFoundError:
         get_field_source_information(verbose=verbose)
         field = read_csv(FIELD_SOURCE_MAP)

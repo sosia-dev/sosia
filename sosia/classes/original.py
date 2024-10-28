@@ -10,7 +10,7 @@ from typing_extensions import Self
 from sosia.classes import Scientist
 from sosia.processing import add_source_names, chunk_list, find_matches, \
     flat_set_from_df, get_authors_from_sourceyear, inform_matches
-from sosia.utils import accepts, custom_print
+from sosia.utils import accepts, custom_print, logger
 
 
 class Original(Scientist):
@@ -151,13 +151,21 @@ class Original(Scientist):
         """
         # Internal checks
         if first_year_margin is not None and not isinstance(first_year_margin, (int, float)):
-            raise TypeError("Argument first_year_margin must be float or integer.")
+            msg = "Argument first_year_margin must be float or integer."
+            logger.critical(msg)
+            raise TypeError(msg)
         if pub_margin is not None and not isinstance(pub_margin, (int, float)):
-            raise TypeError("Argument pub_margin must be float or integer.")
+            msg = "Argument pub_margin must be float or integer."
+            logger.critical(msg)
+            raise TypeError(msg)
         if coauth_margin is not None and not isinstance(coauth_margin, (int, float)):
-            raise TypeError("Argument coauth_margin must be float or integer.")
+            msg = "Argument coauth_margin must be float or integer."
+            logger.critical(msg)
+            raise TypeError(msg)
         if cits_margin is not None and not isinstance(cits_margin, (int, float)):
-            raise TypeError("Argument cits_margin must be float or integer.")
+            msg = "Argument cits_margin must be float or integer."
+            logger.critical(msg)
+            raise TypeError(msg)
 
         # Variables
         if not isinstance(scientist, list):
@@ -233,10 +241,12 @@ class Original(Scientist):
         if not self.search_sources:
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
+            logger.critical(text)
             raise RuntimeError(text)
         if chunk_size < self.first_year_margin:
             msg = f"Parameter 'chunk_size' must not be smaller " \
                   f"than {self.first_year_margin} ('first_year_margin')."
+            logger.critical(msg)
             raise ValueError(msg)
 
         # Define variables
@@ -277,6 +287,7 @@ class Original(Scientist):
         self._search_group = sorted(search_group)
         text = f"Found {len(search_group):,} candidates"
         custom_print(text, verbose)
+        logger.info(text)
         return self
 
     def define_search_sources(
@@ -307,7 +318,9 @@ class Original(Scientist):
         Search sources are available through property `.search_sources`.
         """
         if mode not in {"narrow", "wide"}:
-            raise TypeError("Argument mode must be 'narrow' or 'wide'.")
+            msg = "Argument mode must be 'narrow' or 'wide'."
+            logger.critical(msg)
+            raise TypeError(msg)
 
         field_df = self.field_source
         info_df = self.source_info
@@ -342,6 +355,7 @@ class Original(Scientist):
                f"{', '.join(main_types)} matching main field "\
                f"{self.main_field[0]} {mode}ly"
         custom_print(text, verbose)
+        logger.info(text)
         return self
 
     def find_matches(
@@ -374,6 +388,7 @@ class Original(Scientist):
         if not self.search_group:
             text = "No search group defined.  Please run "\
                    ".define_search_group() first."
+            logger.critical(text)
             raise RuntimeError(text)
 
         # Find matches
@@ -384,6 +399,7 @@ class Original(Scientist):
             ending = "es"
         text = f"Found {len(matches):,} match{ending}"
         custom_print(text, verbose)
+        logger.info(text)
         self._matches = sorted([auth_id for auth_id in matches])
 
     def inform_matches(
@@ -425,6 +441,7 @@ class Original(Scientist):
         # Checks
         if not self._matches:
             text = "No matches defined.  Please run .find_matches() first."
+            logger.critical(text)
             raise RuntimeError(text)
         allowed_fields = ["first_name", "surname", "first_year",
                           "num_coauthors", "num_publications", "num_citations",
@@ -436,11 +453,13 @@ class Original(Scientist):
             if invalid:
                 text = "Parameter fields contains invalid keywords: " +\
                        ", ".join(invalid)
+                logger.critical(text)
                 raise ValueError(text)
         else:
             fields = allowed_fields
 
         text = f"Providing information for {len(self._matches):,} matches..."
         custom_print(text, verbose)
+        logger.info(text)
         matches = inform_matches(self, fields, verbose, refresh)
         self._matches = matches

@@ -10,7 +10,7 @@ from sosia.processing.caching import insert_data, retrieve_from_author_table, \
     retrieve_authors_from_sourceyear
 from sosia.processing.querying import count_citations, stacked_query, \
     query_pubs_by_sourceyear
-from sosia.utils import custom_print
+from sosia.utils import custom_print, logger
 
 
 def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame:
@@ -52,6 +52,7 @@ def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame
                   "stacked": True, "verbose": verbose}
         text = f"Downloading information for {len(missing):,} candidates..."
         custom_print(text, verbose)
+        logger.info(text)
         res = stacked_query(**params)
         res = pd.DataFrame(res)
         res = res.drop_duplicates(subset="eid")
@@ -99,6 +100,7 @@ def get_author_data(group, conn, verbose=False, refresh=False) -> pd.DataFrame:
         text = f"Querying Scopus for information for {len(missing):,} " \
                "authors..."
         custom_print(text, verbose)
+        logger.info(text)
         to_add = []
         for auth_id in tqdm(missing, disable=not verbose):
             new = extract_yearly_author_data(auth_id, refresh=refresh)
@@ -210,6 +212,7 @@ def get_citations(authors, year, conn, verbose=False, refresh=False):
     if missing:
         text = f"Counting citations of {len(missing):,} candidates..."
         custom_print(text, verbose)
+        logger.info(text)
         to_add = []
         for auth_id in tqdm(missing, disable=not verbose):
             n_cits = count_citations([auth_id], year + 1)

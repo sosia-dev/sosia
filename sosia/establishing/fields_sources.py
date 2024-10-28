@@ -6,7 +6,7 @@ import pandas as pd
 
 from sosia.establishing.constants import DATA_REPO_URL, FIELD_SOURCE_MAP, \
     SOURCE_INFO
-from sosia.utils import custom_print
+from sosia.utils import custom_print, logger
 
 
 def get_field_source_information(verbose: bool = False) -> None:
@@ -31,3 +31,4 @@ def get_field_source_information(verbose: bool = False) -> None:
     text = f"Stored information for {info.shape[0]:,} sources as well as "\
         f"{fields.shape[0]:,} field-source assignments in {SOURCE_INFO.parent}"
     custom_print(text, verbose)
+    logger.info(text)

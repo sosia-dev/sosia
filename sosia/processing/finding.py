@@ -5,7 +5,7 @@ such as publications, citations, coauthors, and affiliations.
 from sosia.processing.getting import get_author_data, get_author_info, \
     get_citations
 from sosia.processing.utils import generate_filter_message, margin_range
-from sosia.utils import custom_print
+from sosia.utils import custom_print, logger
 
 
 def find_matches(original, verbose, refresh):
@@ -27,6 +27,7 @@ def find_matches(original, verbose, refresh):
     # Variables
     text = f"Filtering {len(original.search_group):,} candidates..."
     custom_print(text, verbose)
+    logger.info(text)
     conn = original.sql_conn
 
     # First round of filtering: minimum publications and main field
@@ -39,6 +40,7 @@ def find_matches(original, verbose, refresh):
             text = (f"... left with {info.shape[0]:,} candidates in main "
                     f"field ({original.main_field[1]})")
             custom_print(text, verbose)
+            logger.info(text)
         if original.pub_margin is not None:
             min_papers = margin_range(len(original.publications), original.pub_margin)[0]
             enough_pubs = info['documents'].astype(int) >= min_papers
@@ -46,6 +48,7 @@ def find_matches(original, verbose, refresh):
             text = (f"... left with {info.shape[0]:,} candidates with "
                     f"sufficient total publications ({min_papers:,})")
             custom_print(text, verbose)
+            logger.info(text)
         group = sorted(info["auth_id"].unique())
     else:
         group = original.search_group
@@ -69,6 +72,7 @@ def find_matches(original, verbose, refresh):
             text = generate_filter_message(data['auth_id'].nunique(), _years,
                                            "year of first publication")
             custom_print(text, verbose)
+            logger.info(text)
         data = (data.drop(columns="first_year")
                     .drop_duplicates("auth_id", keep="last"))
         if data.empty:
@@ -80,6 +84,7 @@ def find_matches(original, verbose, refresh):
             text = generate_filter_message(data.shape[0], _npapers,
                                            "number of publications")
             custom_print(text, verbose)
+            logger.info(text)
         if data.empty:
             return set()
         if original.coauth_margin is not None:
@@ -89,6 +94,7 @@ def find_matches(original, verbose, refresh):
             text = generate_filter_message(data.shape[0], _ncoauth,
                                            "number of coauthors")
             custom_print(text, verbose)
+            logger.info(text)
         group = sorted(data["auth_id"].unique())
     if not group:
         return group
@@ -103,6 +109,7 @@ def find_matches(original, verbose, refresh):
         text = generate_filter_message(citations.shape[0], _ncits,
                                        "number of citations")
         custom_print(text, verbose)
+        logger.info(text)
         group = sorted(citations['auth_id'].unique())
     if not group:
         return group
@@ -111,10 +118,12 @@ def find_matches(original, verbose, refresh):
     if original.search_affiliations:
         text = "Filtering based on affiliations..."
         custom_print(text, verbose)
+        logger.info(text)
         group[:] = [m for m in group if same_affiliation(original, m, refresh)]
         text = (f"... left with {len(group):,} candidates from same "
                 f"affiliation ({'-'.join(original.affiliation_id)})")
         custom_print(text, verbose)
+        logger.info(text)
 
     return group
 

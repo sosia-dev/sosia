@@ -13,7 +13,7 @@ from sosia.establishing import connect_database, DEFAULT_DATABASE
 from sosia.processing import add_source_names, base_query, count_citations, \
     extract_authors, find_main_affiliation, get_author_info, determine_main_field, \
     read_fields_sources_list
-from sosia.utils import accepts
+from sosia.utils import accepts, logger
 
 
 class Scientist(object):
@@ -142,7 +142,9 @@ class Scientist(object):
     @main_field.setter
     def main_field(self, val: tuple) -> None:
         if not isinstance(val, tuple) or len(val) != 2:
-            raise TypeError("Value must be a two-element tuple.")
+            msg = "Value must be a two-element tuple."
+            logger.critical(msg)
+            raise TypeError(msg)
         self._main_field = val
 
     @property
@@ -304,6 +306,7 @@ class Scientist(object):
             text = "Not possible to determine research field(s) of "\
                    "researcher.  Functionality is reduced."
             warn(text, UserWarning)
+            logger.warning(text)
 
         # Most recent geolocation
         afid = find_main_affiliation(identifier, self._publications, year)
@@ -317,6 +320,7 @@ class Scientist(object):
             self._affiliation_country = None
             self._affiliation_name = None
             self._affiliation_type = None
+            
         self._language = None
 
         # Author name from profile with most documents
