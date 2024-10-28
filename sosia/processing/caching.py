@@ -199,6 +199,7 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
         "LEFT JOIN sources_afids AS b "\
         "ON a.source_id=b.source_id AND a.year=b.year;"
     data = pd.read_sql_query(q, conn)
+    logger.debug("SQL authors query returned %d rows.", len(data))
     data = data.sort_values(["source_id", "year"]).reset_index(drop=True)
 
     # Finalize
@@ -214,4 +215,6 @@ def temporary_merge(conn: Connection,
     """Perform merge with temp table and `table` and retrieve all columns."""
     conditions = " and ".join(["a.{0}=b.{0}".format(c) for c in merge_cols])
     q = f"SELECT b.* FROM temp AS a INNER JOIN {table} AS b ON {conditions};"
-    return pd.read_sql_query(q, conn)
+    data = pd.read_sql_query(q, conn)
+    logger.debug("SQL temporary merge returned %d rows.", len(data))
+    return data

@@ -60,6 +60,7 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
     if q_type == "author":
         params["count"] = AUTHOR_SEARCH_MAX_COUNT
         au = AuthorSearch(**params)
+        logger.debug("AuthorSearch(%s) yielded %d results.", query, au.get_results_size())
         if size_only:
             return au.get_results_size()
         else:
@@ -68,15 +69,20 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
         params["integrity_fields"] = fields
         params["view"] = view
         if size_only:
-            return ScopusSearch(**params).get_results_size()
+            result_size = ScopusSearch(**params).get_results_size()
+            logger.debug("ScopusSearch(%s) yielded %d results.", params.get('query'), result_size)
+            return result_size
         try:
             docs = ScopusSearch(**params).results or []
+            logger.debug("ScopusSearch(%s) yielded %d results.", params.get('query'), len(docs))
             docs = [d for d in docs if d.subtype in RESEARCH_TYPES]
             return docs
         except AttributeError:
             params.pop("integrity_fields")
             params["refresh"] = True
-            return ScopusSearch(**params).results or []
+            docs = ScopusSearch(**params).results or []
+            logger.debug("ScopusSearch(%s) yielded %d results.", params.get('query'), len(docs))
+            return docs
 
 
 def count_citations(search_ids, pubyear, exclusion_ids=None):
