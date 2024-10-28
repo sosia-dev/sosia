@@ -135,9 +135,11 @@ def same_affiliation(original, new, refresh=False):
     return any(str(a) in m.affiliation_id for a in original.search_affiliations)
 
 
-def search_group_from_sources(original, chunk_size, stacked=False,
-                              verbose=False, refresh=False):
+def search_group_from_sources(original, chunk_size, verbose=False,
+                              *args, **kwargs):
     """
+    Retrieves the initial search as intersection of authors publishing
+    in different chunks of the Original's search sources.
 
     Parameters
     ----------
@@ -148,15 +150,12 @@ def search_group_from_sources(original, chunk_size, stacked=False,
         How many years each set of source-years includes, in which eauch
         author has to publish.
 
-    stacked : bool (optional, default=False)
-        Whether to use fewer queries that are not reusable, or to use modular
-        queries of the form "SOURCE-ID(<SID>) AND PUBYEAR IS <YYYY>".
-
     verbose : bool (optional, default=False)
         Whether to report on the progress of the process.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh cached search files.
+    *args, **kwargs : tuple or dict (optional)
+        Additional options passed on to `get_authors_from_sourceyear()`:
+        `stacked`, and `refresh`.
 
     Returns
     -------
@@ -177,9 +176,8 @@ def search_group_from_sources(original, chunk_size, stacked=False,
         auth_before = get_authors_from_sourceyear(
             volumes_bef,
             original.sql_conn,
-            refresh=refresh,
-            stacked=stacked,
-            verbose=verbose
+            verbose=verbose,
+            *args, **kwargs
         )
         before = flat_set_from_df(auth_before, "auids")
     else:
@@ -199,9 +197,8 @@ def search_group_from_sources(original, chunk_size, stacked=False,
         authors = get_authors_from_sourceyear(
             volumes,
             original.sql_conn,
-            refresh=refresh,
-            stacked=stacked,
-            verbose=verbose
+            verbose=verbose,
+            *args, **kwargs
         )
         if original.search_affiliations:
             same_affs = authors["afid"].isin(original.search_affiliations)

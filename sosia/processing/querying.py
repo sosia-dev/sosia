@@ -25,8 +25,10 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
     query : str
         The query string.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh cached files if they exist, or not.
+    refresh : bool or int (optional, default=False)
+            Whether to refresh cached results (if they exist) or not. If
+            int is passed, results will be refreshed if they are older
+            than that value in number of days.
 
     fields : list of field names (optional, default=None)
         Fields in the Scopus query that must always present.  To be passed
@@ -137,7 +139,7 @@ def create_queries(group, joiner, template, maxlen):
     return queries
 
 
-def long_query(query, q_type, template, refresh=False, view="COMPLETE"):
+def long_query(query, q_type, template, *args, **kwargs):
     """Run one query from create_queries output, and revert to
     one-by-one queries of each element if Scopus400Error is returned.
 
@@ -154,25 +156,22 @@ def long_query(query, q_type, template, refresh=False, view="COMPLETE"):
         A string template with one parameter named `fill` which will be used
         as search query.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh cached files if they exist, or not.
-
-    view : str
-        Which Scopus API view to use in the query.
+    *args, **kwargs : tuple or dict (optional)
+        Additional parameters to be passed to `base_query()`: `refresh`,
+        and `view`.
     """
     try:
-        return base_query(q_type, query[0], refresh=refresh, view=view)
+        return base_query(q_type, query[0], *args, **kwargs)
     except Scopus400Error:
         res = []
         for element in query[1]:
             q = template.substitute(fill=element)
-            res = base_query(q_type, q, refresh=refresh)
+            res = base_query(q_type, q, *args, **kwargs)
             res.extend(res)
         return res
 
 
-def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
-                             verbose=False):
+def query_pubs_by_sourceyear(source_ids, year, verbose=False, *args, **kwargs):
     """Get authors lists for each source in a particular year.
 
     Parameters
@@ -183,28 +182,28 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     year : str or int
         The year of the search.
 
-    stacked : bool (optional, default=False)
-        Whether to use fewer queries that are not reusable, or to use modular
-        queries of the form "SOURCE-ID(<SID>) AND PUBYEAR IS <YYYY>".
+    verbose : bool or int (default = False)
+        Whether to report on the progress of the process.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh cached files if they exist, or not.
-
-    verbose : bool (optional, default=False)
-        Whether to print information on the search progress.
+    *args, **kwargs : tuple or dict (optional)
+        Additional options passed to stacked_query(): `stacked`, and
+        `refresh`.
     """
-    dummy = pd.DataFrame(columns=["source_id", "year", "auids", "afid"])
-
     # Search authors
     msg = f"... parsing Scopus information for {year}..."
     custom_print(msg, verbose)
     q = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year}")
-    params = {"group": [str(x) for x in sorted(source_ids)],
-              "joiner": " OR ", "refresh": refresh, "q_type": "docs",
-              "template": q, "verbose": verbose, "stacked": stacked}
-    res = stacked_query(**params)
+    res = stacked_query(
+        group=[str(x) for x in sorted(source_ids)],
+        joiner=" OR ",
+        q_type="docs",
+        verbose=verbose,
+        template=q,
+        *args, **kwargs
+    )
 
     # Verify data is not empty
+    dummy = pd.DataFrame(columns=["source_id", "year", "auids", "afid"])
     if res:
         res = pd.DataFrame(res).dropna(subset=["author_ids"])
         if res.empty:
@@ -226,7 +225,8 @@ def query_pubs_by_sourceyear(source_ids, year, stacked=False, refresh=False,
     return res
 
 
-def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
+def stacked_query(group, template, joiner, q_type, stacked=False,
+                  verbose=False, *args, **kwargs):
     """Auxiliary function to query list of items.
 
     Parameters
@@ -246,15 +246,15 @@ def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
         Determines the query search that will be used.  Allowed values:
         "author", "docs".
 
-    refresh : bool
-        Whether the cached files should be refreshed or not.
-
-    stacked: bool
+    stacked: bool (optional, default=False)
         If True search for queries as close as possible to the maximum length
         QUERY_MAX_LEN.  If False, search elements in group one by one.
 
     verbose : bool (optional, default=False)
-        Whether to print information on the search progress.
+        If True, prints a progress bar for the download sections.
+
+    *args, **kwargs : dict (optional)
+        Additional options passed on to `long_query()`: `refresh`.
 
     Returns
     -------
@@ -267,6 +267,6 @@ def stacked_query(group, template, joiner, q_type, refresh, stacked, verbose):
     queries = create_queries(group, joiner, template, maxlen)
     res = []
     for q in tqdm(queries, disable=not verbose):
-        res.extend(long_query(q, q_type, template, refresh))
+        res.extend(long_query(q, q_type, template, *args, **kwargs))
     return res
 

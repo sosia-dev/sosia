@@ -1,7 +1,7 @@
 """Module that contains functions for retrieving data from a SQLite3 database cache."""
 
 from sqlite3 import Connection
-from typing import Iterable, Union, Literal
+from typing import Iterable, Literal, Optional, Union
 
 import pandas as pd
 
@@ -163,7 +163,7 @@ def retrieve_from_author_table(
 
 def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
                                      conn: Connection,
-                                     refresh: Union[bool, int] = False):
+                                     drop: Optional[bool] = False):
     """Search through sources by year for authors in SQL database.
 
     Parameters
@@ -188,7 +188,7 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
         DataFrame of source-year-combinations not in SQL database.
     """
     # Drop values if to be refreshed
-    if not isinstance(refresh, bool) or refresh:
+    if drop:
         drop_values(tosearch, conn, table="sources_afids")
 
     # Query authors for relevant journal-years

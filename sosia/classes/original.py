@@ -188,7 +188,7 @@ class Original(Scientist):
         chunk_size: int = 2,
         stacked: bool = False,
         verbose: bool = False,
-        refresh: bool = False,
+        refresh: Union[bool, int] = False,
     ) -> Self:
         """Define a search group of authors based on their publication
         activity in the Orginal's search sources between the first year
@@ -217,7 +217,10 @@ class Original(Scientist):
             Whether to report on the progress of the process.
 
         refresh : bool (optional, default=False)
-            Whether to refresh cached results (if they exist) or not.
+            refresh : bool or int (optional, default=False)
+            Whether to refresh cached results (if they exist) or not.  If
+            int is passed, results will be refreshed if they are older
+            than that value in number of days.
 
         Raises
         ------
