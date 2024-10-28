@@ -25,25 +25,26 @@ def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
 
-    refresh : bool (optional, default=False)
-        Whether to refresh scopus cached files if they exist, or not.
-
     verbose : bool (optional, default=False)
         Whether to print information on the search progress.
 
     refresh : bool, int (optional, default=False)
-        Whether to refresh cached results (if they exist) or not, with
-        Scopus data that is at most `refresh` days old (True = 0).
+        How to handle existing information in database and on disk.  If True,
+        or int is passed, will replace all matching information in database
+        with information on disk.  If int is passed, information on disk
+        will be refreshed if older than int days.  If True, will refresh
+        information on disk in any case.
 
     Returns
     -------
     info : DataFrame
         DataFrame with general information on requested authors.
     """
-    # Retrieve existing data from SQL cache
+    # Retrieve information from SQL database
     authors = pd.DataFrame(authors, columns=["auth_id"], dtype="uint64")
     info, missing = retrieve_from_author_table(authors, conn,
         table="author_info", refresh=refresh)
+
     # Query missing records and insert at the same time
     if missing:
         params = {"group": missing, "refresh": refresh, "joiner": ") OR AU-ID(",
@@ -77,17 +78,22 @@ def get_author_data(group, conn, verbose=False, refresh=False) -> pd.DataFrame:
         Whether to print information on the search progress.
 
     refresh : bool, int (optional, default=False)
-        Whether to refresh cached results (if they exist) or not, with
-        Scopus data that is at most `refresh` days old (True = 0).
+        How to handle existing information in database and on disk.  If True,
+        or int is passed, will replace all matching information in database
+        with information on disk.  If int is passed, information on disk
+        will be refreshed if older than int days.  If True, will refresh
+        information on disk in any case.
 
     Returns
     -------
     data : DataFrame
         DataFrame with yearly information on requested authors.
     """
+    # Retrieve information from SQL database
     authors = pd.DataFrame({"auth_id": group})
     data, missing = retrieve_from_author_table(authors, conn,
         table="author_data", refresh=refresh)
+
     # Add to database
     if missing:
         text = f"Querying Scopus for information for {len(missing):,} " \

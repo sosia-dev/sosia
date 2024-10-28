@@ -321,7 +321,11 @@ class Original(Scientist):
         custom_print(text, verbose)
         return self
 
-    def find_matches(self, verbose: bool = False, refresh: bool = False) -> None:
+    def find_matches(
+            self,
+            verbose: bool = False,
+            refresh: Union[bool, int] = False
+    ) -> None:
         """Find matches within search_group based on up to five criteria:
         1. Works in the same field as the scientist's main field
         2. Started publishing in about the same year
@@ -334,10 +338,10 @@ class Original(Scientist):
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
 
-        refresh : bool (optional, default=False)
-            Whether to refresh cached results (if they exist) or not. If int
-            is passed and stacked=False, results will be refreshed if they are
-            older than that value in number of days.
+        refresh : bool or int (optional, default=False)
+            Whether to refresh cached results (if they exist) or not. If
+            int is passed, results will be refreshed if they are older
+            than that value in number of days.
 
         Notes
         -----

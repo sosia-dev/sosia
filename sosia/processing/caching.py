@@ -134,8 +134,8 @@ def retrieve_from_author_table(
         The table of the SQLite3 database on which to perform the merge.
 
     refresh : bool, int (optional, default=False)
-        Whether to refresh cached results (if they exist) or not, with
-        Scopus data that is at most `refresh` days old (True = 0).
+        All values other than False will lead to dropping database
+        entries matching `df`.
 
     Returns
     -------
@@ -208,7 +208,7 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
 
 
 def temporary_merge(conn: Connection,
-                    table: pd.DataFrame,
+                    table: str,
                     merge_cols: Iterable[str]) -> pd.DataFrame:
     """Perform merge with temp table and `table` and retrieve all columns."""
     conditions = " and ".join(["a.{0}=b.{0}".format(c) for c in merge_cols])
