@@ -84,7 +84,7 @@ def test_filter_candidates(original1, refresh_interval):
 
 def test_filter_candidates_affiliations(original2, refresh_interval):
     original2.filter_candidates(refresh=refresh_interval)
-    expected = []
+    expected = [m.ID for m in MATCHES]
     assert original2.matches == expected
 
 

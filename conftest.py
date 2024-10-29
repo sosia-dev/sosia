@@ -64,7 +64,7 @@ def original1(test_cache, refresh_interval):
 
 @pytest.fixture(scope="session")
 def original2(test_cache, refresh_interval):
-    affiliations = [60010348, 60022109, 60017317, 60071236]
+    affiliations = [60009697, 60190884, 60272566, 60032882, 60033420]
     return Original(55208373700, 2018, db_path=test_cache,
                     refresh=refresh_interval, cits_margin=0.15, same_discipline=True,
                     first_year_margin=1, pub_margin=0.2, coauth_margin=0.2,
