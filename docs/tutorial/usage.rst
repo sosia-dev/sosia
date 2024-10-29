@@ -168,6 +168,7 @@ You may need additional information to both assess match quality and select matc
 By default, `sosia` provides the following information:
 
 * `first_year`: The year of the first recorded publication
+* `last_year`: The year of the most recent recorded publication
 * `num_coauthors`: The number of coauthors (Scopus Author profiles) up to the comparison year
 * `num_publications`: The number of indexed publications up to the comparison year
 * `num_citations`: The number of citations up to the comparison year
@@ -185,8 +186,8 @@ Alternatively, you can provide a list of the desired keywords to obtain informat
 
     >>> print(stefano.matches[0])
     Match(ID=37080157400, name='Buchanan, Sean', first_name='Sean', surname='Buchanan',
-          first_year=2011, num_coauthors=5, num_publications=6, num_citations=45,
-          subjects=['BUSI', 'ECON', 'SOCI'], affiliation_country='Canada',
+          first_year=2011, last_year=2018, num_coauthors=5, num_publications=6,
+          num_citations=45, subjects=['BUSI', 'ECON', 'SOCI'], affiliation_country='Canada',
           affiliation_id='60009697', affiliation_name='University of Manitoba',
           affiliation_type='univ', language='eng', num_cited_refs=1)
 
@@ -199,20 +200,20 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     >>> df = pd.DataFrame(stefano.matches)
     >>> df = df.set_index('ID')
     >>> print(df)
-                           name first_name   surname  first_year  num_coauthors  \
+                           name first_name   surname  first_year  last_year  \
     ID
-    37080157400  Buchanan, Sean       Sean  Buchanan        2011              5
-    55567912500   Eling, Katrin     Katrin     Eling        2013              9
+    37080157400  Buchanan, Sean       Sean  Buchanan        2011       2018
+    55567912500   Eling, Katrin     Katrin     Eling        2013       2018
 
-                 num_publications  num_citations            subjects  \
+                 num_coauthors  num_publications  num_citations  \
     ID
-    37080157400                 6             45  [BUSI, ECON, SOCI]
-    55567912500                 8             56  [BUSI, COMP, ENGI]
+    37080157400              5                 6             45
+    55567912500              9                 8             56
 
-                affiliation_country affiliation_id  \
+                           subjects affiliation_country affiliation_id  \
     ID
-    37080157400              Canada       60009697
-    55567912500         Netherlands       60032882
+    37080157400  [BUSI, ECON, SOCI]              Canada       60009697
+    55567912500  [BUSI, COMP, ENGI]         Netherlands       60032882
 
                                   affiliation_name affiliation_type language  \
     ID

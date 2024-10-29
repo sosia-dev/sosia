@@ -194,6 +194,7 @@ def inform_match(profile, keywords, refresh):
         "first_name": profile.first_name,
         "surname": profile.surname,
         "first_year": profile.first_year,
+        "last_year": profile.last_year,
         "num_coauthors": len(profile.coauthors),
         "num_publications": len(profile.publications),
         "num_citations": profile.citations,

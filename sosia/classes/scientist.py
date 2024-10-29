@@ -20,18 +20,6 @@ class Scientist(object):
     """Class to represent a scientist.
     """
     @property
-    def active_year(self) -> int:
-        """The scientist's most recent year with publication(s) before
-         provided year (which may be the same).
-         """
-        return self._active_year
-
-    @active_year.setter
-    @accepts(int)
-    def active_year(self, val: int) -> None:
-        self._active_year = val
-
-    @property
     def affiliation_country(self) -> Optional[str]:
         """The country of the scientist's affiliation."""
         return self._affiliation_country
@@ -166,6 +154,18 @@ class Scientist(object):
         self._language = val
 
     @property
+    def last_year(self) -> int:
+        """The scientist's most recent year with publication(s) before the
+         match year (which may be the same).
+         """
+        return self._last_year
+
+    @last_year.setter
+    @accepts(int)
+    def last_year(self, val: int) -> None:
+        self._last_year = val
+
+    @property
     def publications(self) -> Union[set, list, tuple]:
         """List of the scientists' publications."""
         return self._publications
@@ -281,9 +281,10 @@ class Scientist(object):
             raise ValueError(text)
         self._eids = eids or [p.eid for p in self._publications]
 
-        # First year of publication
-        pub_years = [p.coverDate[:4] for p in self._publications]
-        self._first_year = int(min(pub_years))
+        # Publication range
+        pub_years = [int(p.coverDate[:4]) for p in self._publications if p.coverDate]
+        self._first_year = min(pub_years)
+        self._last_year = max(pub_years)
 
         # Count of citations
         search_ids = eids or identifier
@@ -296,7 +297,6 @@ class Scientist(object):
         source_ids = set([int(p.source_id) for p in self._publications
                           if p.source_id])
         self._sources = add_source_names(sorted(source_ids), self.source_names)
-        self._active_year = int(max(pub_years))
         mask = fields["source_id"].isin(source_ids)
         self._fields = fields[mask]["asjc"].astype(int).tolist()
         self._main_field = determine_main_field(self._fields)

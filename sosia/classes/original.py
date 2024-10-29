@@ -402,11 +402,11 @@ class Original(Scientist):
         ----------
         fields : iterable (optional, default=None)
             Which information to provide.  Allowed values are "first_name",
-            "surname", "first_year", "num_coauthors", "num_publications",
-            "num_citations", "subjects", "affiliation_country",
-            "affiliation_id", "affiliation_name", "affiliation_type",
-            "language", "num_cited_refs".  If None, will use all
-            available fields.
+            "surname", "first_year", "last_year", "num_coauthors",
+            "num_publications", "num_citations", "subjects",
+            "affiliation_country", "affiliation_id", "affiliation_name",
+            "affiliation_type", "language", "num_cited_refs".  If None, will
+            use all available fields.
 
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
@@ -430,7 +430,7 @@ class Original(Scientist):
         if not self._matches:
             text = "No matches defined.  Please run .find_matches() first."
             raise RuntimeError(text)
-        allowed_fields = ["first_name", "surname", "first_year",
+        allowed_fields = ["first_name", "surname", "first_year", "last_year",
                           "num_coauthors", "num_publications", "num_citations",
                           "subjects", "affiliation_country", "affiliation_id",
                           "affiliation_name", "affiliation_type", "language",

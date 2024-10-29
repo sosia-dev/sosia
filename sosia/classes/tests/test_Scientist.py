@@ -1,13 +1,6 @@
 """Tests for class `Scientist`."""
 
 
-def test_active_year(scientist1, scientist2, scientist3, scientist4):
-    assert scientist1.active_year == 2001
-    assert scientist2.active_year == 2017
-    assert scientist3.active_year == 2016
-    assert scientist4.active_year == 2012
-
-
 def test_affiliation_country(scientist1, scientist2, scientist3, scientist4):
     assert scientist1.affiliation_country == "Germany"
     assert scientist2.affiliation_country == "Switzerland"
@@ -82,6 +75,13 @@ def test_first_year(scientist1, scientist2, scientist3):
     assert scientist1.first_year == 1996
     assert scientist2.first_year == 2012
     assert scientist3.first_year == 2016
+
+
+def test_last_year(scientist1, scientist2, scientist3, scientist4):
+    assert scientist1.last_year == 2001
+    assert scientist2.last_year == 2017
+    assert scientist3.last_year == 2016
+    assert scientist4.last_year == 2012
 
 
 def test_sources(scientist1, scientist2, scientist3):

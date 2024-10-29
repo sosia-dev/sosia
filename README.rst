@@ -59,7 +59,7 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>> stefano.inform_matches()  # Optional step to provide additional information
     >>> print(stefano.matches[0])
     Match(ID=55320703900, name='Arts, Sam', first_name='Sam', surname='Arts',
-          first_year=2012, num_coauthors=9, num_publications=8, num_citations=74,
+          first_year=2012, last_year=2019, num_coauthors=9, num_publications=8, num_citations=74,
           num_coauthors_period=None, num_publications_period=None, num_citations_period=None, subjects=['BUSI', 'ECON', 'DECI'],
           affiliation_country='Belgium', affiliation_id='60025063',
           affiliation_name='KU Leuven', affiliation_type='univ',
