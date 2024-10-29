@@ -93,7 +93,7 @@ def find_matches(original, verbose, refresh):
 
     # Third round of filtering: citations
     if original.cits_margin is not None:
-        citations = get_citations(group, original.year,
+        citations = get_citations(group, original.year, refresh=refresh,
                                   verbose=verbose, conn=conn)
         _ncits = margin_range(original.citations, original.cits_margin)
         similar_citcount = citations["n_cits"].between(min(_ncits), max(_ncits))
