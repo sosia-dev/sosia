@@ -89,16 +89,17 @@ def test_filter_candidates_affiliations(original2, refresh_interval):
 
 
 def test_inform_matches(original1, refresh_interval):
-    original1.inform_matches(refresh=refresh_interval)
+    fields = ["first_year", "num_coauthors", "num_publications",
+              "num_citations", "affiliation_country", "language",
+              "num_cited_refs"]
+    original1.inform_matches(refresh=refresh_interval, fields=fields)
     recieved = original1.matches
     assert len(recieved) == len(MATCHES)
     assert isinstance(recieved, list)
-    cols = ["ID", "name", "first_year", "num_coauthors", "num_publications",
-            "affiliation_country", "num_cited_refs"]
     df_r = pd.DataFrame(recieved)
     df_r["num_cited_refs"] = df_r["num_cited_refs"].round(3)
     df_m = pd.DataFrame(MATCHES)
     df_m["num_cited_refs"] = df_m["num_cited_refs"].round(3)
     df_m["ID"] = df_m["ID"].astype("uint64")
-    pd.testing.assert_frame_equal(df_r[cols], df_m[cols])
+    pd.testing.assert_frame_equal(df_r, df_m)
 
