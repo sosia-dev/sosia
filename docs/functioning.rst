@@ -12,9 +12,8 @@ Functioning
 7. Optional: In the year of comparison, has about the same number of publications
 8. Optional: In the year of comparison, has about the same number of co-authors
 9. Optional: In the year of comparison, has about the same number of citations (excluding self-ciations)
-10. Optional: is affiliated to a similar institution (from a user-provided list of affiliations)
 
-That steps 5 through 10 are optional means that there are no default values, and that you may want to choose to not use a particular filter.  Of course, it would not make sense to not use any of these filters.  Most authors will want to use steps 5 through 9, as this aligns most closely with the literature.
+That steps 5 through 9 are optional means that there are no default values, and that you may want to choose to not use a particular filter.  Of course, it would not make sense to not use any of these filters.  Most authors will want to use steps 5 through 9, as this aligns most closely with the literature.
 
 You obtain results after only four steps:
 

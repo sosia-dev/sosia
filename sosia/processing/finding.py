@@ -105,24 +105,4 @@ def find_matches(original, verbose, refresh):
     if not group:
         return group
 
-    # Fourth round of filtering: affiliations
-    if original.search_affiliations:
-        text = "Filtering based on affiliations..."
-        custom_print(text, verbose)
-        group[:] = [m for m in group if
-                    same_affiliation(original.search_affiliations, m,
-                                     original.year, original.sql_fname, refresh)]
-        text = (f"... left with {len(group):,} candidates from specified "
-                f"institution(s)")
-        custom_print(text, verbose)
-
     return group
-
-
-def same_affiliation(affiliations, new, year, db_path, refresh=False):
-    """Whether a scientist belongs to an institution in `affiliations`."""
-    from sosia.classes import Scientist
-
-    m = Scientist([new], year, refresh=refresh,
-                  db_path=db_path)
-    return any(str(a) in m.affiliation_id for a in affiliations)
