@@ -6,6 +6,7 @@ from collections import namedtuple
 import pandas as pd
 
 warnings.filterwarnings("ignore")
+FIRST_YEAR_MARGIN = 1
 
 # Expected matches
 fields = "ID name first_year num_coauthors num_publications num_citations "\
@@ -53,7 +54,8 @@ def test_search_sources_change(original1):
 
 
 def test_candidates(original1, refresh_interval):
-    original1.identify_candidates_from_sources(chunk_size=2, refresh=refresh_interval)
+    original1.identify_candidates_from_sources(chunk_size=2, refresh=refresh_interval,
+                                               first_year_margin=FIRST_YEAR_MARGIN)
     recieved = original1.candidates
     assert isinstance(recieved, list)
     assert 700 <= len(recieved) <= 800
@@ -61,14 +63,18 @@ def test_candidates(original1, refresh_interval):
 
 def test_candidates_stacked(original1, refresh_interval):
     original1.identify_candidates_from_sources(chunk_size=2, stacked=True,
-                                               refresh=refresh_interval)
+                                               refresh=refresh_interval,
+                                               first_year_margin=FIRST_YEAR_MARGIN)
     recieved = original1.candidates
     assert isinstance(recieved, list)
     assert 700 <= len(recieved) <= 800
 
 
 def test_filter_candidates(original1, refresh_interval):
-    original1.filter_candidates(refresh=refresh_interval)
+    original1.filter_candidates(refresh=refresh_interval, cits_margin=0.15,
+                                same_discipline=True, pub_margin=0.2,
+                                first_year_margin=FIRST_YEAR_MARGIN,
+                                coauth_margin=0.2)
     expected = [m.ID for m in MATCHES]
     assert original1.matches == expected
 
@@ -85,6 +91,5 @@ def test_inform_matches(original1, refresh_interval):
     df_r["num_cited_refs"] = df_r["num_cited_refs"].round(3)
     df_m = pd.DataFrame(MATCHES)
     df_m["num_cited_refs"] = df_m["num_cited_refs"].round(3)
-    df_m["ID"] = df_m["ID"].astype("uint64")
     pd.testing.assert_frame_equal(df_r, df_m)
 

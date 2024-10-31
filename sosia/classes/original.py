@@ -8,8 +8,10 @@ from pandas import DataFrame
 from typing_extensions import Self
 
 from sosia.classes import Scientist
-from sosia.processing import add_source_names, chunk_list, find_matches, \
-    flat_set_from_df, get_authors_from_sourceyear, inform_matches
+from sosia.processing import add_source_names, chunk_list, compute_margins, \
+    flat_set_from_df, get_author_data, get_author_info, \
+    get_authors_from_sourceyear, get_citations, generate_filter_message, \
+    inform_matches
 from sosia.utils import accepts, custom_print
 
 
@@ -64,11 +66,6 @@ class Original(Scientist):
         self,
         scientist: Union[str, int, list[Union[str, int]]],
         match_year: Union[str, int],
-        first_year_margin: Optional[int] = None,
-        pub_margin: Optional[Union[float, int]] = None,
-        coauth_margin: Optional[Union[float, int]] = None,
-        cits_margin: Optional[Union[float, int]] = None,
-        same_discipline: Optional[bool] = False,
         eids: Optional[list[Union[str, int]]] = None,
         refresh: Union[bool, int] = False,
         db_path: Optional[Union[str, Path]] = None,
@@ -86,42 +83,6 @@ class Original(Scientist):
             Year in which the comparison takes place.  Control scientist will
             be matched on trends and characteristics of the original
             scientist up to this year.
-
-        first_year_margin : numeric (optional, default=None)
-            The left and right margin for year of first publication to match
-            possible matches and the scientist on. If the value is not given,
-            sosia will not filter on the first year of publication.
-
-        pub_margin : numeric (optional, default=None)
-            The left and right margin for the number of publications to match
-            possible matches and the scientist on.  If the value is a float,
-            it is interpreted as percentage of the scientist's number of
-            publications and the resulting value is rounded up.  If the value
-            is an integer, it is interpreted as fixed number of publications.
-            If the value is not given, sosia will not filter on the number
-            of publications.
-
-        coauth_margin : numeric (optional, default=None)
-            The left and right margin for the number of coauthors to match
-            possible matches and the scientist on.  If the value is a float,
-            it is interpreted as percentage of the scientists number of
-            coauthors and the resulting value is rounded up.  If the value
-            is an integer, it is interpreted as fixed number of coauthors.
-            If the value is not given, sosia will not filter on the number
-            of coauthors.
-
-        cits_margin : numeric (optional, default=None)
-            The left and right margin for the number of citations to match
-            possible matches and the scientist on.  If the value is a float,
-            it is interpreted as percentage of the scientists number of
-            publications and the resulting value is rounded up.  If the value
-            is an integer, it is interpreted as fixed number of citations.
-            If the value is not given, sosia will not filter on the number
-            of citations.
-
-        same_discipline : boolean (optional, default=False)
-            Whether to restrict candidates to the same main discipline (ASJC2)
-            as the original scientist or not.
 
         eids : list (optional, default=None)
             A list of scopus EIDs of the publications of the scientist you
@@ -143,28 +104,12 @@ class Original(Scientist):
         verbose : bool (optional, default=False)
             Whether to report on the initialization process.
         """
-        # Internal checks
-        if first_year_margin is not None and not isinstance(first_year_margin, (int, float)):
-            raise TypeError("Argument first_year_margin must be float or integer.")
-        if pub_margin is not None and not isinstance(pub_margin, (int, float)):
-            raise TypeError("Argument pub_margin must be float or integer.")
-        if coauth_margin is not None and not isinstance(coauth_margin, (int, float)):
-            raise TypeError("Argument coauth_margin must be float or integer.")
-        if cits_margin is not None and not isinstance(cits_margin, (int, float)):
-            raise TypeError("Argument cits_margin must be float or integer.")
-
         # Variables
         if not isinstance(scientist, list):
             scientist = [scientist]
         self.identifier = [int(auth_id) for auth_id in scientist]
         self.match_year = int(match_year)
-        self.first_year_margin = first_year_margin
-        self.pub_margin = pub_margin
-        self.coauth_margin = coauth_margin
-        self.cits_margin = cits_margin
-        self.same_discipline = same_discipline
         self.eids = eids
-        self.refresh = refresh
         self.sql_fname = db_path
         self._search_sources = None
         self._candidates = None
@@ -176,6 +121,7 @@ class Original(Scientist):
 
     def identify_candidates_from_sources(
         self,
+        first_year_margin: int,
         chunk_size: int = 2,
         stacked: bool = False,
         verbose: bool = False,
@@ -191,6 +137,10 @@ class Original(Scientist):
 
         Parameters
         ----------
+        first_year_margin : int
+            The left margin for year of first publication to identify
+            match candidates.
+
         chunk_size : int (optional, default=2)
             The size of each set in terms of years, i.e. how many years
             each chunk will contain.  Must not be smaller than the
@@ -228,9 +178,9 @@ class Original(Scientist):
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise RuntimeError(text)
-        if chunk_size < self.first_year_margin:
+        if chunk_size < first_year_margin:
             msg = f"Parameter 'chunk_size' must not be smaller " \
-                  f"than {self.first_year_margin} ('first_year_margin')."
+                  f"than {first_year_margin} ('first_year_margin')."
             raise ValueError(msg)
 
         # Define variables
@@ -241,7 +191,7 @@ class Original(Scientist):
         # Get years to look through
         years = range(self.first_year, self.match_year)
         chunks = chunk_list(years, chunk_size)
-        chunks[0] = range(self.first_year - self.first_year_margin,
+        chunks[0] = range(self.first_year - first_year_margin,
                           max(chunks[0]) + 1)
 
         # Get authors
@@ -337,6 +287,11 @@ class Original(Scientist):
 
     def filter_candidates(
             self,
+            first_year_margin: Optional[int] = None,
+            pub_margin: Optional[Union[float, int]] = None,
+            coauth_margin: Optional[Union[float, int]] = None,
+            cits_margin: Optional[Union[float, int]] = None,
+            same_discipline: Optional[bool] = False,
             verbose: bool = False,
             refresh: Union[bool, int] = False
     ) -> None:
@@ -349,6 +304,42 @@ class Original(Scientist):
 
         Parameters
         ----------
+        first_year_margin : numeric (optional, default=None)
+            The left and right margin for year of first publication to match
+            candidates and the scientist on. If the value is not given,
+            sosia will not filter on the first year of publication.
+
+        pub_margin : numeric (optional, default=None)
+            The left and right margin for the number of publications to match
+            candidates and the scientist on.  If the value is a float,
+            it is interpreted as percentage of the scientist's number of
+            publications and the resulting value is rounded up.  If the value
+            is an integer, it is interpreted as fixed number of publications.
+            If the value is not given, sosia will not filter on the number
+            of publications.
+
+        coauth_margin : numeric (optional, default=None)
+            The left and right margin for the number of coauthors to match
+            candidates and the scientist on.  If the value is a float,
+            it is interpreted as percentage of the scientists number of
+            coauthors and the resulting value is rounded up.  If the value
+            is an integer, it is interpreted as fixed number of coauthors.
+            If the value is not given, sosia will not filter on the number
+            of coauthors.
+
+        cits_margin : numeric (optional, default=None)
+            The left and right margin for the number of citations to match
+            candidates and the scientist on.  If the value is a float,
+            it is interpreted as percentage of the scientists number of
+            publications and the resulting value is rounded up.  If the value
+            is an integer, it is interpreted as fixed number of citations.
+            If the value is not given, sosia will not filter on the number
+            of citations.
+
+        same_discipline : boolean (optional, default=False)
+            Whether to restrict candidates to the same main discipline (ASJC2)
+            as the original scientist or not.
+
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
 
@@ -365,16 +356,94 @@ class Original(Scientist):
         if not self.candidates:
             text = "No candidates defined.  Please define candidates first."
             raise RuntimeError(text)
+        if first_year_margin is not None and not isinstance(first_year_margin, (int, float)):
+            raise TypeError("Argument first_year_margin must be float or integer.")
+        if pub_margin is not None and not isinstance(pub_margin, (int, float)):
+            raise TypeError("Argument pub_margin must be float or integer.")
+        if coauth_margin is not None and not isinstance(coauth_margin, (int, float)):
+            raise TypeError("Argument coauth_margin must be float or integer.")
+        if cits_margin is not None and not isinstance(cits_margin, (int, float)):
+            raise TypeError("Argument cits_margin must be float or integer.")
 
         # Find matches
-        matches = find_matches(self, verbose, refresh)
-        if len(matches) == 1:
+        group = self.candidates
+        text = f"Filtering {len(group):,} candidates..."
+        custom_print(text, verbose)
+        while group:
+            # First round of filtering: minimum publications and main field
+            if same_discipline or pub_margin is not None:
+                info = get_author_info(group, self.sql_conn, verbose=verbose,
+                                       refresh=refresh)
+                if same_discipline:
+                    same_discipline = info['areas'].str.startswith(self.main_field[1])
+                    info = info[same_discipline]
+                    text = (f"... left with {info.shape[0]:,} candidates with same "
+                            f"main discipline ({self.main_field[1]})")
+                    custom_print(text, verbose)
+                if pub_margin is not None:
+                    min_papers = compute_margins(len(self.publications), pub_margin)[0]
+                    enough_pubs = info['documents'].astype(int) >= min_papers
+                    info = info[enough_pubs]
+                    text = (f"... left with {info.shape[0]:,} candidates with "
+                            f"sufficient total publications ({min_papers:,})")
+                    custom_print(text, verbose)
+                group = sorted(info["auth_id"].unique())
+
+            # Second round of filtering: first year, publication count, coauthor count
+            second_round = (
+                    (first_year_margin is not None) or
+                    (pub_margin is not None) or
+                    (coauth_margin is not None)
+            )
+            if second_round:
+                data = get_author_data(group=group, verbose=verbose,
+                                       conn=self.sql_conn, refresh=refresh)
+                data = data[data["year"] <= self.match_year]
+                if first_year_margin is not None:
+                    _years = compute_margins(self.first_year, first_year_margin)
+                    similar_start = data["first_year"].between(*_years)
+                    data = data[similar_start]
+                    text = generate_filter_message(data['auth_id'].nunique(), _years,
+                                                   "year of first publication")
+                    custom_print(text, verbose)
+                data = (data.drop(columns="first_year")
+                        .drop_duplicates("auth_id", keep="last"))
+                if pub_margin is not None:
+                    _npapers = compute_margins(len(self.publications), pub_margin)
+                    similar_pubcount = data["n_pubs"].between(*_npapers)
+                    data = data[similar_pubcount]
+                    text = generate_filter_message(data.shape[0], _npapers,
+                                                   "number of publications")
+                    custom_print(text, verbose)
+                if coauth_margin is not None:
+                    _ncoauth = compute_margins(len(self.coauthors), coauth_margin)
+                    similar_coauthcount = data["n_coauth"].between(*_ncoauth)
+                    data = data[similar_coauthcount]
+                    text = generate_filter_message(data.shape[0], _ncoauth,
+                                                   "number of coauthors")
+                    custom_print(text, verbose)
+                group = sorted(data["auth_id"].unique())
+
+            # Third round of filtering: citations
+            if cits_margin is not None:
+                citations = get_citations(group, self.year, refresh=refresh,
+                                          verbose=verbose, conn=self.sql_conn)
+                _ncits = compute_margins(self.citations, cits_margin)
+                similar_citcount = citations["n_cits"].between(*_ncits)
+                citations = citations[similar_citcount]
+                text = generate_filter_message(citations.shape[0], _ncits,
+                                               "number of citations")
+                custom_print(text, verbose)
+                group = sorted(citations['auth_id'].unique())
+
+        # Status update
+        if len(group) == 1:
             ending = ""
         else:
             ending = "es"
-        text = f"Found {len(matches):,} match{ending}"
+        text = f"Found {len(group):,} match{ending}"
         custom_print(text, verbose)
-        self._matches = sorted([auth_id for auth_id in matches])
+        self._matches = sorted([int(auth_id) for auth_id in group])
 
     def inform_matches(
         self,

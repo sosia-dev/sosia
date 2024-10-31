@@ -58,5 +58,4 @@ def scientist4(test_cache, refresh_interval):
 @pytest.fixture(scope="session")
 def original1(test_cache, refresh_interval):
     return Original(55208373700, 2018, db_path=test_cache,
-                    refresh=refresh_interval, cits_margin=0.15, same_discipline=True,
-                    first_year_margin=1, pub_margin=0.2, coauth_margin=0.2)
+                    refresh=refresh_interval)

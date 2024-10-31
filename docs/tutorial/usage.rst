@@ -49,23 +49,6 @@ You can override each property manually, for instance when you are certain that 
     >>> stefano.main_field
     (1406, 'ECON')
 
-
-Similarity parameters
----------------------
-
-`sosia` aims to identify researchers who are similar to the Original in the comparison year. `sosia` can define similarity based on six criteria: the same main discipline (ASJC2), the start of the academic career, the number of co-authors, the number of publications, the total citation count, being affiliated to a specific (set of) affiliations. Another researcher (i.e., Scopus profile) is considered similar if their characteristics fall within a defined margin around those of the Original. However, keep in mind that `sosia` discards coauthors of the Original.
-
-By default none of the six criteria is active; i.e., you can switch them on and off like they were modules. We recommend to use the first five criteria with rather low values (e.g., , the margin for the first year of publication equal to 1 year, and the margins for the number of co-authors, publications, and citations equal to something between 10% and 20%). Margins apply in both directions. `sosia` interprets integer values as absolute deviations and float values as percentages for relative deviations. To match on the characteristic precisely, use the value 0.
-
-.. code-block:: python
-   
-    >>> stefano = Original(55208373700, 2018, db_path=DB_NAME,
-    >>>                    same_discipline=True, first_year_margin=1,
-    >>>                    coauth_margin=0.2, pub_margin=0.2,
-    >>>                    cits_margin=0.15)
-
-With this configuration, sosia will identify matches who began publishing within ±1 years of the scientist's first publication. In the comparison year, the matches will have a similar number of co-authors, within a range of ±20% of the original number (with a minimum of 1), and a similar number of publications, also within a range of ±15% (with a minimum of 1).
-
 Defining search sources
 -----------------------
 The first step in this process is to define a list of sources that are similar in type and area to those the scientist published in up to the comparison year. A source is considered similar if it (i) is associated with the scientist's fields (ASJC-4) and (ii) matches the type(s) of sources the scientist has used. Here, the type of source refers to categories such as journals, conference proceedings, books, etc. Using parameter "mode", users can (iii) choose between a wide and a narrow defintion of sources. In the narrow defintion, the default, a source may not be linked to fields that are alien to the Original; in the wide defintion, those sources are included.
@@ -96,7 +79,7 @@ Identifying candidates
 
 .. code-block:: python
 
-    >>> stefano.identify_candidates_from_sources(verbose=True, chunk_size=2)
+    >>> stefano.identify_candidates_from_sources(first_year_margin=2, chunk_size=2, verbose=True)
     Identifying candidates using up to 206 sources...
     ... parsing Scopus information for 2010...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:27<00:00,  1.01s/it]
@@ -125,11 +108,19 @@ An alternative search process that minimizes the number of queries can be activa
 Finding matches
 ---------------
 
-The next step is to filter the candidates. Depending on the search paratmers, `sosia` searches for authors who are mainly active in the same field, started around the same time, have a similar number of publications, have a similar number of coauthors, and have been cited about equally often.
+The next step is to filter the candidates. `sosia` aims to identify researchers who are similar to the Original in the comparison year. `sosia` can define similarity based on six criteria: the same main discipline (ASJC2), the start of the academic career, the number of co-authors, the number of publications, and the total citation count. Another researcher (i.e., Scopus profile) is considered similar if their characteristics fall within a defined margin around those of the Original. However, keep in mind that `sosia` discards coauthors.
+
+By default none of the six criteria is active; i.e., you can switch them on and off like they were modules. We recommend to use the first five criteria with rather low values (e.g., , the margin for the first year of publication equal to 1 year, and the margins for the number of co-authors, publications, and citations equal to something between 10% and 20%), but this may depend on the characteristics of the original scientist. For instance, you may want to have a small or no first year margin for young scientists and a large margin for senior scientists, or you may want to set the citation margin depending on the discipline.
+
+Margins apply in both directions. `sosia` interprets integer values as absolute deviations and float values as percentages for relative deviations. To match on the characteristic precisely, use the value 0. The margin for the first year should be the same as in the previous step.
+
+With the following configuration, `sosia` will keep candidates whose main field is the same as that of the original scientist and who began publishing within ±1 years of the original scientist's first publication. In the comparison year, the candidates need to have a similar number of co-authors, within a range of ±20% of the original number (with a minimum of 1), and a similar number of publications, also within a range of ±15% (with a minimum of 1).
 
 .. code-block:: python
 
-    >>> stefano.filter_candidates(verbose=True)
+    >>> stefano.filter_candidates(same_discipline=True, first_year_margin=1,
+    >>>                           coauth_margin=0.2, pub_margin=0.2
+    >>>                           cits_margin=0.15 verbose=True, )
     Filtering 772 candidates...
     Downloading information for 772 candidates...
     100%|████████████████████████████████████████████████████████████████████████████████████| 8/8 [02:07<00:00,  9.58s/it]
