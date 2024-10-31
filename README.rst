@@ -53,21 +53,22 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>> # Sources similiar to those stefano publishes in
     >>> stefano.define_search_sources()
     >>> # Authors publishing in search sources every 2 years
-    >>> stefano.identify_candidates_from_sources(first_year_margin=2, chunk_size=2)
+    >>> stefano.identify_candidates_from_sources(first_year_margin=1, chunk_size=2)
     >>> # Find candidates whose characteristics fall within margins
-    >>> stefano.filter_candidates(same_discipline=True, first_year_margin=2,
-    >>>                           pub_margin=0.2, cits_margin=0.2, coauth_margin=0.2)
+    >>> stefano.filter_candidates(same_discipline=True, first_year_margin=1,
+    >>>                           pub_margin=0.2, cits_margin=0.2,
+    >>>                           coauth_margin=0.15)
     >>> print(stefano.matches)
-    >>> [55320703900, 55817553500, 56113324000, 56276429200]
-    >>> stefano.inform_matches()  # Optional step to provide additional information
+    >>> [55227190800, 55880939500]
+    >>> # Optional step to provide additional information
+    >>> stefano.inform_matches()
     >>> print(stefano.matches[0])
-    Match(ID=55320703900, name='Arts, Sam', first_name='Sam', surname='Arts',
-          first_year=2012, last_year=2019, num_coauthors=9, num_publications=8, num_citations=74,
-          num_coauthors_period=None, num_publications_period=None, num_citations_period=None, subjects=['BUSI', 'ECON', 'DECI'],
-          affiliation_country='Belgium', affiliation_id='60025063',
-          affiliation_name='KU Leuven', affiliation_type='univ',
-          language='eng', num_cited_refs=28)
-
+    Match(ID=55227190800, name='Behrens, Judith', first_name='Judith',
+          surname='Behrens', first_year=2012, last_year=2020, num_coauthors=10,
+          num_publications=14, num_citations=106, subjects=['BUSI', 'ECON', 'COMP'],
+          affiliation_country='Belgium', affiliation_id='60211750',
+          affiliation_name='Solvay Brussels School of Economics and Management',
+          affiliation_type='univ', language='eng', num_cited_refs=10)
 
 .. inclusion-marker-end
 
