@@ -2,7 +2,7 @@
 
 from sosia.processing.getting import get_author_data, get_author_info, \
     get_citations
-from sosia.processing.utils import generate_filter_message, margin_range
+from sosia.processing.utils import compute_margins, generate_filter_message
 from sosia.utils import custom_print
 
 
@@ -38,7 +38,7 @@ def find_matches(original, verbose, refresh):
                     f"main discipline ({original.main_field[1]})")
             custom_print(text, verbose)
         if original.pub_margin is not None:
-            min_papers = margin_range(len(original.publications), original.pub_margin)[0]
+            min_papers = compute_margins(len(original.publications), original.pub_margin)[0]
             enough_pubs = info['documents'].astype(int) >= min_papers
             info = info[enough_pubs]
             text = (f"... left with {info.shape[0]:,} candidates with "
@@ -61,8 +61,8 @@ def find_matches(original, verbose, refresh):
                                refresh=refresh)
         data = data[data["year"] <= original.match_year]
         if original.first_year_margin is not None:
-            _years = margin_range(original.first_year, original.first_year_margin)
-            similar_start = data["first_year"].between(min(_years), max(_years))
+            _years = compute_margins(original.first_year, original.first_year_margin)
+            similar_start = data["first_year"].between(*_years)
             data = data[similar_start]
             text = generate_filter_message(data['auth_id'].nunique(), _years,
                                            "year of first publication")
@@ -72,8 +72,8 @@ def find_matches(original, verbose, refresh):
         if data.empty:
             return set()
         if original.pub_margin is not None:
-            _npapers = margin_range(len(original.publications), original.pub_margin)
-            similar_pubcount = data["n_pubs"].between(min(_npapers), max(_npapers))
+            _npapers = compute_margins(len(original.publications), original.pub_margin)
+            similar_pubcount = data["n_pubs"].between(*_npapers)
             data = data[similar_pubcount]
             text = generate_filter_message(data.shape[0], _npapers,
                                            "number of publications")
@@ -81,8 +81,8 @@ def find_matches(original, verbose, refresh):
         if data.empty:
             return set()
         if original.coauth_margin is not None:
-            _ncoauth = margin_range(len(original.coauthors), original.coauth_margin)
-            similar_coauthcount = data["n_coauth"].between(min(_ncoauth), max(_ncoauth))
+            _ncoauth = compute_margins(len(original.coauthors), original.coauth_margin)
+            similar_coauthcount = data["n_coauth"].between(*_ncoauth)
             data = data[similar_coauthcount]
             text = generate_filter_message(data.shape[0], _ncoauth,
                                            "number of coauthors")
@@ -95,8 +95,8 @@ def find_matches(original, verbose, refresh):
     if original.cits_margin is not None:
         citations = get_citations(group, original.year, refresh=refresh,
                                   verbose=verbose, conn=conn)
-        _ncits = margin_range(original.citations, original.cits_margin)
-        similar_citcount = citations["n_cits"].between(min(_ncits), max(_ncits))
+        _ncits = compute_margins(original.citations, original.cits_margin)
+        similar_citcount = citations["n_cits"].between(*_ncits)
         citations = citations[similar_citcount]
         text = generate_filter_message(citations.shape[0], _ncits,
                                        "number of citations")

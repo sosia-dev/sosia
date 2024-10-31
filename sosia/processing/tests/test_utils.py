@@ -2,8 +2,8 @@
 
 import pandas as pd
 
-from sosia.processing import chunk_list, compute_overlap, flat_set_from_df, \
-    margin_range
+from sosia.processing import chunk_list, compute_margins, compute_overlap, \
+    flat_set_from_df
 
 
 def test_chunk_list():
@@ -18,6 +18,12 @@ def test_chunk_list():
     assert result3 == expected3
 
 
+def test_compute_margins():
+    assert compute_margins(5, 1) == (4, 6)
+    assert compute_margins(10, 0.09) == (9, 11)
+    assert compute_margins(150, 200) == (0, 350)
+
+
 def test_compute_overlap():
     set1 = set("abc")
     set2 = set("cde")
@@ -30,9 +36,3 @@ def test_flat_set_from_df():
     expected = [1, 2, 10, 20]
     received = sorted(list(flat_set_from_df(df, "col1")))
     assert received == expected
-
-
-def test_margin_range():
-    assert margin_range(5, 1) == range(4, 7)
-    assert margin_range(10, 0.09) == range(9, 12)
-    assert margin_range(150, 200) == range(0, 351)

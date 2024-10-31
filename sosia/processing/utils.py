@@ -32,31 +32,31 @@ def flat_set_from_df(df, col):
     return set([item for sublist in lists for item in sublist])
 
 
-def generate_filter_message(number: int, condition: range, label: str):
+def generate_filter_message(number: int, margins: tuple, label: str):
     """Generate filter progress message."""
     if number == 1:
         plural = ""
     else:
         plural = "s"
-    if len(condition) == 1:
+    if margins[0] == margins[1]:
         qualifier = "same"
         if "year" in label:
-            suffix = condition[0]
+            suffix = margins[0]
         else:
-            suffix = f"{condition[0]:,}"
+            suffix = f"{margins[0]:,}"
     else:
         qualifier = "similar"
         if "year" in label:
-            suffix = f"{min(condition)} to {max(condition)}"
+            suffix = f"{min(margins)} to {max(margins)}"
         else:
-            suffix = f"{min(condition):,} to {max(condition):,}"
+            suffix = f"{min(margins):,} to {max(margins):,}"
     text = (f"... left with {number:,} candidate{plural} with "
             f"{qualifier} {label} ({suffix})")
     return text
 
 
-def margin_range(base: int, val: Union[float, int]):
-    """Create a range of margins around a base value.
+def compute_margins(base: int, val: Union[float, int]) -> tuple[int, int]:
+    """Computer upper and lower margin around a base value.
 
     Parameters
     ----------
@@ -68,14 +68,14 @@ def margin_range(base: int, val: Union[float, int]):
 
     Returns
     -------
-    r : range
-        A range object representing the margin range.
+    min, may : tuple
+        A tuple with the upper and lower value.
     """
     if isinstance(val, float):
         margin = ceil(val * base)
-        r = range(max(base - margin, 0), base + margin + 1)
+        t = (max(base - margin, 0), base + margin)
     elif isinstance(val, int):
-        r = range(max(base - val, 0), base + val + 1)
+        t = (max(base - val, 0), base + val)
     else:
         raise TypeError("Value must be either float or int.")
-    return r
+    return t
