@@ -10,11 +10,8 @@ from sosia.establishing import DB_TABLES
 
 def drop_values(data: pd.DataFrame, conn: Connection, table: str) -> None:
     """Drop values from a database `table`."""
-    if table == "sources":
-        fields = ("source_id", "year")
-    elif table == "author_citations":
-        fields = ("auth_id", "year")
-    else:
+    fields = DB_TABLES[table]["primary"]
+    if table == "author_data":
         fields = ("auth_id",)
     cursor = conn.cursor()
     if len(fields) == 1:
