@@ -1,7 +1,7 @@
 """Module that contains functions for retrieving data from a SQLite3 database cache."""
 
 from sqlite3 import Connection
-from typing import Iterable, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -70,39 +70,6 @@ def insert_data(
     conn.commit()
 
 
-def insert_temporary_table(df: pd.DataFrame,
-                           conn: Connection,
-                           merge_cols: list[str]) -> None:
-    """Temporarily create a table in SQL database in order to prepare a
-    merge with `merge_cols`.
-
-    Parameters
-    ----------
-    df : DataFrame
-        Dataframe with authors information that should be entered.
-
-    conn : sqlite3 connection
-        Standing connection to a SQLite3 database.
-
-    merge_cols : list of str
-        The columns that should be created and filled.  Must correspond in
-        length to the number of columns of `df`.
-    """
-    df = df.astype({c: "int64" for c in merge_cols})
-    # Drop table
-    cursor = conn.cursor()
-    cursor.execute("DROP TABLE IF EXISTS temp")
-    # Create table
-    names = ", ".join(merge_cols)
-    q = f"CREATE TABLE temp ({names}, PRIMARY KEY({names}))"
-    cursor.execute(q)
-    # Insert values
-    wildcards = ", ".join(["?"] * len(merge_cols))
-    q = f"INSERT OR IGNORE INTO temp ({names}) values ({wildcards})"
-    cursor.executemany(q, df.to_records(index=False))
-    conn.commit()
-
-
 def retrieve_from_author_table(
         df: pd.DataFrame,
         conn: Connection,
@@ -144,15 +111,17 @@ def retrieve_from_author_table(
     if not isinstance(refresh, bool) or refresh:
         drop_values(df, conn, table=table)
 
-    insert_temporary_table(df, merge_cols=cols, conn=conn)
-    incache = temporary_merge(conn, table=table, merge_cols=cols)
+    # Query data
+    incache = merge_query(df, conn, table=table, merge_cols=cols, join="INNER")
     tosearch = set(df["auth_id"].unique()) - set(incache["auth_id"].unique())
     return incache, sorted(tosearch)
 
 
-def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
-                                     conn: Connection,
-                                     drop: Optional[bool] = False):
+def retrieve_authors_from_sourceyear(
+        tosearch: pd.DataFrame,
+        conn: Connection,
+        drop: Optional[bool] = False
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Search through sources by year for authors in SQL database.
 
     Parameters
@@ -182,11 +151,8 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
 
     # Query authors for relevant journal-years
     cols = ["source_id", "year"]
-    insert_temporary_table(tosearch.copy(), conn, merge_cols=cols)
-    q = "SELECT a.source_id, a.year, b.auids FROM temp AS a "\
-        "LEFT JOIN sources AS b "\
-        "ON a.source_id=b.source_id AND a.year=b.year;"
-    data = pd.read_sql_query(q, conn)
+    data = merge_query(tosearch.copy(), conn, table="sources",
+                       merge_cols=cols, join="LEFT")
 
     # Finalize
     mask_missing = data["auids"].isna()
@@ -195,10 +161,35 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
     return incache, missing
 
 
-def temporary_merge(conn: Connection,
-                    table: str,
-                    merge_cols: Iterable[str]) -> pd.DataFrame:
-    """Perform merge with temp table and `table` and retrieve all columns."""
-    conditions = " and ".join(["a.{0}=b.{0}".format(c) for c in merge_cols])
-    q = f"SELECT b.* FROM temp AS a INNER JOIN {table} AS b ON {conditions};"
-    return pd.read_sql_query(q, conn)
+def merge_query(
+        df: pd.DataFrame,
+        conn: Connection,
+        table: str,
+        merge_cols: list[str],
+        join: str = "INNER"
+) -> pd.DataFrame:
+    """Query data from `table` matching `df` on `merge_cols`."""
+    # Insert "temp" table
+    df = df.astype({c: "int64" for c in merge_cols})
+    cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS temp")
+    names = ", ".join(merge_cols)
+    cursor.execute(f"CREATE TABLE temp ({names}, PRIMARY KEY({names}))")
+    wildcards = ", ".join(["?"] * len(merge_cols))
+    cursor.executemany(f"INSERT OR IGNORE INTO temp ({names}) VALUES ({wildcards})",
+                       df.to_records(index=False))
+    conn.commit()
+    # Build query
+    table_columns = [col[0] for col in DB_TABLES[table]["columns"]]
+    b_columns = [col for col in table_columns if col not in merge_cols]
+    a_select = ", ".join([f"a.{col}" for col in merge_cols])
+    b_select = ", ".join([f"b.{col}" for col in b_columns])
+    select_statement = f"{a_select}, {b_select}" if b_select else a_select
+    conditions = " and ".join([f"a.{col} = b.{col}" for col in merge_cols])
+    query = (
+        f"SELECT {select_statement} FROM temp AS a "
+        f"{join} JOIN {table} AS b "
+        f"ON {conditions};"
+    )
+    # Retrieve data
+    return pd.read_sql_query(query, conn)
