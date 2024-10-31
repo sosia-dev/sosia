@@ -137,8 +137,8 @@ def get_authors_from_sourceyear(df, conn, refresh=False, *args, **kwargs):
     Returns
     -------
     data : DataFrame
-        DataFrame in format ("source_id", "year", "auids", "afid"), where
-        entries correspond to an individual paper.
+        DataFrame in format ("source_id", "year", "auids"), where
+        auids is a string of author IDs joined on semicolon.
     """
     # Retrieve information from SQL database
     drop = refresh is not False  # becomes True for all values unless False
@@ -153,26 +153,22 @@ def get_authors_from_sourceyear(df, conn, refresh=False, *args, **kwargs):
         new = query_pubs_by_sourceyear(sources, year, refresh=refresh,
                                        *args, **kwargs)
         no_info = set(sources) - set(new["source_id"].unique())
+        assert new["source_id"].nunique() + len(no_info) == len(sources)
         empty.extend([(s, year) for s in no_info])
         to_add = pd.concat([to_add, new])
-
-    # Format useful information
-    if data.empty:
-        data = to_add
-    else:
-        data = pd.concat([data, to_add])
-    data = data[data["auids"] != ""]
-    data["auids"] = data["auids"].str.replace(";", ",").str.split(",")
 
     # Insert new information and information on missing data
     if empty:
         sources, years = list(zip(*empty))
-        d = {"source_id": sources, "year": years, "auids": [""]*len(sources),
-             "afid": [""]*len(sources)}
+        d = {"source_id": sources, "year": years, "auids": [""] * len(sources)}
         to_add = pd.concat([to_add, pd.DataFrame(d)])
     if not to_add.empty:
-        to_add["auids"] = to_add["auids"].str.replace(";", ",").str.split(",")
-        insert_data(to_add, conn, table="sources_afids")
+        insert_data(to_add, conn, table="sources")
+
+    # Return data
+    data = pd.concat([data, to_add])
+    data = data[data["auids"] != ""]
+    data["auids"] = data["auids"].str.split(";")
     return data
 
 

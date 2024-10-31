@@ -1,10 +1,9 @@
 """Tests for processing.utils module."""
 
 import pandas as pd
-from pybliometrics.scopus import ScopusSearch
 
-from sosia.processing import chunk_list, compute_overlap, expand_affiliation, \
-    flat_set_from_df, margin_range
+from sosia.processing import chunk_list, compute_overlap, flat_set_from_df, \
+    margin_range
 
 
 def test_chunk_list():
@@ -23,17 +22,6 @@ def test_compute_overlap():
     set1 = set("abc")
     set2 = set("cde")
     assert compute_overlap(set1, set2) == 1
-
-
-def test_expand_affiliation(refresh_interval):
-    pubs = ScopusSearch(f"AU-ID(6701809842)", refresh=refresh_interval).results
-    res = pd.DataFrame(pubs)
-    res = expand_affiliation(res)
-    assert len(res) >= 180
-    expect_columns = ['source_id', 'author_ids', 'afid']
-    assert set(res.columns) == set(expect_columns)
-    assert any(res['author_ids'].str.contains(";"))
-    assert all(isinstance(x, (int, float)) for x in res['afid'].unique())
 
 
 def test_flat_set_from_df():

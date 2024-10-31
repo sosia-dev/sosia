@@ -35,13 +35,12 @@ MATCHES = [
 ]
 
 
-def test_search_sources(original1, original2):
-    for o in [original1, original2]:
-        o.define_search_sources()
-        search_sources = o.search_sources
-        assert len(search_sources) == 206
-        assert (20206, "Academy of Management Review") in search_sources
-        assert (15143, "Regional Studies") in search_sources
+def test_search_sources(original1):
+    original1.define_search_sources()
+    search_sources = original1.search_sources
+    assert len(search_sources) == 206
+    assert (20206, "Academy of Management Review") in search_sources
+    assert (15143, "Regional Studies") in search_sources
 
 
 def test_search_sources_change(original1):
@@ -68,24 +67,10 @@ def test_candidates_stacked(original1, refresh_interval):
     assert 700 <= len(recieved) <= 800
 
 
-def test_candidates_affiliations_stacked(original2, refresh_interval):
-    original2.identify_candidates_from_sources(chunk_size=2, stacked=True,
-                                               refresh=refresh_interval)
-    recieved = original2.candidates
-    assert isinstance(recieved, list)
-    assert 2 <= len(recieved) <= 10
-
-
 def test_filter_candidates(original1, refresh_interval):
     original1.filter_candidates(refresh=refresh_interval)
     expected = [m.ID for m in MATCHES]
     assert original1.matches == expected
-
-
-def test_filter_candidates_affiliations(original2, refresh_interval):
-    original2.filter_candidates(refresh=refresh_interval)
-    expected = [m.ID for m in MATCHES]
-    assert original2.matches == expected
 
 
 def test_inform_matches(original1, refresh_interval):

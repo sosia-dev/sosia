@@ -24,19 +24,6 @@ def compute_overlap(left, right):
     return len(left.intersection(right))
 
 
-def expand_affiliation(df):
-    """Auxiliary function to expand the information about the affiliation
-    in publications from ScopusSearch.
-    """
-    temp = df.set_index(["source_id", "author_ids"])[["afid"]]
-    temp = (temp["afid"].str.split(";", expand=True)
-                .stack().dropna().reset_index()
-                .drop("level_2", axis=1)
-                .rename(columns={0: "afid"}))
-    temp['afid'] = temp['afid'].astype(float)
-    return temp
-
-
 def flat_set_from_df(df, col):
     """Flatten Series from DataFrame which contains lists and
     return as set, optionally after filtering the DataFrame.
@@ -92,8 +79,3 @@ def margin_range(base: int, val: Union[float, int]):
     else:
         raise TypeError("Value must be either float or int.")
     return r
-
-
-def robust_join(s, sep=','):
-    """Join an iterable converting each element to str first."""
-    return sep.join([str(e) for e in s])

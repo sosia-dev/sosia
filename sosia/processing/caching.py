@@ -1,17 +1,16 @@
 """Module that contains functions for retrieving data from a SQLite3 database cache."""
 
 from sqlite3 import Connection
-from typing import Iterable, Literal, Optional, Union
+from typing import Iterable, Optional, Union
 
 import pandas as pd
 
 from sosia.establishing import DB_TABLES
-from sosia.processing.utils import robust_join
 
 
 def drop_values(data: pd.DataFrame, conn: Connection, table: str) -> None:
     """Drop values from a database `table`."""
-    if table == "sources_afids":
+    if table == "sources":
         fields = ("source_id", "year")
     elif table == "author_citations":
         fields = ("auth_id", "year")
@@ -31,12 +30,7 @@ def drop_values(data: pd.DataFrame, conn: Connection, table: str) -> None:
 def insert_data(
     data: pd.DataFrame,
     conn: Connection,
-    table: Literal[
-        "author_citations",
-        "author_data",
-        "author_info",
-        "sources_afids",
-    ],
+    table: str,
 ) -> None:
     """Insert new information in SQL database.
 
@@ -68,11 +62,9 @@ def insert_data(
     q = f"INSERT OR REPLACE INTO {table} ({','.join(cols)}) VALUES ({','.join(values)})"
 
     # Eventually tweak data
-    if table in ('author_info', 'sources_afids'):
+    if table in ('author_info', 'sources'):
         if data.empty:
             return None
-        if table == 'sources_afids':
-            data["auids"] = data["auids"].apply(robust_join)
     data = data[list(cols)]
 
     # Execute queries
@@ -174,31 +166,30 @@ def retrieve_authors_from_sourceyear(tosearch: pd.DataFrame,
     conn : sqlite3 connection
         Standing connection to a SQLite3 database.
 
-    refresh : bool, int (optional, default=False)
-        Whether to refresh cached results (if they exist) or not, with
-        Scopus data that is at most `refresh` days old (True = 0).
+    drop : bool, int (optional, default=False)
+        Whether to drop matching information and replace them with data
+        on disk.
 
     Returns
     -------
     data : DataFrame
-        DataFrame in format ("source_id", "year", "auids", "afid"), where
-        entries correspond to an individual paper.
+        DataFrame in format ("source_id", "year", "auids"), where
+        auids is a set of author IDs.
 
     missing: DataFrame
         DataFrame of source-year-combinations not in SQL database.
     """
     # Drop values if to be refreshed
     if drop:
-        drop_values(tosearch, conn, table="sources_afids")
+        drop_values(tosearch, conn, table="sources")
 
     # Query authors for relevant journal-years
     cols = ["source_id", "year"]
     insert_temporary_table(tosearch.copy(), conn, merge_cols=cols)
-    q = "SELECT a.source_id, a.year, b.auids, b.afid FROM temp AS a "\
-        "LEFT JOIN sources_afids AS b "\
+    q = "SELECT a.source_id, a.year, b.auids FROM temp AS a "\
+        "LEFT JOIN sources AS b "\
         "ON a.source_id=b.source_id AND a.year=b.year;"
     data = pd.read_sql_query(q, conn)
-    data = data.sort_values(["source_id", "year"]).reset_index(drop=True)
 
     # Finalize
     mask_missing = data["auids"].isna()

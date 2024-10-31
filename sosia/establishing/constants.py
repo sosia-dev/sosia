@@ -23,7 +23,7 @@ DB_TABLES = {
                      ("givenname", "TEXT"), ("documents", "INTEGER"),
                      ("areas", "TEXT")),
          "primary": ("auth_id",)},
-    "sources_afids":
+    "sources":
         {"columns": (("source_id", "INTEGER"), ("year", "INTEGER"),
-                     ("afid", "INTEGER"), ("auids", "TEXT")),
-         "primary": ("source_id", "year", "afid")}}
+                     ("auids", "TEXT")),
+         "primary": ("source_id", "year")}}

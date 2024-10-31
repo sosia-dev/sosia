@@ -6,7 +6,6 @@ import pandas as pd
 from pybliometrics.scopus.exception import Scopus400Error
 from tqdm import tqdm
 
-from sosia.processing.utils import expand_affiliation
 from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN, \
     RESEARCH_TYPES
 from sosia.utils import custom_print
@@ -203,7 +202,7 @@ def query_pubs_by_sourceyear(source_ids, year, verbose=False, *args, **kwargs):
     )
 
     # Verify data is not empty
-    dummy = pd.DataFrame(columns=["source_id", "year", "auids", "afid"])
+    dummy = pd.DataFrame(columns=["source_id", "year", "auids"])
     if res:
         res = pd.DataFrame(res).dropna(subset=["author_ids"])
         if res.empty:
@@ -212,17 +211,16 @@ def query_pubs_by_sourceyear(source_ids, year, verbose=False, *args, **kwargs):
         return dummy
 
     # Group data
-    res = expand_affiliation(res)
-    if res.empty:
-        return dummy
-    res["year"] = year
-    res["author_ids"] = res["author_ids"] + ";"
-    grouping_cols = ["source_id", "year", "afid"]
-    res = (res.groupby(grouping_cols)["author_ids"].sum()
-              .reset_index()
-              .rename(columns={"author_ids": "auids"}))
-    res["auids"] = res["auids"].str.strip(";")
-    return res
+    data = {"source_id": [],
+            "year": year,
+            "auids": []}
+    for source_id, subset in res.groupby("source_id"):
+        groups = subset["author_ids"].dropna().tolist()
+        authors = sorted(set([item for sublist in groups for item in sublist.split(";")]))
+        data["source_id"].append(int(source_id))
+        data["auids"].append(";".join(authors))
+    data = pd.DataFrame(data)
+    return data
 
 
 def stacked_query(group, template, joiner, q_type, stacked=False,

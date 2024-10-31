@@ -69,7 +69,6 @@ class Original(Scientist):
         coauth_margin: Optional[Union[float, int]] = None,
         cits_margin: Optional[Union[float, int]] = None,
         same_discipline: Optional[bool] = False,
-        affiliations: Optional[list] = None,
         eids: Optional[list[Union[str, int]]] = None,
         refresh: Union[bool, int] = False,
         db_path: Optional[Union[str, Path]] = None,
@@ -124,11 +123,6 @@ class Original(Scientist):
             Whether to restrict candidates to the same main discipline (ASJC2)
             as the original scientist or not.
 
-        affiliations : list (optional, default=None)
-            A list of Scopus affiliation IDs.  If provided, sosia conditions
-            the match procedure on affiliation with these IDs in the
-            year of comparison.
-
         eids : list (optional, default=None)
             A list of scopus EIDs of the publications of the scientist you
             want to find a control for.  If it is provided, the scientist
@@ -170,11 +164,6 @@ class Original(Scientist):
         self.cits_margin = cits_margin
         self.same_discipline = same_discipline
         self.eids = eids
-        if isinstance(affiliations, (int, str)):
-            affiliations = [affiliations]
-        if affiliations:
-            affiliations = [int(a) for a in affiliations]
-        self.search_affiliations = affiliations
         self.refresh = refresh
         self.sql_fname = db_path
         self._search_sources = None
@@ -267,9 +256,6 @@ class Original(Scientist):
                 refresh=refresh,
                 verbose=verbose
             )
-            if self.search_affiliations:
-                same_affs = authors["afid"].isin(self.search_affiliations)
-                authors = authors[same_affs]
             groups.append(flat_set_from_df(authors, "auids"))
 
         # Compile group

@@ -79,7 +79,7 @@ def test_create_queries_short():
 def test_query_sources_by_year(refresh_interval):
     # Test a journal and year
     res = query_pubs_by_sourceyear([22900], 2010, refresh=refresh_interval)
-    assert res["source_id"].unique() == ['22900']
+    assert res["source_id"].unique() == [22900]
     assert res["year"].unique() == [2010]
     assert isinstance(res["auids"][0], str)
     assert len(res["auids"][0]) > 0
@@ -90,28 +90,30 @@ def test_query_sources_by_year(refresh_interval):
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_pubs_by_sourceyear(source_ids, 1984, refresh=refresh_interval)
-    assert 3300 < res.dropna(subset=["auids"]).shape[0] < 3500
-    assert res.columns.tolist() == ['source_id', 'year', 'afid', 'auids']
+    assert 1 < res.dropna(subset=["auids"]).shape[0] <= len(source_ids)
+    assert res.columns.tolist() == ['source_id', 'year', 'auids']
     assert isinstance(res["auids"][0], str)
     assert len(res["auids"][0]) > 0
 
 
 def test_query_sources_by_year_stacked(refresh_interval):
     # Test a journal and year
-    res = query_pubs_by_sourceyear([22900], 2010, refresh=refresh_interval, stacked=True)
-    assert res["source_id"].unique() == ['22900']
+    res = query_pubs_by_sourceyear([22900], 2010, refresh=refresh_interval,
+                                   stacked=True)
+    assert res["source_id"].unique() == [22900]
     assert res["year"].unique() == [2010]
     assert isinstance(res["auids"][0], str)
     assert len(res["auids"][0]) > 0
     # Test a journal and year that are not in Scopus
-    res = query_pubs_by_sourceyear([22900], 1969, refresh=refresh_interval, stacked=True)
+    res = query_pubs_by_sourceyear([22900], 1969, refresh=refresh_interval,
+                                   stacked=True)
     assert res.empty
     # Test a large query (>5000 results)
     source_ids = [13703, 13847, 13945, 14131, 14150, 14156, 14204, 14207,
                   14209, 14346, 14438, 14536, 14539, 15034, 15448, 15510, 15754]
     res = query_pubs_by_sourceyear(source_ids, 1984, refresh=refresh_interval, stacked=True)
-    assert 3300 < res.dropna(subset=["auids"]).shape[0] < 3500
-    assert res.columns.tolist() == ['source_id', 'year', 'afid', 'auids']
+    assert 1 < res.dropna(subset=["auids"]).shape[0] <= len(source_ids)
+    assert res.columns.tolist() == ['source_id', 'year', 'auids']
     assert isinstance(res["auids"][0], str)
     assert len(res["auids"][0]) > 0
 
