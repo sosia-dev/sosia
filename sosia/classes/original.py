@@ -12,7 +12,7 @@ from sosia.processing import add_source_names, chunk_list, compute_margins, \
     flat_set_from_df, get_author_data, get_author_info, \
     get_authors_from_sourceyear, get_citations, generate_filter_message, \
     inform_matches
-from sosia.utils import accepts, custom_print
+from sosia.utils import accepts, custom_print, validate_param
 
 
 class Original(Scientist):
@@ -178,6 +178,7 @@ class Original(Scientist):
             text = "No search sources defined.  Please run "\
                    ".define_search_sources() first."
             raise RuntimeError(text)
+        validate_param(first_year_margin, "first_year_margin", (int,))
         if chunk_size < first_year_margin:
             msg = f"Parameter 'chunk_size' must not be smaller " \
                   f"than {first_year_margin} ('first_year_margin')."
@@ -356,14 +357,10 @@ class Original(Scientist):
         if not self.candidates:
             text = "No candidates defined.  Please define candidates first."
             raise RuntimeError(text)
-        if first_year_margin is not None and not isinstance(first_year_margin, (int, float)):
-            raise TypeError("Argument first_year_margin must be float or integer.")
-        if pub_margin is not None and not isinstance(pub_margin, (int, float)):
-            raise TypeError("Argument pub_margin must be float or integer.")
-        if coauth_margin is not None and not isinstance(coauth_margin, (int, float)):
-            raise TypeError("Argument coauth_margin must be float or integer.")
-        if cits_margin is not None and not isinstance(cits_margin, (int, float)):
-            raise TypeError("Argument cits_margin must be float or integer.")
+        validate_param(first_year_margin, "first_year_margin", (int,))
+        validate_param(pub_margin, "pub_margin")
+        validate_param(coauth_margin, "coauth_margin")
+        validate_param(cits_margin, "cits_margin")
 
         # Find matches
         group = self.candidates
