@@ -366,72 +366,72 @@ class Original(Scientist):
         group = self.candidates
         text = f"Filtering {len(group):,} candidates..."
         custom_print(text, verbose)
-        while group:
-            # First round of filtering: minimum publications and main field
-            if same_discipline or pub_margin is not None:
-                info = get_author_info(group, self.sql_conn, verbose=verbose,
-                                       refresh=refresh)
-                if same_discipline:
-                    same_discipline = info['areas'].str.startswith(self.main_field[1])
-                    info = info[same_discipline]
-                    text = (f"... left with {info.shape[0]:,} candidates with same "
-                            f"main discipline ({self.main_field[1]})")
-                    custom_print(text, verbose)
-                if pub_margin is not None:
-                    min_papers = compute_margins(len(self.publications), pub_margin)[0]
-                    enough_pubs = info['documents'].astype(int) >= min_papers
-                    info = info[enough_pubs]
-                    text = (f"... left with {info.shape[0]:,} candidates with "
-                            f"sufficient total publications ({min_papers:,})")
-                    custom_print(text, verbose)
-                group = sorted(info["auth_id"].unique())
 
-            # Second round of filtering: first year, publication count, coauthor count
-            second_round = (
-                    (first_year_margin is not None) or
-                    (pub_margin is not None) or
-                    (coauth_margin is not None)
-            )
-            if second_round:
-                data = get_author_data(group=group, verbose=verbose,
-                                       conn=self.sql_conn, refresh=refresh)
-                data = data[data["year"] <= self.match_year]
-                if first_year_margin is not None:
-                    _years = compute_margins(self.first_year, first_year_margin)
-                    similar_start = data["first_year"].between(*_years)
-                    data = data[similar_start]
-                    text = generate_filter_message(data['auth_id'].nunique(), _years,
-                                                   "year of first publication")
-                    custom_print(text, verbose)
-                data = (data.drop(columns="first_year")
-                        .drop_duplicates("auth_id", keep="last"))
-                if pub_margin is not None:
-                    _npapers = compute_margins(len(self.publications), pub_margin)
-                    similar_pubcount = data["n_pubs"].between(*_npapers)
-                    data = data[similar_pubcount]
-                    text = generate_filter_message(data.shape[0], _npapers,
-                                                   "number of publications")
-                    custom_print(text, verbose)
-                if coauth_margin is not None:
-                    _ncoauth = compute_margins(len(self.coauthors), coauth_margin)
-                    similar_coauthcount = data["n_coauth"].between(*_ncoauth)
-                    data = data[similar_coauthcount]
-                    text = generate_filter_message(data.shape[0], _ncoauth,
-                                                   "number of coauthors")
-                    custom_print(text, verbose)
-                group = sorted(data["auth_id"].unique())
-
-            # Third round of filtering: citations
-            if cits_margin is not None:
-                citations = get_citations(group, self.year, refresh=refresh,
-                                          verbose=verbose, conn=self.sql_conn)
-                _ncits = compute_margins(self.citations, cits_margin)
-                similar_citcount = citations["n_cits"].between(*_ncits)
-                citations = citations[similar_citcount]
-                text = generate_filter_message(citations.shape[0], _ncits,
-                                               "number of citations")
+        # First round of filtering: minimum publications and main field
+        if same_discipline or pub_margin is not None:
+            info = get_author_info(group, self.sql_conn, verbose=verbose,
+                                   refresh=refresh)
+            if same_discipline:
+                same_discipline = info['areas'].str.startswith(self.main_field[1])
+                info = info[same_discipline]
+                text = (f"... left with {info.shape[0]:,} candidates with same "
+                        f"main discipline ({self.main_field[1]})")
                 custom_print(text, verbose)
-                group = sorted(citations['auth_id'].unique())
+            if pub_margin is not None:
+                min_papers = compute_margins(len(self.publications), pub_margin)[0]
+                enough_pubs = info['documents'].astype(int) >= min_papers
+                info = info[enough_pubs]
+                text = (f"... left with {info.shape[0]:,} candidates with "
+                        f"sufficient total publications ({min_papers:,})")
+                custom_print(text, verbose)
+            group = sorted(info["auth_id"].unique())
+
+        # Second round of filtering: first year, publication count, coauthor count
+        second_round = (
+                (first_year_margin is not None) or
+                (pub_margin is not None) or
+                (coauth_margin is not None)
+        )
+        if second_round:
+            data = get_author_data(group=group, verbose=verbose,
+                                   conn=self.sql_conn, refresh=refresh)
+            data = data[data["year"] <= self.match_year]
+            if first_year_margin is not None:
+                _years = compute_margins(self.first_year, first_year_margin)
+                similar_start = data["first_year"].between(*_years)
+                data = data[similar_start]
+                text = generate_filter_message(data['auth_id'].nunique(), _years,
+                                               "year of first publication")
+                custom_print(text, verbose)
+            data = (data.drop(columns="first_year")
+                        .drop_duplicates("auth_id", keep="last"))
+            if pub_margin is not None:
+                _npapers = compute_margins(len(self.publications), pub_margin)
+                similar_pubcount = data["n_pubs"].between(*_npapers)
+                data = data[similar_pubcount]
+                text = generate_filter_message(data.shape[0], _npapers,
+                                               "number of publications")
+                custom_print(text, verbose)
+            if coauth_margin is not None:
+                _ncoauth = compute_margins(len(self.coauthors), coauth_margin)
+                similar_coauthcount = data["n_coauth"].between(*_ncoauth)
+                data = data[similar_coauthcount]
+                text = generate_filter_message(data.shape[0], _ncoauth,
+                                               "number of coauthors")
+                custom_print(text, verbose)
+            group = sorted(data["auth_id"].unique())
+
+        # Third round of filtering: citations
+        if cits_margin is not None:
+            citations = get_citations(group, self.year, refresh=refresh,
+                                      verbose=verbose, conn=self.sql_conn)
+            _ncits = compute_margins(self.citations, cits_margin)
+            similar_citcount = citations["n_cits"].between(*_ncits)
+            citations = citations[similar_citcount]
+            text = generate_filter_message(citations.shape[0], _ncits,
+                                           "number of citations")
+            custom_print(text, verbose)
+            group = sorted(citations['auth_id'].unique())
 
         # Status update
         if len(group) == 1:
