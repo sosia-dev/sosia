@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN, \
     RESEARCH_TYPES
-from sosia.utils import custom_print, logger
+from sosia.utils import custom_print, log_scopus
 
 
 def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
@@ -59,7 +59,7 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
     if q_type == "author":
         params["count"] = AUTHOR_SEARCH_MAX_COUNT
         au = AuthorSearch(**params)
-        logger.debug("AuthorSearch(%s) yielded %d results.", query, au.get_results_size())
+        log_scopus(au)
         if size_only:
             return au.get_results_size()
         else:
@@ -68,19 +68,22 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
         params["integrity_fields"] = fields
         params["view"] = view
         if size_only:
-            nr_results = ScopusSearch(**params).get_results_size()
-            logger.debug("ScopusSearch(%s) yielded %d results.", query, nr_results)
-            return nr_results
+            ss = ScopusSearch(**params)
+            log_scopus(ss)
+            return ss.get_results_size()
         try:
-            docs = ScopusSearch(**params).results or []
-            logger.debug("ScopusSearch(%s) yielded %d results.", query, len(docs))
+            ss = ScopusSearch(**params)
+            log_scopus(ss)
+            docs = ss.results or []
             docs = [d for d in docs if d.subtype in RESEARCH_TYPES]
             return docs
         except AttributeError:
             params.pop("integrity_fields")
             params["refresh"] = True
+            ss = ScopusSearch(**params)
+            log_scopus(ss)
             docs = ScopusSearch(**params).results or []
-            logger.debug("ScopusSearch(%s) yielded %d results.", query, len(docs))
+            docs = ss.results or []
             return docs
 
 
