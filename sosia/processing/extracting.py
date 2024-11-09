@@ -58,6 +58,7 @@ def extract_yearly_author_data(auth_id: int, *args, **kwargs) -> pd.DataFrame:
     unique_authors = set()
     coauth_counts = defaultdict(int)
     for year, subset in authors.groupby('year'):
+        subset = subset[subset["author_id"] != str(auth_id)]
         unique_authors.update(subset['author_id'].unique())
         coauth_counts[year] = len(unique_authors)
     # Combine

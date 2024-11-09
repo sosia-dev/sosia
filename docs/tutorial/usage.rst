@@ -79,7 +79,7 @@ Identifying candidates
 
 .. code-block:: python
 
-    >>> stefano.identify_candidates_from_sources(first_year_margin=2, chunk_size=2, verbose=True)
+    >>> stefano.identify_candidates_from_sources(first_year_margin=1, chunk_size=2, verbose=True)
     Identifying candidates using up to 206 sources...
     ... parsing Scopus information for 2010...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:27<00:00,  1.01s/it]
@@ -114,13 +114,13 @@ By default none of the six criteria is active; i.e., you can switch them on and 
 
 Margins apply in both directions. `sosia` interprets integer values as absolute deviations and float values as percentages for relative deviations. To match on the characteristic precisely, use the value 0. The margin for the first year should be the same as in the previous step.
 
-With the following configuration, `sosia` will keep candidates whose main field is the same as that of the original scientist and who began publishing within ±1 years of the original scientist's first publication. In the comparison year, the candidates need to have a similar number of co-authors, within a range of ±20% of the original number (with a minimum of 1), and a similar number of publications, also within a range of ±15% (with a minimum of 1).
+With the following configuration, `sosia` will keep candidates whose main field is the same as that of the original scientist and who began publishing within ±1 year of the original scientist's first publication. In the comparison year, the candidates need to have a similar number of co-authors, within a range of ±20%, a similar number of publications, also within a range of ±20%, and a similar number number of citations, with a range of ±15%.
 
 .. code-block:: python
 
     >>> stefano.filter_candidates(same_discipline=True, first_year_margin=1,
     >>>                           coauth_margin=0.2, pub_margin=0.2
-    >>>                           cits_margin=0.15 verbose=True, )
+    >>>                           cits_margin=0.15 verbose=True)
     Filtering 772 candidates...
     Downloading information for 772 candidates...
     100%|████████████████████████████████████████████████████████████████████████████████████| 8/8 [02:07<00:00,  9.58s/it]
@@ -130,16 +130,18 @@ With the following configuration, `sosia` will keep candidates whose main field 
     100%|████████████████████████████████████████████████████████████████████████████████| 557/557 [35:46<00:00,  3.85s/it]
     ... left with 57 candidates with similar year of first publication (2011 to 2013)
     ... left with 22 candidates with similar number of publications (6 to 10)
-    ... left with 8 candidates with similar number of coauthors (6 to 10)
-    ... left with 2 candidates with similar number of citations (42 to 58)
-    Found 2 matches
+    ... left with 5 candidates with similar number of coauthors (6 to 10)
+    Counting citations of 5 candidates...
+    100%|████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:07<00:00,  1.45s/it]
+    ... left with 1 candidate with similar number of citations (42 to 58)
+    Found 1 match
     
 The matches are a list available through the .matches property.
 
 .. code-block:: python
 
     >>> print(stefano.matches)
-    [37080157400, 55567912500]
+    [55567912500]
 
 
 Adding information to matches
@@ -150,9 +152,8 @@ You may need additional information to both assess match quality and select matc
 .. code-block:: python
 
     >>> stefano.inform_matches(verbose=True)
-    Providing information for 2 matches...
+    Providing information for 1 matches...
     100%|████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:20<00:00, 10.21s/it]
-    Match 37080157400: 2 reference list out of 6 documents missing
     Match 55567912500: No reference list of 8 documents missing
     Original 55208373700: 1 reference list out of 8 documents missing
 
@@ -176,11 +177,12 @@ Alternatively, you can provide a list of the desired keywords to obtain informat
 .. code-block:: python
 
     >>> print(stefano.matches[0])
-    Match(ID=37080157400, name='Buchanan, Sean', first_name='Sean', surname='Buchanan',
-          first_year=2011, last_year=2018, num_coauthors=5, num_publications=6,
-          num_citations=45, subjects=['BUSI', 'ECON', 'SOCI'], affiliation_country='Canada',
-          affiliation_id='60009697', affiliation_name='University of Manitoba',
-          affiliation_type='univ', language='eng', num_cited_refs=1)
+    Match(ID=55567912500, name='Eling, Katrin', first_name='Katrin',
+          surname='Eling', first_year=2013, last_year=2018, num_coauthors=9,
+          num_publications=8, num_citations=56, subjects=['BUSI', 'COMP', 'ENGI'],
+          affiliation_country='Netherlands', affiliation_id='60032882',
+          affiliation_name='Technische Universiteit Eindhoven',
+          affiliation_type='univ', language='eng', num_cited_refs=0)
 
 It is easy to work with namedtuples.  For example, using `pandas <https://pandas.pydata.org/>`_ you easily turn the list into a pandas DataFrame:
 
@@ -193,25 +195,20 @@ It is easy to work with namedtuples.  For example, using `pandas <https://pandas
     >>> print(df)
                            name first_name   surname  first_year  last_year  \
     ID
-    37080157400  Buchanan, Sean       Sean  Buchanan        2011       2018
     55567912500   Eling, Katrin     Katrin     Eling        2013       2018
 
                  num_coauthors  num_publications  num_citations  \
     ID
-    37080157400              5                 6             45
     55567912500              9                 8             56
 
                            subjects affiliation_country affiliation_id  \
     ID
-    37080157400  [BUSI, ECON, SOCI]              Canada       60009697
     55567912500  [BUSI, COMP, ENGI]         Netherlands       60032882
 
                                   affiliation_name affiliation_type language  \
     ID
-    37080157400             University of Manitoba             univ      eng
     55567912500  Technische Universiteit Eindhoven             univ      eng
 
                  num_cited_refs
     ID
-    37080157400               1
     55567912500               0

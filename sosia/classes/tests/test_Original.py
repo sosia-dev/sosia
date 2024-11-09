@@ -14,16 +14,6 @@ fields = "ID name first_year num_coauthors num_publications num_citations "\
 Match = namedtuple("Match", fields)
 MATCHES = [
     Match(
-        ID=37080157400,
-        name='Buchanan, Sean',
-        first_year=2011,
-        num_coauthors=5,
-        num_publications=6,
-        num_citations=45,
-        affiliation_country='Canada',
-        language='eng',
-        num_cited_refs=1),
-    Match(
         ID=55567912500,
         name='Eling, Katrin',
         first_year=2013,
