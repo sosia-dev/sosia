@@ -49,7 +49,7 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>> import sosia
     >>> 
     >>> # You need the Scopus ID and the year, optionally set a database path
-    >>> stefano = sosia.Original(55208373700, 2019)
+    >>> stefano = sosia.Original(55208373700, 2018)
     >>> # Sources similiar to those stefano publishes in
     >>> stefano.define_search_sources()
     >>> # Authors publishing in search sources every 2 years
@@ -59,16 +59,16 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>>                           pub_margin=0.2, cits_margin=0.2,
     >>>                           coauth_margin=0.15)
     >>> print(stefano.matches)
-    >>> [55227190800, 55880939500]
+    >>> [55567912500]
     >>> # Optional step to provide additional information
     >>> stefano.inform_matches()
     >>> print(stefano.matches[0])
-    Match(ID=55227190800, name='Behrens, Judith', first_name='Judith',
-          surname='Behrens', first_year=2012, last_year=2020, num_coauthors=10,
-          num_publications=14, num_citations=106, subjects=['BUSI', 'ECON', 'COMP'],
-          affiliation_country='Belgium', affiliation_id='60211750',
-          affiliation_name='Solvay Brussels School of Economics and Management',
-          affiliation_type='univ', language='eng', num_cited_refs=10)
+    Match(ID=55567912500, name='Eling, Katrin', first_name='Katrin',
+          surname='Eling', first_year=2013, last_year=2018, num_coauthors=9,
+          num_publications=8, num_citations=56, subjects=['BUSI', 'COMP', 'ENGI'],
+          affiliation_country='Netherlands', affiliation_id='60032882',
+          affiliation_name='Technische Universiteit Eindhoven',
+          affiliation_type='univ', language='eng', num_cited_refs=0)
 
 .. inclusion-marker-end
 
