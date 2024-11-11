@@ -41,8 +41,10 @@ def log_scopus(scopus_obj) -> None:
     query = scopus_obj._query[:255]
 
     if scopus_class == 'AuthorSearch':
+        scopus_name = 'Author Search'
         results = scopus_obj.get_results_size()
     elif scopus_class == 'ScopusSearch':
+        scopus_name = 'Scopus Search'
         if scopus_obj.results is None:
             results = 0
         else:
@@ -53,6 +55,6 @@ def log_scopus(scopus_obj) -> None:
     logger = get_logger()
 
     logger.debug(
-        "\n\t- Class: %s\n\t- View: %s\n\t- Query: %s\n\t- Nr Results: %d",
-        scopus_class, view, query, results
+        "\n\t- Scopus API: %s\n\t- View: %s\n\t- Query: %s\n\t- Results: %d",
+        scopus_name, view, query, results
     )
