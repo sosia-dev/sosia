@@ -6,9 +6,10 @@ import pandas as pd
 from pybliometrics.scopus.exception import Scopus400Error
 from tqdm import tqdm
 
+from sosia.establishing import log_scopus
 from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN, \
     RESEARCH_TYPES
-from sosia.utils import custom_print, log_scopus
+from sosia.utils import custom_print
 
 
 def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,

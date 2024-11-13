@@ -8,11 +8,12 @@ from pandas import DataFrame
 from typing_extensions import Self
 
 from sosia.classes import Scientist
+from sosia.establishing import create_logger
 from sosia.processing import add_source_names, chunk_list, compute_margins, \
     flat_set_from_df, get_author_data, get_author_info, \
     get_authors_from_sourceyear, get_citations, generate_filter_message, \
     inform_matches
-from sosia.utils import accepts, create_logger, custom_print, validate_param
+from sosia.utils import accepts, custom_print, validate_param
 
 
 class Original(Scientist):

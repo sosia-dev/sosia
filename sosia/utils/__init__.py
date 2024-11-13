@@ -2,4 +2,3 @@
 
 from sosia.utils.decorators import *
 from sosia.utils.helpers import *
-from sosia.utils.logger import *
