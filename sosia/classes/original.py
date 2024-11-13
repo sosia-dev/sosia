@@ -8,6 +8,7 @@ from pandas import DataFrame
 from typing_extensions import Self
 
 from sosia.classes import Scientist
+from sosia.establishing import create_logger
 from sosia.processing import add_source_names, chunk_list, compute_margins, \
     flat_set_from_df, get_author_data, get_author_info, \
     get_authors_from_sourceyear, get_citations, generate_filter_message, \
@@ -114,6 +115,9 @@ class Original(Scientist):
         self._search_sources = None
         self._candidates = None
         self._matches = None
+
+        # Create logger
+        create_logger()
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, match_year, refresh=refresh,
