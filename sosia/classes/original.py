@@ -8,7 +8,7 @@ from pandas import DataFrame
 from typing_extensions import Self
 
 from sosia.classes import Scientist
-from sosia.establishing import create_logger
+from sosia.establishing import create_logger, DEFAULT_LOG
 from sosia.processing import add_source_names, chunk_list, compute_margins, \
     flat_set_from_df, get_author_data, get_author_info, \
     get_authors_from_sourceyear, get_citations, generate_filter_message, \
@@ -70,7 +70,8 @@ class Original(Scientist):
         eids: Optional[list[Union[str, int]]] = None,
         refresh: Union[bool, int] = False,
         db_path: Optional[Union[str, Path]] = None,
-        verbose: Optional[bool] = False
+        verbose: Optional[bool] = False,
+        log_path: Optional[Union[str, Path]] = None
     ) -> None:
         """Representation of a scientist for whom to find matches.
 
@@ -102,6 +103,10 @@ class Original(Scientist):
             will default to `~/.cache/sosia/main.sqlite`.  Will be created
             if the database doesn't exist.
 
+        log_path : str or pathlib.Path (optional, default=None)
+            The path of the log file using logging.  If None, will default
+             to `~/.cache/sosia/sosia.log`.
+
         verbose : bool (optional, default=False)
             Whether to report on the initialization process.
         """
@@ -117,7 +122,8 @@ class Original(Scientist):
         self._matches = None
 
         # Create logger
-        create_logger()
+        log_path = log_path or DEFAULT_LOG
+        create_logger(log_path)
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, match_year, refresh=refresh,

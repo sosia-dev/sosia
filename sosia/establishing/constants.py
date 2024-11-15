@@ -7,6 +7,7 @@ _cache_folder = Path.home() / ".cache" / "sosia/"
 FIELD_SOURCE_MAP = _cache_folder / "field_sources_list.csv"
 SOURCE_INFO = _cache_folder / "source_info.csv"
 DEFAULT_DATABASE = _cache_folder / 'main.sqlite'
+DEFAULT_LOG = _cache_folder / 'sosia.log'
 
 DB_TABLES = {
     "author_citations":
