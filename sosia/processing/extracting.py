@@ -39,7 +39,9 @@ def extract_yearly_author_data(auth_id: int, *args, **kwargs) -> pd.DataFrame:
         publication stock, and coauthor stock) on requested author.
     """
     # Get data
-    docs = base_query("docs", f"AU-ID({auth_id})", *args, **kwargs)
+    fields = ["eid", "creator", "author_ids"]
+    docs = base_query("docs", f"AU-ID({auth_id})", fields=fields,
+                      *args, **kwargs)
     cols = ["eid", "coverDate", "author_ids"]
     df = pd.DataFrame(docs)[cols].rename(columns={"coverDate": "year"})
     df["year"] = df["year"].str[:4].astype("uint16")

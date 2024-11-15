@@ -83,7 +83,6 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
             params["refresh"] = True
             ss = ScopusSearch(**params)
             log_scopus(ss)
-            docs = ScopusSearch(**params).results or []
             docs = ss.results or []
             return docs
 
