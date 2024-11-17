@@ -75,11 +75,11 @@ Using `verbose=True` you receive additional information on this operation:
 Identifying candidates
 ----------------------
 
-`sosia` uses these sources to create the initial set of candidates. `sosia` takes all the years between the Original's first year and the comparison year (including these two) and splits them into chunks. The number of years of each chunk is determined by the user, and it must not be smaller than the first year margin. The first chunk may be larger as the left margin of the first year is included. The last chunk will be merged into the next-to-last margin if it is smaller than half the target size. Suitable candidates then have to publish in all these chunks. Technically, the set of candidates is hence the intersection of authors publishing in these chunks. In the example, `sosia` will look at all publications in the search sources between 2011 (the first year 2012 minus the first_year_margin) and 2017 (the year before the comparison year). With a chunk_size equal to 2, the following chunks emerge: {2011, 2012, 2013}, {2014, 2015}, {2016, 2017}.
+`sosia` uses these sources to create the initial set of candidates. `sosia` takes all the years between the Original's first year and the comparison year (including these two) and splits them into chunks. By default, this tris to mimic the average publication frequency of the Original: When the Original publishes on average every two years, candidates must not publish less often than tat. Users can set the value freely. The first chunk may be larger as the left margin of the first year is included. The last chunk will be merged into the next-to-last chunk if it is smaller than half the target size. Suitable candidates then have to publish in all these chunks. Technically, the set of candidates is hence the intersection of authors publishing in these chunks. In the example, `sosia` will look at all publications in the search sources between 2011 (the first year 2012 minus the first_year_margin) and 2017 (the year before the comparison year). With a frequency equal to 2, the following chunks emerge: {2011, 2012, 2013}, {2014, 2015}, {2016, 2017}.
 
 .. code-block:: python
 
-    >>> stefano.identify_candidates_from_sources(first_year_margin=1, chunk_size=2, verbose=True)
+    >>> stefano.identify_candidates_from_sources(first_year_margin=1, frequency=2, verbose=True)
     Identifying candidates using up to 206 sources...
     ... parsing Scopus information for 2010...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:27<00:00,  1.01s/it]
@@ -97,7 +97,7 @@ Identifying candidates
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:57<00:00,  1.15s/it]
     ... parsing Scopus information for 2017...
     100%|████████████████████████████████████████████████████████████████████████████████| 206/206 [03:32<00:00,  1.03s/it]
-    Found 772 candidates
+    Found 783 candidates
 
 
 You can inspect the candidates using `stefano.candidates`, which you can also override or pre-define.
@@ -121,12 +121,12 @@ With the following configuration, `sosia` will keep candidates whose main field 
     >>> stefano.filter_candidates(same_discipline=True, first_year_margin=1,
     >>>                           coauth_margin=0.2, pub_margin=0.2
     >>>                           cits_margin=0.15 verbose=True)
-    Filtering 772 candidates...
+    Filtering 783 candidates...
     Downloading information for 772 candidates...
     100%|████████████████████████████████████████████████████████████████████████████████████| 8/8 [02:07<00:00,  9.58s/it]
-    ... left with 560 candidates with same main discipline (BUSI)
-    ... left with 557 candidates with sufficient total publications (6)
-    Querying Scopus for information for 557 authors...
+    ... left with 571 candidates with same main discipline (BUSI)
+    ... left with 568 candidates with sufficient total publications (6)
+    Querying Scopus for information for 568 authors...
     100%|████████████████████████████████████████████████████████████████████████████████| 557/557 [35:46<00:00,  3.85s/it]
     ... left with 57 candidates with similar year of first publication (2011 to 2013)
     ... left with 22 candidates with similar number of publications (6 to 10)

@@ -44,7 +44,7 @@ def test_search_sources_change(original1):
 
 
 def test_candidates(original1, refresh_interval):
-    original1.identify_candidates_from_sources(chunk_size=2, refresh=refresh_interval,
+    original1.identify_candidates_from_sources(frequency=2, refresh=refresh_interval,
                                                first_year_margin=FIRST_YEAR_MARGIN)
     recieved = original1.candidates
     assert isinstance(recieved, list)
@@ -52,7 +52,7 @@ def test_candidates(original1, refresh_interval):
 
 
 def test_candidates_stacked(original1, refresh_interval):
-    original1.identify_candidates_from_sources(chunk_size=2, stacked=True,
+    original1.identify_candidates_from_sources(frequency=2, stacked=True,
                                                refresh=refresh_interval,
                                                first_year_margin=FIRST_YEAR_MARGIN)
     recieved = original1.candidates

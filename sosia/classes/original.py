@@ -1,7 +1,8 @@
 """Main module of `sosia` containing the `Original` class."""
 
-from pathlib import Path
+from math import ceil
 from itertools import product
+from pathlib import Path
 from typing import Iterable, Literal, Optional, Union
 
 from pandas import DataFrame
@@ -132,18 +133,14 @@ class Original(Scientist):
     def identify_candidates_from_sources(
         self,
         first_year_margin: int,
-        chunk_size: int = 2,
+        frequency: Optional[int] = None,
         stacked: bool = False,
         verbose: bool = False,
         refresh: Union[bool, int] = False,
     ) -> Self:
         """Define a search group of authors based on their publication
         activity in the Orginal's search sources between the first year
-        and the match year.  To find candidates, the method considers
-        chunks of consecutive volumes, and requires candidates to publish
-        at least once in each (!) of these chunks.  That is, it generates
-        sets of authors publishing in the search sources during specific
-        years, and considers only the intersection of these.
+        and the match year.
 
         Parameters
         ----------
@@ -151,13 +148,20 @@ class Original(Scientist):
             The left margin for year of first publication to identify
             match candidates.
 
-        chunk_size : int (optional, default=2)
-            The size of each set in terms of years, i.e. how many years
-            each chunk will contain.  Must not be smaller than the
-            first_year_margin.  If the last chunk is smaller than half the
-            target chunk size, it will be merged with the previous chunk.
-            Put differently: candidates need to appear in the search sources
-            on average at least every `chunk_size` years.
+        frequency : int (optional, default=None)
+            The maximum gap in number of years between publications of
+            suitable candidates, i.e. the average frequency with which they
+            publish in these sources.  If not given, will take the average
+            frequency (rounded up) of the Orignal:
+            `max[1, (match_year - first_year) / number of publications.]`
+            Must not be smaller than the first_year_margin.
+            To find candidates, the method considers chunks of consecutive
+            volumes, and requires candidates to publish at least once in
+            each (!) of these chunks.  That is, it generates sets of authors
+            publishing in the search sources during specific years, and
+            considers only the intersection of these. If the last chunk is
+            smaller than half the target chunk size, it will be merged
+            with the previous chunk.
 
         stacked : bool (optional, default=False)
             Whether to combine searches in few queries or not.  Cached
@@ -173,11 +177,6 @@ class Original(Scientist):
             int is passed, results will be refreshed if they are older
             than that value in number of days.
 
-        Raises
-        ------
-        ValueError
-            If the chunk_size is smaller than the first_year_margin.
-
         Notes
         -----
         If candidates have been identified, they are accessible through
@@ -189,10 +188,9 @@ class Original(Scientist):
                    ".define_search_sources() first."
             raise RuntimeError(text)
         validate_param(first_year_margin, "first_year_margin", (int,))
-        if chunk_size < first_year_margin:
-            msg = f"Parameter 'chunk_size' must not be smaller " \
-                  f"than {first_year_margin} ('first_year_margin')."
-            raise ValueError(msg)
+        if not frequency:
+            n_pubs = len(self.publications)
+            frequency = max(1, ceil((self.match_year - self.first_year) / n_pubs))
 
         # Define variables
         search_sources, _ = zip(*self.search_sources)
@@ -201,7 +199,7 @@ class Original(Scientist):
 
         # Get years to look through
         years = range(self.first_year, self.match_year)
-        chunks = chunk_list(years, chunk_size)
+        chunks = chunk_list(years, frequency)
         chunks[0] = range(self.first_year - first_year_margin,
                           max(chunks[0]) + 1)
 
