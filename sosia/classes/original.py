@@ -70,8 +70,8 @@ class Original(Scientist):
         eids: Optional[list[Union[str, int]]] = None,
         refresh: Union[bool, int] = False,
         db_path: Optional[Union[str, Path]] = None,
-        verbose: Optional[bool] = False,
-        log_path: Optional[Union[str, Path]] = None
+        log_path: Optional[Union[str, Path]] = None,
+        verbose: Optional[bool] = False
     ) -> None:
         """Representation of a scientist for whom to find matches (= Original).
 
@@ -121,7 +121,7 @@ class Original(Scientist):
         self._matches = None
 
         # Create logger
-        log_path = log_path or DEFAULT_LOG
+        log_path = Path(log_path) or DEFAULT_LOG
         create_logger(log_path)
 
         # Instantiate superclass to load private variables
