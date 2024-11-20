@@ -53,6 +53,8 @@ def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame
         text = f"Downloading information for {len(missing):,} candidates..."
         custom_print(text, verbose)
         res = stacked_query(**params)
+        if not res:  # Likely author IDs do not exist anymore
+            return info
         res = pd.DataFrame(res)
         res = res.drop_duplicates(subset="eid")
         res["auth_id"] = res['eid'].str.split('-').str[-1].astype("int64")
