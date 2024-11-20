@@ -46,12 +46,11 @@ class Original(Scientist):
 
     @property
     def search_sources(self) -> Optional[Union[set, list, tuple]]:
-        """The set of sources (journals, books) comparable to the sources
-        the scientist published in until the treatment year.
-        A source is comparable if it belongs to the scientist's main field
-        but not to fields alien to the scientist, and if the types of the
-        sources are the same as the types of the sources in the scientist's
-        main field where she published in.
+        """The set of sources comparable to those of the Original.
+
+        A source (journal, book, etc.) is comparable if it belongs to
+        the Original's main field, and if the types of the sources are those
+        the Original publishes in.
 
         Notes
         -----
@@ -74,7 +73,7 @@ class Original(Scientist):
         verbose: Optional[bool] = False,
         log_path: Optional[Union[str, Path]] = None
     ) -> None:
-        """Representation of a scientist for whom to find matches.
+        """Representation of a scientist for whom to find matches (= Original).
 
         Parameters
         ----------
@@ -88,11 +87,10 @@ class Original(Scientist):
             scientist up to this year.
 
         eids : list (optional, default=None)
-            A list of scopus EIDs of the publications of the scientist you
-            want to find a control for.  If it is provided, the scientist
-            properties and the control group are set based on this list of
-            publications, instead of the list of publications obtained from
-            the Scopus Author ID.
+            A list of Scopus EIDs of the publications to consinder.  If it
+            is provided, all properties will be derived from them, and the
+            control group is based on them. If None, will use all
+            research-type publications published until the match year.
 
         refresh : boolean (optional, default=False)
             Whether to refresh cached results (if they exist) or not.  If int
@@ -139,8 +137,8 @@ class Original(Scientist):
         refresh: Union[bool, int] = False,
     ) -> Self:
         """Define a search group of authors based on their publication
-        activity in the Orginal's search sources between the first year
-        and the match year.
+        activity in the search sources between the first year and the
+        match year.
 
         Parameters
         ----------
@@ -166,7 +164,7 @@ class Original(Scientist):
         stacked : bool (optional, default=False)
             Whether to combine searches in few queries or not.  Cached
             files will most likely not be reusable.  Set to True if you
-            query in distinct fields or you want to minimize API key usage.
+            query in distinct fields or to minimize API key usage.
 
         verbose : bool (optional, default=False)
             Whether to report on the progress of the process.
@@ -234,7 +232,7 @@ class Original(Scientist):
             verbose: bool = False,
             mode: Literal["narrow", "wide"] = "narrow"
     ) -> Self:
-        """Define .search_sources.
+        """Define search sources related to the Original.
 
         Search sources are the set of sources where sosia will search for
         possible candidates.  Search source are of the same types (journal,
@@ -305,7 +303,7 @@ class Original(Scientist):
             refresh: Union[bool, int] = False
     ) -> None:
         """Find matches within candidates based on up to five criteria:
-        1. Work mainly in the same discipline
+        1. Work mainly in the same discipline (as of date of retrieval)
         2. Started publishing in about the same year
         3. Have about the same number of publications in the match year
         4. Have about the same number of coauthors in the match year
