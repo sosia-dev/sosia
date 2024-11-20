@@ -3,7 +3,8 @@
 import logging
 from typing import Union
 from pathlib import Path
-from re import sub
+
+from pybliometrics.scopus import AuthorSearch, ScopusSearch
 
 logger = None
 
@@ -27,17 +28,35 @@ def create_logger(log_file: Union[str, Path] = None) -> None:
     logger.propagate = False
 
 
-def log_scopus(scopus_obj) -> None:
-    """Log the results of a Scopus query."""
-    scopus_class = scopus_obj.__class__.__name__
-    scopus_name = sub(r'(?<!^)([A-Z])', r' \1', scopus_class)
-    view = scopus_obj._view
-    query = scopus_obj._query
+class ScopusLogger:
+    """Context manager to log scopus"""
+    def __init__(self, scopus_class_name, params):
+        self.scopus_obj: Union[AuthorSearch, ScopusSearch]
+        self.scopus_class_name = scopus_class_name
+        self.query = params.get('query')
+        self.view = params.get('view', 'Default')
 
-    if logger is None:
-        create_logger()
+        if logger is None:
+            create_logger()
 
-    logger.debug(
-        "\n\t- Scopus API: %s\n\t- View: %s\n\t- Query: %s\n\t",
-        scopus_name, view, query
-    )
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        # If no exception get nr of results
+        results = 0
+        if not exc_type:
+            if self.scopus_class_name == 'Author Search':
+                results = self.scopus_obj.get_results_size()
+            elif self.scopus_class_name == 'Scopus Search':
+                if self.scopus_obj.results is None:
+                    results = 0
+                else:
+                    results = len(self.scopus_obj.results)
+            else:
+                raise ValueError(f'Unknown Scopus class: {self.scopus_class_name}')
+
+        logger.debug(
+            '\n\t- Scopus API: %s\n\t- View: %s\n\t- Query: %s\n\t- Exception: %s\n\t- Results: %d',
+            self.scopus_class_name, self.view, self.query[:255], exc_type, results
+        )
