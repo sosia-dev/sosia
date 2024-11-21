@@ -9,7 +9,7 @@ from pybliometrics.scopus import AuthorSearch, ScopusSearch
 logger = None
 
 
-def create_logger(log_file: Union[str, Path] = None) -> None:
+def create_logger(log_file: Union[str, Path]) -> None:
     """Configure a logger."""
     global logger
 
@@ -43,20 +43,10 @@ class ScopusLogger:
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        # If no exception get nr of results
-        results = 0
         if not exc_type:
-            if self.scopus_class_name == 'Author Search':
-                results = self.scopus_obj.get_results_size()
-            elif self.scopus_class_name == 'Scopus Search':
-                if self.scopus_obj.results is None:
-                    results = 0
-                else:
-                    results = len(self.scopus_obj.results)
-            else:
-                raise ValueError(f'Unknown Scopus class: {self.scopus_class_name}')
-
+            results = self.scopus_obj.get_results_size()
+            self.view = self.scopus_obj._view
         logger.debug(
-            '\n\t- Scopus API: %s\n\t- View: %s\n\t- Query: %s\n\t- Exception: %s\n\t- Results: %d',
-            self.scopus_class_name, self.view, self.query[:255], exc_type, results
+            '\n\t- Scopus API: %s with %s view \n\t- Query: %s\n\t- Results: %s',
+            self.scopus_class_name, self.view, self.query[:255], exc_type or results
         )
