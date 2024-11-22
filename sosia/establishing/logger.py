@@ -3,12 +3,13 @@
 import logging
 from typing import Union
 from pathlib import Path
-from re import sub
+
+from pybliometrics.scopus import AuthorSearch, ScopusSearch
 
 logger = None
 
 
-def create_logger(log_file: Union[str, Path] = None) -> None:
+def create_logger(log_file: Union[str, Path]) -> None:
     """Configure a logger."""
     global logger
 
@@ -27,17 +28,25 @@ def create_logger(log_file: Union[str, Path] = None) -> None:
     logger.propagate = False
 
 
-def log_scopus(scopus_obj) -> None:
-    """Log the results of a Scopus query."""
-    scopus_class = scopus_obj.__class__.__name__
-    scopus_name = sub(r'(?<!^)([A-Z])', r' \1', scopus_class)
-    view = scopus_obj._view
-    query = scopus_obj._query
+class ScopusLogger:
+    """Context manager to log scopus"""
+    def __init__(self, scopus_api, params):
+        self.scopus_obj: Union[AuthorSearch, ScopusSearch]
+        self.scopus_api = scopus_api
+        self.query = params.get('query')
+        self.view = params.get('view', 'Default')
 
-    if logger is None:
-        create_logger()
+        if logger is None:
+            create_logger()
 
-    logger.debug(
-        "\n\t- Scopus API: %s\n\t- View: %s\n\t- Query: %s\n\t",
-        scopus_name, view, query
-    )
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if not exc_type:
+            results = self.scopus_obj.get_results_size()
+            self.view = self.scopus_obj._view
+        logger.debug(
+            '\n\t- Scopus API: %s with %s view \n\t- Query: %s\n\t- Results: %s',
+            self.scopus_api, self.view, self.query, exc_type or results
+        )

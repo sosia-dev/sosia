@@ -121,8 +121,8 @@ class Original(Scientist):
         self._matches = None
 
         # Create logger
-        log_path = Path(log_path) or DEFAULT_LOG
-        create_logger(log_path)
+        log_path = log_path or DEFAULT_LOG
+        create_logger(Path(log_path))
 
         # Instantiate superclass to load private variables
         Scientist.__init__(self, self.identifier, match_year, refresh=refresh,

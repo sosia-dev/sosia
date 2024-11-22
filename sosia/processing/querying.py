@@ -6,7 +6,7 @@ import pandas as pd
 from pybliometrics.scopus.exception import Scopus400Error
 from tqdm import tqdm
 
-from sosia.establishing import log_scopus
+from sosia.establishing import ScopusLogger
 from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN, \
     RESEARCH_TYPES
 from sosia.utils import custom_print
@@ -59,8 +59,9 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
 
     if q_type == "author":
         params["count"] = AUTHOR_SEARCH_MAX_COUNT
-        au = AuthorSearch(**params)
-        log_scopus(au)
+        with ScopusLogger("Author Search", params) as sl:
+            au = AuthorSearch(**params)
+            sl.scopus_obj = au
         if size_only:
             return au.get_results_size()
         else:
@@ -69,20 +70,23 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
         params["integrity_fields"] = fields
         params["view"] = view
         if size_only:
-            ss = ScopusSearch(**params)
-            log_scopus(ss)
+            with ScopusLogger("Scopus Search", params) as sl:
+                ss = ScopusSearch(**params)
+                sl.scopus_obj = ss
             return ss.get_results_size()
         try:
-            ss = ScopusSearch(**params)
-            log_scopus(ss)
+            with ScopusLogger("Scopus Search", params) as sl:
+                ss = ScopusSearch(**params)
+                sl.scopus_obj = ss
             docs = ss.results or []
             docs = [d for d in docs if d.subtype in RESEARCH_TYPES]
             return docs
         except AttributeError:
             params.pop("integrity_fields")
             params["refresh"] = True
-            ss = ScopusSearch(**params)
-            log_scopus(ss)
+            with ScopusLogger("Scopus Search", params) as sl:
+                ss = ScopusSearch(**params)
+                sl.scopus_obj = ss
             docs = ss.results or []
             return docs
 
