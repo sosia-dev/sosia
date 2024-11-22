@@ -8,15 +8,14 @@ The log file records entries in the following format:
 
 .. code-block:: yaml
    
-    24-11-16 21:47:20 - DEBUG: 
-        - Scopus API: Scopus Search
-        - View: COMPLETE
-        - Query: AU-ID(55208373700)
-        
-    24-11-16 21:47:21 - DEBUG: 
-        - Scopus API: Scopus Search
-        - View: COMPLETE
-        - Query: REF(55208373700) AND PUBYEAR BEF 2019 AND NOT AU-ID(55208373700)
+    24-11-22 10:09:49 - DEBUG: 
+        - Scopus API: Scopus Search with COMPLETE view 
+        - Query: AU-ID(55567912500)
+        - Results: 13
+    24-11-22 10:09:51 - DEBUG: 
+        - Scopus API: Scopus Search with COMPLETE view 
+        - Query: REF(55567912500) AND PUBYEAR BEF 2019 AND NOT AU-ID(55567912500)
+        - Results: <class 'SomeErrorClass'>
 
 
 For instance, you may want to refresh the query manually using `pybliometrics`.

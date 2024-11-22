@@ -30,9 +30,9 @@ def create_logger(log_file: Union[str, Path]) -> None:
 
 class ScopusLogger:
     """Context manager to log scopus"""
-    def __init__(self, scopus_class_name, params):
+    def __init__(self, scopus_api, params):
         self.scopus_obj: Union[AuthorSearch, ScopusSearch]
-        self.scopus_class_name = scopus_class_name
+        self.scopus_api = scopus_api
         self.query = params.get('query')
         self.view = params.get('view', 'Default')
 
@@ -48,5 +48,5 @@ class ScopusLogger:
             self.view = self.scopus_obj._view
         logger.debug(
             '\n\t- Scopus API: %s with %s view \n\t- Query: %s\n\t- Results: %s',
-            self.scopus_class_name, self.view, self.query[:255], exc_type or results
+            self.scopus_api, self.view, self.query, exc_type or results
         )
