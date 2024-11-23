@@ -14,7 +14,7 @@ from sosia.processing import add_source_names, chunk_list, compute_margins, \
     flat_set_from_df, get_author_data, get_author_info, \
     get_authors_from_sourceyear, get_citations, generate_filter_message, \
     inform_matches
-from sosia.utils import accepts, custom_print, validate_param
+from sosia.utils import accepts, custom_print, get_ending, validate_param
 
 
 class Original(Scientist):
@@ -223,7 +223,8 @@ class Original(Scientist):
 
         # Finalize
         self._candidates = sorted(candidates)
-        text = f"Found {len(candidates):,} candidates"
+        n_candidates = len(candidates)
+        text = f"Found {n_candidates:,} candidate{get_ending(n_candidates)}"
         custom_print(text, verbose)
         return self
 
@@ -285,8 +286,8 @@ class Original(Scientist):
         sources.update(self.sources)
         # Finalize
         self._search_sources = sorted(sources, key=lambda x: x[0])
-        suffix = "" if len(main_types) == 1 else "s"
-        text = f"Found {len(sources):,} sources of type{suffix} " \
+        text = f"Found {len(sources):,} sources of " \
+               f"type{get_ending(len(main_types))} " \
                f"{', '.join(main_types)} matching main field "\
                f"{self.main_field[0]} {mode}ly"
         custom_print(text, verbose)
@@ -440,11 +441,8 @@ class Original(Scientist):
             group = sorted(citations['auth_id'].unique())
 
         # Status update
-        if len(group) == 1:
-            ending = ""
-        else:
-            ending = "es"
-        text = f"Found {len(group):,} match{ending}"
+        n_matches = len(group)
+        text = f"Found {n_matches:,} match{get_ending(n_matches, 'es')}"
         custom_print(text, verbose)
         self._matches = sorted([int(auth_id) for auth_id in group])
 
@@ -502,7 +500,9 @@ class Original(Scientist):
         else:
             fields = allowed_fields
 
-        text = f"Providing information for {len(self._matches):,} matches..."
+        n_matches = len(self._matches)
+        text = f"Providing information for {n_matches:,} " \
+               f"match{get_ending(n_matches, 'es')}..."
         custom_print(text, verbose)
         matches = inform_matches(self, fields, verbose, refresh)
         self._matches = matches

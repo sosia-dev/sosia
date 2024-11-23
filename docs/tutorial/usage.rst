@@ -152,7 +152,7 @@ You may need additional information to both assess match quality and select matc
 .. code-block:: python
 
     >>> stefano.inform_matches(verbose=True)
-    Providing information for 1 matches...
+    Providing information for 1 match...
     100%|████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:20<00:00, 10.21s/it]
     Match 55567912500: No reference list of 8 documents missing
     Original 55208373700: 1 reference list out of 8 documents missing
