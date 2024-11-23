@@ -1,11 +1,11 @@
 Change Log
-----------
+##########
 
 .. toctree::
 
 
 0.6.2
-~~~~~
+*****
 
 2024-08-13
 
@@ -14,7 +14,7 @@ Change Log
 * Improve, update and fix documentation.
 
 0.6.1
-~~~~~
+*****
 
 2023-11-05
 
@@ -25,13 +25,13 @@ Change Log
 * Improve documentation, add copy-code button, update code examples.
 
 0.6
-~~~
+***
 
 2023-04-23
 
 * Drop usage of configuration file and recommend project-specific databases.
-* In class `Scientist(), rename properties: `.country` -> `.affiliation_country`, `.affiliation` -> `.affiliation_name`.
-* In class `Scientist(), create property `.affiliation_type`.
+* In class `Scientist()`, rename properties: `.country` -> `.affiliation_country`, `.affiliation` -> `.affiliation_name`.
+* In class `Scientist()`, create property `.affiliation_type`.
 * In `.create_fields_sources_list()`, make use of parameter "verbose".
 * Make retrieval of affiliation related information robust to missing information (404 error).
 * Pass on "refresh" parameter from `inform_matches()`.
@@ -40,7 +40,7 @@ Change Log
 * Improve various methods and functions for stability and speed.
 
 0.5
-~~~
+***
 
 2022-01-20
 
@@ -52,7 +52,7 @@ Change Log
 * Require pybliometrics >= 3.2.0.
 
 0.4.1
-~~~~~
+*****
 
 2020-12-08
 
@@ -60,7 +60,7 @@ Change Log
 * Require pybliometrics >= 2.7.2.
 
 0.4
-~~~
+***
 
 2020-12-04
 
@@ -81,11 +81,11 @@ Change Log
 * Require numpy.
 * Fix bug originating from missing reference EIDs.
 * Fix bug originating from missing source IDs.
-* Improve documentaton, add tutorial.
+* Improve documentation, add tutorial.
 * Add citation dunder.
 
 0.3.1
-~~~~~
+*****
 
 2020-03-17
 
@@ -93,33 +93,33 @@ Change Log
 * Add support for Python 3.8 and Python 3.9.
 * Add missing required package lxml and require sklearn>=0.22.1.
 * Correct verbose output of `.find_matches()` w.r.t. completeness of reference lists and abstracts of matches.
-* Check for existence of the search group in `.find_machtes()`.
+* Check for existence of the search group in `.find_matches()`.
 * In `.find_matches()`, fix bug when attempting to compute the cosine similarity when reference lists or abstracts are completely missing.
 * In `.get_publication_language()`, fix bug resulting from bad downloads of abstracts.
 * In `Original()`, fix bug resulting from unclean source ID information in Scopus search results.
 
 0.3
-~~~
+***
 
 2019-11-26
 
 * Introduce internal SQLite database to store results from stacked queries.
 * Comply with pybliometrics 2.2 or higher to make use of integrity_fields.
 * In `Original()`, add parameter "num_citations" to filter on the number of citations as well.
-* In `Original()`, add paramater "period" to allow for matching on information derived from used-provided period only.
+* In `Original()`, add parameter "period" to allow for matching on information derived from user-provided period only.
 * In `Original()`, add parameter "search_affiliations" to enable subsetting on matches from a list of specific affiliations.
 * Add "num_citations" to information of matches.
 * Introduce internal config file.
-* Attempt to download most recent sources list from scopus.com during `.create_fields_sources_list()`.
+* Attempt to download the most recent sources list from scopus.com during `.create_fields_sources_list()`.
 * In `find_country()`, add "refresh" parameter and fix bugs related to wrong views and not continuing the search.
-* In `get_main_field()` return most common 2-digit ASJC code and most commont 4-digit ASJC field.
-* Attempt to extract URL for the Scopus source list via webscraping.
+* In `get_main_field()` return the most common 2-digit ASJC code and the most common 4-digit ASJC field.
+* Attempt to extract URL for the Scopus source list via web scraping.
 * In `find_matches()`, provide only desired information.
 * In `find_matches()`, fix bug with missing references or abstracts.
 * Use decorators for methods.
 
 0.2
-~~~
+***
 
 2019-02-21
 
@@ -139,15 +139,15 @@ Change Log
 * Fix bug resulting from missing source IDs.
 * Fix bug resulting in redundant counts during `.define_search_group()`.
 * Use pair-wise tfidf-vectorization (instead of group-wise vectorization).
-* When the focal's publications are empty, do not compute similiarity measures.
+* When the focal's publications are empty, do not compute similarity measures.
 * In `clean_abstracts()`, remove copyright statement in next-to-last sentence as well.
-* Use error messages from scopus to for case-specific error handling.
+* Use error messages from scopus for case-specific error handling.
 * Simplify functions and classes and refactor internally.
 * Make `stacked_query` robust to group as list of int.
 * Enable internal function `query_journal()` to perform stacked queries.
 
 0.1.1
-~~~~~
+*****
 
 2018-11-25
 
@@ -159,7 +159,7 @@ Change Log
 * Simplify code.
 
 0.1.0
-~~~~~
+*****
 
 2018-11-23
 
