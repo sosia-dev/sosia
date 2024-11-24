@@ -3,6 +3,77 @@ Change Log
 
 .. toctree::
 
+1.0
+***
+
+2024-11-23
+
+* In `Original()`, rename parameter `sql_fname` to `db_path` and parameter `treatment_year` to `match_year`; add parameter `verbose`; drop parameters `affiliations`, `cits_margin`, `coauth_margin`, `first_year_margin`, `first_year_search`, `period`, `pub_margin`, `same_field`; rename properties `.active_year` to `.last_year` and `.search_group` to `.candidates`.
+* In method `Original().define_search_sources`, add parameter `mode` for narrow and wide definition of search sources.
+* Rename method `Original().define_search_group()` to `Original().identify_candidates_from_sources()` and add optional parameter `frequency` to use a specified overlap of authors publishing in the search sources (rather than the publication around the first year and the active/last year).
+* Rename method `Original().find_matches()` to `Original().filter_candidates()`; drop parameter `stacked`; add parameters `same_discipline`, `first_year_margin`, `pub_margin`, `coauth_margin`, `cits_margin`.
+* `Original().coauthors` is now a sorted list.
+* Restrict all analysis to research-type articles.
+* Fix bug with incomplete bulk author searches.
+* Fix bug with progress bars in verbose mode.
+* Fix bug with citations filter step not being refreshed.
+* Fix bug with coauthor count using own ID.
+* Fix bug with missing author information due to nonexistent profiles.
+* In `Scientist()`, add parameter `verbose`.
+* `Original()` now invokes `make_database()` if the provided SQLite database doesn't exist, as well as `get_field_source_information()` if source definitions do not exist.
+* In `Original.inform_matches()`, add field `last_year`.
+* In `get_field_source_information()`, add parameter `verbose`.
+* In `make_database()`, add parameter `verbose`.
+* Drop support for Python 3.6, 3.7, and 3.8; add support for Python 3.10, 3.11, and 3.12.
+* Refactor locally used SQLite database.
+* Log all Scopus queries using the logging module.
+* Optimize Scopus queries.
+* Make verbose statements more explicit and use actually used values.
+* Improve all documentation and document all classes and methods.
+* Introduce type hints for all functions and methods.
+
+Migration Guide
+===============
+
+There are four changes users need to be aware of going from 0.6.2 to 1.0:
+1. User neither needs to invoke `sosia.get_field_source_information()` nor `sosia.make_database()` themselves. If the relevant files aren't present, a simple call of `Original()` will invoke the required functions. It may still make sense to use the function manually: `sosia.get_field_source_information()` should be used to update the source information (in spring and in fall each year, check out `this repo <https://github.com/sosia-dev/sosia-data>_`), and `sosia.make_database()` can be used to drop tables.
+2. All search parameters previously used in `Scientist()` have been moved to the respective functions. Users thus pass match margins where they are used.
+3. There are no more default values for the search parameters in `Original().filter_candidates()`. If no values are passed, the respective filter won't apply!
+4. Some functions have been renamed: `Original().define_search_group()` became `Original().identify_candidates_from_sources()`, and `Original().find_matches()` became `Original().filter_candidates()`.
+
+In sum, the previous snippet
+
+.. code-block:: python
+
+    >>> import sosia
+
+    >>> sosia.get_field_source_information()
+    >>> sosia.make_database()
+
+    >>> stefano = sosia.Original(55208373700, 2019)
+    >>> stefano.define_search_sources()
+    >>> stefano.define_search_group()
+    >>> stefano.find_matches()
+    >>> stefano.inform_matches()
+
+becomes this snippet:
+
+.. code-block:: python
+
+    >>> import sosia
+
+    >>> stefano = sosia.Original(55208373700, 2019)
+    >>> stefano.define_search_sources()
+    >>> stefano.identify_candidates_from_sources(
+            first_year_margin=0.2, frequency=4)
+    >>> stefano.filter_candidates(same_discipline=True,
+            first_year_margin=2, pub_margin=0.2,
+            coauth_margin=0.2, cits_margin=0.2)
+    >>> stefano.inform_matches()
+
+However, this will not yield quite the same matches, as the definition of candidates (formerly search group) underwent a drastic change. Previously, `sosia` considered only authors that published in two periods: The exact same year when the focal author published for the last time (the last year, formerly the active year), and in the provided margin around the first year.
+
+Now, to be considered a candidate, an author must have publications in multiple periods, each matching the 'frequency' parameter in length. Think of this as the average publication duration of an author. If "frequency" is not given, `sosia` infers the publication frequency of the focal author by dividing the number of publications through the number of years between the match year and the inferred first year.
 
 0.6.2
 *****
