@@ -65,10 +65,10 @@ becomes this snippet:
     >>> stefano = sosia.Original(55208373700, 2019)
     >>> stefano.define_search_sources()
     >>> stefano.identify_candidates_from_sources(
-            first_year_margin=0.2, frequency=4)
+    >>>     first_year_margin=0.2, frequency=4)
     >>> stefano.filter_candidates(same_discipline=True,
-            first_year_margin=2, pub_margin=0.2,
-            coauth_margin=0.2, cits_margin=0.2)
+    >>>     first_year_margin=2, pub_margin=0.2,
+    >>>     coauth_margin=0.2, cits_margin=0.2)
     >>> stefano.inform_matches()
 
 However, this will not yield quite the same matches, as the definition of candidates (formerly search group) underwent a drastic change. Previously, `sosia` considered only authors that published in two periods: The exact same year when the focal author published for the last time (the last year, formerly the active year), and in the provided margin around the first year.
