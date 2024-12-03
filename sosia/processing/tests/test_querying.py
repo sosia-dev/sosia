@@ -122,6 +122,6 @@ def test_stacked_query():
     group = [18400156716, 19300157101, 19400157208, 19400157312, 19500157223,
              19600166213, 19700175482, 19700182353, 19800188009, 19900193211]
     template = Template(f"SOURCE-ID($fill) AND PUBYEAR IS {year+1}")
-    res = stacked_query(group, template, joiner=" OR ", q_type="docs",
-                        refresh=False, stacked=True, verbose=False)
+    res = stacked_query(group, template, joiner=" OR ", refresh=False,
+                        stacked=True, verbose=False)
     assert len(res) == 791

@@ -5,11 +5,12 @@ from string import Template
 import pandas as pd
 from tqdm import tqdm
 
+from sosia.processing.constants import QUERY_MAX_LEN
 from sosia.processing.extracting import extract_yearly_author_data
 from sosia.processing.caching import insert_data, retrieve_from_author_table, \
     retrieve_authors_from_sourceyear
-from sosia.processing.querying import count_citations, stacked_query, \
-    query_pubs_by_sourceyear
+from sosia.processing.querying import base_query, count_citations, \
+    create_queries, query_pubs_by_sourceyear
 from sosia.utils import custom_print
 
 
@@ -47,20 +48,23 @@ def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame
 
     # Query missing records and insert at the same time
     if missing:
-        params = {"group": missing, "refresh": refresh, "joiner": ") OR AU-ID(",
-                  "q_type": "author", "template": Template("AU-ID($fill)"),
-                  "stacked": True, "verbose": verbose}
         text = f"Downloading information for {len(missing):,} candidates..."
         custom_print(text, verbose)
-        res = stacked_query(**params)
-        if not res:  # Likely author IDs do not exist anymore
-            return info
-        res = pd.DataFrame(res)
-        res = res.drop_duplicates(subset="eid")
-        res["auth_id"] = res['eid'].str.split('-').str[-1].astype("int64")
-        res = res[info.columns]
-        insert_data(res, conn, table="author_info")
-        info = pd.concat([info, res])
+        template = Template("AU-ID($fill)")
+        queries = create_queries(missing, joiner=") OR AU-ID(",
+                                 template=template, maxlen=QUERY_MAX_LEN)
+        with tqdm(total=len(missing), disable=not verbose) as pbar:
+            for query, group in queries:
+                res = base_query("author", query, refresh=refresh)
+                pbar.update(len(group))
+                if not res:  # Likely author IDs do not exist anymore
+                    continue
+                res = pd.DataFrame(res)
+                res = res.drop_duplicates(subset="eid")
+                res["auth_id"] = res['eid'].str.split('-').str[-1].astype("int64")
+                res = res[info.columns]
+                insert_data(res, conn, table="author_info")
+                info = pd.concat([info, res])
     return info
 
 

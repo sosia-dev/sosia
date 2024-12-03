@@ -208,7 +208,6 @@ def query_pubs_by_sourceyear(source_ids, year, verbose=False, *args, **kwargs):
     res = stacked_query(
         group=[str(x) for x in sorted(source_ids)],
         joiner=" OR ",
-        q_type="docs",
         verbose=verbose,
         template=q,
         *args, **kwargs
@@ -236,7 +235,7 @@ def query_pubs_by_sourceyear(source_ids, year, verbose=False, *args, **kwargs):
     return data
 
 
-def stacked_query(group, template, joiner, q_type, stacked=False,
+def stacked_query(group, template, joiner, stacked=False,
                   verbose=False, *args, **kwargs):
     """Auxiliary function to query list of items.
 
@@ -252,10 +251,6 @@ def stacked_query(group, template, joiner, q_type, stacked=False,
 
     joiner : str
         On which the group elements should be joined to fill the query.
-
-    q_type : str
-        Determines the query search that will be used.  Allowed values:
-        "author", "docs".
 
     stacked: bool (optional, default=False)
         If True search for queries as close as possible to the maximum length
@@ -278,6 +273,6 @@ def stacked_query(group, template, joiner, q_type, stacked=False,
     queries = create_queries(group, joiner, template, maxlen)
     res = []
     for q in tqdm(queries, disable=not verbose):
-        res.extend(long_query(q, q_type, template, *args, **kwargs))
+        res.extend(long_query(q, "docs", template, *args, **kwargs))
     return res
 
