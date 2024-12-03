@@ -3,7 +3,6 @@
 from string import Template
 
 import pandas as pd
-from pybliometrics.scopus.exception import Scopus400Error
 from tqdm import tqdm
 
 from sosia.establishing import ScopusLogger
@@ -104,8 +103,8 @@ def count_citations(search_ids, pubyear, exclusion_ids=None):
                             f" (AU-ID({') OR AU-ID('.join(exclusion_ids)}))")
         queries = create_queries(search_ids, " OR ", template, QUERY_MAX_LEN)
         res = []
-        for q in queries:
-            r = long_query(q, "docs", template, view="STANDARD")
+        for q, _ in queries:
+            r = base_query("docs", q, view="STANDARD")
             res.extend(r)
         res = pd.DataFrame(res)
         return res["eid"].nunique()
@@ -149,38 +148,6 @@ def create_queries(group, joiner, template, maxlen):
             queries.append((query, sub_group))
             start = i + 1
     return queries
-
-
-def long_query(query, q_type, template, *args, **kwargs):
-    """Run one query from create_queries output, and revert to
-    one-by-one queries of each element if Scopus400Error is returned.
-
-    Parameters
-    ----------
-    query : str
-        The query string.
-
-    q_type : str
-        Determines the query search that will be used.  Allowed values:
-        "author", "docs".
-
-    template : string.Template()
-        A string template with one parameter named `fill` which will be used
-        as search query.
-
-    *args, **kwargs : tuple or dict (optional)
-        Additional parameters to be passed to `base_query()`: `refresh`,
-        and `view`.
-    """
-    try:
-        return base_query(q_type, query[0], *args, **kwargs)
-    except Scopus400Error:
-        res = []
-        for element in query[1]:
-            q = template.substitute(fill=element)
-            res = base_query(q_type, q, *args, **kwargs)
-            res.extend(res)
-        return res
 
 
 def query_pubs_by_sourceyear(source_ids, year, verbose=False, *args, **kwargs):
@@ -260,7 +227,7 @@ def stacked_query(group, template, joiner, stacked=False,
         If True, prints a progress bar for the download sections.
 
     *args, **kwargs : dict (optional)
-        Additional options passed on to `long_query()`: `refresh`.
+        Additional options passed on to `base_query()`: `refresh`.
 
     Returns
     -------
@@ -272,7 +239,8 @@ def stacked_query(group, template, joiner, stacked=False,
         maxlen = QUERY_MAX_LEN
     queries = create_queries(group, joiner, template, maxlen)
     res = []
-    for q in tqdm(queries, disable=not verbose):
-        res.extend(long_query(q, "docs", template, *args, **kwargs))
+    for q, _ in tqdm(queries, disable=not verbose):
+        r = base_query("docs", q, *args, **kwargs)
+        res.extend(r)
     return res
 
