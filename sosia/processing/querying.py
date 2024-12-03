@@ -5,6 +5,7 @@ from string import Template
 import pandas as pd
 from tqdm import tqdm
 
+from pybliometrics.scopus import AuthorSearch, ScopusSearch
 from sosia.establishing import ScopusLogger
 from sosia.processing.constants import AUTHOR_SEARCH_MAX_COUNT, QUERY_MAX_LEN, \
     RESEARCH_TYPES
@@ -43,17 +44,7 @@ def base_query(q_type, query, refresh=False, view="COMPLETE", fields=None,
     res : list of namedtuples (if size_only is False) or int
         Documents represented by namedtuples as returned from scopus or
         number of search results.
-
-    Raises
-    ------
-    ValueError:
-        If q_type is none of the allowed values.
     """
-
-    from pybliometrics.scopus import AuthorSearch, ScopusSearch, init
-
-    init()
-
     params = {"query": query, "refresh": refresh, "download": not size_only}
 
     if q_type == "author":

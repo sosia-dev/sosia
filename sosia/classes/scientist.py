@@ -5,8 +5,7 @@ from typing import Optional, Union
 from warnings import warn
 
 from typing_extensions import Self
-
-from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval
+from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval, init
 from pybliometrics.scopus.exception import Scopus404Error
 
 from sosia.establishing import connect_database, DEFAULT_DATABASE
@@ -251,6 +250,8 @@ class Scientist(object):
             When there are no publications for the author until the
             provided year.
         """
+        init()  # pybliometrics
+
         self.identifier = identifier
         self.year = int(year)
 
