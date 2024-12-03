@@ -53,10 +53,11 @@ sosia performs a series of queries in the Scopus database using the `pybliometri
     >>> # Sources similiar to those stefano publishes in
     >>> stefano.define_search_sources()
     >>> # Authors publishing in search sources every 2 years
-    >>> stefano.identify_candidates_from_sources(first_year_margin=1, chunk_size=2)
+    >>> stefano.identify_candidates_from_sources(first_year_margin=1,
+    >>>                                          frequency=2)
     >>> # Find candidates whose characteristics fall within margins
-    >>> stefano.filter_candidates(same_discipline=True, first_year_margin=1,
-    >>>                           pub_margin=0.2, cits_margin=0.2,
+    >>> stefano.filter_candidates(same_discipline=True, pub_margin=0.2,
+    >>>                           first_year_margin=1, cits_margin=0.2,
     >>>                           coauth_margin=0.15)
     >>> print(stefano.matches)
     >>> [55567912500]
