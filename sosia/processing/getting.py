@@ -68,7 +68,7 @@ def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame
     return info
 
 
-def get_author_data(group, conn, verbose=False, refresh=False) -> pd.DataFrame:
+def get_author_data(group, conn, verbose=False, refresh=False, batch_size=100) -> pd.DataFrame:
     """Get author information from author_data table and add missing
     information via Scopus Search API.
 
@@ -90,6 +90,10 @@ def get_author_data(group, conn, verbose=False, refresh=False) -> pd.DataFrame:
         will be refreshed if older than int days.  If True, will refresh
         information on disk in any case.
 
+    batch_size : int (optional, default=100)
+        Number of authors to store at once.  Will balance SQL database overhead
+        from insertion and risk of losing data in case of an error.
+
     Returns
     -------
     data : DataFrame
@@ -102,16 +106,18 @@ def get_author_data(group, conn, verbose=False, refresh=False) -> pd.DataFrame:
 
     # Add to database
     if missing:
-        text = f"Querying Scopus for information for {len(missing):,} " \
-               "authors..."
+        total = len(missing)
+        text = f"Querying Scopus for information for {total:,} authors..."
         custom_print(text, verbose)
         to_add = []
-        for auth_id in tqdm(missing, disable=not verbose):
+        for i, auth_id in tqdm(enumerate(missing), disable=not verbose, total=total):
             new = extract_yearly_author_data(auth_id, refresh=refresh)
             to_add.append(new)
-        to_add = pd.concat(to_add)
-        insert_data(to_add, conn, table="author_data")
-        data = pd.concat([data, to_add])
+            if i % batch_size == 0 or i == total:
+                to_add_df = pd.concat(to_add)
+                insert_data(to_add_df, conn, table="author_data")
+                data = pd.concat([data, to_add_df])
+                to_add = []
     return data
 
 
