@@ -111,8 +111,11 @@ def get_author_data(group, conn, verbose=False, refresh=False, batch_size=100) -
         custom_print(text, verbose)
         to_add = []
         for i, auth_id in tqdm(enumerate(missing), disable=not verbose, total=total):
-            new = extract_yearly_author_data(auth_id, refresh=refresh)
-            to_add.append(new)
+            try:
+                new = extract_yearly_author_data(auth_id, refresh=refresh)
+                to_add.append(new)
+            except KeyError:
+                continue
             if i % batch_size == 0 or i == total:
                 to_add_df = pd.concat(to_add)
                 insert_data(to_add_df, conn, table="author_data")
