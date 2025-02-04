@@ -40,7 +40,7 @@ class Original(Scientist):
 
         Notes
         -----
-        Property is initiated via .find_matches().
+        Property is initiated via .filter_candidates().
         """
         return self._matches
 
@@ -484,7 +484,7 @@ class Original(Scientist):
         """
         # Checks
         if not self._matches:
-            text = "No matches defined.  Please run .find_matches() first."
+            text = "No matches defined.  Please run .filter_candidates() first."
             raise RuntimeError(text)
         allowed_fields = ["first_name", "surname", "first_year", "last_year",
                           "num_coauthors", "num_publications", "num_citations",
