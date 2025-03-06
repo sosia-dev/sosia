@@ -3,8 +3,17 @@ Change Log
 
 .. toctree::
 
-1.0
-***
+1.0.1
+*****
+
+2025-03-06
+
+* Fix potential bug during extraction of yearly author data due to malformatted response.
+* Insert author information and yearly author data into local database more often.
+* Fix mistakes in documentation.
+
+1.0.0
+*****
 
 2024-11-23
 
