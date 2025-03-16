@@ -5,8 +5,8 @@ from typing import Optional, Union
 from warnings import warn
 
 from typing_extensions import Self
+from pybliometrics.exception import Scopus404Error
 from pybliometrics.scopus import AbstractRetrieval, AffiliationRetrieval, init
-from pybliometrics.scopus.exception import Scopus404Error
 
 from sosia.establishing import connect_database, DEFAULT_DATABASE
 from sosia.processing import add_source_names, base_query, count_citations, \

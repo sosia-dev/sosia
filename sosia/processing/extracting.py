@@ -4,8 +4,8 @@ from collections import defaultdict, Counter, namedtuple
 from typing import Optional
 
 import pandas as pd
+from pybliometrics.exception import Scopus404Error
 from pybliometrics.scopus import AbstractRetrieval
-from pybliometrics.scopus.exception import Scopus404Error
 from tqdm import tqdm
 
 from sosia.processing.constants import ASJC_2D
