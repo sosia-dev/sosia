@@ -11,7 +11,7 @@ from sosia.processing.caching import insert_data, retrieve_from_author_table, \
     retrieve_authors_from_sourceyear
 from sosia.processing.querying import base_query, count_citations, \
     create_queries, query_pubs_by_sourceyear
-from sosia.utils import custom_print
+from sosia.utils import custom_print, get_ending
 
 
 def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame:
@@ -48,12 +48,14 @@ def get_author_info(authors, conn, verbose=False, refresh=False) -> pd.DataFrame
 
     # Query missing records and insert at the same time
     if missing:
-        text = f"Downloading information for {len(missing):,} candidates..."
+        total = len(missing)
+        ending = get_ending(total)
+        text = f"Downloading information for {total:,} candidate{ending}..."
         custom_print(text, verbose)
         template = Template("AU-ID($fill)")
         queries = create_queries(missing, joiner=") OR AU-ID(",
                                  template=template, maxlen=QUERY_MAX_LEN)
-        with tqdm(total=len(missing), disable=not verbose) as pbar:
+        with tqdm(total=total, disable=not verbose) as pbar:
             for query, group in queries:
                 res = base_query("author", query, refresh=refresh)
                 pbar.update(len(group))
@@ -107,10 +109,12 @@ def get_author_data(group, conn, verbose=False, refresh=False, batch_size=100) -
     # Add to database
     if missing:
         total = len(missing)
-        text = f"Querying Scopus for information for {total:,} authors..."
+        ending = get_ending(total)
+        text = f"Querying Scopus for information for {total:,} author{ending}..."
         custom_print(text, verbose)
         to_add = []
-        for i, auth_id in tqdm(enumerate(missing), disable=not verbose, total=total):
+        for i, auth_id in tqdm(enumerate(missing, start=1),
+                               disable=not verbose, total=total):
             try:
                 new = extract_yearly_author_data(auth_id, refresh=refresh)
                 to_add.append(new)
