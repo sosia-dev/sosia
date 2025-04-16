@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 message: "If sosia helped you in your research, please cite it using the following:"
-title: "Finding Doppelgängers in Scopus: How to Build Scientists Control Groups Using Sosia"
-doi: 10.2139/ssrn.3742602
+title: "Finding Doppelgängers in Scopus: how to build scientists control groups using sosia"
+doi: 10.1007/s11192-025-05298-y
 authors:
   - family-names: Rose
     given-names: Michael E.
-    orcid: 0000-0002-4128-4236  # Assuming your ORCID, as used in the previous citation
+    orcid: 0000-0002-4128-4236
   - family-names: Baruffaldi
     given-names: Stefano H.
     orcid: 0000-0003-4022-7691
@@ -18,8 +18,7 @@ preferred-citation:
     - family-names: Baruffaldi
       given-names: Stefano H.
       orcid: 0000-0003-4022-7691
-  title: "Finding Doppelgängers in Scopus: How to Build Scientists Control Groups Using Sosia"
-  journal: "Max Planck Institute for Innovation & Competition Research Paper"
-  doi: 10.2139/ssrn.3742602
-  year: 2020
-  issue: "20-20"
+  title: "Finding Doppelgängers in Scopus: how to build scientists control groups using sosia"
+  journal: "Scientometrics"
+  doi: 10.1007/s11192-025-05298-y
+  year: 2025
