@@ -6,6 +6,14 @@ Change Log
 1.0.1
 *****
 
+2025-06-17
+
+* Fix bug with batch insertion of authors.
+* Require pybliometrics >= 4.2.0.
+
+1.0.1
+*****
+
 2025-03-06
 
 * Fix potential bug during extraction of yearly author data due to malformatted response.
